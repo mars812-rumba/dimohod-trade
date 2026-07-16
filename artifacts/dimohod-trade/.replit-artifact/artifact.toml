@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Dimohod Trade"
+version = "1.0.0"
+id = "artifacts/dimohod-trade"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21292
+
+[services.development]
+run = "pnpm --filter @workspace/dimohod-trade run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/dimohod-trade", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/dimohod-trade/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21292"
+BASE_PATH = "/"

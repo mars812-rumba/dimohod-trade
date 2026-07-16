@@ -3,13 +3,17 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Dimohod Trade API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: catalog
+    description: Catalog operations
+  - name: products
+    description: Product operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,43 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /v1/catalog/tree:
+    get:
+      operationId: getCatalogTree
+      tags: [catalog]
+      summary: Get catalog category tree
+      description: Returns the full nested category tree
+      responses:
+        "200":
+          description: Catalog tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogTreeResponse"
+  /v1/products/{slug}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get product by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +74,115 @@ components:
           type: string
       required:
         - status
-
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    CategoryNode:
+      type: object
+      properties:
+        id:
+          type: string
+        parent_id:
+          type: ["string", "null"]
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: ["string", "null"]
+        sort_order:
+          type: integer
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryNode"
+      required:
+        - id
+        - name
+        - slug
+        - sort_order
+        - children
+    CatalogTreeResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryNode"
+      required:
+        - items
+    CategorySummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+      required:
+        - id
+        - name
+        - slug
+    SKU:
+      type: object
+      properties:
+        id:
+          type: string
+        article:
+          type: string
+        name:
+          type: string
+        price_rub:
+          type: ["string", "null"]
+        stock_status:
+          type: string
+      required:
+        - id
+        - article
+        - name
+        - stock_status
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        category:
+          $ref: "#/components/schemas/CategorySummary"
+        name:
+          type: string
+        slug:
+          type: string
+        short_description:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        brand:
+          type: ["string", "null"]
+        material:
+          type: ["string", "null"]
+        wall_thickness_mm:
+          type: ["string", "null"]
+        diameter_mm:
+          type: ["integer", "null"]
+        application_tags:
+          type: array
+          items:
+            type: string
+        compatibility_notes:
+          type: ["string", "null"]
+        skus:
+          type: array
+          items:
+            $ref: "#/components/schemas/SKU"
+      required:
+        - id
+        - category
+        - name
+        - slug
+        - application_tags
+        - skus
