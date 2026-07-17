@@ -94,6 +94,7 @@
 - `categories`
 - `products`
 - `skus`
+- `needs_review`
 
 Текущие API:
 
@@ -106,11 +107,42 @@
 - `diameter_mm`
 - `wall_thickness_mm`
 - `material`
+- `steel_grade`
+- `contour`
+- `insulation_mm`
+- `max_temperature_c`
+- `product_kind`
+- `purpose`
+- `extra_attributes`
+- `source_name`
 - `application_tags`
 - `compatibility_notes`
 
-Но для полноценной нормализации каталога этого недостаточно: нужно расширять схему отдельными
-структурными колонками и логом `needs_review`.
+Первое расширение схемы под импорт прайсов выполнено миграцией:
+
+- `backend/alembic/versions/202607170001_product_import_fields.py`
+
+Импортер JSON-прайса:
+
+- `backend/app/db/import_price_list.py`
+
+Команда импорта внутри backend-контейнера:
+
+```bash
+python -m app.db.import_price_list /tmp/price_list.json --sheet голые
+```
+
+На 2026-07-17 импортирован лист `голые` из `prices/price_list.json`:
+
+- импортировано products: `2295`;
+- импортировано SKU: `2295`;
+- `needs_review`: `0`;
+- `contour = одностенный`;
+- `insulation_mm = NULL`;
+- `purpose = []`;
+- `Дефлектор` замаплен в `product_kind = оголовок`;
+- оцинковка хранится как `material = оцинковка`, `steel_grade = NULL`;
+- AISI хранится как `steel_grade = AISI 430/304/321/316`, `material = нержавеющая сталь`.
 
 ### Frontend
 
@@ -402,4 +434,3 @@ curl -I https://sunny-rentals.online/dimohod
 5. Показать сводку форматов диаметра.
 6. Показать схему нормализации.
 7. Дождаться подтверждения перед миграцией и импортом.
-
