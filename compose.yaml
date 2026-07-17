@@ -43,17 +43,16 @@ services:
   web:
     build:
       context: ./apps/web
+      args:
+        NEXT_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
     environment:
       API_BASE_URL: ${API_BASE_URL:-http://backend:8000}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://sunny-rentals.online/dimohod}
+      NEXT_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
     ports:
       - "3000:3000"
     depends_on:
       - backend
-    volumes:
-      - ./apps/web:/app
-      - web_node_modules:/app/node_modules
 
 volumes:
   postgres_data:
-  web_node_modules:

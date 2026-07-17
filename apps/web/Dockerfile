@@ -1,13 +1,25 @@
 FROM node:22-slim AS deps
 WORKDIR /app
-COPY package.json ./
+COPY package*.json ./
 RUN npm install
+
+FROM node:22-slim AS builder
+WORKDIR /app
+ARG NEXT_BASE_PATH=/dimohod
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_BASE_PATH=${NEXT_BASE_PATH}
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
 
 FROM node:22-slim AS runtime
 WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_BASE_PATH=/dimohod
+COPY package.json ./
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/next.config.ts ./next.config.ts
 EXPOSE 3000
-CMD ["npm", "run", "dev"]
-
+CMD ["npm", "run", "start"]
