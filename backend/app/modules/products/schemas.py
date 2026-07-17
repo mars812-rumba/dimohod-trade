@@ -24,6 +24,31 @@ class SKURead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProductListItem(BaseModel):
+    id: UUID
+    category: CategorySummary
+    name: str
+    slug: str
+    material: str | None
+    steel_grade: str | None
+    wall_thickness_mm: Decimal | None
+    diameter_mm: int | None
+    contour: str | None
+    insulation_mm: int | None
+    product_kind: str | None
+    price_rub: Decimal | None
+    sku_count: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ProductListResponse(BaseModel):
+    items: list[ProductListItem]
+    total: int
+    limit: int
+    offset: int
+
+
 class ProductRead(BaseModel):
     id: UUID
     category: CategorySummary
@@ -33,11 +58,17 @@ class ProductRead(BaseModel):
     description: str | None
     brand: str | None
     material: str | None
+    steel_grade: str | None
     wall_thickness_mm: Decimal | None
     diameter_mm: int | None
+    contour: str | None
+    insulation_mm: int | None
+    max_temperature_c: int | None
+    product_kind: str | None
+    purpose: list[str]
+    extra_attributes: dict[str, Any]
     application_tags: list[str]
     compatibility_notes: str | None
     skus: list[SKURead]
 
     model_config = ConfigDict(from_attributes=True)
-

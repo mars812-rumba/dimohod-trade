@@ -17,7 +17,7 @@ import {
 import type { Product } from "@/lib/api";
 
 function formatPrice(value: string | null) {
-  if (value === null) {
+  if (value === null || Number(value) <= 0) {
     return "Цена по запросу";
   }
 
@@ -172,6 +172,12 @@ export function ProductExperience({ product }: { product: Product }) {
                   <strong>{product.material}</strong>
                 </div>
               ) : null}
+              {product.steel_grade ? (
+                <div className="spec-row">
+                  <span>Марка стали</span>
+                  <strong>{product.steel_grade}</strong>
+                </div>
+              ) : null}
               {product.diameter_mm ? (
                 <div className="spec-row">
                   <span>Внутренний диаметр</span>
@@ -184,18 +190,30 @@ export function ProductExperience({ product }: { product: Product }) {
                   <strong>{product.wall_thickness_mm} мм</strong>
                 </div>
               ) : null}
-              <div className="spec-row">
-                <span>Контур</span>
-                <strong>Сэндвич, двустенный</strong>
-              </div>
-              <div className="spec-row">
-                <span>Утепление</span>
-                <strong>Базальтовая вата 50 мм</strong>
-              </div>
-              <div className="spec-row">
-                <span>Максимальная температура</span>
-                <strong>600 °C</strong>
-              </div>
+              {product.contour ? (
+                <div className="spec-row">
+                  <span>Контур</span>
+                  <strong>{product.contour}</strong>
+                </div>
+              ) : null}
+              {product.insulation_mm !== null ? (
+                <div className="spec-row">
+                  <span>Утепление</span>
+                  <strong>{product.insulation_mm} мм</strong>
+                </div>
+              ) : null}
+              {product.max_temperature_c !== null ? (
+                <div className="spec-row">
+                  <span>Максимальная температура</span>
+                  <strong>{product.max_temperature_c} °C</strong>
+                </div>
+              ) : null}
+              {product.product_kind ? (
+                <div className="spec-row">
+                  <span>Тип элемента</span>
+                  <strong>{product.product_kind}</strong>
+                </div>
+              ) : null}
             </div>
           </section>
 

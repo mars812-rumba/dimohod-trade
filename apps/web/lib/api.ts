@@ -21,6 +21,33 @@ export type SKU = {
   attributes: Record<string, unknown>;
 };
 
+export type ProductListItem = {
+  id: string;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  name: string;
+  slug: string;
+  material: string | null;
+  steel_grade: string | null;
+  wall_thickness_mm: string | null;
+  diameter_mm: number | null;
+  contour: string | null;
+  insulation_mm: number | null;
+  product_kind: string | null;
+  price_rub: string | null;
+  sku_count: number;
+};
+
+export type ProductListResponse = {
+  items: ProductListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
 export type Product = {
   id: string;
   category: {
@@ -34,8 +61,15 @@ export type Product = {
   description: string | null;
   brand: string | null;
   material: string | null;
+  steel_grade: string | null;
   wall_thickness_mm: string | null;
   diameter_mm: number | null;
+  contour: string | null;
+  insulation_mm: number | null;
+  max_temperature_c: number | null;
+  product_kind: string | null;
+  purpose: string[];
+  extra_attributes: Record<string, unknown>;
   application_tags: string[];
   compatibility_notes: string | null;
   skus: SKU[];
@@ -56,6 +90,28 @@ export async function getCatalogTree(): Promise<CategoryNode[]> {
   return data.items;
 }
 
+export async function getProducts({
+  limit = 48,
+  offset = 0,
+}: {
+  limit?: number;
+  offset?: number;
+} = {}): Promise<ProductListResponse> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const response = await fetch(`${apiBaseUrl}/api/v1/products?${params.toString()}`, {
+    next: { revalidate: 60 },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load products");
+  }
+
+  return (await response.json()) as ProductListResponse;
+}
+
 export async function getProduct(slug: string): Promise<Product | null> {
   const response = await fetch(`${apiBaseUrl}/api/v1/products/${slug}`, {
     next: { revalidate: 60 },
@@ -71,4 +127,3 @@ export async function getProduct(slug: string): Promise<Product | null> {
 
   return (await response.json()) as Product;
 }
-
