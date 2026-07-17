@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Route, Switch, Router as WouterRouter } from "wouter";
-import { Flame, Search, ShoppingCart } from "lucide-react";
+import { Search, Phone } from "lucide-react";
 import { Link } from "wouter";
 import HomePage from "@/pages/HomePage";
 import CatalogPage from "@/pages/CatalogPage";
@@ -12,21 +12,30 @@ const queryClient = new QueryClient();
 function SiteHeader() {
   return (
     <header className="site-header">
-      <Link href="/" className="brand" aria-label="Dimohod Trade">
-        <span className="brand-mark">
-          <Flame size={18} strokeWidth={2.2} />
+      <Link href="/" className="brand" aria-label="Дымоход Трейд — главная">
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Дымоход Трейд" className="brand-logo" />
+        <span className="brand-name">
+          <span className="brand-name-top">Дымоход Трейд</span>
+          <span className="brand-name-sub">Санкт-Петербург</span>
         </span>
-        <span>Dimohod Trade</span>
       </Link>
+
       <nav className="top-nav" aria-label="Основная навигация">
         <Link href="/catalog">Каталог</Link>
-        <button type="button" aria-label="Поиск" title="Поиск">
-          <Search size={18} />
-        </button>
-        <button type="button" aria-label="Корзина" title="Корзина">
-          <ShoppingCart size={18} />
-        </button>
+        <Link href="/catalog?scenario=banya">Для бани</Link>
+        <Link href="/catalog?scenario=kamin">Для камина</Link>
+        <Link href="/catalog?scenario=gaz">Для газа</Link>
       </nav>
+
+      <div className="header-right">
+        <a href="tel:+79650756555" className="header-phone">
+          <Phone size={14} />
+          +7 (965) 075-65-55
+        </a>
+        <button type="button" className="icon-button" aria-label="Поиск">
+          <Search size={17} />
+        </button>
+      </div>
     </header>
   );
 }
