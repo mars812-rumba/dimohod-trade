@@ -181,12 +181,12 @@ export default function HomePage() {
               и привести его к совместимой спецификации, заявке инженеру или нужной категории.
             </p>
             <div className="actions">
-              <Link className="button" href="/catalog">
-                Перейти в каталог <ArrowRight size={17} />
-              </Link>
-              <a href="tel:+79650756555" className="button secondary">
-                <Phone size={17} /> Получить подбор
+              <a className="button" href="tel:+79650756555">
+                Рассчитать комплект <ArrowRight size={17} />
               </a>
+              <Link href="/catalog" className="button secondary">
+                Открыть каталог <ShoppingBag size={17} />
+              </Link>
             </div>
           </div>
 
