@@ -51,11 +51,11 @@ export default async function CatalogPage() {
         </div>
 
         {loadError ? (
-          <div className="empty">Backend пока не ответил. Запусти API или docker compose.</div>
+          <div className="state-empty">Backend пока не ответил. Запусти API или docker compose.</div>
         ) : null}
 
         {!loadError && categories.length === 0 ? (
-          <div className="empty">Категории пока пустые. Запусти seed для demo-данных.</div>
+          <div className="state-empty">Категории пока пустые. Запусти seed для demo-данных.</div>
         ) : null}
 
         <div className="category-list">
