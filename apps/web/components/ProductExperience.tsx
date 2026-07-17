@@ -9,7 +9,6 @@ import {
   FileText,
   Info,
   Mail,
-  Package,
   Phone,
   ShieldCheck,
   Truck,
@@ -68,6 +67,33 @@ const docs = [
   { icon: FileText, label: "Инструкция по монтажу", note: "PDF" },
 ];
 
+const tempProductMedia: Record<
+  string,
+  Array<{
+    role: string;
+    src: string;
+    alt: string;
+  }>
+> = {
+  "sendvich-truba-115-200-nerzhaveyushchaya-stal-08": [
+    {
+      role: "Фото",
+      src: "/dimohod-media/catalog/products/sendvich-truba-115-200-nerzhaveyushchaya-stal-08/photos/main.png",
+      alt: "Сэндвич-труба 115/200, нержавеющая сталь, товарное фото",
+    },
+    {
+      role: "Размеры",
+      src: "/dimohod-media/catalog/products/sendvich-truba-115-200-nerzhaveyushchaya-stal-08/photos/dimensions.png",
+      alt: "Чертеж размеров сэндвич-трубы 115/200",
+    },
+    {
+      role: "Монтаж",
+      src: "/dimohod-media/catalog/products/sendvich-truba-115-200-nerzhaveyushchaya-stal-08/photos/installed.png",
+      alt: "Сэндвич-труба 115/200 в установленном дымоходе",
+    },
+  ],
+};
+
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
 
@@ -84,7 +110,10 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export function ProductExperience({ product }: { product: Product }) {
   const [selectedSku, setSelectedSku] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(0);
   const activeSku = product.skus[selectedSku] ?? product.skus[0] ?? null;
+  const media = tempProductMedia[product.slug] ?? [];
+  const activeImage = media[selectedImage] ?? media[0] ?? null;
 
   return (
     <main className="page">
@@ -99,10 +128,13 @@ export function ProductExperience({ product }: { product: Product }) {
       <div className="product-layout">
         <div className="product-main">
           <div className="product-image-wrap">
-            <div className="product-image-placeholder">
-              <Package size={48} color="var(--line)" />
-              <span>Фото товара</span>
-            </div>
+            {activeImage ? (
+              <img className="product-image" src={activeImage.src} alt={activeImage.alt} />
+            ) : (
+              <div className="product-image-placeholder">
+                <span>Фото товара</span>
+              </div>
+            )}
             <div className="product-image-badges">
               {product.application_tags.map((tag) => (
                 <span className="chip" key={tag}>
@@ -110,6 +142,21 @@ export function ProductExperience({ product }: { product: Product }) {
                 </span>
               ))}
             </div>
+            {media.length > 1 ? (
+              <div className="product-gallery-thumbs" aria-label="Галерея товара">
+                {media.map((item, index) => (
+                  <button
+                    className={`product-thumb${selectedImage === index ? " product-thumb-active" : ""}`}
+                    key={item.src}
+                    onClick={() => setSelectedImage(index)}
+                    type="button"
+                  >
+                    <img src={item.src} alt="" aria-hidden="true" />
+                    <span>{item.role}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <p className="eyebrow product-eyebrow">{product.category.name}</p>
@@ -285,4 +332,3 @@ export function ProductExperience({ product }: { product: Product }) {
     </main>
   );
 }
-
