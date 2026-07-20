@@ -17,6 +17,16 @@ class SKURead(BaseModel):
     id: UUID
     article: str
     name: str
+    slug: str | None
+    material: str | None
+    steel_grade: str | None
+    wall_thickness_mm: Decimal | None
+    diameter_mm: int | None
+    outer_diameter_mm: int | None
+    contour: str | None
+    insulation_mm: int | None
+    length_mm: int | None
+    angle_deg: int | None
     price_rub: Decimal | None
     stock_status: str
     attributes: dict[str, Any]
@@ -48,6 +58,16 @@ class ProductListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class ProductKindFilter(BaseModel):
+    value: str
+    label: str
+    count: int
+
+
+class ProductFiltersResponse(BaseModel):
+    product_kinds: list[ProductKindFilter]
 
 
 class ProductRead(BaseModel):

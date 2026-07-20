@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { getCatalogTree, getProducts, type CategoryNode, type ProductListItem } from "@/lib/api";
+import {
+  getCatalogTree,
+  getProductFilters,
+  getProducts,
+  type CategoryNode,
+  type ProductKindFilter,
+  type ProductListItem,
+} from "@/lib/api";
 
 const PAGE_SIZE = 48;
 
@@ -83,24 +90,29 @@ function ProductCard({ product }: { product: ProductListItem }) {
 type CatalogPageProps = {
   searchParams?: Promise<{
     page?: string;
+    product_kind?: string;
   }>;
 };
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const params = await searchParams;
+  const productKind = params?.product_kind?.trim() || undefined;
   const page = Math.max(1, Number(params?.page ?? "1") || 1);
   const offset = (page - 1) * PAGE_SIZE;
   let categories: CategoryNode[] = [];
+  let productKindFilters: ProductKindFilter[] = [];
   let products: ProductListItem[] = [];
   let total = 0;
   let loadError = false;
 
   try {
-    const [categoryItems, productResponse] = await Promise.all([
+    const [categoryItems, filterResponse, productResponse] = await Promise.all([
       getCatalogTree(),
-      getProducts({ limit: PAGE_SIZE, offset }),
+      getProductFilters(),
+      getProducts({ limit: PAGE_SIZE, offset, productKind }),
     ]);
     categories = categoryItems;
+    productKindFilters = filterResponse.product_kinds;
     products = productResponse.items;
     total = productResponse.total;
   } catch {
@@ -110,6 +122,17 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const prevPage = page > 1 ? page - 1 : null;
   const nextPage = page < totalPages ? page + 1 : null;
+  const pageHref = (targetPage: number) => {
+    const nextParams = new URLSearchParams();
+    if (targetPage > 1) {
+      nextParams.set("page", String(targetPage));
+    }
+    if (productKind) {
+      nextParams.set("product_kind", productKind);
+    }
+    const query = nextParams.toString();
+    return query ? `/catalog?${query}` : "/catalog";
+  };
 
   return (
     <main className="page">
@@ -138,7 +161,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
             <div className="catalog-summary">
               <div>
                 <strong>{total}</strong>
-                <span>товаров в базе</span>
+                <span>{productKind ? "товаров по фильтру" : "товаров в базе"}</span>
               </div>
               <div>
                 <strong>{products.length}</strong>
@@ -149,6 +172,30 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
                 <span>страница</span>
               </div>
             </div>
+
+            {productKindFilters.length > 0 ? (
+              <section className="catalog-filter-panel" aria-labelledby="catalog-product-kind-title">
+                <div>
+                  <p className="eyebrow">Фильтр по изделиям</p>
+                  <h2 id="catalog-product-kind-title">Что ищем?</h2>
+                </div>
+                <div className="catalog-filter-chips">
+                  <Link className={`filter-chip ${!productKind ? "active" : ""}`} href="/catalog">
+                    Все изделия
+                  </Link>
+                  {productKindFilters.map((filter) => (
+                    <Link
+                      className={`filter-chip ${productKind === filter.value ? "active" : ""}`}
+                      href={`/catalog?product_kind=${encodeURIComponent(filter.value)}`}
+                      key={filter.value}
+                    >
+                      {filter.label}
+                      <span>{filter.count}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             <h2 className="catalog-subtitle">Категории</h2>
             <div className="category-list catalog-category-list">
@@ -170,7 +217,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
             <nav className="catalog-pagination" aria-label="Пагинация каталога">
               {prevPage ? (
-                <Link className="button secondary" href={`/catalog?page=${prevPage}`}>
+                <Link className="button secondary" href={pageHref(prevPage)}>
                   <ArrowLeft size={16} /> Назад
                 </Link>
               ) : (
@@ -180,7 +227,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
                 Страница {page} из {totalPages}
               </span>
               {nextPage ? (
-                <Link className="button" href={`/catalog?page=${nextPage}`}>
+                <Link className="button" href={pageHref(nextPage)}>
                   Дальше <ArrowRight size={16} />
                 </Link>
               ) : (

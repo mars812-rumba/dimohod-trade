@@ -115,9 +115,16 @@ export function ProductExperience({ product }: { product: Product }) {
   const media = tempProductMedia[product.slug] ?? [];
   const activeImage = media[selectedImage] ?? media[0] ?? null;
   const outerDiameter =
-    typeof product.extra_attributes.outer_diameter_mm === "number"
+    activeSku?.outer_diameter_mm ??
+    (typeof product.extra_attributes.outer_diameter_mm === "number"
       ? product.extra_attributes.outer_diameter_mm
-      : null;
+      : null);
+  const material = activeSku?.material ?? product.material;
+  const steelGrade = activeSku?.steel_grade ?? product.steel_grade;
+  const diameterMm = activeSku?.diameter_mm ?? product.diameter_mm;
+  const wallThicknessMm = activeSku?.wall_thickness_mm ?? product.wall_thickness_mm;
+  const contour = activeSku?.contour ?? product.contour;
+  const insulationMm = activeSku?.insulation_mm ?? product.insulation_mm;
 
   return (
     <main className="page">
@@ -170,22 +177,22 @@ export function ProductExperience({ product }: { product: Product }) {
           <section className="product-section">
             <h2 className="product-section-title">Характеристики</h2>
             <div className="specs-table">
-              {product.material ? (
+              {material ? (
                 <div className="spec-row">
                   <span>Материал</span>
-                  <strong>{product.material}</strong>
+                  <strong>{material}</strong>
                 </div>
               ) : null}
-              {product.steel_grade ? (
+              {steelGrade ? (
                 <div className="spec-row">
                   <span>Марка стали</span>
-                  <strong>{product.steel_grade}</strong>
+                  <strong>{steelGrade}</strong>
                 </div>
               ) : null}
-              {product.diameter_mm ? (
+              {diameterMm ? (
                 <div className="spec-row">
                   <span>Внутренний диаметр</span>
-                  <strong>{product.diameter_mm} мм</strong>
+                  <strong>{diameterMm} мм</strong>
                 </div>
               ) : null}
               {outerDiameter ? (
@@ -194,22 +201,34 @@ export function ProductExperience({ product }: { product: Product }) {
                   <strong>{outerDiameter} мм</strong>
                 </div>
               ) : null}
-              {product.wall_thickness_mm ? (
+              {wallThicknessMm ? (
                 <div className="spec-row">
                   <span>Толщина стенки</span>
-                  <strong>{product.wall_thickness_mm} мм</strong>
+                  <strong>{wallThicknessMm} мм</strong>
                 </div>
               ) : null}
-              {product.contour ? (
+              {contour ? (
                 <div className="spec-row">
                   <span>Контур</span>
-                  <strong>{product.contour}</strong>
+                  <strong>{contour}</strong>
                 </div>
               ) : null}
-              {product.insulation_mm !== null ? (
+              {insulationMm !== null ? (
                 <div className="spec-row">
                   <span>Утепление</span>
-                  <strong>{product.insulation_mm} мм</strong>
+                  <strong>{insulationMm} мм</strong>
+                </div>
+              ) : null}
+              {activeSku?.length_mm ? (
+                <div className="spec-row">
+                  <span>Длина</span>
+                  <strong>{activeSku.length_mm} мм</strong>
+                </div>
+              ) : null}
+              {activeSku?.angle_deg ? (
+                <div className="spec-row">
+                  <span>Угол</span>
+                  <strong>{activeSku.angle_deg}°</strong>
                 </div>
               ) : null}
               {product.max_temperature_c !== null ? (

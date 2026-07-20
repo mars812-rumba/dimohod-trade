@@ -1986,6 +1986,61 @@ ul {
   font-size: 24px;
 }
 
+.catalog-filter-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.35fr) 1fr;
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 34px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(64, 81, 90, 0.08), rgba(255, 255, 255, 0.72));
+}
+
+.catalog-filter-panel h2 {
+  margin: 4px 0 0;
+  font-size: 22px;
+}
+
+.catalog-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 740;
+}
+
+.filter-chip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.filter-chip.active,
+.filter-chip:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.filter-chip.active span,
+.filter-chip:hover span {
+  color: rgba(255, 255, 255, 0.76);
+}
+
 .catalog-category-list {
   padding-top: 0;
   padding-bottom: 0;
@@ -2107,6 +2162,10 @@ ul {
 
   .catalog-products-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .catalog-filter-panel {
+    grid-template-columns: 1fr;
   }
 
   .wire-flow {

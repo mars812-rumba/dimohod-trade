@@ -101,6 +101,8 @@
 
 - `GET /api/v1/health`
 - `GET /api/v1/catalog/tree`
+- `GET /api/v1/products?limit=&offset=&product_kind=`
+- `GET /api/v1/products/filters`
 - `GET /api/v1/products/{slug}`
 
 Текущая модель `products` уже содержит часть будущих структурных полей:
@@ -122,6 +124,23 @@
 Первое расширение схемы под импорт прайсов выполнено миграцией:
 
 - `backend/alembic/versions/202607170001_product_import_fields.py`
+
+Расширение `skus` до Variant/SKU выполнено миграцией:
+
+- `backend/alembic/versions/202607200002_sku_variant_fields.py`
+
+Теперь `skus` содержит variant-поля:
+
+- `slug`
+- `diameter_mm`
+- `outer_diameter_mm`
+- `length_mm`
+- `angle_deg`
+- `material`
+- `steel_grade`
+- `wall_thickness_mm`
+- `contour`
+- `insulation_mm`
 
 Импортер JSON-прайса:
 
@@ -166,9 +185,38 @@ python -m app.db.import_price_list /tmp/price_list.json --sheet голые
 - сэндвич 50 мм: `4044`;
 - demo без нового contour: `1`.
 
+На 2026-07-20 выполнен переход текущих импортированных позиций к модели Product → Variant/SKU:
+
+- физически в таблице `products`: `6340`;
+- активных logical products: `40`;
+- legacy products выключено через `is_active = false`: `6300`;
+- всего SKU: `6341`;
+- импортированных SKU с `slug` варианта и variant-полями: `6339`;
+- `needs_review`: `0`.
+
+Активные logical products по типу изделия:
+
+- `труба`: `2`;
+- `отвод`: `4`;
+- `тройник`: `8`;
+- `четверник`: `4`;
+- `шибер`: `9`;
+- `ревизия`: `1`;
+- `конденсатоотвод`: `1`;
+- `заглушка`: `3`;
+- `крепеж`: `2`;
+- `оголовок`: `5`.
+
+Скрипт группировки:
+
+```bash
+python -m app.db.group_products_into_variants
+```
+
 Важное архитектурное решение от 2026-07-20:
 
-- текущий импорт, где каждая позиция прайса лежит как отдельный `products`, — временное MVP-состояние;
+- старое состояние, где каждая позиция прайса лежала как отдельный `products`, переведено в
+  legacy/inactive;
 - целевая модель каталога: `Product` = логический тип товара, `Variant/SKU` = конкретная покупаемая
   позиция;
 - каждая SEO-важная вариация должна иметь собственный canonical URL;
@@ -193,6 +241,7 @@ python -m app.db.import_price_list /tmp/price_list.json --sheet голые
 - каталог;
 - карточка товара;
 - медиа-блок карточки товара с временными изображениями.
+- фильтрация каталога по типу изделия через `product_kind`.
 
 На главной главный CTA сейчас:
 

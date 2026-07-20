@@ -16,6 +16,16 @@ export type SKU = {
   id: string;
   article: string;
   name: string;
+  slug: string | null;
+  material: string | null;
+  steel_grade: string | null;
+  wall_thickness_mm: string | null;
+  diameter_mm: number | null;
+  outer_diameter_mm: number | null;
+  contour: string | null;
+  insulation_mm: number | null;
+  length_mm: number | null;
+  angle_deg: number | null;
   price_rub: string | null;
   stock_status: string;
   attributes: Record<string, unknown>;
@@ -47,6 +57,16 @@ export type ProductListResponse = {
   total: number;
   limit: number;
   offset: number;
+};
+
+export type ProductKindFilter = {
+  value: string;
+  label: string;
+  count: number;
+};
+
+export type ProductFiltersResponse = {
+  product_kinds: ProductKindFilter[];
 };
 
 export type Product = {
@@ -94,14 +114,19 @@ export async function getCatalogTree(): Promise<CategoryNode[]> {
 export async function getProducts({
   limit = 48,
   offset = 0,
+  productKind,
 }: {
   limit?: number;
   offset?: number;
+  productKind?: string;
 } = {}): Promise<ProductListResponse> {
   const params = new URLSearchParams({
     limit: String(limit),
     offset: String(offset),
   });
+  if (productKind) {
+    params.set("product_kind", productKind);
+  }
   const response = await fetch(`${apiBaseUrl}/api/v1/products?${params.toString()}`, {
     next: { revalidate: 60 },
   });
@@ -111,6 +136,18 @@ export async function getProducts({
   }
 
   return (await response.json()) as ProductListResponse;
+}
+
+export async function getProductFilters(): Promise<ProductFiltersResponse> {
+  const response = await fetch(`${apiBaseUrl}/api/v1/products/filters`, {
+    next: { revalidate: 60 },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load product filters");
+  }
+
+  return (await response.json()) as ProductFiltersResponse;
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
