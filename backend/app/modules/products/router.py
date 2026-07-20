@@ -22,6 +22,9 @@ async def read_products(
     for product in products:
         prices = [sku.price_rub for sku in product.skus if sku.price_rub is not None]
         price_rub: Decimal | None = min(prices) if prices else None
+        outer_diameter_mm = product.extra_attributes.get("outer_diameter_mm")
+        if not isinstance(outer_diameter_mm, int):
+            outer_diameter_mm = None
         items.append(
             ProductListItem(
                 id=product.id,
@@ -32,6 +35,7 @@ async def read_products(
                 steel_grade=product.steel_grade,
                 wall_thickness_mm=product.wall_thickness_mm,
                 diameter_mm=product.diameter_mm,
+                outer_diameter_mm=outer_diameter_mm,
                 contour=product.contour,
                 insulation_mm=product.insulation_mm,
                 product_kind=product.product_kind,

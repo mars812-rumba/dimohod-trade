@@ -41,6 +41,12 @@ class SectionSpec:
     material: str | None
     steel_grade: str | None
     wall_thickness_mm: Decimal | None
+    contour: str
+    insulation_mm: int | None = None
+    insulation_material: str | None = None
+    outer_material: str | None = None
+    outer_steel_grade: str | None = None
+    outer_wall_thickness_mm: Decimal | None = None
 
 
 def slugify(value: str, max_len: int = 180) -> str:
@@ -95,10 +101,8 @@ def parse_diameter(raw: str) -> tuple[int | None, int | None]:
     return nums[0], None
 
 
-def parse_section(titles: list[str]) -> SectionSpec:
-    title = " / ".join(str(t).strip() for t in titles if str(t).strip())
-    title_compact = " ".join(title.split())
-
+def parse_material_part(value: str) -> tuple[str | None, str | None, Decimal | None]:
+    title_compact = " ".join(value.split())
     steel_grade = None
     steel_match = re.search(r"AISI\s*([0-9]{3}[A-Z]?)", title_compact, re.IGNORECASE)
     if steel_match:
@@ -117,11 +121,42 @@ def parse_section(titles: list[str]) -> SectionSpec:
     else:
         material = None
 
+    return material, steel_grade, wall_thickness_mm
+
+
+def parse_section(titles: list[str]) -> SectionSpec:
+    clean_titles = [str(t).strip() for t in titles if str(t).strip()]
+    title = " / ".join(clean_titles)
+
+    inner_title = next((t for t in clean_titles if "внутрен" in t.lower()), title)
+    outer_title = next((t for t in clean_titles if "наруж" in t.lower()), None)
+    insulation_title = next((t for t in clean_titles if "изоляц" in t.lower()), None)
+
+    material, steel_grade, wall_thickness_mm = parse_material_part(inner_title)
+    outer_material = outer_steel_grade = None
+    outer_wall_thickness_mm = None
+    if outer_title is not None:
+        outer_material, outer_steel_grade, outer_wall_thickness_mm = parse_material_part(outer_title)
+
+    insulation_mm = None
+    insulation_material = None
+    if insulation_title is not None:
+        insulation_match = re.search(r"толщина\s*([0-9]+)\s*мм", insulation_title, re.IGNORECASE)
+        if insulation_match:
+            insulation_mm = int(insulation_match.group(1))
+        insulation_material = insulation_title.split("—", 1)[-1].strip() if "—" in insulation_title else insulation_title
+
     return SectionSpec(
         title=title,
         material=material,
         steel_grade=steel_grade,
         wall_thickness_mm=wall_thickness_mm,
+        contour="сэндвич" if outer_title or insulation_title else "одностенный",
+        insulation_mm=insulation_mm,
+        insulation_material=insulation_material,
+        outer_material=outer_material,
+        outer_steel_grade=outer_steel_grade,
+        outer_wall_thickness_mm=outer_wall_thickness_mm,
     )
 
 
@@ -135,7 +170,7 @@ def product_kind(name: str) -> str | None:
         return "тройник"
     if "четверник" in text:
         return "четверник"
-    if "зонт" in text or "дефлектор" in text:
+    if "зонт" in text or "дефлектор" in text or "оголовок" in text:
         return "оголовок"
     if "шибер" in text:
         return "шибер"
@@ -223,19 +258,76 @@ async def log_review(
     )
 
 
-def product_name(item_name: str, diameter_mm: int, section: SectionSpec) -> str:
-    parts = [item_name.strip(), f"Ø{diameter_mm}"]
+def product_name(
+    item_name: str,
+    diameter_mm: int,
+    outer_diameter_mm: int | None,
+    section: SectionSpec,
+) -> str:
+    diameter_label = f"Ø{diameter_mm}/{outer_diameter_mm}" if outer_diameter_mm else f"Ø{diameter_mm}"
+    parts = [item_name.strip(), diameter_label]
     if section.steel_grade:
         parts.append(section.steel_grade)
     elif section.material:
         parts.append(section.material)
     if section.wall_thickness_mm is not None:
         parts.append(f"{section.wall_thickness_mm} мм")
+    if section.contour == "сэндвич" and section.insulation_mm is not None:
+        parts.append(f"изоляция {section.insulation_mm} мм")
     return ", ".join(parts)[:220]
+
+
+def root_category_meta(section: SectionSpec) -> tuple[str, str, int]:
+    if section.contour == "сэндвич":
+        return "sendvich-elementy", "Сэндвич-элементы", 40
+    return "odnokonturnye-elementy", "Одноконтурные элементы", 30
+
+
+def category_meta(section: SectionSpec) -> dict[str, tuple[str, str]]:
+    if section.contour == "сэндвич":
+        return {
+            "труба": ("sendvich-truby", "Сэндвич-трубы"),
+            "отвод": ("sendvich-otvody", "Сэндвич-отводы"),
+            "тройник": ("sendvich-troyniki", "Сэндвич-тройники"),
+            "четверник": ("sendvich-chetverniki", "Сэндвич-четверники"),
+            "шибер": ("sendvich-shibery", "Сэндвич-шиберы"),
+            "ревизия": ("sendvich-revizii", "Сэндвич-ревизии"),
+            "конденсатоотвод": ("sendvich-kondensatootvody", "Сэндвич-конденсатоотводы"),
+            "заглушка": ("sendvich-zaglushki", "Сэндвич-заглушки"),
+            "крепеж": ("sendvich-krepezh", "Сэндвич-крепеж"),
+            "оголовок": ("sendvich-ogolovki-i-deflektory", "Сэндвич-оголовки и дефлекторы"),
+        }
+    return CATEGORY_META
+
+
+def import_code(sheet_name: str, section: SectionSpec) -> str:
+    if section.contour == "сэндвич":
+        return f"SW{section.insulation_mm or 0}"
+    if sheet_name == "голые":
+        return "GOLYE"
+    return slugify(sheet_name, max_len=24).upper()
+
+
+def product_slug_source(
+    sheet_name: str,
+    block_index: int,
+    item_index: int,
+    item_name: str,
+    diameter_mm: int,
+    outer_diameter_mm: int | None,
+    section: SectionSpec,
+) -> str:
+    if section.contour == "сэндвич":
+        return (
+            f"sendvich-{section.insulation_mm or 0}-{block_index}-{item_index}-"
+            f"{item_name}-d{diameter_mm}-{outer_diameter_mm or 0}"
+        )
+    return f"{sheet_name}-{block_index}-{item_index}-{item_name}-d{diameter_mm}"
 
 
 async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
     source_file = str(path)
+    source_name = f"Дымоход Трейд {path.name}"
     data = json.loads(path.read_text(encoding="utf-8"))
     blocks = data.get(sheet_name)
     if not isinstance(blocks, list):
@@ -254,27 +346,7 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
             )
         )
 
-        root, root_touched = await get_or_create_category(
-            session,
-            "odnokonturnye-elementy",
-            "Одноконтурные элементы",
-            sort_order=30,
-        )
-        if root_touched:
-            stats["categories_touched"] += 1
-
         categories: dict[str, Category] = {}
-        for idx, (kind, (slug, name)) in enumerate(CATEGORY_META.items(), start=1):
-            category, touched = await get_or_create_category(
-                session,
-                slug,
-                name,
-                parent_id=root.id,
-                sort_order=idx * 10,
-            )
-            categories[kind] = category
-            if touched:
-                stats["categories_touched"] += 1
 
         for block_index, block in enumerate(blocks):
             if not ("items" in block and "columns" in block):
@@ -282,6 +354,31 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
 
             section = parse_section(block.get("titles") or [])
             stats["sections"] += 1
+            stats[f"sections_{section.contour}"] += 1
+
+            root_slug, root_name, root_sort_order = root_category_meta(section)
+            root, root_touched = await get_or_create_category(
+                session,
+                root_slug,
+                root_name,
+                sort_order=root_sort_order,
+            )
+            if root_touched:
+                stats["categories_touched"] += 1
+
+            for idx, (kind, (slug, name)) in enumerate(category_meta(section).items(), start=1):
+                if slug in categories:
+                    continue
+                category, touched = await get_or_create_category(
+                    session,
+                    slug,
+                    name,
+                    parent_id=root.id,
+                    sort_order=idx * 10,
+                )
+                categories[slug] = category
+                if touched:
+                    stats["categories_touched"] += 1
 
             for item_index, item in enumerate(block.get("items") or []):
                 item_name = str(item.get("name") or "").strip()
@@ -303,7 +400,8 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                     )
                     continue
 
-                category = categories.get(kind)
+                meta = category_meta(section).get(kind)
+                category = categories.get(meta[0]) if meta else None
                 if category is None:
                     review_stats["category"] += 1
                     await log_review(
@@ -346,12 +444,22 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                     diameter_stats[diameter_mm] += 1
                     stats["price_rows_seen"] += 1
 
-                    article = f"DT-GOLYE-{block_index:02d}-{item_index:02d}-D{diameter_mm}"
+                    code = import_code(sheet_name, section)
+                    article_suffix = f"D{diameter_mm}-{outer_diameter_mm}" if outer_diameter_mm else f"D{diameter_mm}"
+                    article = f"DT-{code}-{block_index:02d}-{item_index:02d}-{article_suffix}"
                     slug = slugify(
-                        f"{sheet_name}-{block_index}-{item_index}-{item_name}-d{diameter_mm}",
+                        product_slug_source(
+                            sheet_name,
+                            block_index,
+                            item_index,
+                            item_name,
+                            diameter_mm,
+                            outer_diameter_mm,
+                            section,
+                        ),
                         max_len=220,
                     )
-                    name = product_name(item_name, diameter_mm, section)
+                    name = product_name(item_name, diameter_mm, outer_diameter_mm, section)
                     extra_attributes = {
                         "source_file": source_file,
                         "source_sheet": sheet_name,
@@ -363,6 +471,14 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                         "length_mm": length_mm,
                         "angle_deg": angle_deg,
                         "outer_diameter_mm": outer_diameter_mm,
+                        "outer_material": section.outer_material,
+                        "outer_steel_grade": section.outer_steel_grade,
+                        "outer_wall_thickness_mm": (
+                            str(section.outer_wall_thickness_mm)
+                            if section.outer_wall_thickness_mm is not None
+                            else None
+                        ),
+                        "insulation_material": section.insulation_material,
                     }
 
                     product = await session.scalar(select(Product).where(Product.slug == slug))
@@ -378,13 +494,13 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                             wall_thickness_mm=section.wall_thickness_mm,
                             diameter_mm=diameter_mm,
                             steel_grade=section.steel_grade,
-                            contour="одностенный",
-                            insulation_mm=None,
+                            contour=section.contour,
+                            insulation_mm=section.insulation_mm,
                             max_temperature_c=None,
                             product_kind=kind,
                             purpose=[],
                             extra_attributes=extra_attributes,
-                            source_name=SOURCE_NAME,
+                            source_name=source_name,
                             application_tags=[],
                             compatibility_notes=None,
                         )
@@ -400,12 +516,12 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                         product.wall_thickness_mm = section.wall_thickness_mm
                         product.diameter_mm = diameter_mm
                         product.steel_grade = section.steel_grade
-                        product.contour = "одностенный"
-                        product.insulation_mm = None
+                        product.contour = section.contour
+                        product.insulation_mm = section.insulation_mm
                         product.product_kind = kind
                         product.purpose = []
                         product.extra_attributes = extra_attributes
-                        product.source_name = SOURCE_NAME
+                        product.source_name = source_name
                         stats["products_updated"] += 1
 
                     sku = await session.scalar(select(SKU).where(SKU.article == article))

@@ -41,11 +41,17 @@ function CategoryRow({ category }: { category: CategoryNode }) {
 }
 
 function ProductCard({ product }: { product: ProductListItem }) {
+  const diameterLabel = product.diameter_mm
+    ? product.outer_diameter_mm
+      ? `Ø ${product.diameter_mm}/${product.outer_diameter_mm} мм`
+      : `Ø ${product.diameter_mm} мм`
+    : null;
   const specs = [
     product.product_kind,
-    product.diameter_mm ? `Ø ${product.diameter_mm} мм` : null,
+    diameterLabel,
     product.steel_grade ?? product.material,
     product.wall_thickness_mm ? `${product.wall_thickness_mm} мм` : null,
+    product.insulation_mm ? `изоляция ${product.insulation_mm} мм` : null,
   ].filter(Boolean);
 
   return (

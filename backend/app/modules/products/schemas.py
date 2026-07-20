@@ -33,6 +33,7 @@ class ProductListItem(BaseModel):
     steel_grade: str | None
     wall_thickness_mm: Decimal | None
     diameter_mm: int | None
+    outer_diameter_mm: int | None
     contour: str | None
     insulation_mm: int | None
     product_kind: str | None

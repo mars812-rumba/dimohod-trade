@@ -144,6 +144,31 @@ python -m app.db.import_price_list /tmp/price_list.json --sheet голые
 - оцинковка хранится как `material = оцинковка`, `steel_grade = NULL`;
 - AISI хранится как `steel_grade = AISI 430/304/321/316`, `material = нержавеющая сталь`.
 
+На 2026-07-20 импортирован сэндвич 50 мм из `prices/50mm.json`, лист `Лист1`:
+
+- импортировано products: `4044`;
+- импортировано SKU: `4044`;
+- `needs_review`: `0`;
+- `contour = сэндвич`;
+- `insulation_mm = 50`;
+- `diameter_mm` хранит внутренний диаметр;
+- наружный диаметр хранится в `extra_attributes.outer_diameter_mm`;
+- внутренняя труба используется как главный `steel_grade` и `wall_thickness_mm`;
+- наружный кожух хранится в `extra_attributes.outer_material`,
+  `extra_attributes.outer_steel_grade`, `extra_attributes.outer_wall_thickness_mm`;
+- `Оголовок-конус` замаплен в `product_kind = оголовок`.
+
+Итого после импорта одноконтурных + сэндвич 50 мм + demo:
+
+- products: `6340`;
+- одностенный: `2295`;
+- сэндвич 50 мм: `4044`;
+- demo без нового contour: `1`.
+
+Правила конфигуратора и совместимости зафиксированы в:
+
+- `backend/configurator/CONFIGURATOR_RULES.md`
+
 ### Frontend
 
 Собраны:

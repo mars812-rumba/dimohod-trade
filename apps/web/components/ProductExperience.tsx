@@ -114,6 +114,10 @@ export function ProductExperience({ product }: { product: Product }) {
   const activeSku = product.skus[selectedSku] ?? product.skus[0] ?? null;
   const media = tempProductMedia[product.slug] ?? [];
   const activeImage = media[selectedImage] ?? media[0] ?? null;
+  const outerDiameter =
+    typeof product.extra_attributes.outer_diameter_mm === "number"
+      ? product.extra_attributes.outer_diameter_mm
+      : null;
 
   return (
     <main className="page">
@@ -182,6 +186,12 @@ export function ProductExperience({ product }: { product: Product }) {
                 <div className="spec-row">
                   <span>Внутренний диаметр</span>
                   <strong>{product.diameter_mm} мм</strong>
+                </div>
+              ) : null}
+              {outerDiameter ? (
+                <div className="spec-row">
+                  <span>Наружный диаметр</span>
+                  <strong>{outerDiameter} мм</strong>
                 </div>
               ) : null}
               {product.wall_thickness_mm ? (

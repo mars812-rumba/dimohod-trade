@@ -34,6 +34,7 @@ export type ProductListItem = {
   steel_grade: string | null;
   wall_thickness_mm: string | null;
   diameter_mm: number | null;
+  outer_diameter_mm: number | null;
   contour: string | null;
   insulation_mm: number | null;
   product_kind: string | null;
