@@ -213,6 +213,19 @@ erDiagram
     SKU ||--o{ STOCK : has
 ```
 
+Ключевое правило каталога: `PRODUCT` и `SKU` нельзя смешивать.
+
+- `PRODUCT` — логический тип товара: одноконтурная труба, сэндвич-труба, отвод 45°, отвод 90°,
+  тройник, адаптер.
+- `SKU` / `Variant` — конкретная покупаемая позиция: диаметр, длина, марка стали, толщина,
+  утепление, цена, артикул, наличие.
+- Один `PRODUCT` имеет много `SKU`.
+- SEO-важный `SKU` должен иметь собственный canonical URL.
+- Frontend использует один переиспользуемый Product Detail component, который получает данные
+  выбранного варианта из backend API. Дублировать React-страницы под диаметры, длины и стали нельзя.
+
+Подробное решение зафиксировано в `PRODUCT_VARIANT_SEO_ARCHITECTURE.md`.
+
 ### 6.2 Основные таблицы
 
 #### categories
@@ -486,7 +499,43 @@ is_active
 updated_at
 ```
 
-### 8.4 Schema.org
+### 8.4 Canonical URL для вариантов товаров
+
+Каждая SEO-важная покупаемая позиция должна иметь отдельный canonical URL, но рендериться через один
+Product Detail component.
+
+Примеры:
+
+```text
+/catalog/single-wall-pipe/d115-1000-aisi430
+/catalog/single-wall-pipe/d150-1000-aisi430
+/catalog/single-wall-pipe/d200-500-aisi304
+/catalog/sandwich-pipe-50mm/d115-1000-aisi430
+```
+
+Где:
+
+- `single-wall-pipe` или `sandwich-pipe-50mm` — slug логического товара;
+- `d115-1000-aisi430` — slug конкретного варианта/SKU.
+
+При выборе другого диаметра, длины, стали или другого SEO-значимого параметра frontend должен:
+
+- обновить URL через Next.js routing без полной перезагрузки страницы;
+- запросить у backend данные нового Variant/SKU;
+- обновить цену, артикул, характеристики, документы, чертежи, совместимость, наличие и SEO metadata;
+- сохранить общий layout карточки.
+
+Backend должен возвращать для варианта:
+
+- `title`;
+- `description`;
+- `h1`;
+- `canonical_url`;
+- OpenGraph metadata;
+- `Schema.org Product` + `Offer`;
+- breadcrumbs.
+
+### 8.5 Schema.org
 
 Использовать:
 
@@ -509,8 +558,10 @@ updated_at
 GET    /api/v1/catalog/tree
 GET    /api/v1/catalog/categories/{slug}
 GET    /api/v1/catalog/categories/{slug}/products
-GET    /api/v1/products/{slug}
-GET    /api/v1/products/{slug}/related
+GET    /api/v1/products/{product_slug}
+GET    /api/v1/products/{product_slug}/variants
+GET    /api/v1/products/{product_slug}/variants/{variant_slug}
+GET    /api/v1/products/{product_slug}/variants/{variant_slug}/related
 GET    /api/v1/search?q=
 
 GET    /api/v1/seo/page?path=
@@ -923,4 +974,3 @@ MVP:
 - умный поиск;
 - проектные сметы;
 - аналитику спроса.
-
