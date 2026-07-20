@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
+from app.modules.compatibility.service import context_from_product_sku, evaluate_rules, list_active_rules
 from app.modules.products.schemas import (
     ProductFiltersResponse,
     ProductKindFilter,
@@ -95,4 +96,14 @@ async def read_product(slug: str, session: AsyncSession = Depends(get_db)) -> Pr
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
-    return ProductRead.model_validate(product)
+    product_read = ProductRead.model_validate(product)
+    rules = await list_active_rules(session)
+    sku_by_id = {sku.id: sku for sku in product.skus}
+
+    for sku_read in product_read.skus:
+        sku = sku_by_id.get(sku_read.id)
+        if sku is None:
+            continue
+        sku_read.compatibility_messages = evaluate_rules(rules, context_from_product_sku(product, sku))
+
+    return product_read

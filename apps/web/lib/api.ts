@@ -29,6 +29,12 @@ export type SKU = {
   price_rub: string | null;
   stock_status: string;
   attributes: Record<string, unknown>;
+  compatibility_messages: Array<{
+    code: string;
+    severity: "info" | "warning" | "error" | string;
+    message: string;
+    rule_type: string;
+  }>;
 };
 
 export type ProductListItem = {

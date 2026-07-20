@@ -2,7 +2,9 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.modules.compatibility.schemas import CompatibilityMessage
 
 
 class CategorySummary(BaseModel):
@@ -30,6 +32,7 @@ class SKURead(BaseModel):
     price_rub: Decimal | None
     stock_status: str
     attributes: dict[str, Any]
+    compatibility_messages: list[CompatibilityMessage] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 

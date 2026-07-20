@@ -1164,6 +1164,65 @@ ul {
   font-size: 13px;
 }
 
+.compat-rule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.compat-rule {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.compat-rule strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.compat-rule p {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.compat-rule-info {
+  background: var(--ok-soft);
+}
+
+.compat-rule-info svg,
+.compat-rule-info strong {
+  color: var(--ok);
+}
+
+.compat-rule-warning {
+  background: rgba(255, 183, 77, 0.14);
+}
+
+.compat-rule-warning svg,
+.compat-rule-warning strong {
+  color: #a86500;
+}
+
+.compat-rule-error {
+  background: var(--danger-soft);
+}
+
+.compat-rule-error svg,
+.compat-rule-error strong {
+  color: #be2c2c;
+}
+
 .doc-list {
   display: flex;
   flex-direction: column;

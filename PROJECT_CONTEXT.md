@@ -101,6 +101,8 @@
 
 - `GET /api/v1/health`
 - `GET /api/v1/catalog/tree`
+- `GET /api/v1/compatibility/rules`
+- `POST /api/v1/compatibility/check`
 - `GET /api/v1/products?limit=&offset=&product_kind=`
 - `GET /api/v1/products/filters`
 - `GET /api/v1/products/{slug}`
@@ -129,6 +131,10 @@
 
 - `backend/alembic/versions/202607200002_sku_variant_fields.py`
 
+Первый слой правил совместимости выполнен миграцией:
+
+- `backend/alembic/versions/202607200003_compatibility_rules.py`
+
 Теперь `skus` содержит variant-поля:
 
 - `slug`
@@ -141,6 +147,33 @@
 - `wall_thickness_mm`
 - `contour`
 - `insulation_mm`
+
+Таблица `compatibility_rules` хранит правила, которые применяются к Variant/SKU и сценариям
+конфигуратора:
+
+- `conditions jsonb`;
+- `result jsonb`;
+- `severity = info/warning/error`;
+- `message`;
+- `applies_to_product_kind`.
+
+Seed базовых правил:
+
+```bash
+python -m app.db.seed_compatibility_rules
+```
+
+На 2026-07-20 засеяно `11` правил:
+
+- улица/чердак/холодная зона требуют `contour = сэндвич`;
+- одноконтурные элементы — только теплая зона/стартовый участок;
+- рабочий диаметр комплекта должен совпадать;
+- сэндвич должен иметь `insulation_mm`;
+- сэндвич 50 мм — базовый наружный/холодный контур;
+- крепеж подбирается по наружному диаметру;
+- тройник должен оставлять доступ к ревизии;
+- оголовок ставится только сверху системы;
+- газовый котел требует проверки стали.
 
 Импортер JSON-прайса:
 
@@ -242,6 +275,7 @@ python -m app.db.group_products_into_variants
 - карточка товара;
 - медиа-блок карточки товара с временными изображениями.
 - фильтрация каталога по типу изделия через `product_kind`.
+- вывод сообщений совместимости на карточке из `compatibility_rules` для выбранного SKU.
 
 На главной главный CTA сейчас:
 

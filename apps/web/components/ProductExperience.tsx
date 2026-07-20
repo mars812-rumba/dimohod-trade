@@ -47,20 +47,6 @@ const faqItems = [
   },
 ];
 
-const compatOk = [
-  "Банные печи с диаметром патрубка 115 мм",
-  "Камины с вкладышем диаметром 115 мм",
-  "Твердотопливные котлы с диаметром 115 мм",
-  "Монтаж через кровлю с проходным узлом",
-  "Внутренняя прокладка по стене",
-];
-
-const compatNo = [
-  "Газовые котлы с конденсатом без кислотостойкой стали",
-  "Диаметр 120 мм без переходника",
-  "Уличные холодные участки без утеплителя",
-];
-
 const docs = [
   { icon: FileText, label: "Сертификат пожарной безопасности", note: "PDF" },
   { icon: ShieldCheck, label: "Паспорт изделия", note: "PDF" },
@@ -125,6 +111,7 @@ export function ProductExperience({ product }: { product: Product }) {
   const wallThicknessMm = activeSku?.wall_thickness_mm ?? product.wall_thickness_mm;
   const contour = activeSku?.contour ?? product.contour;
   const insulationMm = activeSku?.insulation_mm ?? product.insulation_mm;
+  const compatibilityMessages = activeSku?.compatibility_messages ?? [];
 
   return (
     <main className="page">
@@ -248,28 +235,33 @@ export function ProductExperience({ product }: { product: Product }) {
 
           <section className="product-section">
             <h2 className="product-section-title">Совместимость</h2>
-            <div className="compat-grid">
-              <div className="compat-block compat-ok">
-                <p className="compat-label">
-                  <CheckCircle2 size={15} /> Подходит для
-                </p>
-                <ul>
-                  {compatOk.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+            {compatibilityMessages.length > 0 ? (
+              <div className="compat-rule-list">
+                {compatibilityMessages.map((message) => {
+                  const Icon = message.severity === "error" ? XCircle : message.severity === "warning" ? Info : CheckCircle2;
+                  return (
+                    <div className={`compat-rule compat-rule-${message.severity}`} key={message.code}>
+                      <Icon size={16} />
+                      <div>
+                        <strong>
+                          {message.severity === "error"
+                            ? "Запрет"
+                            : message.severity === "warning"
+                              ? "Требует внимания"
+                              : "Подсказка"}
+                        </strong>
+                        <p>{message.message}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="compat-block compat-no">
-                <p className="compat-label">
-                  <XCircle size={15} /> Не применять
-                </p>
-                <ul>
-                  {compatNo.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+            ) : (
+              <div className="compat-note">
+                <Info size={15} />
+                Для выбранного варианта пока нет специальных правил совместимости.
               </div>
-            </div>
+            )}
             {product.compatibility_notes ? (
               <div className="compat-note">
                 <Info size={15} />
