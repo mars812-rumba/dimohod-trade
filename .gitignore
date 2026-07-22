@@ -18,4 +18,5 @@ coverage/
 
 *.pyc
 *.log
+.codex-telegram/
 .DS_Store
