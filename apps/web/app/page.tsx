@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -22,163 +23,175 @@ import {
   Zap,
 } from "lucide-react";
 
+export const metadata: Metadata = {
+  title: "Дымоход Трейд — подбор и каталог дымоходных систем",
+  description:
+    "Подбор совместимого комплекта дымохода для бани, камина, газового и твердотопливного котла. Каталог, документы, схемы монтажа и заявка инженеру.",
+};
+
 const scenarios = [
   {
     icon: FlameKindling,
     slug: "banya",
     title: "Баня и сауна",
-    desc: "Высокая температура, деревянные перекрытия, проходка и пожарные отступы.",
-    result: "Комплект от печи до оголовка",
-    badge: "самый частый",
+    desc: "Высокая температура, влажность, деревянные перекрытия и безопасная проходка.",
+    result: "Сэндвич на улице + безопасный узел прохода",
+    badge: "частый запрос",
   },
   {
     icon: Home,
     slug: "kamin",
     title: "Камин",
-    desc: "Вертикальный канал, эстетика в помещении, ревизия и подключение к топке.",
-    result: "Схема подключения и список элементов",
+    desc: "Эстетика в помещении, стабильная тяга, ревизия и корректное подключение к топке.",
+    result: "Система от топки до оголовка",
     badge: null,
   },
   {
     icon: Waves,
     slug: "gaz",
-    title: "Газовый котел",
-    desc: "Конденсат, герметичность, кислотостойкая сталь и требования к материалам.",
-    result: "Безопасная система под оборудование",
+    title: "Газовый котёл",
+    desc: "Конденсат, герметичность, кислотостойкая сталь и требования производителя котла.",
+    result: "Подбор стали и диаметра без угадывания",
     badge: null,
   },
   {
     icon: Zap,
     slug: "tt-kotel",
-    title: "Твердотопливный котел",
-    desc: "Температура, тяга, смолы, толщина стали и устойчивость к перегреву.",
-    result: "Подбор стали, диаметра и высоты",
+    title: "Твердотопливный котёл",
+    desc: "Температура, сажа, смолы, толщина стали и устойчивость к перегреву.",
+    result: "Комплект под температуру и тягу",
     badge: null,
   },
   {
     icon: Wrench,
     slug: "gilzovanie",
-    title: "Гильзование канала",
-    desc: "Ремонт старой шахты, вставка нержавеющего канала, ревизии и конденсатоотвод.",
-    result: "План восстановления дымового канала",
+    title: "Гильзование шахты",
+    desc: "Восстановление кирпичного канала, ревизии, конденсатоотвод и овальные элементы.",
+    result: "План ремонта старого канала",
     badge: null,
   },
 ];
 
-const marketGaps = [
+const researchPrinciples = [
   {
-    title: "Маркетплейс продает деталь",
-    text: "Быстро купить трубу можно почти везде, но покупатель все равно остается один на один с вопросом: подойдет ли она к моей печи?",
+    title: "Продаём систему, а не отдельную трубу",
+    text: "Покупатель приходит не за SKU, а за уверенностью: какой диаметр, где нужен сэндвич, какой проходной узел и что обязательно добавить к заказу.",
   },
   {
-    title: "Производитель показывает каталог",
-    text: "Каталог полезен монтажнику, но новичку нужен перевод задачи в комплект: диаметр, проходка, крепеж, ревизия, оголовок.",
+    title: "Скорость маркетплейса + ответственность инженера",
+    text: "Берём быстрые фильтры, наличие и понятную цену, но добавляем проверку совместимости, документы и монтажные ограничения.",
   },
   {
-    title: "Ошибка стоит дорого",
-    text: "Неправильный материал, диаметр или проход через перекрытие — это не просто возврат товара, а риск для безопасности.",
+    title: "Два входа: новичок и монтажник",
+    text: "Новичок идёт через сценарий и расчёт комплекта. Профессионал сразу открывает каталог, фильтры и артикулы.",
   },
 ];
 
-const calculatorSteps = [
+const selectorSteps = [
   {
     icon: FlameKindling,
-    title: "1. Источник тепла",
-    text: "Банная печь, камин, газовый или твердотопливный котел.",
+    title: "Источник тепла",
+    text: "Печь, камин, газовый или твердотопливный котёл.",
   },
   {
     icon: Ruler,
-    title: "2. Диаметр и маршрут",
+    title: "Диаметр и маршрут",
     text: "Патрубок, высота, повороты, проход через стену или кровлю.",
   },
   {
     icon: ShieldCheck,
-    title: "3. Безопасность",
-    text: "Материал, изоляция, отступы, узлы прохода и совместимость.",
+    title: "Безопасность",
+    text: "Материал, утепление, температура, наружные участки и узлы прохода.",
   },
   {
     icon: ClipboardCheck,
-    title: "4. Спецификация",
+    title: "Спецификация",
     text: "BOM-комплект, цена, документы и заявка инженеру.",
   },
 ];
 
-const catalogEntries = [
-  "Сэндвич-трубы",
-  "Одноконтурные трубы",
-  "Отводы и колена",
-  "Тройники и ревизии",
-  "Проходные узлы",
-  "Оголовки и дефлекторы",
-  "Хомуты и крепеж",
-  "Стартовые элементы",
+const catalogGroups = [
+  {
+    title: "Одноконтурные дымоходы",
+    desc: "Участки внутри помещения, подключение к печи, стартовые элементы и переходы.",
+    tags: ["трубы", "отводы", "тройники", "ревизии"],
+  },
+  {
+    title: "Сэндвич-системы",
+    desc: "Улица, холодные зоны, проходы через кровлю и безопасная работа наружного контура.",
+    tags: ["утепление 50 мм", "наружный контур", "оголовки", "хомуты"],
+  },
+  {
+    title: "Узлы монтажа",
+    desc: "Проходные элементы, крепления, конденсатоотводы, финишные детали и документы.",
+    tags: ["ППУ", "кронштейны", "зонты", "сертификаты"],
+  },
 ];
 
 const compatibilityChecks = [
-  "Диаметр внутреннего канала и патрубка",
-  "Марка стали под температуру и конденсат",
-  "Переходы между одноконтурным и сэндвич-участком",
+  "Диаметр патрубка и внутреннего канала",
+  "Контур: внутри можно одноконтурный, по улице — только сэндвич",
+  "Марка стали под топливо, температуру и конденсат",
   "Проход через дерево, стену и кровлю",
-  "Совместимость тройников, ревизий и оголовка",
+  "Совместимость тройников, ревизий, оголовков и крепежа",
   "Документы: сертификаты, инструкции, пожарная безопасность",
 ];
 
 const productCardBlocks = [
   {
     icon: Camera,
-    title: "Фото, чертеж, монтаж",
-    text: "Главное фото изделия, размерный чертеж и фото в установленной системе.",
+    title: "Фото, чертёж, монтаж",
+    text: "Главный вид изделия, размерный чертёж и фото детали в собранной системе.",
   },
   {
     icon: Gauge,
-    title: "Характеристики и SKU",
-    text: "Диаметр, сталь, толщина, длина, артикулы, цены и остатки.",
+    title: "Характеристики SKU",
+    text: "Диаметр, длина, сталь, толщина, утепление, артикул, цена и наличие из базы.",
   },
   {
     icon: CheckCircle2,
     title: "Совместимость",
-    text: "С чем работает, где нельзя применять, какие элементы нужны рядом.",
+    text: "Где применять можно, где нельзя, какие соседние элементы нужны рядом.",
   },
   {
     icon: FileText,
-    title: "Документы",
-    text: "Сертификаты, инструкции по монтажу и материалы по пожарной безопасности.",
+    title: "Документы и SEO",
+    text: "Паспорта, инструкции, FAQ, Schema.org и отдельный SEO-URL для вариантов.",
   },
 ];
 
-const mediaBlocks = [
+const knowledgeBlocks = [
   {
     icon: Video,
     title: "Видео монтажа",
-    text: "Короткие ролики по проходке, стыковке, креплению и ревизии.",
+    text: "Короткие ролики: как собрать стык, пройти перекрытие, закрепить трубу и поставить ревизию.",
   },
   {
     icon: FileText,
-    title: "Инструкции и сертификаты",
-    text: "PDF-документы рядом с карточкой и в базе знаний.",
+    title: "Сертификаты и инструкции",
+    text: "Документы должны быть рядом с карточкой, а не спрятаны в отдельном разделе.",
   },
   {
     icon: Truck,
-    title: "Доставка и комплектация",
-    text: "Проверка комплекта перед отгрузкой, доставка по России.",
+    title: "Комплектация и доставка",
+    text: "Перед отгрузкой проверяем совместимость списка и доставляем комплект по России.",
   },
 ];
 
 export default function HomePage() {
   return (
-    <main className="home-wireframe">
-      <section className="wire-hero">
-        <div className="page wire-hero-grid">
-          <div className="wire-hero-copy">
-            <p className="eyebrow">Каркас главной · платформа подбора дымоходных систем</p>
+    <main className="home-page">
+      <section className="home-hero">
+        <div className="page home-hero-grid">
+          <div className="home-hero-copy">
+            <p className="eyebrow">Дымоходные системы · подбор · каталог · документы</p>
             <h1>
-              Помогаем купить не трубу,
-              <br />
-              <span className="accent-text">а безопасный комплект дымохода.</span>
+              Подберём дымоход,
+              <span> который подходит к вашей печи и монтажу.</span>
             </h1>
             <p className="lead">
-              Главная должна быстро понять задачу клиента: баня, камин, котел или гильзование —
-              и привести его к совместимой спецификации, заявке инженеру или нужной категории.
+              Дымоход Трейд помогает собрать совместимый комплект: от первого метра трубы до
+              проходного узла, крепежа, оголовка, документов и заявки инженеру.
             </p>
             <div className="actions">
               <a className="button" href="tel:+79650756555">
@@ -188,22 +201,32 @@ export default function HomePage() {
                 Открыть каталог <ShoppingBag size={17} />
               </Link>
             </div>
+            <div className="hero-metrics" aria-label="Ключевые преимущества">
+              <div>
+                <strong>6 300+</strong>
+                <span>SKU уже в базе</span>
+              </div>
+              <div>
+                <strong>40</strong>
+                <span>логических изделий</span>
+              </div>
+              <div>
+                <strong>0</strong>
+                <span>угадываний диаметра</span>
+              </div>
+            </div>
           </div>
 
-          <aside className="wire-selector" aria-label="Быстрый выбор сценария">
-            <div className="wire-selector-head">
-              <span>01</span>
-              <strong>Сначала сценарий, потом товар</strong>
+          <aside className="selector-panel" aria-label="Быстрый подбор дымохода">
+            <div className="selector-head">
+              <span>Product Finder</span>
+              <strong>Начните с задачи — мы соберём детали.</strong>
             </div>
-            <div className="wire-scenario-list">
+            <div className="selector-list">
               {scenarios.map((scenario) => {
                 const Icon = scenario.icon;
                 return (
-                  <Link
-                    key={scenario.slug}
-                    className="wire-scenario-row"
-                    href={`/catalog?scenario=${scenario.slug}`}
-                  >
+                  <Link key={scenario.slug} className="selector-row" href={`/catalog?scenario=${scenario.slug}`}>
                     <span className="scenario-icon-wrap">
                       <Icon size={18} />
                     </span>
@@ -221,27 +244,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="wire-strip">
-        <div className="page wire-strip-grid">
-          <div>
+      <section className="trust-strip">
+        <div className="page trust-inner">
+          <div className="trust-item">
             <ShieldCheck size={20} />
-            <strong>Совместимость важнее корзины</strong>
-            <span>Главный конверсионный путь — заявка из подбора.</span>
+            <div>
+              <strong>Проверка совместимости</strong>
+              <span>диаметр, сталь, контур, температура, проходы</span>
+            </div>
           </div>
-          <div>
+          <div className="trust-item">
             <ShoppingBag size={20} />
-            <strong>Каталог остается быстрым</strong>
-            <span>Профессионал должен сразу найти артикул и цену.</span>
+            <div>
+              <strong>Каталог для монтажника</strong>
+              <span>артикулы, цены, варианты и фильтры</span>
+            </div>
           </div>
-          <div>
+          <div className="trust-item">
             <FileText size={20} />
-            <strong>Документы рядом с товаром</strong>
-            <span>Сертификаты, инструкции, пожарная безопасность.</span>
+            <div>
+              <strong>Документы рядом</strong>
+              <span>сертификаты, инструкции, пожарная безопасность</span>
+            </div>
           </div>
-          <div>
-            <Truck size={20} />
-            <strong>Доставка по России</strong>
-            <span>Комплектуем заказ из Санкт-Петербурга.</span>
+          <div className="trust-item">
+            <Phone size={20} />
+            <div>
+              <strong>Инженер на связи</strong>
+              <span>проверим комплект перед заказом</span>
+            </div>
           </div>
         </div>
       </section>
@@ -249,56 +280,52 @@ export default function HomePage() {
       <section className="page section">
         <div className="section-head">
           <div>
-            <p className="eyebrow">Почему такой каркас</p>
-            <h2>Рынку не хватает не ассортимента, а уверенности в выборе.</h2>
+            <p className="eyebrow">UX-вывод исследования</p>
+            <h2>Лучший сайт дымоходов должен закрыть страх ошибки.</h2>
           </div>
           <p className="section-lead">
-            По архитектуре проекта мы строим платформу подбора: SEO-сценарии приводят трафик,
-            каталог дает ассортимент, калькулятор собирает комплект, а инженерская заявка снимает
-            риск несовместимости.
+            В исследовании видно: рынок умеет показывать каталоги, но редко объясняет безопасную
+            систему целиком. Поэтому главная строится вокруг подбора, доверия и понятного пути в
+            комплект.
           </p>
         </div>
 
-        <div className="wire-card-grid three">
-          {marketGaps.map((gap) => (
-            <article key={gap.title} className="wire-card">
-              <span className="wire-card-index">рынок</span>
-              <h3>{gap.title}</h3>
-              <p>{gap.text}</p>
+        <div className="principle-grid">
+          {researchPrinciples.map((principle, index) => (
+            <article key={principle.title} className="principle-card">
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <h3>{principle.title}</h3>
+              <p>{principle.text}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="wire-muted-section">
+      <section className="soft-section">
         <div className="page">
           <div className="section-head">
             <div>
               <p className="eyebrow">Сценарные входы</p>
-              <h2>Пять главных дверей на сайт.</h2>
+              <h2>Пять дверей для клиента: от бани до гильзования.</h2>
             </div>
             <p className="section-lead">
-              Эти блоки потом станут SEO-посадочными: “дымоход для бани”, “дымоход для камина”,
-              “дымоход для газового котла” и так далее.
+              Эти блоки станут SEO-посадочными страницами: “дымоход для бани”, “для камина”,
+              “для газового котла”, “через стену”, “для кирпичной шахты”.
             </p>
           </div>
 
-          <div className="wire-card-grid five">
+          <div className="scenario-grid">
             {scenarios.map((scenario) => {
               const Icon = scenario.icon;
               return (
-                <Link
-                  key={scenario.slug}
-                  className="wire-scenario-card"
-                  href={`/catalog?scenario=${scenario.slug}`}
-                >
+                <Link key={scenario.slug} className="scenario-card" href={`/catalog?scenario=${scenario.slug}`}>
                   <span className="scenario-card-icon">
                     <Icon size={24} />
                   </span>
                   <h3>{scenario.title}</h3>
                   <p>{scenario.desc}</p>
                   <span className="scenario-card-link">
-                    Открыть подбор <ArrowRight size={14} />
+                    Перейти к подбору <ArrowRight size={14} />
                   </span>
                 </Link>
               );
@@ -310,20 +337,20 @@ export default function HomePage() {
       <section className="page section">
         <div className="section-head">
           <div>
-            <p className="eyebrow">Калькулятор v1</p>
-            <h2>Главный интерактивный блок: собрать комплект.</h2>
+            <p className="eyebrow">Конфигуратор комплекта</p>
+            <h2>Главный интерактивный продукт — не калькулятор цены, а спецификация.</h2>
           </div>
           <p className="section-lead">
-            На первом этапе это может быть форма-заявка с пошаговыми вопросами. Позже — полноценный
-            rule engine, BOM-смета и PDF-спецификация.
+            MVP может начинаться как заявка из четырёх вопросов. Дальше — rule engine, BOM,
+            PDF-смета и база совместимости печей/котлов.
           </p>
         </div>
 
-        <div className="wire-flow">
-          {calculatorSteps.map((step) => {
+        <div className="selector-flow">
+          {selectorSteps.map((step) => {
             const Icon = step.icon;
             return (
-              <article key={step.title} className="wire-step-card">
+              <article key={step.title} className="step-card">
                 <span>
                   <Icon size={21} />
                 </span>
@@ -335,41 +362,48 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="page section wire-split">
+      <section className="page section catalog-split">
         <div>
           <p className="eyebrow">Каталог</p>
           <h2>Быстрый путь для тех, кто уже знает деталь.</h2>
           <p className="section-lead">
-            Каталог на главной нужен не как простая витрина, а как понятная карта системы:
-            трубы, соединения, проходки, крепеж, завершение канала.
+            Каталог остаётся техническим: Product → Variant → SKU. Одна карточка изделия,
+            множество вариантов по диаметру, длине, стали, толщине и утеплению.
           </p>
-          <Link className="button wire-inline-button" href="/catalog">
-            Смотреть все категории <ArrowRight size={16} />
+          <Link className="button inline-button" href="/catalog">
+            Смотреть каталог <ArrowRight size={16} />
           </Link>
         </div>
 
-        <div className="wire-category-map">
-          {catalogEntries.map((entry) => (
-            <Link key={entry} href="/catalog" className="wire-category-pill">
-              {entry}
-              <ChevronRight size={14} />
-            </Link>
+        <div className="catalog-group-grid">
+          {catalogGroups.map((group) => (
+            <article key={group.title} className="catalog-group-card">
+              <h3>{group.title}</h3>
+              <p>{group.desc}</p>
+              <div className="tag-row">
+                {group.tags.map((tag) => (
+                  <span key={tag} className="chip">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="wire-dark-section">
-        <div className="page wire-split">
+      <section className="dark-section">
+        <div className="page compatibility-grid">
           <div>
             <p className="eyebrow">Совместимость</p>
-            <h2>Блок доверия: что именно мы проверяем.</h2>
+            <h2>Что мы проверяем до заявки.</h2>
             <p>
-              Это должно быть видно уже на главной: мы не просто “перезваниваем”, а проверяем
-              техническую связку элементов и условия монтажа.
+              Наша логика должна быть видна на главной: покупатель понимает, что получает не
+              обратный звонок “как у всех”, а проверку технической связки элементов.
             </p>
           </div>
 
-          <ul className="wire-check-list">
+          <ul className="check-list">
             {compatibilityChecks.map((check) => (
               <li key={check}>
                 <CheckCircle2 size={18} />
@@ -380,32 +414,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="page section">
+      <section className="page section product-preview-section">
         <div className="section-head">
           <div>
             <p className="eyebrow">Карточка товара</p>
-            <h2>Главная должна заранее объяснять, что будет внутри карточки.</h2>
+            <h2>Карточка должна объяснять изделие, вариант и риск применения.</h2>
           </div>
           <p className="section-lead">
-            Для дымоходов карточка товара — это не только цена. В ней должны быть фото, чертеж,
-            характеристики, совместимость, документы и монтажные материалы.
+            Каждая SEO-важная вариация получает canonical URL, но интерфейс остаётся единым:
+            меняются данные, характеристики, документы, цена и совместимость.
           </p>
         </div>
 
-        <div className="wire-product-anatomy">
-          <div className="wire-product-preview">
-            <div className="wire-image-placeholder">Фото изделия</div>
-            <div className="wire-thumb-row">
-              <span>Чертеж</span>
-              <span>В системе</span>
-              <span>Видео</span>
+        <div className="product-anatomy">
+          <div className="product-mock">
+            <div className="product-mock-image">
+              <span>Сэндвич-труба 115/200</span>
+              <small>фото · чертёж · в системе</small>
+            </div>
+            <div className="product-mock-specs">
+              <span>D 115/200</span>
+              <span>AISI 430</span>
+              <span>изоляция 50 мм</span>
             </div>
           </div>
-          <div className="wire-card-grid two">
+          <div className="product-feature-grid">
             {productCardBlocks.map((block) => {
               const Icon = block.icon;
               return (
-                <article key={block.title} className="wire-card compact">
+                <article key={block.title} className="feature-card">
                   <Icon size={20} />
                   <h3>{block.title}</h3>
                   <p>{block.text}</p>
@@ -416,24 +453,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="wire-muted-section">
+      <section className="soft-section">
         <div className="page">
           <div className="section-head">
             <div>
-              <p className="eyebrow">Медиа и база знаний</p>
-              <h2>Фото, видео и документы — отдельный слой доверия.</h2>
+              <p className="eyebrow">DIY Help + документы</p>
+              <h2>Обучение должно вести не в блог, а в правильный комплект.</h2>
             </div>
             <p className="section-lead">
-              Логику хранения мы уже ведем к структуре product/media: фото, видео и documents.
-              На главной этот слой стоит показать как обещание прозрачности.
+              Лучшие зарубежные сайты совмещают магазин, инструкции, калькуляторы и помощь
+              эксперта. Мы делаем так же: знания рядом с товаром и подбором.
             </p>
           </div>
 
-          <div className="wire-card-grid three">
-            {mediaBlocks.map((block) => {
+          <div className="knowledge-grid">
+            {knowledgeBlocks.map((block) => {
               const Icon = block.icon;
               return (
-                <article key={block.title} className="wire-card">
+                <article key={block.title} className="feature-card">
                   <Icon size={22} />
                   <h3>{block.title}</h3>
                   <p>{block.text}</p>
@@ -444,29 +481,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="wire-lead-section">
-        <div className="page wire-lead-card">
+      <section className="lead-section">
+        <div className="page lead-card">
           <div>
-            <p className="eyebrow">Финальный CTA</p>
-            <h2>Пришлите фото печи — соберем совместимый комплект.</h2>
+            <p className="eyebrow">Заявка инженеру</p>
+            <h2>Пришлите фото печи или план — соберём безопасный комплект.</h2>
             <p>
-              Для MVP этот блок ведет в заявку. Потом сюда добавим загрузку фото, выбор сценария,
+              Для MVP этот блок ведёт в звонок или письмо. Позже добавим загрузку фото,
               автосборку BOM и статус обработки в админке.
             </p>
           </div>
 
-          <div className="wire-lead-form">
-            <div className="wire-input">Имя и телефон</div>
-            <div className="wire-input">Сценарий: баня / камин / котел</div>
-            <div className="wire-input tall">Фото, план или комментарий</div>
-            <div className="actions">
-              <a href="tel:+79650756555" className="button">
-                <Phone size={16} /> Позвонить
-              </a>
-              <a href="mailto:office@dimohod-trade.ru" className="button secondary">
-                <Mail size={16} /> Отправить материалы
-              </a>
-            </div>
+          <div className="lead-actions">
+            <a href="tel:+79650756555" className="button">
+              <Phone size={16} /> Позвонить инженеру
+            </a>
+            <a href="mailto:office@dimohod-trade.ru" className="button secondary">
+              <Mail size={16} /> Отправить материалы
+            </a>
           </div>
         </div>
       </section>
