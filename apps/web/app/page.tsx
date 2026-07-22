@@ -37,6 +37,7 @@ const scenarios = [
     desc: "Высокая температура, влажность, деревянные перекрытия и безопасная проходка.",
     result: "Сэндвич на улице + безопасный узел прохода",
     badge: "частый запрос",
+    image: "/images/home/scenario-banya.webp",
   },
   {
     icon: Home,
@@ -45,6 +46,7 @@ const scenarios = [
     desc: "Эстетика в помещении, стабильная тяга, ревизия и корректное подключение к топке.",
     result: "Система от топки до оголовка",
     badge: null,
+    image: "/images/home/scenario-kamin.webp",
   },
   {
     icon: Waves,
@@ -53,6 +55,7 @@ const scenarios = [
     desc: "Конденсат, герметичность, кислотостойкая сталь и требования производителя котла.",
     result: "Подбор стали и диаметра без угадывания",
     badge: null,
+    image: "/images/home/scenario-gaz.webp",
   },
   {
     icon: Zap,
@@ -61,6 +64,7 @@ const scenarios = [
     desc: "Температура, сажа, смолы, толщина стали и устойчивость к перегреву.",
     result: "Комплект под температуру и тягу",
     badge: null,
+    image: "/images/home/scenario-tt-kotel.webp",
   },
   {
     icon: Wrench,
@@ -69,6 +73,7 @@ const scenarios = [
     desc: "Восстановление кирпичного канала, ревизии, конденсатоотвод и овальные элементы.",
     result: "План ремонта старого канала",
     badge: null,
+    image: "/images/home/scenario-gilzovanie.webp",
   },
 ];
 
@@ -178,6 +183,9 @@ const knowledgeBlocks = [
   },
 ];
 
+const basePath = process.env.NEXT_BASE_PATH ?? "";
+const assetUrl = (path: string) => `${basePath}${path}`;
+
 export default function HomePage() {
   return (
     <main className="home-page">
@@ -194,7 +202,7 @@ export default function HomePage() {
               проходного узла, крепежа, оголовка, документов и заявки инженеру.
             </p>
             <div className="actions">
-              <a className="button" href="tel:+79650756555">
+              <a className="button" href="#calculator">
                 Рассчитать комплект <ArrowRight size={17} />
               </a>
               <Link href="/catalog" className="button secondary">
@@ -217,30 +225,43 @@ export default function HomePage() {
             </div>
           </div>
 
-          <aside className="selector-panel" aria-label="Быстрый подбор дымохода">
-            <div className="selector-head">
-              <span>Product Finder</span>
-              <strong>Начните с задачи — мы соберём детали.</strong>
+          <div className="hero-side">
+            <aside className="selector-panel" aria-label="Быстрый подбор дымохода">
+              <div className="selector-head">
+                <span>Product Finder</span>
+                <strong>Начните с задачи — мы соберём детали.</strong>
+              </div>
+              <div className="selector-list">
+                {scenarios.map((scenario) => {
+                  const Icon = scenario.icon;
+                  return (
+                    <Link key={scenario.slug} className="selector-row" href={`/catalog?scenario=${scenario.slug}`}>
+                      <span className="scenario-icon-wrap">
+                        <Icon size={18} />
+                      </span>
+                      <span>
+                        <strong>{scenario.title}</strong>
+                        <small>{scenario.result}</small>
+                      </span>
+                      {scenario.badge ? <em>{scenario.badge}</em> : null}
+                      <ChevronRight size={16} />
+                    </Link>
+                  );
+                })}
+              </div>
+            </aside>
+
+            <div className="hero-visual" aria-label="Сэндвич дымоход на фасаде деревянного дома">
+              <img
+                src={assetUrl("/images/home/hero-chimney-system.webp")}
+                alt="Сэндвич дымоход из нержавеющей стали на фасаде деревянного дома"
+              />
+              <div className="hero-visual-caption">
+                <strong>Безопасный наружный участок</strong>
+                <span>по улице используем только сэндвич-систему</span>
+              </div>
             </div>
-            <div className="selector-list">
-              {scenarios.map((scenario) => {
-                const Icon = scenario.icon;
-                return (
-                  <Link key={scenario.slug} className="selector-row" href={`/catalog?scenario=${scenario.slug}`}>
-                    <span className="scenario-icon-wrap">
-                      <Icon size={18} />
-                    </span>
-                    <span>
-                      <strong>{scenario.title}</strong>
-                      <small>{scenario.result}</small>
-                    </span>
-                    {scenario.badge ? <em>{scenario.badge}</em> : null}
-                    <ChevronRight size={16} />
-                  </Link>
-                );
-              })}
-            </div>
-          </aside>
+          </div>
         </div>
       </section>
 
@@ -319,6 +340,9 @@ export default function HomePage() {
               const Icon = scenario.icon;
               return (
                 <Link key={scenario.slug} className="scenario-card" href={`/catalog?scenario=${scenario.slug}`}>
+                  <span className="scenario-card-image">
+                    <img src={assetUrl(scenario.image)} alt={`${scenario.title}: пример дымоходного решения`} />
+                  </span>
                   <span className="scenario-card-icon">
                     <Icon size={24} />
                   </span>
@@ -334,7 +358,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="page section">
+      <section className="page section" id="calculator">
         <div className="section-head">
           <div>
             <p className="eyebrow">Конфигуратор комплекта</p>
@@ -359,6 +383,24 @@ export default function HomePage() {
               </article>
             );
           })}
+        </div>
+
+        <div className="calculator-start-card">
+          <div>
+            <h3>Начать расчёт комплекта</h3>
+            <p>
+              Выберите сценарий — откроем каталог с нужным контекстом. Полный пошаговый
+              конфигуратор подключим следующим этапом к правилам совместимости и базе SKU.
+            </p>
+          </div>
+          <div className="calculator-start-actions">
+            {scenarios.slice(0, 4).map((scenario) => (
+              <Link key={scenario.slug} href={`/catalog?scenario=${scenario.slug}`} className="calc-chip">
+                {scenario.title}
+                <ChevronRight size={14} />
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
