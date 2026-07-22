@@ -10,6 +10,7 @@ import {
   FlameKindling,
   Gauge,
   Home,
+  Info,
   Mail,
   MapPin,
   Phone,
@@ -22,6 +23,7 @@ import {
   Wrench,
   Zap,
 } from "lucide-react";
+import { getProduct, type Product, type SKU } from "@/lib/api";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 
 export const metadata: Metadata = {
@@ -29,6 +31,10 @@ export const metadata: Metadata = {
   description:
     "Подбор совместимого комплекта дымохода для бани, камина, газового и твердотопливного котла. Каталог, документы, схемы монтажа и заявка инженеру.",
 };
+
+export const dynamic = "force-dynamic";
+
+const featuredProductSlug = "sendvich-truba-115-200-nerzhaveyushchaya-stal-08";
 
 const scenarios = [
   {
@@ -187,7 +193,76 @@ const knowledgeBlocks = [
 const basePath = process.env.NEXT_BASE_PATH ?? "";
 const assetUrl = (path: string) => `${basePath}${path}`;
 
-export default function HomePage() {
+function formatPrice(value: string | null | undefined) {
+  if (!value || Number(value) <= 0) {
+    return "Цена по запросу";
+  }
+
+  return new Intl.NumberFormat("ru-RU", {
+    style: "currency",
+    currency: "RUB",
+    maximumFractionDigits: 0,
+  }).format(Number(value));
+}
+
+function numberAttribute(sku: SKU | null, key: string) {
+  const value = sku?.attributes[key];
+
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim() !== "" && !Number.isNaN(Number(value))) {
+    return Number(value);
+  }
+
+  return null;
+}
+
+function diameterPair(product: Product, sku: SKU | null) {
+  const fromName = product.name.match(/(\d{2,3})\s*\/\s*(\d{2,3})/);
+  const inner = sku?.diameter_mm ?? product.diameter_mm ?? (fromName ? Number(fromName[1]) : null);
+  const outer =
+    sku?.outer_diameter_mm ??
+    (typeof product.extra_attributes.outer_diameter_mm === "number" ? product.extra_attributes.outer_diameter_mm : null) ??
+    (fromName ? Number(fromName[2]) : null);
+
+  if (inner && outer) {
+    return `${inner}/${outer}`;
+  }
+
+  return inner ? `${inner}` : null;
+}
+
+async function getFeaturedProduct() {
+  try {
+    return await getProduct(featuredProductSlug);
+  } catch {
+    return null;
+  }
+}
+
+export default async function HomePage() {
+  const featuredProduct = await getFeaturedProduct();
+  const featuredSku = featuredProduct?.skus[0] ?? null;
+  const featuredDiameter = featuredProduct ? diameterPair(featuredProduct, featuredSku) : null;
+  const featuredLength = featuredSku?.length_mm ?? numberAttribute(featuredSku, "length_mm");
+  const featuredMaterial = featuredSku?.material ?? featuredProduct?.material;
+  const featuredSteelGrade = featuredSku?.steel_grade ?? featuredProduct?.steel_grade;
+  const featuredWallThickness = featuredSku?.wall_thickness_mm ?? featuredProduct?.wall_thickness_mm;
+  const featuredContour = featuredSku?.contour ?? featuredProduct?.contour;
+  const featuredInsulation = featuredSku?.insulation_mm ?? featuredProduct?.insulation_mm;
+  const featuredSpecs = [
+    featuredDiameter ? { label: "Диаметр", value: `D ${featuredDiameter}` } : null,
+    featuredMaterial ? { label: "Материал", value: featuredMaterial } : null,
+    featuredSteelGrade ? { label: "Марка стали", value: featuredSteelGrade } : null,
+    featuredWallThickness ? { label: "Толщина", value: `${featuredWallThickness} мм` } : null,
+    featuredInsulation ? { label: "Утепление", value: `${featuredInsulation} мм` } : null,
+    featuredLength ? { label: "Длина SKU", value: `${featuredLength} мм` } : null,
+    featuredContour ? { label: "Контур", value: featuredContour } : null,
+    featuredProduct?.max_temperature_c ? { label: "Температура", value: `${featuredProduct.max_temperature_c} °C` } : null,
+  ].filter(Boolean) as Array<{ label: string; value: string }>;
+
   return (
     <main className="home-page">
       <section className="home-hero">
@@ -454,17 +529,84 @@ export default function HomePage() {
         </div>
 
         <div className="product-anatomy">
-          <div className="product-mock">
-            <div className="product-mock-image">
-              <span>Сэндвич-труба 115/200</span>
-              <small>фото · чертёж · в системе</small>
+          {featuredProduct ? (
+            <div className="product-mock product-mock-real">
+              <div className="product-mock-image">
+                <span>{featuredProduct.name}</span>
+                <small>
+                  {featuredProduct.category.name}
+                  {featuredProduct.brand ? ` · ${featuredProduct.brand}` : ""}
+                </small>
+              </div>
+
+              <div className="product-mock-content">
+                <div className="product-mock-title-row">
+                  <span className="chip">Данные из PostgreSQL</span>
+                  <span className="chip">{featuredProduct.skus.length} SKU</span>
+                </div>
+                <h3>{featuredProduct.name}</h3>
+                {featuredProduct.short_description ? <p>{featuredProduct.short_description}</p> : null}
+
+                {featuredProduct.application_tags.length > 0 ? (
+                  <div className="tag-row product-mock-tags">
+                    {featuredProduct.application_tags.map((tag) => (
+                      <span className="chip" key={tag}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                {featuredSpecs.length > 0 ? (
+                  <div className="product-mock-specs product-mock-specs-real">
+                    {featuredSpecs.map((spec) => (
+                      <span key={spec.label}>
+                        <small>{spec.label}</small>
+                        <strong>{spec.value}</strong>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                {featuredProduct.skus.length > 0 ? (
+                  <div className="product-mock-skus">
+                    {featuredProduct.skus.slice(0, 3).map((sku) => (
+                      <div className="product-mock-sku-row" key={sku.id}>
+                        <span>
+                          <strong>{sku.name}</strong>
+                          <small>Арт. {sku.article}</small>
+                        </span>
+                        <em>{formatPrice(sku.price_rub)}</em>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {featuredProduct.compatibility_notes ? (
+                  <div className="product-mock-compat">
+                    <Info size={15} />
+                    <span>{featuredProduct.compatibility_notes}</span>
+                  </div>
+                ) : null}
+
+                <Link className="button secondary product-mock-link" href={`/product/${featuredProduct.slug}`}>
+                  Открыть полную карточку <ArrowRight size={15} />
+                </Link>
+              </div>
             </div>
-            <div className="product-mock-specs">
-              <span>D 115/200</span>
-              <span>AISI 430</span>
-              <span>изоляция 50 мм</span>
+          ) : (
+            <div className="product-mock">
+              <div className="product-mock-image">
+                <span>Карточка товара</span>
+                <small>backend временно недоступен</small>
+              </div>
+              <div className="product-mock-specs">
+                <span>Product</span>
+                <span>Variant</span>
+                <span>SKU</span>
+              </div>
             </div>
-          </div>
+          )}
           <div className="product-feature-grid">
             {productCardBlocks.map((block) => {
               const Icon = block.icon;
