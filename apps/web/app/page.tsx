@@ -22,6 +22,7 @@ import {
   Wrench,
   Zap,
 } from "lucide-react";
+import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 
 export const metadata: Metadata = {
   title: "Дымоход Трейд — подбор и каталог дымоходных систем",
@@ -385,23 +386,7 @@ export default function HomePage() {
           })}
         </div>
 
-        <div className="calculator-start-card">
-          <div>
-            <h3>Начать расчёт комплекта</h3>
-            <p>
-              Выберите сценарий — откроем каталог с нужным контекстом. Полный пошаговый
-              конфигуратор подключим следующим этапом к правилам совместимости и базе SKU.
-            </p>
-          </div>
-          <div className="calculator-start-actions">
-            {scenarios.slice(0, 4).map((scenario) => (
-              <Link key={scenario.slug} href={`/catalog?scenario=${scenario.slug}`} className="calc-chip">
-                {scenario.title}
-                <ChevronRight size={14} />
-              </Link>
-            ))}
-          </div>
-        </div>
+        <ChimneyConfigurator assetBasePath={basePath} />
       </section>
 
       <section className="page section catalog-split">
