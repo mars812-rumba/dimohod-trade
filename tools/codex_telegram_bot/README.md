@@ -130,4 +130,6 @@ python3 -m unittest tools.codex_telegram_bot.test_bot
 
 Готовый system unit-файл находится в `deploy/dimohod-codex-bot.service`. В текущем окружении он
 работает от `root`, потому что этому пользователю принадлежат проект и авторизация Codex. Сервис
-ограничивает запись каталогами `/home/dimohod-trade` и `/root/.codex`.
+ограничивает запись каталогами `/home/dimohod-trade`, `/root/.codex` и только
+`/root/.docker/buildx/activity` и `/root/.docker/buildx/refs`. Эти каталоги нужны Docker Buildx
+для служебного состояния сборки; остальная Docker-конфигурация остаётся read-only.

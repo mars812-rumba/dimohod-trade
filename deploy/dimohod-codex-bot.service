@@ -13,12 +13,12 @@ RestartSec=5
 Environment=PYTHONUNBUFFERED=1
 Environment=CODEX_BOT_CODEX_BINARY=/usr/local/bin/codex
 
-# Codex still needs write access to its state and the project workspace.
+# Codex needs its state/workspace; Docker Buildx needs its activity metadata.
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/dimohod-trade /root/.codex
+ReadWritePaths=/home/dimohod-trade /root/.codex /root/.docker/buildx/activity /root/.docker/buildx/refs
 PrivateDevices=true
 RestrictSUIDSGID=true
 LockPersonality=true
