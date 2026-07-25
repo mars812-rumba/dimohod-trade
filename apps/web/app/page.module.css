@@ -31,10 +31,27 @@
   padding: 76px 0 0;
   border-bottom: 1px solid var(--line);
   background:
+    linear-gradient(
+      90deg,
+      rgba(248, 250, 249, 0.99) 0%,
+      rgba(248, 250, 249, 0.96) 40%,
+      rgba(248, 250, 249, 0.7) 57%,
+      rgba(248, 250, 249, 0.06) 82%
+    ),
+    var(--hero-image),
     linear-gradient(rgba(50, 98, 118, 0.075) 1px, transparent 1px),
     linear-gradient(90deg, rgba(50, 98, 118, 0.075) 1px, transparent 1px),
     linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
+  background-position:
+    center,
+    right 32%,
+    center,
+    center,
+    center;
+  background-repeat: no-repeat, no-repeat, repeat, repeat, no-repeat;
   background-size:
+    100% 100%,
+    auto 118%,
     32px 32px,
     32px 32px,
     auto;
@@ -198,56 +215,6 @@
   position: relative;
   align-self: stretch;
   min-height: 620px;
-}
-
-.heroPhoto {
-  position: absolute;
-  inset: 0 0 74px;
-  overflow: hidden;
-  background: var(--steel-deep);
-  clip-path: polygon(9% 0, 100% 0, 100% 100%, 0 100%, 0 9%);
-}
-
-.heroPhoto::before {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(9, 26, 33, 0.08), rgba(9, 26, 33, 0.66)),
-    linear-gradient(90deg, transparent 58%, rgba(9, 26, 33, 0.36));
-  content: "";
-}
-
-.heroPhoto img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.photoLabel {
-  position: absolute;
-  z-index: 2;
-  right: 24px;
-  bottom: 25px;
-  display: grid;
-  gap: 4px;
-  padding: 14px 16px;
-  border-left: 3px solid var(--signal);
-  color: #fff;
-  background: rgba(10, 28, 35, 0.8);
-  backdrop-filter: blur(8px);
-}
-
-.photoLabel span {
-  color: #afc4cc;
-  font-family: ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.photoLabel strong {
-  font-size: 15px;
 }
 
 .systemRule {
@@ -755,10 +722,6 @@
     min-height: 520px;
   }
 
-  .heroPhoto {
-    inset: 0 0 70px;
-  }
-
   .route {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -800,6 +763,18 @@
 
   .hero {
     padding-top: 40px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(248, 250, 249, 0.94) 0%,
+        rgba(248, 250, 249, 0.86) 56%,
+        rgba(248, 250, 249, 0.28) 100%
+      ),
+      var(--hero-image),
+      linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
+    background-position: center, 64% center, center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%, cover, auto;
   }
 
   .heroCopy {
@@ -829,12 +804,15 @@
   }
 
   .heroSystem {
-    min-height: 430px;
+    min-height: 116px;
   }
 
   .systemRule {
-    right: 12px;
-    left: 12px;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: 100%;
   }
 
   .route {

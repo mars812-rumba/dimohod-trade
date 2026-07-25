@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import {
   ArrowRight,
   Check,
@@ -96,9 +97,13 @@ const basePath = process.env.NEXT_BASE_PATH ?? "";
 const assetUrl = (path: string) => `${basePath}${path}`;
 
 export default function HomePage() {
+  const heroStyle = {
+    "--hero-image": `url("${assetUrl("/images/home/hero-photo.jpg")}")`,
+  } as CSSProperties;
+
   return (
     <main className={styles.main}>
-      <section className={styles.hero}>
+      <section className={styles.hero} style={heroStyle}>
         <div className={styles.shell}>
           <div className={styles.heroGrid}>
             <div className={styles.heroCopy}>
@@ -140,16 +145,6 @@ export default function HomePage() {
             </div>
 
             <div className={styles.heroSystem}>
-              <div className={styles.heroPhoto}>
-                <img
-                  src={assetUrl("/images/home/hero-chimney-system.webp")}
-                  alt="Наружный сэндвич-дымоход на деревянном доме"
-                />
-                <div className={styles.photoLabel}>
-                  <span>Холодная зона</span>
-                  <strong>Сэндвич-контур</strong>
-                </div>
-              </div>
               <div className={styles.systemRule}>
                 <ShieldCheck size={22} />
                 <div>

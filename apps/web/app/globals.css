@@ -1403,6 +1403,7 @@ ul {
 .configurator-controls,
 .configurator-schematic-pane,
 .configurator-spec {
+  min-width: 0;
   padding: 28px;
 }
 
@@ -1427,6 +1428,7 @@ ul {
 .configurator-segmented {
   display: flex;
   gap: 8px;
+  min-width: 0;
 }
 
 .configurator-segmented-grid {
@@ -1435,6 +1437,8 @@ ul {
 }
 
 .configurator-segmented button {
+  min-width: 0;
+  flex: 1 1 0;
   min-height: 44px;
   padding: 11px 12px;
   border: 1px solid var(--line);
@@ -2133,6 +2137,16 @@ ul {
 }
 
 @media (max-width: 560px) {
+  .chimney-configurator,
+  .configurator-body,
+  .configurator-controls,
+  .configurator-field,
+  .configurator-segmented {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
   .configurator-header,
   .configurator-controls,
   .configurator-schematic-pane,
@@ -2146,6 +2160,12 @@ ul {
     grid-template-columns: 1fr;
   }
 
+  .configurator-segmented button {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
   .configurator-sheet,
   .configurator-svg-wrap {
     min-height: 330px;
@@ -2157,7 +2177,9 @@ ul {
   }
 
   .configurator-svg {
-    min-width: 360px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .configurator-spec-head,
