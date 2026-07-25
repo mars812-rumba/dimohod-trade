@@ -2203,18 +2203,60 @@ ul {
     min-width: 0;
   }
 
-  .configurator-spec-head,
   .configurator-schematic-top {
     align-items: flex-start;
     flex-direction: column;
   }
 
+  .configurator-spec-head {
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
   .configurator-spec-row {
-    grid-template-columns: 8px minmax(0, 1fr);
+    grid-template-columns: 7px minmax(0, 1fr) auto;
+    gap: 8px;
+    min-height: 44px;
+    padding: 7px 0;
+    align-items: center;
+  }
+
+  .configurator-spec-row > div {
+    display: flex;
+    min-width: 0;
+    gap: 7px;
+    align-items: baseline;
+    white-space: nowrap;
+  }
+
+  .configurator-spec-dot {
+    width: 7px;
+    height: 7px;
+    margin-top: 0;
+  }
+
+  .configurator-spec-row strong {
+    overflow: hidden;
+    min-width: 0;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .configurator-spec-row small {
+    overflow: hidden;
+    max-width: 38%;
+    min-width: 0;
+    flex: 0 1 auto;
+    margin-top: 0;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .configurator-spec-row em {
-    grid-column: 2;
+    grid-column: auto;
+    font-size: 13px;
   }
 }
 

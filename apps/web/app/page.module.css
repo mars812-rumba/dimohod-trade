@@ -761,24 +761,30 @@
     width: min(100% - 28px, 1240px);
   }
 
+  .hero::before {
+    display: none;
+  }
+
   .hero {
-    padding-top: 40px;
-    background:
-      linear-gradient(
-        180deg,
-        rgba(248, 250, 249, 0.94) 0%,
-        rgba(248, 250, 249, 0.86) 56%,
-        rgba(248, 250, 249, 0.28) 100%
-      ),
-      var(--hero-image),
-      linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
-    background-position: center, 64% center, center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%, cover, auto;
+    padding-top: 0;
+    background: #eef2f2;
   }
 
   .heroCopy {
-    padding-bottom: 40px;
+    margin-inline: -14px;
+    padding: 40px 14px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(248, 250, 249, 0.9) 0%,
+        rgba(248, 250, 249, 0.76) 58%,
+        rgba(248, 250, 249, 0.18) 100%
+      ),
+      var(--hero-image),
+      linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
+    background-position: center, right center, center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%, cover, auto;
   }
 
   .heroCopy h1 {
