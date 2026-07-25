@@ -10,6 +10,7 @@ from tools.codex_telegram_bot.bot import (
     CodexRunner,
     PendingAction,
     RELEASE_CONFIRM_KEYBOARD,
+    ReleaseManager,
     StateStore,
     StatusSummary,
     TelegramAPI,
@@ -135,6 +136,31 @@ class BotUtilitiesTest(unittest.TestCase):
         self.assertEqual(message_id, 7)
         self.assertEqual(calls[0]["parse_mode"], "Markdown")
         self.assertNotIn("parse_mode", calls[1])
+
+    def test_ship_allows_commit_to_be_skipped(self) -> None:
+        class FakeReleaseManager(ReleaseManager):
+            def __init__(self):
+                super().__init__(Path("."))
+                self.skip_flags = []
+
+            def test(self):
+                return "tests ok"
+
+            def commit(self, message, *, skip_if_empty=False):
+                self.skip_flags.append(skip_if_empty)
+                return "commit skipped"
+
+            def push(self):
+                return "push ok"
+
+            def deploy(self):
+                return "deploy ok"
+
+        manager = FakeReleaseManager()
+        output = manager.execute(PendingAction("ship", "message"))
+        self.assertEqual(manager.skip_flags, [True])
+        self.assertIn("commit skipped", output)
+        self.assertIn("deploy ok", output)
 
     def test_load_dotenv_does_not_override_environment(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

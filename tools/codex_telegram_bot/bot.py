@@ -907,7 +907,7 @@ class ReleaseManager:
         )
         return [path for path in output.split("\0") if path]
 
-    def commit(self, message: str) -> str:
+    def commit(self, message: str, *, skip_if_empty: bool = False) -> str:
         self.assert_branch()
         message = re.sub(r"\s+", " ", message).strip()
         if not message:
@@ -938,6 +938,8 @@ class ReleaseManager:
         )
         staged = self.staged_paths()
         if not staged:
+            if skip_if_empty:
+                return "Новых разрешённых изменений нет — commit пропущен."
             raise RuntimeError("Нет разрешённых изменений для commit")
         protected = [path for path in staged if is_protected_commit_path(path)]
         if protected:
@@ -990,7 +992,7 @@ class ReleaseManager:
                 return self.deploy()
             if action.kind == "ship":
                 tests = self.test()
-                commit = self.commit(action.argument)
+                commit = self.commit(action.argument, skip_if_empty=True)
                 push = self.push()
                 deploy = self.deploy()
                 return (
@@ -999,7 +1001,7 @@ class ReleaseManager:
                 )
             if action.kind == "publish":
                 tests = self.test()
-                commit = self.commit(action.argument)
+                commit = self.commit(action.argument, skip_if_empty=True)
                 push = self.push()
                 return f"Тесты:\n{tests}\n\nCommit:\n{commit}\n\nPush:\n{push}"
             raise RuntimeError(f"Неизвестное действие: {action.kind}")

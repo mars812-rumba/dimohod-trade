@@ -133,3 +133,6 @@ python3 -m unittest tools.codex_telegram_bot.test_bot
 ограничивает запись каталогами `/home/dimohod-trade`, `/root/.codex` и только
 `/root/.docker/buildx/activity` и `/root/.docker/buildx/refs`. Эти каталоги нужны Docker Buildx
 для служебного состояния сборки; остальная Docker-конфигурация остаётся read-only.
+
+Если при `/ship` или `/publish` новых разрешённых изменений нет, commit пропускается, а pipeline
+продолжает push/deploy. Отдельная `/commit` по-прежнему сообщает об отсутствии изменений.
