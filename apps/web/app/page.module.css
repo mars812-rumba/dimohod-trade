@@ -307,6 +307,25 @@
   color: #9cabaf;
 }
 
+.routePromise {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+  padding: 15px 18px;
+  color: var(--steel-deep);
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.routePromise svg {
+  flex: 0 0 auto;
+  color: var(--signal);
+}
+
 .scenarioSection,
 .calculatorSection,
 .catalogSection,
@@ -833,6 +852,12 @@
 
   .route li:first-child {
     border-top: 0;
+  }
+
+  .routePromise {
+    align-items: flex-start;
+    padding: 16px;
+    font-size: 12px;
   }
 
   .scenarioSection,

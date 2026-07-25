@@ -113,16 +113,16 @@ export default function HomePage() {
               </p>
               <h1>
                 Дымоход —
-                <span> это маршрут.</span>
-                Соберём его целиком.
+                <span> это система,</span>
+                а не набор труб.
               </h1>
               <p className={styles.heroLead}>
-                От патрубка печи до оголовка: подберём совместимые элементы, проверим холодные
-                зоны и подготовим понятную спецификацию.
+                Конфигуратор сам проверит совместимость узлов и найдёт холодные зоны — вам
+                останется нажать «собрать».
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#calculator">
-                  Собрать комплект <ArrowRight size={18} />
+                  Подобрать безопасный комплект <ArrowRight size={18} />
                 </a>
                 <Link className={styles.secondaryButton} href="/catalog">
                   <ShoppingBag size={17} /> Открыть каталог
@@ -167,6 +167,11 @@ export default function HomePage() {
               </li>
             ))}
           </ol>
+          <p className={styles.routePromise}>
+            <ShieldCheck size={17} aria-hidden />
+            Каждый шаг конфигуратор проверяет на совместимость с предыдущим — ошибиться просто не
+            получится.
+          </p>
         </div>
       </section>
 
