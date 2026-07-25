@@ -7,6 +7,7 @@ from pathlib import Path
 
 from tools.codex_telegram_bot.bot import (
     PROJECT_INSTRUCTIONS,
+    SUNNY_PROJECT_INSTRUCTIONS,
     CodexRunner,
     PendingAction,
     POST_TASK_KEYBOARD,
@@ -18,6 +19,7 @@ from tools.codex_telegram_bot.bot import (
     TelegramError,
     consume_codex_event,
     allowed_changed_paths,
+    build_project_configs,
     commit_message_from_prompt,
     detect_natural_confirmation,
     detect_natural_release_intent,
@@ -28,6 +30,7 @@ from tools.codex_telegram_bot.bot import (
     natural_image_prompt,
     safe_project_file,
     split_message,
+    task_changed_paths,
 )
 
 
@@ -227,6 +230,53 @@ class BotUtilitiesTest(unittest.TestCase):
             state.set_thread(1, "thread-123")
             resumed = runner.build_command(1, "продолжай")
             self.assertEqual(resumed[-3:], ["resume", "thread-123", "продолжай"])
+
+    def test_projects_have_separate_threads_and_workdirs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            sunny = root / "sunny"
+            sunny.mkdir()
+            projects = build_project_configs(root)
+            projects["sunny"] = type(projects["sunny"])(
+                **{**projects["sunny"].__dict__, "root": sunny}
+            )
+            state = StateStore(root / "state.json")
+            runner = CodexRunner(root, "/bin/codex", state, projects)
+            state.set_thread(1, "dim-thread", "dimohod")
+            state.set_thread(1, "sun-thread", "sunny")
+            dim_command = runner.build_command(1, "задача", "dimohod")
+            sunny_command = runner.build_command(1, "задача", "sunny")
+            self.assertIn(str(root), dim_command)
+            self.assertIn(str(sunny), sunny_command)
+            self.assertEqual(dim_command[-3:], ["resume", "dim-thread", "задача"])
+            self.assertEqual(sunny_command[-3:], ["resume", "sun-thread", "задача"])
+
+    def test_new_sunny_session_uses_sunny_instructions(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            projects = build_project_configs(root)
+            state = StateStore(root / "state.json")
+            runner = CodexRunner(root, "/bin/codex", state, projects)
+            command = runner.build_command(2, "задача", "sunny")
+            self.assertEqual(command[-1], SUNNY_PROJECT_INSTRUCTIONS + "задача")
+
+    def test_task_changed_paths_excludes_unchanged_dirty_files(self) -> None:
+        before = {"old-user-file.txt": "same", "edited.ts": "before"}
+        after = {
+            "old-user-file.txt": "same",
+            "edited.ts": "after",
+            "created.ts": "new",
+        }
+        self.assertEqual(
+            task_changed_paths(before, after), ["created.ts", "edited.ts"]
+        )
+
+    def test_active_project_defaults_and_persists(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            state = StateStore(Path(temp_dir) / "state.json")
+            self.assertEqual(state.get_active_project(10), "dimohod")
+            state.set_active_project(10, "sunny")
+            self.assertEqual(state.get_active_project(10), "sunny")
 
     def test_codex_events_update_status(self) -> None:
         summary = StatusSummary(started_at=time.monotonic())

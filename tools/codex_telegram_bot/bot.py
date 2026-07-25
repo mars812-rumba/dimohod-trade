@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import fcntl
 import base64
+import hashlib
 import json
 import mimetypes
 import os
@@ -51,6 +52,21 @@ Git commit/push и production deploy выполняются отдельными
 Запрос пользователя из Telegram:
 """
 
+SUNNY_PROJECT_INSTRUCTIONS = """Работай только над проектом Sunny Rentals в текущем каталоге.
+Перед изменениями прочитай PROJECT.md и ARCHITECTURE.md. Рабочая ветка — marsel-collab.
+В репозитории уже могут быть пользовательские незакоммиченные изменения: сохраняй их и не
+перезаписывай. Не изменяй .env, backend/data/, backend/media/, логи и credentials, если задача
+явно этого не требует. Выполни запрос, проверь результат подходящими тестами и кратко сообщи итог.
+Финальный ответ оформляй Telegram-совместимым Markdown: *жирный текст*, списки, `inline code`
+и блоки кода. Не используй Markdown-таблицы и HTML.
+Если пользователь просит прислать файл из проекта, в финальном ответе добавь отдельной строкой
+[[send_file:relative/path/to/file]] — бот отправит этот файл в Telegram.
+Git commit/push и production deploy выполняются отдельными командами Telegram-бота:
+/commit, /push, /deploy или /ship. Не пытайся обходить sandbox ради записи в .git или сети.
+
+Запрос пользователя из Telegram:
+"""
+
 DEPLOY_BRANCH = "ui/replit-port"
 PENDING_ACTION_TTL_SECONDS = 300
 PROTECTED_COMMIT_PATHS = (
@@ -59,6 +75,74 @@ PROTECTED_COMMIT_PATHS = (
     ".codex-telegram/",
     ".env",
 )
+
+
+@dataclass(frozen=True)
+class ProjectConfig:
+    key: str
+    label: str
+    root: Path
+    branch: str
+    instructions: str
+    protected_paths: tuple[str, ...]
+    test_commands: tuple[tuple[str, ...], ...]
+    deploy_commands: tuple[tuple[str, ...], ...]
+
+
+def build_project_configs(dimohod_root: Path) -> dict[str, ProjectConfig]:
+    return {
+        "dimohod": ProjectConfig(
+            key="dimohod",
+            label="🔥 Дымоходы",
+            root=dimohod_root,
+            branch=DEPLOY_BRANCH,
+            instructions=PROJECT_INSTRUCTIONS,
+            protected_paths=PROTECTED_COMMIT_PATHS,
+            test_commands=(
+                ("docker", "compose", "exec", "-T", "backend", "pytest", "-q"),
+                ("npm", "run", "build:web"),
+            ),
+            deploy_commands=(
+                ("docker", "compose", "up", "-d", "--build", "backend", "web"),
+                ("docker", "compose", "ps", "backend", "web"),
+            ),
+        ),
+        "sunny": ProjectConfig(
+            key="sunny",
+            label="☀️ Sunny Rentals",
+            root=Path("/home/sunny-rentals"),
+            branch="marsel-collab",
+            instructions=SUNNY_PROJECT_INSTRUCTIONS,
+            protected_paths=(
+                ".env",
+                "backend/.env",
+                "backend/creds.json",
+                "backend/data/",
+                "backend/media/",
+                ".codex-telegram/",
+                "graphify-out/",
+                "src/graphify-out/",
+                "backend/graphify-out/",
+            ),
+            test_commands=(("npm", "run", "build"),),
+            deploy_commands=(
+                ("npm", "run", "build"),
+                ("systemctl", "restart", "sunny-api.service", "sunny-backend.service"),
+                ("systemctl", "is-active", "sunny-api.service", "sunny-backend.service"),
+            ),
+        ),
+    }
+
+
+def project_keyboard(projects: dict[str, ProjectConfig]) -> dict[str, Any]:
+    return {
+        "inline_keyboard": [
+            [
+                {"text": project.label, "callback_data": f"project:{project.key}"}
+                for project in projects.values()
+            ]
+        ]
+    }
 RELEASE_CONFIRM_KEYBOARD = {
     "inline_keyboard": [
         [
@@ -349,7 +433,11 @@ class StateStore:
     def __init__(self, path: Path, configured_users: set[int] | None = None) -> None:
         self.path = path
         self.lock = threading.RLock()
-        self.data: dict[str, Any] = {"owner_user_id": None, "threads": {}}
+        self.data: dict[str, Any] = {
+            "owner_user_id": None,
+            "threads": {},
+            "active_projects": {},
+        }
         self.configured_users = configured_users or set()
         if path.exists():
             try:
@@ -388,15 +476,42 @@ class StateStore:
             self.save()
             return True
 
-    def get_thread(self, chat_id: int) -> str | None:
+    def get_active_project(self, chat_id: int, default: str = "dimohod") -> str:
         with self.lock:
-            return self.data.setdefault("threads", {}).get(str(chat_id))
+            return str(self.data.setdefault("active_projects", {}).get(str(chat_id)) or default)
 
-    def set_thread(self, chat_id: int, thread_id: str | None) -> None:
+    def set_active_project(self, chat_id: int, project_key: str) -> None:
+        with self.lock:
+            self.data.setdefault("active_projects", {})[str(chat_id)] = project_key
+            self.save()
+
+    def get_thread(self, chat_id: int, project_key: str = "dimohod") -> str | None:
         with self.lock:
             threads = self.data.setdefault("threads", {})
+            project_threads = threads.get(str(chat_id))
+            if isinstance(project_threads, dict):
+                value = project_threads.get(project_key)
+                return str(value) if value else None
+            # Migration from the original one-project state format.
+            if project_key == "dimohod" and isinstance(project_threads, str):
+                return project_threads
+            return None
+
+    def set_thread(
+        self, chat_id: int, thread_id: str | None, project_key: str = "dimohod"
+    ) -> None:
+        with self.lock:
+            threads = self.data.setdefault("threads", {})
+            existing = threads.get(str(chat_id))
+            if isinstance(existing, str):
+                existing = {"dimohod": existing}
+            project_threads = existing if isinstance(existing, dict) else {}
             if thread_id:
-                threads[str(chat_id)] = thread_id
+                project_threads[project_key] = thread_id
+            else:
+                project_threads.pop(project_key, None)
+            if project_threads:
+                threads[str(chat_id)] = project_threads
             else:
                 threads.pop(str(chat_id), None)
             self.save()
@@ -472,8 +587,14 @@ def consume_codex_event(event: dict[str, Any], summary: StatusSummary) -> bool:
 
 
 class CodexRunner:
-    def __init__(self, project_root: Path, codex_binary: str, state: StateStore) -> None:
-        self.project_root = project_root
+    def __init__(
+        self,
+        project_root: Path,
+        codex_binary: str,
+        state: StateStore,
+        projects: dict[str, ProjectConfig] | None = None,
+    ) -> None:
+        self.projects = projects or build_project_configs(project_root)
         self.codex_binary = codex_binary
         self.state = state
         self.tasks: dict[int, RunningTask] = {}
@@ -497,7 +618,10 @@ class CodexRunner:
                 pass
         return True
 
-    def build_command(self, chat_id: int, prompt: str) -> list[str]:
+    def build_command(
+        self, chat_id: int, prompt: str, project_key: str = "dimohod"
+    ) -> list[str]:
+        project = self.projects[project_key]
         common = [
             self.codex_binary,
             "exec",
@@ -505,20 +629,21 @@ class CodexRunner:
             "--color",
             "never",
             "--cd",
-            str(self.project_root),
+            str(project.root),
             "--sandbox",
             "workspace-write",
         ]
-        thread_id = self.state.get_thread(chat_id)
+        thread_id = self.state.get_thread(chat_id, project_key)
         if thread_id:
             return [*common, "resume", thread_id, prompt]
-        return [*common, PROJECT_INSTRUCTIONS + prompt]
+        return [*common, project.instructions + prompt]
 
     def run(
         self,
         chat_id: int,
         prompt: str,
         on_status: Any,
+        project_key: str = "dimohod",
     ) -> tuple[StatusSummary, int, str]:
         with self.lock:
             if chat_id in self.tasks:
@@ -528,11 +653,12 @@ class CodexRunner:
 
         summary = StatusSummary()
         diagnostic_lines: list[str] = []
-        saved_thread_id = self.state.get_thread(chat_id)
+        project = self.projects[project_key]
+        saved_thread_id = self.state.get_thread(chat_id, project_key)
         try:
             process = subprocess.Popen(
-                self.build_command(chat_id, prompt),
-                cwd=self.project_root,
+                self.build_command(chat_id, prompt, project_key),
+                cwd=project.root,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -557,7 +683,7 @@ class CodexRunner:
                     continue
                 changed = consume_codex_event(event, summary)
                 if summary.thread_id and summary.thread_id != saved_thread_id:
-                    self.state.set_thread(chat_id, summary.thread_id)
+                    self.state.set_thread(chat_id, summary.thread_id, project_key)
                     saved_thread_id = summary.thread_id
                 now = time.monotonic()
                 if changed and now - last_update >= 2.0:
@@ -704,18 +830,19 @@ def transcribe_voice(source: Path, openai_key: str, model: str) -> str:
     return text
 
 
-HELP_TEXT = """Я управляю Codex в проекте dimohod-trade.
+HELP_TEXT = """Я управляю Codex в проектах Dimohod Trade и Sunny Rentals.
 
 Отправьте текст, голосовое или фото — это станет задачей для Codex.
 
 Команды:
+/projects — выбрать активный проект
 /status — ветка, изменения и активная задача
 /file path/to/file — прислать файл из проекта
 /image описание — сгенерировать изображение и прислать в чат
 /commit сообщение — подготовить commit изменений
 /publish сообщение — тесты → commit → push
 /push — подготовить push текущей ветки
-/deploy — подготовить Docker deploy backend + web
+/deploy — подготовить production deploy активного проекта
 /ship сообщение — тесты → commit → push → deploy
 /confirm — подтвердить подготовленное действие
 /abort — отменить подготовленное действие
@@ -727,17 +854,21 @@ HELP_TEXT = """Я управляю Codex в проекте dimohod-trade.
 Codex работает с sandbox=workspace-write. Одновременно в одном чате выполняется одна задача."""
 
 
-def is_protected_commit_path(path: str) -> bool:
+def is_protected_commit_path(
+    path: str, protected_paths: tuple[str, ...] = PROTECTED_COMMIT_PATHS
+) -> bool:
     normalized = path.strip().replace("\\", "/")
     while normalized.startswith("./"):
         normalized = normalized[2:]
     return any(
         normalized == protected.rstrip("/") or normalized.startswith(protected)
-        for protected in PROTECTED_COMMIT_PATHS
+        for protected in protected_paths
     )
 
 
-def allowed_changed_paths(status_output: str) -> list[str]:
+def allowed_changed_paths(
+    status_output: str, protected_paths: tuple[str, ...] = PROTECTED_COMMIT_PATHS
+) -> list[str]:
     paths: list[str] = []
     for line in status_output.splitlines():
         if len(line) < 4 or line.startswith("## "):
@@ -745,9 +876,47 @@ def allowed_changed_paths(status_output: str) -> list[str]:
         path = line[3:].strip().strip('"')
         if " -> " in path:
             path = path.rsplit(" -> ", 1)[1].strip().strip('"')
-        if path and not is_protected_commit_path(path):
+        if path and not is_protected_commit_path(path, protected_paths):
             paths.append(path)
     return paths
+
+
+def file_fingerprint(project_root: Path, relative_path: str) -> str:
+    path = project_root / relative_path
+    if not path.exists() and not path.is_symlink():
+        return "missing"
+    if path.is_symlink():
+        return "symlink:" + os.readlink(path)
+    if not path.is_file():
+        return "other"
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def worktree_snapshot(
+    project_root: Path, protected_paths: tuple[str, ...]
+) -> dict[str, str]:
+    result = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=30,
+        check=True,
+    )
+    snapshot: dict[str, str] = {}
+    for path in allowed_changed_paths(result.stdout, protected_paths):
+        snapshot[path] = file_fingerprint(project_root, path)
+    return snapshot
+
+
+def task_changed_paths(before: dict[str, str], after: dict[str, str]) -> list[str]:
+    return sorted(path for path in set(before) | set(after) if before.get(path) != after.get(path))
 
 
 def commit_message_from_prompt(prompt: str) -> str:
@@ -781,6 +950,8 @@ def run_host_command(args: list[str], cwd: Path, timeout: int = 1200) -> str:
 class PendingAction:
     kind: str
     argument: str
+    project_key: str = "dimohod"
+    paths: tuple[str, ...] | None = None
     created_at: float = field(default_factory=time.monotonic)
 
     def expired(self) -> bool:
@@ -898,11 +1069,18 @@ def detect_natural_confirmation(text: str) -> str | None:
 
 
 class ReleaseManager:
-    """Narrow host-side Git and Docker operations unavailable inside Codex sandbox."""
+    """Narrow host-side Git and deploy operations unavailable inside Codex sandbox."""
 
-    def __init__(self, project_root: Path, branch: str = DEPLOY_BRANCH) -> None:
-        self.project_root = project_root
-        self.branch = branch
+    def __init__(
+        self,
+        project_root: Path,
+        branch: str = DEPLOY_BRANCH,
+        *,
+        config: ProjectConfig | None = None,
+    ) -> None:
+        self.config = config or build_project_configs(project_root)["dimohod"]
+        self.project_root = self.config.root
+        self.branch = branch if config is None else self.config.branch
         self.lock = threading.Lock()
 
     def is_running(self) -> bool:
@@ -928,7 +1106,7 @@ class ReleaseManager:
         )
 
     def allowed_changed_paths(self) -> list[str]:
-        return allowed_changed_paths(self.status())
+        return allowed_changed_paths(self.status(), self.config.protected_paths)
 
     def staged_paths(self) -> list[str]:
         output = run_host_command(
@@ -938,7 +1116,13 @@ class ReleaseManager:
         )
         return [path for path in output.split("\0") if path]
 
-    def commit(self, message: str, *, skip_if_empty: bool = False) -> str:
+    def commit(
+        self,
+        message: str,
+        *,
+        skip_if_empty: bool = False,
+        paths: tuple[str, ...] | None = None,
+    ) -> str:
         self.assert_branch()
         message = re.sub(r"\s+", " ", message).strip()
         if not message:
@@ -947,23 +1131,36 @@ class ReleaseManager:
             raise RuntimeError("Сообщение commit должно быть не длиннее 160 символов")
 
         already_staged = self.staged_paths()
-        protected_staged = [path for path in already_staged if is_protected_commit_path(path)]
+        protected_staged = [
+            path
+            for path in already_staged
+            if is_protected_commit_path(path, self.config.protected_paths)
+        ]
         if protected_staged:
             raise RuntimeError(
                 "В index уже находятся защищённые пути; уберите их из staged вручную:\n"
                 + "\n".join(protected_staged)
             )
 
+        target_paths = list(paths) if paths is not None else self.allowed_changed_paths()
+        target_paths = [
+            path
+            for path in target_paths
+            if not is_protected_commit_path(path, self.config.protected_paths)
+        ]
+        if paths is not None:
+            unrelated_staged = [path for path in already_staged if path not in target_paths]
+            if unrelated_staged:
+                raise RuntimeError(
+                    "В Git index уже есть посторонние изменения; безопасный commit остановлен:\n"
+                    + "\n".join(unrelated_staged)
+                )
+        if not target_paths:
+            if skip_if_empty:
+                return "Новых разрешённых изменений нет — commit пропущен."
+            raise RuntimeError("Нет разрешённых изменений для commit")
         add_output = run_host_command(
-            [
-                "git",
-                "add",
-                "-A",
-                "--",
-                ".",
-                ":(exclude)prices/**",
-                ":(exclude)backend/configurator/chimney-configurator-png.html",
-            ],
+            ["git", "add", "-A", "--", *target_paths],
             self.project_root,
             timeout=60,
         )
@@ -972,7 +1169,11 @@ class ReleaseManager:
             if skip_if_empty:
                 return "Новых разрешённых изменений нет — commit пропущен."
             raise RuntimeError("Нет разрешённых изменений для commit")
-        protected = [path for path in staged if is_protected_commit_path(path)]
+        protected = [
+            path
+            for path in staged
+            if is_protected_commit_path(path, self.config.protected_paths)
+        ]
         if protected:
             raise RuntimeError("Защищённые пути попали в staged:\n" + "\n".join(protected))
         commit_output = run_host_command(
@@ -990,49 +1191,80 @@ class ReleaseManager:
         )
 
     def test(self) -> str:
-        backend = run_host_command(
-            ["docker", "compose", "exec", "-T", "backend", "pytest", "-q"],
-            self.project_root,
-            timeout=600,
-        )
-        frontend = run_host_command(
-            ["npm", "run", "build:web"], self.project_root, timeout=900
-        )
-        return f"Backend:\n{backend}\n\nFrontend:\n{frontend}"
+        outputs = []
+        for command in self.config.test_commands:
+            output = run_host_command(list(command), self.project_root, timeout=900)
+            outputs.append(f"$ {' '.join(command)}\n{output or 'OK'}")
+        return "\n\n".join(outputs)
 
-    def deploy(self) -> str:
-        build = run_host_command(
-            ["docker", "compose", "up", "-d", "--build", "backend", "web"],
-            self.project_root,
-            timeout=1200,
+    def deploy(
+        self,
+        *,
+        skip_tested_commands: bool = False,
+        paths: tuple[str, ...] | None = None,
+    ) -> str:
+        outputs = []
+        backend_changed = paths is None or any(
+            path == "backend" or path.startswith("backend/") for path in paths
         )
-        status = run_host_command(
-            ["docker", "compose", "ps", "backend", "web"],
-            self.project_root,
-            timeout=60,
-        )
-        return f"{build}\n\n{status}"
+        for command in self.config.deploy_commands:
+            if skip_tested_commands and command in self.config.test_commands:
+                continue
+            if (
+                self.config.key == "sunny"
+                and not backend_changed
+                and command[:1] == ("systemctl",)
+            ):
+                continue
+            output = run_host_command(list(command), self.project_root, timeout=1200)
+            outputs.append(f"$ {' '.join(command)}\n{output or 'OK'}")
+        return "\n\n".join(outputs) or "Frontend build опубликован без перезапуска backend."
 
     def execute(self, action: PendingAction) -> str:
         with self.lock:
             if action.kind == "commit":
-                return self.commit(action.argument)
+                if action.paths is None:
+                    return self.commit(action.argument)
+                return self.commit(action.argument, paths=action.paths)
             if action.kind == "push":
                 return self.push()
             if action.kind == "deploy":
                 return self.deploy()
             if action.kind == "ship":
                 tests = self.test()
-                commit = self.commit(action.argument, skip_if_empty=True)
+                commit = (
+                    self.commit(action.argument, skip_if_empty=True)
+                    if action.paths is None
+                    else self.commit(
+                        action.argument, skip_if_empty=True, paths=action.paths
+                    )
+                )
                 push = self.push()
-                deploy = self.deploy()
+                has_repeated_deploy_command = any(
+                    command in self.config.test_commands
+                    for command in self.config.deploy_commands
+                )
+                deploy = (
+                    self.deploy(
+                        skip_tested_commands=True,
+                        paths=action.paths,
+                    )
+                    if has_repeated_deploy_command
+                    else self.deploy()
+                )
                 return (
                     f"Тесты:\n{tests}\n\nCommit:\n{commit}\n\n"
                     f"Push:\n{push}\n\nDeploy:\n{deploy}"
                 )
             if action.kind == "publish":
                 tests = self.test()
-                commit = self.commit(action.argument, skip_if_empty=True)
+                commit = (
+                    self.commit(action.argument, skip_if_empty=True)
+                    if action.paths is None
+                    else self.commit(
+                        action.argument, skip_if_empty=True, paths=action.paths
+                    )
+                )
                 push = self.push()
                 return f"Тесты:\n{tests}\n\nCommit:\n{commit}\n\nPush:\n{push}"
             raise RuntimeError(f"Неизвестное действие: {action.kind}")
@@ -1052,11 +1284,13 @@ class BotApplication:
         image_size: str,
         image_quality: str,
         workers: int = 2,
+        projects: dict[str, ProjectConfig] | None = None,
     ) -> None:
         self.api = api
         self.state = state
         self.runner = runner
         self.project_root = project_root
+        self.projects = projects or build_project_configs(project_root)
         self.openai_key = openai_key
         self.transcribe_model = transcribe_model
         self.vision_model = vision_model
@@ -1064,24 +1298,41 @@ class BotApplication:
         self.image_size = image_size
         self.image_quality = image_quality
         self.runtime_dir = project_root / ".codex-telegram"
-        self.release = ReleaseManager(project_root)
+        self.releases = {
+            key: ReleaseManager(config.root, config=config)
+            for key, config in self.projects.items()
+        }
+        # Compatibility for callers/tests that still access the Dimohod manager directly.
+        self.release = self.releases["dimohod"]
         self.pending_actions: dict[int, PendingAction] = {}
         self.post_codex_actions: dict[int, PendingAction] = {}
         self.pending_lock = threading.Lock()
         self.executor = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="codex-bot")
 
+    def active_project(self, chat_id: int) -> ProjectConfig:
+        key = self.state.get_active_project(chat_id)
+        return self.projects.get(key, self.projects["dimohod"])
+
+    def release_for(self, project_key: str) -> ReleaseManager:
+        return self.releases[project_key]
+
+    def any_release_running(self) -> bool:
+        return any(release.is_running() for release in self.releases.values())
+
     def project_status(self, chat_id: int) -> str:
+        project = self.active_project(chat_id)
+        release = self.release_for(project.key)
         result = subprocess.run(
             ["git", "status", "--short", "--branch"],
-            cwd=self.project_root,
+            cwd=project.root,
             capture_output=True,
             text=True,
             timeout=10,
         )
-        thread = self.state.get_thread(chat_id)
+        thread = self.state.get_thread(chat_id, project.key)
         running = "да" if self.runner.is_running(chat_id) else "нет"
-        release_running = "да" if self.release.is_running() else "нет"
-        env_path = self.project_root / ".env"
+        release_running = "да" if release.is_running() else "нет"
+        env_path = project.root / ".env"
         voice_status = (
             f"включены, модель {self.transcribe_model}"
             if self.openai_key
@@ -1093,7 +1344,7 @@ class BotApplication:
             else "не настроены: OPENAI_API_KEY не загружен"
         )
         return (
-            f"Проект: {self.project_root.name}\n"
+            f"Проект: {project.label} ({project.root.name})\n"
             f"Задача выполняется: {running}\n"
             f"Release выполняется: {release_running}\n"
             f"Сессия Codex: {thread or 'новая'}\n\n"
@@ -1104,9 +1355,18 @@ class BotApplication:
         )
 
     def prepare_release_action(
-        self, chat_id: int, message_id: int, kind: str, argument: str = ""
+        self,
+        chat_id: int,
+        message_id: int,
+        kind: str,
+        argument: str = "",
+        *,
+        project_key: str | None = None,
+        paths: tuple[str, ...] | None = None,
     ) -> None:
-        if self.runner.is_running(chat_id) or self.release.is_running():
+        project = self.projects[project_key or self.active_project(chat_id).key]
+        release = self.release_for(project.key)
+        if self.runner.is_running(chat_id) or release.is_running():
             self.api.send_message(
                 chat_id, "Сначала дождитесь завершения Codex или используйте /cancel", message_id
             )
@@ -1116,12 +1376,17 @@ class BotApplication:
                 chat_id, f"Укажите сообщение: /{kind} краткое описание изменений", message_id
             )
             return
-        action = PendingAction(kind=kind, argument=argument.strip())
+        action = PendingAction(
+            kind=kind,
+            argument=argument.strip(),
+            project_key=project.key,
+            paths=paths,
+        )
         with self.pending_lock:
             self.pending_actions[chat_id] = action
         try:
-            branch = self.release.current_branch()
-            status = self.release.status()
+            branch = release.current_branch()
+            status = release.status()
         except Exception as exc:
             with self.pending_lock:
                 self.pending_actions.pop(chat_id, None)
@@ -1129,21 +1394,34 @@ class BotApplication:
             return
         descriptions = {
             "commit": f"создать commit «{action.argument}»",
-            "push": f"push HEAD → origin/{DEPLOY_BRANCH}",
-            "deploy": "пересобрать и перезапустить Docker-сервисы backend + web",
+            "push": f"push HEAD → origin/{project.branch}",
+            "deploy": (
+                "пересобрать и перезапустить production"
+                if project.key == "sunny"
+                else "пересобрать и перезапустить Docker-сервисы backend + web"
+            ),
             "publish": (
-                f"выполнить тесты, commit «{action.argument}» и push в origin/{DEPLOY_BRANCH}"
+                f"выполнить тесты, commit «{action.argument}» и push в origin/{project.branch}"
             ),
             "ship": (
-                f"выполнить тесты, commit «{action.argument}», push в origin/{DEPLOY_BRANCH} "
-                "и deploy backend + web"
+                f"выполнить тесты, commit «{action.argument}», push в origin/{project.branch} "
+                "и production deploy"
             ),
         }
-        protected = "\n".join(f"• {path}" for path in PROTECTED_COMMIT_PATHS)
+        protected = "\n".join(f"• {path}" for path in project.protected_paths)
+        scoped = ""
+        if paths is not None:
+            scoped = (
+                "\nВ commit войдут только файлы этого запроса:\n"
+                + "\n".join(f"• {path}" for path in paths[:20])
+                + "\n"
+            )
         preview = (
-            f"⚠️ Подготовлено: {descriptions[kind]}\n"
+            f"⚠️ Проект: {project.label}\n"
+            f"Подготовлено: {descriptions[kind]}\n"
             f"Текущая ветка: {branch}\n\n"
             f"{status[:2500] or 'Рабочее дерево чистое'}\n\n"
+            f"{scoped}"
             f"В commit никогда не включаются:\n{protected}\n\n"
             "Подтвердите или отмените действие кнопкой в течение 5 минут."
         )
@@ -1155,9 +1433,20 @@ class BotApplication:
         )
 
     def offer_post_task_actions(
-        self, chat_id: int, message_id: int, prompt: str, paths: list[str]
+        self,
+        chat_id: int,
+        message_id: int,
+        prompt: str,
+        paths: list[str],
+        project_key: str,
     ) -> None:
-        action = PendingAction("ship", commit_message_from_prompt(prompt))
+        project = self.projects[project_key]
+        action = PendingAction(
+            "ship",
+            commit_message_from_prompt(prompt),
+            project_key=project_key,
+            paths=tuple(paths),
+        )
         with self.pending_lock:
             self.pending_actions[chat_id] = action
         preview = "\n".join(f"• {path}" for path in paths[:20])
@@ -1165,7 +1454,7 @@ class BotApplication:
             preview += f"\n• …и ещё {len(paths) - 20}"
         self.api.send_message(
             chat_id,
-            f"Изменения готовы:\n{preview}\n\nЧто делаем дальше?",
+            f"{project.label}: изменения готовы:\n{preview}\n\nЧто делаем дальше?",
             message_id,
             reply_markup=POST_TASK_KEYBOARD,
         )
@@ -1184,6 +1473,8 @@ class BotApplication:
     def process_release_action(
         self, chat_id: int, message_id: int, action: PendingAction
     ) -> None:
+        project = self.projects[action.project_key]
+        release = self.release_for(action.project_key)
         labels = {
             "commit": "Создаю commit",
             "push": "Отправляю изменения в GitHub",
@@ -1191,14 +1482,20 @@ class BotApplication:
             "publish": "Запускаю тесты, commit и push",
             "ship": "Запускаю полный release pipeline",
         }
-        status_id = self.api.send_message(chat_id, f"⏳ {labels[action.kind]}…", message_id)
+        status_id = self.api.send_message(
+            chat_id, f"⏳ {project.label}: {labels[action.kind]}…", message_id
+        )
         try:
-            output = self.release.execute(action)
-            self.api.edit_message(chat_id, status_id, f"✅ {labels[action.kind]}: готово")
+            output = release.execute(action)
+            self.api.edit_message(
+                chat_id, status_id, f"✅ {project.label}: {labels[action.kind]} — готово"
+            )
             if output:
                 self.api.send_long_message(chat_id, output[-10000:])
         except Exception as exc:
-            self.api.edit_message(chat_id, status_id, f"❌ {labels[action.kind]}: ошибка")
+            self.api.edit_message(
+                chat_id, status_id, f"❌ {project.label}: {labels[action.kind]} — ошибка"
+            )
             self.api.send_long_message(chat_id, str(exc)[-5000:])
 
     def abort_release_action(self, chat_id: int, message_id: int) -> None:
@@ -1224,6 +1521,35 @@ class BotApplication:
             self.api.answer_callback_query(callback_id, "Доступ запрещён")
             return
         data = str(callback.get("data") or "")
+        if data.startswith("project:"):
+            project_key = data.partition(":")[2]
+            project = self.projects.get(project_key)
+            if not project:
+                self.api.answer_callback_query(callback_id, "Неизвестный проект")
+                return
+            if self.runner.is_running(chat_id) or self.any_release_running():
+                self.api.answer_callback_query(
+                    callback_id, "Сначала дождитесь текущей операции"
+                )
+                return
+            self.state.set_active_project(chat_id, project_key)
+            with self.pending_lock:
+                self.pending_actions.pop(chat_id, None)
+                self.post_codex_actions.pop(chat_id, None)
+            self.api.answer_callback_query(callback_id, f"Выбран: {project.label}")
+            try:
+                self.api.clear_inline_keyboard(chat_id, message_id)
+            except TelegramError:
+                pass
+            self.api.send_message(
+                chat_id,
+                f"✅ Активный проект: *{project.label}*\n"
+                f"Ветка: `{project.branch}`\n\n"
+                "Теперь отправьте задачу текстом или голосовым.",
+                message_id,
+                markdown=True,
+            )
+            return
         valid_actions = {
             "release:confirm",
             "release:abort",
@@ -1295,7 +1621,16 @@ class BotApplication:
 
         if text.startswith("/"):
             command = text.split(maxsplit=1)[0].split("@", 1)[0].lower()
-            if command in {"/start", "/help"}:
+            if command in {"/start", "/projects"}:
+                current = self.active_project(chat_id)
+                self.api.send_message(
+                    chat_id,
+                    f"Выберите проект.\nСейчас активен: *{current.label}*",
+                    message_id,
+                    markdown=True,
+                    reply_markup=project_keyboard(self.projects),
+                )
+            elif command == "/help":
                 self.api.send_message(chat_id, HELP_TEXT, message_id)
             elif command == "/id":
                 self.api.send_message(chat_id, f"Ваш Telegram user ID: {user_id}", message_id)
@@ -1325,7 +1660,8 @@ class BotApplication:
                 if self.runner.is_running(chat_id):
                     self.api.send_message(chat_id, "Сначала остановите текущую задачу: /cancel")
                 else:
-                    self.state.set_thread(chat_id, None)
+                    project = self.active_project(chat_id)
+                    self.state.set_thread(chat_id, None, project.key)
                     self.api.send_message(chat_id, "Новая сессия Codex будет создана со следующей задачей.")
             elif command == "/cancel":
                 cancelled = self.runner.cancel(chat_id)
@@ -1373,17 +1709,19 @@ class BotApplication:
             self.route_user_text(chat_id, message_id, text)
 
     def send_requested_file(self, chat_id: int, message_id: int | None, requested_path: str) -> None:
+        project = self.active_project(chat_id)
         try:
-            path = safe_project_file(self.project_root, requested_path)
-            self.api.send_document(chat_id, path, f"📎 {path.relative_to(self.project_root)}")
+            path = safe_project_file(project.root, requested_path)
+            self.api.send_document(chat_id, path, f"📎 {path.relative_to(project.root)}")
         except Exception as exc:
             self.api.send_message(chat_id, f"Не могу отправить файл: {exc}", message_id)
 
     def send_codex_requested_files(self, chat_id: int, paths: list[str]) -> None:
+        project = self.active_project(chat_id)
         for requested_path in paths:
             try:
-                path = safe_project_file(self.project_root, requested_path)
-                self.api.send_document(chat_id, path, f"📎 {path.relative_to(self.project_root)}")
+                path = safe_project_file(project.root, requested_path)
+                self.api.send_document(chat_id, path, f"📎 {path.relative_to(project.root)}")
             except Exception as exc:
                 self.api.send_message(chat_id, f"Не смог отправить {requested_path}: {exc}")
 
@@ -1403,15 +1741,22 @@ class BotApplication:
     def process_photo(self, chat_id: int, message_id: int, photos: list[dict[str, Any]], caption: str) -> None:
         status_id = self.api.send_message(chat_id, "🖼 Читаю фото…", message_id)
         try:
+            project = self.active_project(chat_id)
             largest = max(photos, key=lambda photo: int(photo.get("file_size") or 0))
-            saved_path = self.runtime_dir / "uploads" / str(chat_id) / f"photo-{int(time.time())}.jpg"
+            saved_path = (
+                project.root
+                / ".codex-telegram"
+                / "uploads"
+                / str(chat_id)
+                / f"photo-{int(time.time())}.jpg"
+            )
             self.api.download_file(str(largest["file_id"]), saved_path)
             assert self.openai_key is not None
             analysis = analyze_photo(saved_path, caption, self.openai_key, self.vision_model)
             self.api.edit_message(chat_id, status_id, f"🖼 Фото прочитано:\n{analysis[:3200]}")
             prompt = (
                 "Пользователь отправил фото в Telegram.\n"
-                f"Локальный путь к фото: {saved_path.relative_to(self.project_root)}\n"
+                f"Локальный путь к фото: {saved_path.relative_to(project.root)}\n"
                 f"Подпись пользователя: {caption or '(без подписи)'}\n\n"
                 "Визуальный анализ OpenAI:\n"
                 f"{analysis}\n\n"
@@ -1455,13 +1800,14 @@ class BotApplication:
             self.api.edit_message(chat_id, status_id, f"Не удалось сгенерировать изображение:\n{exc}")
 
     def submit_codex(self, chat_id: int, message_id: int, prompt: str) -> None:
-        if self.runner.is_running(chat_id) or self.release.is_running():
+        project = self.active_project(chat_id)
+        if self.runner.is_running(chat_id) or self.release_for(project.key).is_running():
             self.api.send_message(
                 chat_id,
                 "Уже выполняется задача или release. Дождитесь завершения либо используйте /cancel",
             )
             return
-        self.executor.submit(self.process_codex, chat_id, message_id, prompt)
+        self.executor.submit(self.process_codex, chat_id, message_id, prompt, project.key)
 
     def route_user_text(self, chat_id: int, message_id: int, text: str) -> None:
         confirmation = detect_natural_confirmation(text)
@@ -1480,10 +1826,13 @@ class BotApplication:
                 chat_id, message_id, intent.kind, intent.commit_message
             )
             return
-        if self.runner.is_running(chat_id) or self.release.is_running():
+        project = self.active_project(chat_id)
+        if self.runner.is_running(chat_id) or self.release_for(project.key).is_running():
             self.submit_codex(chat_id, message_id, text)
             return
-        action = PendingAction(intent.kind, intent.commit_message)
+        action = PendingAction(
+            intent.kind, intent.commit_message, project_key=project.key
+        )
         with self.pending_lock:
             self.post_codex_actions[chat_id] = action
         prompt = (
@@ -1494,8 +1843,15 @@ class BotApplication:
         )
         self.submit_codex(chat_id, message_id, prompt)
 
-    def process_codex(self, chat_id: int, message_id: int, prompt: str) -> None:
-        status_id = self.api.send_message(chat_id, "⏳ Запускаю Codex…", message_id)
+    def process_codex(
+        self, chat_id: int, message_id: int, prompt: str, project_key: str
+    ) -> None:
+        project = self.projects[project_key]
+        release = self.release_for(project_key)
+        before = worktree_snapshot(project.root, project.protected_paths)
+        status_id = self.api.send_message(
+            chat_id, f"⏳ {project.label}: запускаю Codex…", message_id
+        )
         last_status = ""
 
         def update_status(text: str) -> None:
@@ -1508,7 +1864,9 @@ class BotApplication:
                     pass
 
         try:
-            summary, return_code, diagnostics = self.runner.run(chat_id, prompt, update_status)
+            summary, return_code, diagnostics = self.runner.run(
+                chat_id, prompt, update_status, project_key
+            )
             with self.pending_lock:
                 post_action = self.post_codex_actions.pop(chat_id, None)
             if return_code == 0 and summary.final_response:
@@ -1518,14 +1876,22 @@ class BotApplication:
                     self.api.send_long_message(chat_id, response_text, markdown=True)
                 self.send_codex_requested_files(chat_id, requested_files)
                 if post_action:
+                    after = worktree_snapshot(project.root, project.protected_paths)
+                    changed_paths = task_changed_paths(before, after)
                     self.prepare_release_action(
-                        chat_id, message_id, post_action.kind, post_action.argument
+                        chat_id,
+                        message_id,
+                        post_action.kind,
+                        post_action.argument,
+                        project_key=project_key,
+                        paths=tuple(changed_paths),
                     )
                 else:
-                    changed_paths = self.release.allowed_changed_paths()
+                    after = worktree_snapshot(project.root, project.protected_paths)
+                    changed_paths = task_changed_paths(before, after)
                     if changed_paths:
                         self.offer_post_task_actions(
-                            chat_id, message_id, prompt, changed_paths
+                            chat_id, message_id, prompt, changed_paths, project_key
                         )
             elif summary.cancelled:
                 update_status("⛔ Задача остановлена")
@@ -1576,7 +1942,8 @@ def main() -> int:
     )
     codex_binary = os.getenv("CODEX_BOT_CODEX_BINARY", "codex")
     api = TelegramAPI(token)
-    runner = CodexRunner(project_root, codex_binary, state)
+    projects = build_project_configs(project_root)
+    runner = CodexRunner(project_root, codex_binary, state, projects)
     app = BotApplication(
         api,
         state,
@@ -1589,11 +1956,13 @@ def main() -> int:
         os.getenv("OPENAI_IMAGE_SIZE", DEFAULT_IMAGE_SIZE),
         os.getenv("OPENAI_IMAGE_QUALITY", DEFAULT_IMAGE_QUALITY),
         int(os.getenv("CODEX_BOT_MAX_WORKERS", "2")),
+        projects,
     )
 
     identity = api.call("getMe")
     api.call("deleteWebhook", {"drop_pending_updates": "false"})
-    print(f"Bot @{identity.get('username')} started for {project_root}", flush=True)
+    roots = ", ".join(str(project.root) for project in projects.values())
+    print(f"Bot @{identity.get('username')} started for {roots}", flush=True)
     offset: int | None = None
     while True:
         try:
