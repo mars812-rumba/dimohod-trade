@@ -1,13 +1,13 @@
 :root {
-  --bg: #f7f6f2;
+  --bg: #f1f4f4;
   --surface: #ffffff;
-  --surface-muted: #eeece5;
-  --text: #22201d;
-  --muted: #6d6860;
-  --line: #d9d4ca;
-  --accent: #b13f20;
-  --accent-strong: #7d2a16;
-  --steel: #40515a;
+  --surface-muted: #e8eeee;
+  --text: #102127;
+  --muted: #637277;
+  --line: #ccd5d7;
+  --accent: #ed5b2a;
+  --accent-strong: #bd3d16;
+  --steel: #326276;
   --ok: #227350;
   --radius: 8px;
 }
@@ -409,7 +409,7 @@ ul {
 .site-header {
   gap: 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(105deg, #1c1916 0%, #3a1508 55%, #2a1209 100%);
+  background: linear-gradient(105deg, #102127 0%, #173d4c 62%, #102127 100%);
 }
 
 .brand {

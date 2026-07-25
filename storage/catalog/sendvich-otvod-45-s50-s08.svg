@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7f929b"/>
+      <stop offset="0.2" stop-color="#ecf1f2"/>
+      <stop offset="0.48" stop-color="#9eafb6"/>
+      <stop offset="0.72" stop-color="#f7f9f9"/>
+      <stop offset="1" stop-color="#71858f"/>
+    </linearGradient>
+    <pattern id="insulation" width="18" height="18" patternUnits="userSpaceOnUse">
+      <rect width="18" height="18" fill="#d9bd78"/>
+      <path d="M-4 12L12-4M4 22L22 4" stroke="#b38e45" stroke-width="2" opacity=".55"/>
+    </pattern>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto-start-reverse">
+      <path d="M1 1L11 6L1 11Z" fill="#173d4c"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto-start-reverse">
+      <path d="M1 1L11 6L1 11Z" fill="#ed5b2a"/>
+    </marker>
+    <style>
+      .title { font: 700 35px Arial, sans-serif; fill: #102127; letter-spacing: .5px; }
+      .subtitle { font: 600 18px Arial, sans-serif; fill: #326276; }
+      .label { font: 700 24px Arial, sans-serif; fill: #102127; }
+      .small { font: 500 18px Arial, sans-serif; fill: #53676f; }
+      .tiny { font: 600 15px Arial, sans-serif; fill: #53676f; letter-spacing: .5px; }
+      .dim { stroke: #173d4c; stroke-width: 2.4; fill: none; marker-start: url(#arrow); marker-end: url(#arrow); }
+      .ext { stroke: #7d9198; stroke-width: 1.5; fill: none; }
+      .axis { stroke: #ed5b2a; stroke-width: 2; stroke-dasharray: 12 10; fill: none; }
+      .callout { stroke: #326276; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="#f7f9f8"/>
+  <path d="M0 80H1600M0 920H1600" stroke="#cbd5d7" stroke-width="2"/>
+  <path d="M42 0V1000M1558 0V1000" stroke="#e0e6e7" stroke-width="1"/>
+
+  <text x="82" y="54" class="title">ОТВОД-СЭНДВИЧ 45°</text>
+  <text x="82" y="108" class="subtitle">Техническая схема · теплоизоляция 50 мм · сталь S = 0,8 мм</text>
+
+  <!-- Side section: layered 45-degree elbow -->
+  <g aria-label="Продольный разрез отвода 45 градусов">
+    <text x="92" y="177" class="tiny">ВИД СБОКУ / ПРОДОЛЬНЫЙ РАЗРЕЗ</text>
+
+    <g transform="translate(30 105) scale(.86)">
+    <!-- Outer shell, insulation, inner wall and flue -->
+    <path d="M370 805 L370 590 Q370 430 483 317 L702 98"
+          fill="none" stroke="#6f838c" stroke-width="238" stroke-linecap="butt" stroke-linejoin="round"/>
+    <path d="M370 805 L370 590 Q370 430 483 317 L702 98"
+          fill="none" stroke="url(#steel)" stroke-width="226" stroke-linecap="butt" stroke-linejoin="round"/>
+    <path d="M370 805 L370 590 Q370 430 483 317 L702 98"
+          fill="none" stroke="url(#insulation)" stroke-width="204" stroke-linecap="butt" stroke-linejoin="round"/>
+    <path d="M370 805 L370 590 Q370 430 483 317 L702 98"
+          fill="none" stroke="#5c6c72" stroke-width="112" stroke-linecap="butt" stroke-linejoin="round"/>
+    <path d="M370 805 L370 590 Q370 430 483 317 L702 98"
+          fill="none" stroke="#f7f9f8" stroke-width="100" stroke-linecap="butt" stroke-linejoin="round"/>
+
+    <!-- Socket rings -->
+    <path d="M250 775H490M262 800H478" stroke="#52666f" stroke-width="5"/>
+    <path d="M606 15L774 183M620 1L788 169" stroke="#52666f" stroke-width="5"/>
+
+    <!-- Center axis -->
+    <path d="M370 860 L370 590 Q370 430 483 317 L748 52" class="axis"/>
+
+    <!-- Angle -->
+    <path d="M370 465 A128 128 0 0 1 460 428" fill="none" stroke="#ed5b2a" stroke-width="3"/>
+    <path d="M370 465V385M460 428L516 372" class="ext"/>
+    <text x="397" y="403" class="label" fill="#ed5b2a">45°</text>
+
+    <!-- L along elbow centerline -->
+    <path d="M214 814 L214 592 Q214 365 375 204 L603 -24" class="dim"/>
+    <path d="M214 814H342M603 -24L674 47" class="ext"/>
+    <rect x="166" y="410" width="96" height="48" rx="3" fill="#f7f9f8"/>
+    <text x="199" y="443" class="label">L</text>
+    <text x="92" y="875" class="small">L — длина отвода по осевой линии</text>
+    </g>
+  </g>
+
+  <!-- Cross section -->
+  <g aria-label="Поперечный разрез с диаметрами">
+    <text x="1020" y="177" class="tiny">ПОПЕРЕЧНЫЙ РАЗРЕЗ</text>
+
+    <circle cx="1250" cy="445" r="205" fill="#738891"/>
+    <circle cx="1250" cy="445" r="197" fill="url(#steel)"/>
+    <circle cx="1250" cy="445" r="181" fill="url(#insulation)"/>
+    <circle cx="1250" cy="445" r="94" fill="#5c6c72"/>
+    <circle cx="1250" cy="445" r="86" fill="#f7f9f8"/>
+    <path d="M1005 445H1495M1250 200V690" class="axis" opacity=".6"/>
+
+    <!-- D dimension -->
+    <path d="M1045 720V665M1455 720V665" class="ext"/>
+    <path d="M1045 705H1455" class="dim"/>
+    <rect x="1210" y="681" width="80" height="44" fill="#f7f9f8"/>
+    <text x="1230" y="712" class="label">D</text>
+
+    <!-- d dimension -->
+    <path d="M1164 445H1336" class="dim"/>
+    <rect x="1222" y="421" width="56" height="44" fill="#f7f9f8"/>
+    <text x="1237" y="452" class="label">d</text>
+
+    <!-- Insulation callout -->
+    <path d="M1058 255L1133 326" class="callout"/>
+    <text x="895" y="234" class="label">50 мм</text>
+    <text x="895" y="260" class="small">теплоизоляция</text>
+
+    <!-- Steel thickness callout -->
+    <path d="M1450 290L1381 339" class="callout"/>
+    <text x="1380" y="252" class="label">S = 0,8 мм</text>
+    <text x="1380" y="278" class="small">толщина стали</text>
+  </g>
+
+  <!-- Legend / specification -->
+  <g transform="translate(870 790)">
+    <rect width="640" height="102" fill="#ffffff" stroke="#bfcacc" stroke-width="2"/>
+    <path d="M0 50H640M320 0V102" stroke="#d3dcde" stroke-width="1.5"/>
+    <text x="18" y="31" class="tiny">УГОЛ ОТВОДА</text>
+    <text x="215" y="32" class="label">45°</text>
+    <text x="338" y="31" class="tiny">ТЕПЛОИЗОЛЯЦИЯ</text>
+    <text x="540" y="32" class="label">50 мм</text>
+    <text x="18" y="81" class="tiny">РАЗМЕРЫ</text>
+    <text x="118" y="82" class="small">L · d · D</text>
+    <text x="338" y="81" class="tiny">СТАЛЬ</text>
+    <text x="456" y="82" class="small">S = 0,8 мм</text>
+  </g>
+
+  <text x="82" y="960" class="small">Условное изображение для карточки товара. Конкретные L, d и D подставляются из данных SKU.</text>
+  <text x="1420" y="960" class="tiny">DT–45–50–08</text>
+</svg>

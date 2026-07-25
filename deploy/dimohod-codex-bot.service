@@ -1,0 +1,27 @@
+[Unit]
+Description=Dimohod Trade Telegram Codex Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/dimohod-trade
+ExecStart=/usr/bin/python3 -m tools.codex_telegram_bot.bot
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+Environment=CODEX_BOT_CODEX_BINARY=/usr/local/bin/codex
+
+# Codex still needs write access to its state and the project workspace.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/dimohod-trade /root/.codex
+PrivateDevices=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
