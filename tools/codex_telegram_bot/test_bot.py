@@ -9,6 +9,7 @@ from tools.codex_telegram_bot.bot import (
     PROJECT_INSTRUCTIONS,
     CodexRunner,
     PendingAction,
+    POST_TASK_KEYBOARD,
     RELEASE_CONFIRM_KEYBOARD,
     ReleaseManager,
     StateStore,
@@ -16,6 +17,8 @@ from tools.codex_telegram_bot.bot import (
     TelegramAPI,
     TelegramError,
     consume_codex_event,
+    allowed_changed_paths,
+    commit_message_from_prompt,
     detect_natural_confirmation,
     detect_natural_release_intent,
     extract_file_requests,
@@ -119,6 +122,32 @@ class BotUtilitiesTest(unittest.TestCase):
         self.assertEqual(
             [button["callback_data"] for button in buttons],
             ["release:confirm", "release:abort"],
+        )
+
+    def test_post_task_keyboard_has_ship_and_continue(self) -> None:
+        buttons = POST_TASK_KEYBOARD["inline_keyboard"][0]
+        self.assertEqual(
+            [button["callback_data"] for button in buttons],
+            ["posttask:ship", "posttask:continue"],
+        )
+
+    def test_allowed_changes_exclude_protected_paths(self) -> None:
+        status = (
+            "## ui/replit-port...origin/ui/replit-port\n"
+            " M apps/web/app/page.tsx\n"
+            "?? prices/50mm.json\n"
+            "?? backend/configurator/chimney-configurator-png.html\n"
+            "?? storage/catalog/new.png\n"
+        )
+        self.assertEqual(
+            allowed_changed_paths(status),
+            ["apps/web/app/page.tsx", "storage/catalog/new.png"],
+        )
+
+    def test_commit_message_comes_from_prompt(self) -> None:
+        self.assertEqual(
+            commit_message_from_prompt("**Исправь мобильное меню**\n\nДетали"),
+            "Исправь мобильное меню",
         )
 
     def test_markdown_send_falls_back_to_plain_text(self) -> None:

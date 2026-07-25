@@ -67,6 +67,14 @@ RELEASE_CONFIRM_KEYBOARD = {
         ]
     ]
 }
+POST_TASK_KEYBOARD = {
+    "inline_keyboard": [
+        [
+            {"text": "🚀 Пуш и деплой", "callback_data": "posttask:ship"},
+            {"text": "➡️ Продолжить", "callback_data": "posttask:continue"},
+        ]
+    ]
+}
 
 
 def load_dotenv(path: Path) -> None:
@@ -729,6 +737,26 @@ def is_protected_commit_path(path: str) -> bool:
     )
 
 
+def allowed_changed_paths(status_output: str) -> list[str]:
+    paths: list[str] = []
+    for line in status_output.splitlines():
+        if len(line) < 4 or line.startswith("## "):
+            continue
+        path = line[3:].strip().strip('"')
+        if " -> " in path:
+            path = path.rsplit(" -> ", 1)[1].strip().strip('"')
+        if path and not is_protected_commit_path(path):
+            paths.append(path)
+    return paths
+
+
+def commit_message_from_prompt(prompt: str) -> str:
+    first_line = next((line.strip() for line in prompt.splitlines() if line.strip()), "")
+    message = re.sub(r"[*_`#\[\]]", "", first_line)
+    message = re.sub(r"\s+", " ", message).strip(" .,:;!?—-")[:120]
+    return message or "Update dimohod-trade via Telegram"
+
+
 def run_host_command(args: list[str], cwd: Path, timeout: int = 1200) -> str:
     result = subprocess.run(
         args,
@@ -898,6 +926,9 @@ class ReleaseManager:
             self.project_root,
             timeout=20,
         )
+
+    def allowed_changed_paths(self) -> list[str]:
+        return allowed_changed_paths(self.status())
 
     def staged_paths(self) -> list[str]:
         output = run_host_command(
@@ -1123,6 +1154,22 @@ class BotApplication:
             reply_markup=RELEASE_CONFIRM_KEYBOARD,
         )
 
+    def offer_post_task_actions(
+        self, chat_id: int, message_id: int, prompt: str, paths: list[str]
+    ) -> None:
+        action = PendingAction("ship", commit_message_from_prompt(prompt))
+        with self.pending_lock:
+            self.pending_actions[chat_id] = action
+        preview = "\n".join(f"• {path}" for path in paths[:20])
+        if len(paths) > 20:
+            preview += f"\n• …и ещё {len(paths) - 20}"
+        self.api.send_message(
+            chat_id,
+            f"Изменения готовы:\n{preview}\n\nЧто делаем дальше?",
+            message_id,
+            reply_markup=POST_TASK_KEYBOARD,
+        )
+
     def confirm_release_action(self, chat_id: int, message_id: int) -> None:
         with self.pending_lock:
             action = self.pending_actions.pop(chat_id, None)
@@ -1177,8 +1224,39 @@ class BotApplication:
             self.api.answer_callback_query(callback_id, "Доступ запрещён")
             return
         data = str(callback.get("data") or "")
-        if data not in {"release:confirm", "release:abort"}:
+        valid_actions = {
+            "release:confirm",
+            "release:abort",
+            "posttask:ship",
+            "posttask:continue",
+        }
+        if data not in valid_actions:
             self.api.answer_callback_query(callback_id, "Неизвестное действие")
+            return
+        if data.startswith("posttask:"):
+            with self.pending_lock:
+                action = self.pending_actions.pop(chat_id, None)
+            if data == "posttask:continue":
+                self.api.answer_callback_query(callback_id, "Продолжаем без публикации")
+                try:
+                    self.api.clear_inline_keyboard(chat_id, message_id)
+                except TelegramError:
+                    pass
+                self.api.send_message(chat_id, "Хорошо, изменения оставлены локально.", message_id)
+                return
+            if not action or action.expired():
+                self.api.answer_callback_query(callback_id, "Предложение устарело")
+                try:
+                    self.api.clear_inline_keyboard(chat_id, message_id)
+                except TelegramError:
+                    pass
+                return
+            self.api.answer_callback_query(callback_id, "Запускаю push и deploy…")
+            try:
+                self.api.clear_inline_keyboard(chat_id, message_id)
+            except TelegramError:
+                pass
+            self.executor.submit(self.process_release_action, chat_id, message_id, action)
             return
         self.api.answer_callback_query(
             callback_id, "Запускаю…" if data == "release:confirm" else "Отменено"
@@ -1443,6 +1521,12 @@ class BotApplication:
                     self.prepare_release_action(
                         chat_id, message_id, post_action.kind, post_action.argument
                     )
+                else:
+                    changed_paths = self.release.allowed_changed_paths()
+                    if changed_paths:
+                        self.offer_post_task_actions(
+                            chat_id, message_id, prompt, changed_paths
+                        )
             elif summary.cancelled:
                 update_status("⛔ Задача остановлена")
             else:
