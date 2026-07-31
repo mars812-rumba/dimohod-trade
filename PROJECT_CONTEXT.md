@@ -1,6 +1,6 @@
 # Dimohod Trade — project context for Codex
 
-Обновлено: 2026-07-20  
+Обновлено: 2026-07-31
 Репозиторий: `mars812-rumba/dimohod-trade`  
 Текущая рабочая ветка: `ui/replit-port`
 
@@ -11,6 +11,10 @@
 Для короткой карты ближайших приоритетов читать:
 
 - `NEXT_STEPS.md`
+
+Архитектура общих медиа, параметрических SVG, сцены конфигуратора и BOM зафиксирована в:
+
+- `docs/PARAMETRIC_PRODUCT_MEDIA_AND_BOM_ARCHITECTURE.md`
 
 ## 1. Главная идея продукта
 
