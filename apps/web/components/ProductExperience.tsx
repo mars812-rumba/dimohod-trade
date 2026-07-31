@@ -59,6 +59,7 @@ const tempProductMedia: Record<
     role: string;
     src: string;
     alt: string;
+    fit?: "cover" | "contain";
   }>
 > = {
   "sendvich-truba-115-200-nerzhaveyushchaya-stal-08": [
@@ -80,6 +81,15 @@ const tempProductMedia: Record<
   ],
 };
 
+const deflectorMedia = [
+  {
+    role: "Фото",
+    src: "/dimohod-media/catalog/products/deflectors/photos/main.jpg",
+    alt: "Дефлектор дымохода из нержавеющей стали, товарное фото",
+    fit: "contain" as const,
+  },
+];
+
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
 
@@ -98,7 +108,8 @@ export function ProductExperience({ product }: { product: Product }) {
   const [selectedSku, setSelectedSku] = useState(0);
   const [selectedImage, setSelectedImage] = useState(0);
   const activeSku = product.skus[selectedSku] ?? product.skus[0] ?? null;
-  const media = tempProductMedia[product.slug] ?? [];
+  const isDeflector = product.name.toLocaleLowerCase("ru-RU").includes("дефлектор");
+  const media = tempProductMedia[product.slug] ?? (isDeflector ? deflectorMedia : []);
   const activeImage = media[selectedImage] ?? media[0] ?? null;
   const outerDiameter =
     activeSku?.outer_diameter_mm ??
@@ -127,7 +138,11 @@ export function ProductExperience({ product }: { product: Product }) {
         <div className="product-main">
           <div className="product-image-wrap">
             {activeImage ? (
-              <img className="product-image" src={activeImage.src} alt={activeImage.alt} />
+              <img
+                className={`product-image${activeImage.fit === "contain" ? " product-image-contain" : ""}`}
+                src={activeImage.src}
+                alt={activeImage.alt}
+              />
             ) : (
               <div className="product-image-placeholder">
                 <span>Фото товара</span>

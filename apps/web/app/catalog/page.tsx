@@ -48,6 +48,7 @@ function CategoryRow({ category }: { category: CategoryNode }) {
 }
 
 function ProductCard({ product }: { product: ProductListItem }) {
+  const isDeflector = product.name.toLocaleLowerCase("ru-RU").includes("дефлектор");
   const diameterLabel = product.diameter_mm
     ? product.outer_diameter_mm
       ? `Ø ${product.diameter_mm}/${product.outer_diameter_mm} мм`
@@ -64,7 +65,15 @@ function ProductCard({ product }: { product: ProductListItem }) {
   return (
     <Link className="catalog-product-card" href={`/product/${product.slug}`}>
       <div className="catalog-product-media">
-        <span>{product.product_kind ?? "товар"}</span>
+        {isDeflector ? (
+          <img
+            src="/dimohod-media/catalog/products/deflectors/photos/main.jpg"
+            alt=""
+            aria-hidden="true"
+          />
+        ) : (
+          <span>{product.product_kind ?? "товар"}</span>
+        )}
       </div>
       <div className="catalog-product-body">
         <p className="meta">{product.category.name}</p>
