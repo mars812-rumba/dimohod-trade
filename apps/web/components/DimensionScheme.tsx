@@ -65,40 +65,37 @@ export function DimensionScheme({
 
       <g
         className="dimension-scheme-object"
-        fill="none"
         stroke="#26343d"
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="2.5"
       >
+        <path d="M135 105H365V225H135Z" fill="#e9eef0" />
+        <path d="M135 132H365M135 198H365" fill="none" stroke="#65747c" strokeWidth="1.5" />
+
+        <path d="M205 270H295L325 320H175Z" fill="#e9eef0" />
+        <path d="M175 320H325V382H175Z" fill="#e9eef0" />
+        <path d="M175 350H325" fill="none" stroke="#65747c" strokeWidth="1.5" />
+        <path d="M200 382H300V418H200Z" fill="#e9eef0" />
+
         <path
-          d="M145 112C145 101 192 93 250 93C308 93 355 101 355 112V218H305L338 285V350C322 358 306 362 286 364V397C286 405 270 410 250 410C230 410 214 405 214 397V364C194 362 178 358 162 350V285L195 218H145Z"
-          fill="#e9eef0"
-        />
-        <path
-          d="M145 218H195C210 205 230 200 250 200C270 200 290 205 305 218H355"
-          stroke="#65747c"
-          strokeWidth="1.6"
-        />
-        <path
-          d="M162 350C178 358 194 362 214 364M286 364C306 362 322 358 338 350"
-          stroke="#65747c"
-          strokeWidth="1.6"
+          d="M200 246C200 238 222 233 250 233C278 233 300 238 300 246V264C300 279 278 290 250 290C222 290 200 279 200 264Z"
+          fill="#f8fafb"
         />
       </g>
 
       <g className="dimension-scheme-dimensions" fill="none" stroke="#e56835" strokeWidth="1.5">
-        <path d="M145 90V54M355 90V54M145 64H355" />
-        <path d="M145 64L155 59V69ZM355 64L345 59V69Z" fill="#e56835" stroke="none" />
+        <path d="M135 90V54M365 90V54M135 64H365" />
+        <path d="M135 64L145 59V69ZM365 64L355 59V69Z" fill="#e56835" stroke="none" />
 
-        <path d="M120 112H78M214 410H78M88 112V410" />
-        <path d="M88 112L83 122H93ZM88 410L83 400H93Z" fill="#e56835" stroke="none" />
+        <path d="M120 105H78M200 418H78M88 105V418" />
+        <path d="M88 105L83 115H93ZM88 418L83 408H93Z" fill="#e56835" stroke="none" />
 
-        <path d="M214 410V434M286 410V434M214 424H286" />
-        <path d="M214 424L224 419V429ZM286 424L276 419V429Z" fill="#e56835" stroke="none" />
+        <path d="M200 418V440M300 418V440M200 430H300" />
+        <path d="M200 430L210 425V435ZM300 430L290 425V435Z" fill="#e56835" stroke="none" />
 
-        <path d="M338 333H385L408 310" />
-        <circle cx="338" cy="333" r="3" fill="#e56835" stroke="none" />
+        <path d="M325 350H385L408 322" />
+        <circle cx="325" cy="350" r="3" fill="#e56835" stroke="none" />
       </g>
 
       <g className="dimension-scheme-labels" fill="#1f2d35" fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
@@ -108,13 +105,13 @@ export function DimensionScheme({
         <text x="68" y="262" textAnchor="middle" fontSize="15" fontWeight="700" transform="rotate(-90 68 262)">
           {dimensionLabel("L", dimensions.L)}
         </text>
-        <text x="250" y="447" textAnchor="middle" fontSize="15" fontWeight="700">
+        <text x="250" y="454" textAnchor="middle" fontSize="15" fontWeight="700">
           {dimensionLabel("d", dimensions.d)}
         </text>
-        <text x="414" y="301" textAnchor="end" fontSize="13" fontWeight="700">
+        <text x="414" y="313" textAnchor="end" fontSize="13" fontWeight="700">
           {dimensionLabel("S", dimensions.S)}
         </text>
-        <text x="414" y="392" textAnchor="end" fontSize="12" fontWeight="700">
+        <text x="414" y="400" textAnchor="end" fontSize="12" fontWeight="700">
           {insulationLabel(dimensions.insulation)}
         </text>
       </g>
