@@ -11,6 +11,8 @@ class AdminCategoryRead(BaseModel):
     name: str
     slug: str
     product_count: int = 0
+    media_count: int = 0
+    extra_attributes: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -1,7 +1,8 @@
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, Uuid
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
@@ -23,6 +24,7 @@ class Category(TimestampMixin, Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     indexing_policy: Mapped[str] = mapped_column(String(32), default="index", server_default="index")
+    extra_attributes: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default="{}")
 
     parent: Mapped["Category | None"] = relationship(
         "Category",
@@ -35,4 +37,3 @@ class Category(TimestampMixin, Base):
         order_by="Category.sort_order",
     )
     products: Mapped[list["Product"]] = relationship("Product", back_populates="category")
-

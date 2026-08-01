@@ -40,6 +40,10 @@ async def read_admin_categories(session: AsyncSession = Depends(get_db)) -> list
             name=category.name,
             slug=category.slug,
             product_count=count,
+            media_count=len(category.extra_attributes.get("media", []))
+            if isinstance(category.extra_attributes.get("media"), list)
+            else 0,
+            extra_attributes=category.extra_attributes,
         )
         for category, count in rows
     ]

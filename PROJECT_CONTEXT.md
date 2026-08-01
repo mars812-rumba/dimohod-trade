@@ -108,6 +108,10 @@
 - `skus`
 - `needs_review`
 
+`categories.extra_attributes` добавлено миграцией
+`backend/alembic/versions/202608010001_category_extra_attributes.py` и используется для общих
+медиа категории/форм-фактора: 3 фото, параметрическая SVG-схема и будущие настройки рендера.
+
 Текущие API:
 
 - `GET /api/v1/health`
@@ -322,9 +326,11 @@ storage/catalog/products/sendvich-truba-115-200-nerzhaveyushchaya-stal-08/photos
 
 MVP админки доступен на `/admin`. Центральный список админки показывает SKU/варианты, а не только
 40 logical products: есть фильтр по категории, поиск по артикулу/названию/товару и пагинация.
-Реализовано управление SKU внутри выбранного товара, загрузка фото товара и редактирование
-характеристик SKU через `SKU.attributes`. Фото сохраняются в
-`storage/catalog/admin/<product-slug>/`, а backend раздает `storage/` через `/media`.
+Реализовано управление SKU внутри выбранного товара, загрузка фото категории и редактирование
+характеристик SKU через `SKU.attributes`. Фото сохраняются один раз на категорию в
+`storage/categories/<category-slug>/`, а backend раздает `storage/` через `/media`. Старые
+product-level media в `Product.extra_attributes.media` используются только как fallback, чтобы ранее
+загруженное фото не пропало.
 В Docker для этого используется `MEDIA_STORAGE_DIR=/app/storage` и volume `./storage:/app/storage`.
 Для browser-запросов админки frontend использует `NEXT_PUBLIC_BASE_PATH=/dimohod` и Next rewrites:
 `/dimohod/api/* -> backend /api/*`, `/dimohod/media/* -> backend /media/*`. Если нужен прямой

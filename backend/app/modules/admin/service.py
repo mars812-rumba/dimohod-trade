@@ -73,7 +73,9 @@ def decode_photo_payload(payload: str) -> bytes:
 
 
 def product_to_admin_read(product: Product) -> AdminProductRead:
-    media = normalize_media_list(product.extra_attributes)
+    category_media = normalize_media_list(product.category.extra_attributes)
+    product_media = normalize_media_list(product.extra_attributes)
+    media = category_media or product_media
     return AdminProductRead(
         id=product.id,
         category_id=product.category_id,
@@ -133,7 +135,7 @@ async def list_admin_products(
             slug=product.slug,
             product_kind=product.product_kind,
             sku_count=len(product.skus),
-            media_count=len(normalize_media_list(product.extra_attributes)),
+            media_count=len(normalize_media_list(product.category.extra_attributes)),
             is_active=product.is_active,
         )
         for product in products
@@ -260,17 +262,18 @@ async def attach_product_photo(session: AsyncSession, product_id: UUID, payload:
     content = decode_photo_payload(payload.content_base64)
     file_name = safe_asset_name(payload.file_name)
 
-    product_dir = Path(settings.media_storage_dir) / "catalog" / "admin" / product.slug
-    product_dir.mkdir(parents=True, exist_ok=True)
+    category = product.category
+    category_dir = Path(settings.media_storage_dir) / "categories" / category.slug
+    category_dir.mkdir(parents=True, exist_ok=True)
 
-    target = product_dir / file_name
+    target = category_dir / file_name
     if target.exists():
-        target = product_dir / f"{target.stem}-{len(normalize_media_list(product.extra_attributes)) + 1}{target.suffix}"
+        target = category_dir / f"{target.stem}-{len(normalize_media_list(category.extra_attributes)) + 1}{target.suffix}"
         file_name = target.name
     target.write_bytes(content)
 
     relative = target.relative_to(Path(settings.media_storage_dir))
-    media = normalize_media_list(product.extra_attributes)
+    media = normalize_media_list(category.extra_attributes)
     media.append(
         AdminMediaItem(
             url=f"/media/{relative.as_posix()}",
@@ -279,24 +282,36 @@ async def attach_product_photo(session: AsyncSession, product_id: UUID, payload:
             file_name=file_name,
         )
     )
-    product.extra_attributes = {
-        **(product.extra_attributes or {}),
+    category.extra_attributes = {
+        **(category.extra_attributes or {}),
         MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
     }
     await session.commit()
-    await session.refresh(product)
     return product_to_admin_read(await get_admin_product(session, product_id))
 
 
 async def delete_product_photo(session: AsyncSession, product_id: UUID, photo_index: int) -> AdminProductRead:
     product = await get_admin_product(session, product_id)
-    media = normalize_media_list(product.extra_attributes)
+    category = product.category
+    media = normalize_media_list(category.extra_attributes)
+    if not media:
+        media = normalize_media_list(product.extra_attributes)
+        if photo_index < 0 or photo_index >= len(media):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found")
+        media.pop(photo_index)
+        product.extra_attributes = {
+            **(product.extra_attributes or {}),
+            MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
+        }
+        await session.commit()
+        return product_to_admin_read(await get_admin_product(session, product_id))
+
     if photo_index < 0 or photo_index >= len(media):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found")
 
     media.pop(photo_index)
-    product.extra_attributes = {
-        **(product.extra_attributes or {}),
+    category.extra_attributes = {
+        **(category.extra_attributes or {}),
         MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
     }
     await session.commit()

@@ -10,6 +10,8 @@ type AdminCategory = {
   name: string;
   slug: string;
   product_count: number;
+  media_count: number;
+  extra_attributes: Record<string, unknown>;
 };
 
 type AdminProductListItem = {
@@ -399,8 +401,8 @@ export default function AdminCatalogManager() {
         <div>
           <h1 className={styles.title}>Админка каталога</h1>
           <p className={styles.subtitle}>
-            SKU редактируются внутри выбранного товара и категории. Фото хранятся один раз на товар,
-            характеристики SKU ведутся в JSON.
+            SKU редактируются внутри выбранной категории. Фото и схемы хранятся один раз на категорию,
+            характеристики конкретного SKU ведутся в JSON.
           </p>
         </div>
         <div className={styles.status}>{status}</div>
@@ -437,7 +439,9 @@ export default function AdminCatalogManager() {
               >
                 <span>
                   <span className={styles.rowTitle}>{category.name}</span>
-                  <span className={styles.rowMeta}>{category.slug}</span>
+                  <span className={styles.rowMeta}>
+                    {category.slug} · фото {category.media_count}
+                  </span>
                 </span>
                 <span className={styles.badge}>{category.product_count}</span>
               </button>
@@ -510,7 +514,7 @@ export default function AdminCatalogManager() {
 
         <section className={styles.panel}>
           {!selectedProduct ? (
-            <p className={styles.notice}>Выберите SKU, чтобы управлять фото товара и характеристиками варианта.</p>
+            <p className={styles.notice}>Выберите SKU, чтобы управлять фото категории и характеристиками варианта.</p>
           ) : (
             <div className={styles.detail}>
               <div className={styles.productHead}>
@@ -539,7 +543,7 @@ export default function AdminCatalogManager() {
                 {selectedProduct.media.length < 3
                   ? Array.from({ length: 3 - selectedProduct.media.length }).map((_, index) => (
                       <div className={styles.emptyTile} key={`empty-${index}`}>
-                        фото {selectedProduct.media.length + index + 1}
+                        фото категории {selectedProduct.media.length + index + 1}
                       </div>
                     ))
                   : null}
@@ -563,14 +567,14 @@ export default function AdminCatalogManager() {
                   Alt
                   <input
                     onChange={(event) => setPhotoAlt(event.target.value)}
-                    placeholder={`${selectedProduct.name}, фото товара`}
+                    placeholder={`${selectedProduct.category_name}, фото категории`}
                     value={photoAlt}
                   />
                 </label>
               </div>
               <div className={styles.toolbar}>
                 <button className={styles.ghostButton} disabled={isBusy || !photoFile} onClick={uploadPhoto} type="button">
-                  <ImagePlus size={15} /> Добавить фото
+                  <ImagePlus size={15} /> Добавить фото категории
                 </button>
               </div>
 
