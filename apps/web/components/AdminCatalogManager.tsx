@@ -100,6 +100,7 @@ type SKUFormState = {
 };
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const allCategoriesId = "all";
 const skuPageSize = 200;
 
@@ -156,7 +157,8 @@ function skuToForm(sku: AdminSKU): SKUFormState {
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const requestUrl = buildBackendUrl(path);
+  const response = await fetch(requestUrl, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -170,6 +172,10 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+function buildBackendUrl(path: string): string {
+  return apiBaseUrl ? `${apiBaseUrl}${path}` : `${appBasePath}${path}`;
 }
 
 async function fileToDataUrl(file: File): Promise<string> {
@@ -517,7 +523,7 @@ export default function AdminCatalogManager() {
               <div className={styles.mediaGrid}>
                 {selectedProduct.media.map((item, index) => (
                   <div className={styles.mediaTile} key={`${item.url}-${index}`}>
-                    <img alt={item.alt ?? selectedProduct.name} src={`${apiBaseUrl}${item.url}`} />
+                    <img alt={item.alt ?? selectedProduct.name} src={buildBackendUrl(item.url)} />
                     <button
                       aria-label="Убрать фото"
                       className={styles.deleteMedia}

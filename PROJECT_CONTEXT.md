@@ -326,6 +326,9 @@ MVP админки доступен на `/admin`. Центральный спи
 характеристик SKU через `SKU.attributes`. Фото сохраняются в
 `storage/catalog/admin/<product-slug>/`, а backend раздает `storage/` через `/media`.
 В Docker для этого используется `MEDIA_STORAGE_DIR=/app/storage` и volume `./storage:/app/storage`.
+Для browser-запросов админки frontend использует `NEXT_PUBLIC_BASE_PATH=/dimohod` и Next rewrites:
+`/dimohod/api/* -> backend /api/*`, `/dimohod/media/* -> backend /media/*`. Если нужен прямой
+публичный backend URL, его можно задать через `NEXT_PUBLIC_API_BASE_URL` на этапе build.
 Авторизация и роли для админки пока не реализованы; перед production-доступом маршрут нужно закрыть.
 
 ## 6. Продуктовая структура главной страницы

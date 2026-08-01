@@ -28,6 +28,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://chimney:chimney@postgres:5432/chimney}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost:3000"]}
+      MEDIA_STORAGE_DIR: ${MEDIA_STORAGE_DIR:-/app/storage}
     ports:
       - "8000:8000"
     depends_on:
@@ -39,14 +40,20 @@ services:
       - ./backend/app:/app/app
       - ./backend/alembic:/app/alembic
       - ./backend/tests:/app/tests
+      - ./storage:/app/storage
 
   web:
     build:
       context: ./apps/web
       args:
+        API_BASE_URL: ${API_BASE_URL:-http://backend:8000}
         NEXT_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
+        NEXT_PUBLIC_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
     environment:
       API_BASE_URL: ${API_BASE_URL:-http://backend:8000}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      NEXT_PUBLIC_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://sunny-rentals.online/dimohod}
       NEXT_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
     ports:
