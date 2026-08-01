@@ -6,12 +6,19 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  Barcode,
   CheckCircle2,
   ChevronDown,
+  CircleDot,
+  Cog,
   FileText,
   Info,
+  Layers3,
   Mail,
+  Package,
+  PanelsTopLeft,
   Phone,
+  Ruler,
   ShieldCheck,
   Truck,
   XCircle,
@@ -620,18 +627,23 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                             src={publicMediaUrl(item.primary_image.url)}
                           />
                         ) : (
-                          <span>Сэндвич-труба</span>
+                          <span className="compatible-product-placeholder">
+                            <Package aria-hidden="true" size={25} strokeWidth={1.7} />
+                            Сэндвич-труба
+                          </span>
                         )}
                       </div>
                       <div className="compatible-product-body">
                         <strong>{item.product_name}</strong>
-                        <small>Арт. {item.article}</small>
+                        <small><Barcode aria-hidden="true" size={12} /> Арт. {item.article}</small>
                         <div className="compatible-product-specs">
-                          <span>{item.diameter_mm}/{item.outer_diameter_mm} мм</span>
-                          {item.length_mm !== null ? <span>L={item.length_mm} мм</span> : null}
-                          <span>утепление {item.insulation_mm} мм</span>
-                          <span>{item.steel_grade}</span>
-                          <span>{materialLabel(item.material)}</span>
+                          <span><CircleDot aria-hidden="true" size={13} /> {item.diameter_mm}/{item.outer_diameter_mm} мм</span>
+                          {item.length_mm !== null ? (
+                            <span><Ruler aria-hidden="true" size={13} /> L={item.length_mm} мм</span>
+                          ) : null}
+                          <span><Layers3 aria-hidden="true" size={13} /> утепление {item.insulation_mm} мм</span>
+                          <span><Cog aria-hidden="true" size={13} /> {item.steel_grade}</span>
+                          <span><PanelsTopLeft aria-hidden="true" size={13} /> {materialLabel(item.material)}</span>
                         </div>
                         <div className="compatible-product-footer">
                           <b>{formatPrice(item.price_rub)}</b>
