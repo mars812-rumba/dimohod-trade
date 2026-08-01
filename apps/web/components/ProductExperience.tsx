@@ -14,14 +14,24 @@ import {
   Truck,
   XCircle,
 } from "lucide-react";
+import { DimensionScheme } from "@/components/DimensionScheme";
 import type { Product } from "@/lib/api";
 
-type ProductMediaItem = {
+type ProductPhotoItem = {
+  kind?: "photo";
   role: string;
   src: string;
   alt: string;
   fit?: "cover" | "contain";
 };
+
+type ProductSchemeItem = {
+  kind: "scheme";
+  role: string;
+  alt: string;
+};
+
+type ProductMediaItem = ProductPhotoItem | ProductSchemeItem;
 
 function formatPrice(value: string | null) {
   if (value === null || Number(value) <= 0) {
@@ -95,7 +105,7 @@ function publicMediaUrl(url: string) {
   return url.startsWith("/media/") ? `${appBasePath}${url}` : url;
 }
 
-function sharedProductMedia(product: Product, alt: string): ProductMediaItem[] {
+function sharedProductMedia(product: Product, alt: string): ProductPhotoItem[] {
   const rawMedia = product.extra_attributes.media;
   if (!Array.isArray(rawMedia)) {
     return [];
@@ -135,7 +145,9 @@ export function ProductExperience({ product }: { product: Product }) {
   const [selectedSku, setSelectedSku] = useState(0);
   const [selectedImage, setSelectedImage] = useState(0);
   const activeSku = product.skus[selectedSku] ?? product.skus[0] ?? null;
-  const isDeflector = product.name.toLocaleLowerCase("ru-RU").includes("дефлектор");
+  const normalizedProductName = product.name.toLocaleLowerCase("ru-RU");
+  const isDeflector = normalizedProductName.includes("дефлектор");
+  const hasDeflectorConeScheme = isDeflector && normalizedProductName.includes("конус");
   const outerDiameter =
     activeSku?.outer_diameter_mm ??
     (typeof product.extra_attributes.outer_diameter_mm === "number"
@@ -151,10 +163,31 @@ export function ProductExperience({ product }: { product: Product }) {
   const lengthMm = activeSku?.length_mm ?? null;
   const parametricAlt = `${product.name} ${outerDiameter ?? diameterMm ?? "—"} мм, L=${lengthMm ?? "—"} D=${
     outerDiameter ?? "—"
-  } d=${diameterMm ?? "—"} S=${wallThicknessMm ?? "—"}`;
+  } d=${diameterMm ?? "—"} S=${wallThicknessMm ?? "—"}, утепление=${insulationMm ?? "—"} мм, сталь ${
+    steelGrade ?? "не указана"
+  }`;
   const storedMedia = sharedProductMedia(product, parametricAlt);
-  const media = storedMedia.length ? storedMedia : tempProductMedia[product.slug] ?? (isDeflector ? deflectorMedia : []);
+  const productPhotos = storedMedia.length
+    ? storedMedia
+    : tempProductMedia[product.slug] ?? (isDeflector ? deflectorMedia : []);
+  const media: ProductMediaItem[] = hasDeflectorConeScheme
+    ? [
+        ...productPhotos.slice(0, 3),
+        {
+          kind: "scheme",
+          role: "Схема размеров",
+          alt: parametricAlt,
+        },
+      ]
+    : productPhotos;
   const activeImage = media[selectedImage] ?? media[0] ?? null;
+  const schemeDimensions = {
+    L: lengthMm,
+    D: outerDiameter,
+    d: diameterMm,
+    S: wallThicknessMm,
+    insulation: insulationMm,
+  };
 
   return (
     <main className="page">
@@ -169,7 +202,16 @@ export function ProductExperience({ product }: { product: Product }) {
       <div className="product-layout">
         <div className="product-main">
           <div className="product-image-wrap">
-            {activeImage ? (
+            {activeImage?.kind === "scheme" ? (
+              <div className="product-dimension-scheme">
+                <DimensionScheme
+                  title={product.name}
+                  dimensions={schemeDimensions}
+                  steelGrade={steelGrade}
+                  material={material}
+                />
+              </div>
+            ) : activeImage ? (
               <img
                 className={`product-image${activeImage.fit === "contain" ? " product-image-contain" : ""}`}
                 src={activeImage.src}
@@ -192,11 +234,21 @@ export function ProductExperience({ product }: { product: Product }) {
                 {media.map((item, index) => (
                   <button
                     className={`product-thumb${selectedImage === index ? " product-thumb-active" : ""}`}
-                    key={item.src}
+                    key={item.kind === "scheme" ? "dimension-scheme" : item.src}
                     onClick={() => setSelectedImage(index)}
                     type="button"
                   >
-                    <img src={item.src} alt="" aria-hidden="true" />
+                    {item.kind === "scheme" ? (
+                      <DimensionScheme
+                        title={product.name}
+                        dimensions={schemeDimensions}
+                        steelGrade={steelGrade}
+                        material={material}
+                        compact
+                      />
+                    ) : (
+                      <img src={item.src} alt="" aria-hidden="true" />
+                    )}
                     <span>{item.role}</span>
                   </button>
                 ))}

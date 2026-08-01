@@ -2335,7 +2335,7 @@ ul {
 
 .product-gallery-thumbs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   padding: 12px;
   border-top: 1px solid var(--line);
@@ -2363,6 +2363,26 @@ ul {
   aspect-ratio: 1 / 1;
   border-radius: 6px;
   object-fit: cover;
+}
+
+.product-dimension-scheme {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  place-items: center;
+  background: #f8fafb;
+}
+
+.dimension-scheme-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+.product-thumb .dimension-scheme-svg {
+  border-radius: 6px;
+  background: #f8fafb;
 }
 
 .product-thumb span {

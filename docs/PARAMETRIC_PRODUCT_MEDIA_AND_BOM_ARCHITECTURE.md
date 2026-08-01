@@ -86,6 +86,7 @@ export type ProductDimensions = {
   D: number | null;
   d: number | null;
   S: number | null;
+  insulation: number | null;
 };
 ```
 
@@ -95,6 +96,7 @@ export type ProductDimensions = {
 - `D` — максимальный наружный диаметр, мм;
 - `d` — внутренний рабочий/присоединительный диаметр, мм;
 - `S` — толщина стали, мм.
+- `insulation` — толщина изоляции сэндвич-элемента, мм.
 
 Соответствие текущей модели SKU:
 
@@ -103,10 +105,11 @@ L -> skus.length_mm
 D -> skus.outer_diameter_mm
 d -> skus.diameter_mm
 S -> skus.wall_thickness_mm
+insulation -> skus.insulation_mm
 ```
 
 Для деталей, которым нужны дополнительные параметры, контракт расширяется именованными полями,
-например `angle_deg`, `insulation_mm` или `socket_length_mm`. Нельзя менять смысл `L/D/d/S` от
+например `angle_deg` или `socket_length_mm`. Нельзя менять смысл `L/D/d/S/insulation` от
 категории к категории без явного описания.
 
 Марка стали, толщина изоляции и цена не создают новую SVG-геометрию, если конструкция изделия не
@@ -170,8 +173,8 @@ Nginx уже публикует `/dimohod-media/` из каталога `storage
 Рекомендуемая структура SVG:
 
 ```xml
-<svg viewBox="0 0 320 420" xmlns="http://www.w3.org/2000/svg">
-  <symbol id="shape" viewBox="0 0 320 420">
+<svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="shape" viewBox="0 0 480 480">
     <!-- контуры изделия без конкретных цифр -->
   </symbol>
 </svg>
@@ -184,6 +187,10 @@ ProductShape       -> только контур изделия
 DimensionScheme    -> контур + выносные линии + L/D/d/S
 ConfiguratorPart   -> контур + точки стыковки, без размерных подписей
 ```
+
+Размерная схема карточки всегда использует квадратный холст `480 x 480`. Компактная геометрия
+детали в конфигураторе использует отдельный холст `200 x 200`: на нём нет размерных подписей,
+но есть порты соединения.
 
 Размерные значения не записываются обратно в файл и не создают новый SVG на диске.
 
@@ -236,7 +243,7 @@ const geometryRegistry = {
 ```tsx
 <DimensionScheme
   geometryFamily="deflector-standard"
-  dimensions={{ L: 200, D: 115, d: 100, S: 1.5 }}
+  dimensions={{ L: 200, D: 115, d: 100, S: 1.5, insulation: 50 }}
   title="Дефлектор"
 />
 ```
@@ -247,8 +254,9 @@ const geometryRegistry = {
 2. рендерит базовый контур;
 3. строит выносные линии;
 4. подставляет значения в SVG `<text>`;
-5. добавляет `<title>` и `<desc>` для доступности;
-6. не является единственным местом, где опубликованы размеры.
+5. показывает толщину изоляции, марку и материал стали из выбранного SKU;
+6. добавляет `<title>` и `<desc>` для доступности;
+7. не является единственным местом, где опубликованы размеры.
 
 Для SEO и доступности значения обязательно повторяются обычным HTML под схемой.
 
@@ -512,7 +520,9 @@ geometry_families
 - `geometry_family` и `media_key` в PostgreSQL;
 - таблица `geometry_families`;
 - общий `geometryRegistry`;
-- компоненты `ProductShape`, `DimensionScheme`, `ConfiguratorPart`;
+- общие компоненты `ProductShape` и `ConfiguratorPart`;
+- `DimensionScheme` для остальных geometry family (первая схема `deflector-cone` реализована в
+  `apps/web/components/DimensionScheme.tsx` и подключена четвёртым элементом галереи);
 - параметрические SVG всех деталей;
 - SKU SEO route и JSON-LD;
 - backend endpoint расчёта BOM;
