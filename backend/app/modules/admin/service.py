@@ -1,11 +1,15 @@
 import base64
 import binascii
+import json
 import re
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+import httpx
 from fastapi import HTTPException, status
+from pydantic import ValidationError
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +21,8 @@ from app.modules.admin.schemas import (
     AdminPhotoUpload,
     AdminProductListItem,
     AdminProductRead,
+    AdminProductUpdate,
+    AdminSEOGenerateResponse,
     AdminSKUCreate,
     AdminSKUListItem,
     AdminSKUUpdate,
@@ -35,6 +41,152 @@ PHOTO_ROLE_FILENAMES = {
     "connection": "photo-3",
     "detail": "photo-3",
 }
+OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
+SEO_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "short_description": {"type": "string"},
+        "description": {"type": "string"},
+        "seo_title": {"type": "string"},
+        "seo_description": {"type": "string"},
+    },
+    "required": ["short_description", "description", "seo_title", "seo_description"],
+    "additionalProperties": False,
+}
+
+
+def extract_openai_output_text(payload: dict[str, Any]) -> str:
+    direct = payload.get("output_text")
+    if isinstance(direct, str) and direct.strip():
+        return direct
+    for output_item in payload.get("output", []):
+        if not isinstance(output_item, dict):
+            continue
+        for content_item in output_item.get("content", []):
+            if not isinstance(content_item, dict):
+                continue
+            if content_item.get("type") == "output_text" and isinstance(
+                content_item.get("text"), str
+            ):
+                return content_item["text"]
+    raise ValueError("OpenAI response does not contain output text")
+
+
+def _unique_values(values: list[Any], *, limit: int = 40) -> list[Any] | dict[str, Any]:
+    normalized = sorted(
+        {str(value) if isinstance(value, Decimal) else value for value in values if value is not None},
+        key=lambda value: str(value),
+    )
+    if len(normalized) <= limit:
+        return normalized
+    return {"first": normalized[:limit], "total_unique": len(normalized)}
+
+
+def product_seo_facts(product: Product) -> dict[str, Any]:
+    skus = [sku for sku in product.skus if sku.is_active]
+    return {
+        "family_name": product.name,
+        "category": product.category.name,
+        "product_kind": product.product_kind,
+        "brand": product.brand,
+        "purpose": product.purpose,
+        "application_tags": product.application_tags,
+        "compatibility_notes": product.compatibility_notes,
+        "active_sku_count": len(skus),
+        "diameter_d_mm": _unique_values([sku.diameter_mm for sku in skus]),
+        "outer_diameter_D_mm": _unique_values([sku.outer_diameter_mm for sku in skus]),
+        "length_L_mm": _unique_values([sku.length_mm for sku in skus]),
+        "wall_thickness_S_mm": _unique_values([sku.wall_thickness_mm for sku in skus]),
+        "insulation_mm": _unique_values([sku.insulation_mm for sku in skus]),
+        "steel_grades": _unique_values([sku.steel_grade for sku in skus]),
+        "materials": _unique_values([sku.material for sku in skus]),
+        "contours": _unique_values([sku.contour for sku in skus]),
+        "angles_deg": _unique_values([sku.angle_deg for sku in skus]),
+    }
+
+
+def build_product_seo_prompt(product: Product) -> str:
+    facts = json.dumps(product_seo_facts(product), ensure_ascii=False, indent=2)
+    return f"""Сформируй SEO-черновик на русском языке для семейства товаров «Дымоход Трейд».
+
+Используй только факты из JSON ниже. Не выдумывай сертификаты, температуры, наличие,
+гарантии, совместимость, способ монтажа или технические преимущества, которых нет в данных.
+Текст должен быть полезным покупателю, естественным, без HTML, Markdown и переспама.
+
+Требования к полям:
+- short_description: 1–2 предложения, до 500 символов;
+- description: уникальное описание семейства примерно 900–1600 символов: назначение,
+  конструкция и доступные варианты только по подтверждённым данным;
+- seo_title: шаблон до 180 символов, обязательно с {{name}} и брендом «Дымоход Трейд»;
+- seo_description: шаблон до 320 символов с конкретикой о товаре;
+- в шаблонах разрешены только переменные {{name}}, {{article}}, {{d}}, {{D}}, {{L}},
+  {{S}}, {{steel}}, {{insulation}}. Сохраняй фигурные скобки дословно;
+- не перечисляй все SKU и не вставляй цену.
+
+Факты о семействе:
+{facts}
+"""
+
+
+async def generate_product_seo(session: AsyncSession, product_id: UUID) -> AdminSEOGenerateResponse:
+    product = await get_admin_product(session, product_id)
+    if not settings.openai_api_key:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="OPENAI_API_KEY не настроен для backend",
+        )
+
+    request_payload = {
+        "model": settings.openai_seo_model,
+        "input": [
+            {
+                "role": "system",
+                "content": (
+                    "Ты редактор технического каталога дымоходов. "
+                    "Возвращай только проверяемый SEO-текст."
+                ),
+            },
+            {"role": "user", "content": build_product_seo_prompt(product)},
+        ],
+        "text": {
+            "format": {
+                "type": "json_schema",
+                "name": "product_family_seo",
+                "strict": True,
+                "schema": SEO_JSON_SCHEMA,
+            }
+        },
+        "max_output_tokens": 2400,
+        "store": False,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                OPENAI_RESPONSES_URL,
+                headers={
+                    "Authorization": f"Bearer {settings.openai_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=request_payload,
+            )
+            response.raise_for_status()
+        generated = json.loads(extract_openai_output_text(response.json()))
+        return AdminSEOGenerateResponse(**generated, model=settings.openai_seo_model)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"OpenAI не сгенерировал SEO (HTTP {exc.response.status_code})",
+        ) from exc
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Не удалось подключиться к OpenAI",
+        ) from exc
+    except (ValueError, TypeError, ValidationError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="OpenAI вернул некорректный SEO-черновик",
+        ) from exc
 
 
 def normalize_media_list(extra_attributes: dict[str, Any] | None) -> list[AdminMediaItem]:
@@ -258,6 +410,32 @@ async def get_admin_product(session: AsyncSession, product_id: UUID) -> Product:
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     return product
+
+
+async def update_product(
+    session: AsyncSession,
+    product_id: UUID,
+    payload: AdminProductUpdate,
+) -> AdminProductRead:
+    product = await get_admin_product(session, product_id)
+    values = payload.model_dump(exclude_unset=True)
+    for field in ("short_description", "description"):
+        if field in values:
+            setattr(product, field, values[field])
+
+    extra_attributes = dict(product.extra_attributes or {})
+    for field in ("seo_title", "seo_description"):
+        if field not in values:
+            continue
+        value = values[field]
+        if value:
+            extra_attributes[field] = value
+        else:
+            extra_attributes.pop(field, None)
+    product.extra_attributes = extra_attributes
+
+    await session.commit()
+    return product_to_admin_read(await get_admin_product(session, product_id))
 
 
 async def create_sku(session: AsyncSession, product_id: UUID, payload: AdminSKUCreate) -> SKU:

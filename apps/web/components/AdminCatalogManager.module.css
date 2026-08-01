@@ -229,6 +229,72 @@
   font-size: 24px;
 }
 
+.seoEditor {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px;
+  border: 1px solid rgba(50, 98, 118, 0.24);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f7fbfb 0%, #fff 72%);
+}
+
+.seoEditor .wideField textarea {
+  min-height: 82px;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.seoEditor .descriptionTextarea {
+  min-height: 180px;
+}
+
+.seoEditor small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 560;
+  text-align: right;
+}
+
+.seoMetaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.seoMetaGrid textarea {
+  width: 100%;
+  min-height: 86px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  background: #fff;
+  font: inherit;
+  resize: vertical;
+}
+
+.seoEditorActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+.seoEditorActions span {
+  max-width: 540px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.seoEditorButtons {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
 .mediaSectionHeader {
   display: grid;
   gap: 3px;
@@ -650,6 +716,25 @@
 
   .formGrid {
     grid-template-columns: 1fr;
+  }
+
+  .seoMetaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .seoEditorActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .seoEditorButtons {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .seoEditorButtons .button,
+  .seoEditorButtons .ghostButton {
+    width: 100%;
   }
 
   .photoSlots {

@@ -29,6 +29,8 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost:3000"]}
       MEDIA_STORAGE_DIR: ${MEDIA_STORAGE_DIR:-/app/storage}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_SEO_MODEL: ${OPENAI_SEO_MODEL:-gpt-5.6-luna}
     ports:
       - "8000:8000"
     depends_on:

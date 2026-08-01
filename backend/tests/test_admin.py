@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.modules.catalog.service import category_cover
 from app.modules.admin.service import (
+    extract_openai_output_text,
     canonical_photo_name,
     decode_photo_payload,
     normalize_media_item,
@@ -28,6 +29,8 @@ def test_admin_routes_are_registered() -> None:
     assert "/api/v1/admin/categories" in paths
     assert "/api/v1/admin/skus" in paths
     assert "/api/v1/admin/products/{product_id}/skus" in paths
+    assert "patch" in paths["/api/v1/admin/products/{product_id}"]
+    assert "/api/v1/admin/products/{product_id}/seo/generate" in paths
     assert "/api/v1/admin/products/{product_id}/photos" in paths
     assert "/api/v1/admin/products/{product_id}/photos/upload" in paths
     assert "/api/v1/admin/categories/{category_id}/cover" in paths
@@ -114,3 +117,18 @@ def test_decode_photo_payload_rejects_invalid_base64() -> None:
         decode_photo_payload("not-base64")
 
     assert exc.value.status_code == 400
+
+
+def test_extract_openai_output_text_reads_responses_payload() -> None:
+    payload = {
+        "output": [
+            {
+                "type": "message",
+                "content": [
+                    {"type": "output_text", "text": '{"seo_title":"Тест"}'},
+                ],
+            }
+        ]
+    }
+
+    assert extract_openai_output_text(payload) == '{"seo_title":"Тест"}'

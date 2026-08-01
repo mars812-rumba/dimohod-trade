@@ -100,6 +100,21 @@ class AdminProductListResponse(BaseModel):
     offset: int
 
 
+class AdminProductUpdate(BaseModel):
+    short_description: str | None = Field(default=None, max_length=500)
+    description: str | None = None
+    seo_title: str | None = Field(default=None, max_length=180)
+    seo_description: str | None = Field(default=None, max_length=320)
+
+
+class AdminSEOGenerateResponse(BaseModel):
+    short_description: str = Field(max_length=500)
+    description: str
+    seo_title: str = Field(max_length=180)
+    seo_description: str = Field(max_length=320)
+    model: str
+
+
 class AdminSKUBase(BaseModel):
     article: str = Field(min_length=1, max_length=120)
     name: str = Field(min_length=1, max_length=220)

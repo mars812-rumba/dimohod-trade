@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
-import { ImagePlus, Plus, RefreshCcw, Save, Trash2 } from "lucide-react";
+import { ImagePlus, Plus, RefreshCcw, Save, Sparkles, Trash2 } from "lucide-react";
 import { DimensionScheme } from "./DimensionScheme";
 import styles from "./AdminCatalogManager.module.css";
 
@@ -102,6 +102,17 @@ type SKUFormState = {
   is_active: boolean;
 };
 
+type ProductSeoFormState = {
+  short_description: string;
+  description: string;
+  seo_title: string;
+  seo_description: string;
+};
+
+type GeneratedProductSeo = ProductSeoFormState & {
+  model: string;
+};
+
 type PhotoRole = "general" | "top" | "connection";
 
 type PhotoDraft = {
@@ -177,6 +188,13 @@ const emptySkuForm: SKUFormState = {
   is_active: true,
 };
 
+const emptyProductSeoForm: ProductSeoFormState = {
+  short_description: "",
+  description: "",
+  seo_title: "",
+  seo_description: "",
+};
+
 function numberOrNull(value: string): number | null {
   const trimmed = value.trim();
   return trimmed ? Number(trimmed) : null;
@@ -245,6 +263,20 @@ function skuToForm(sku: AdminSKU): SKUFormState {
   };
 }
 
+function stringAttribute(attributes: Record<string, unknown>, key: string): string {
+  const value = attributes[key];
+  return typeof value === "string" ? value : "";
+}
+
+function productToSeoForm(product: AdminProduct): ProductSeoFormState {
+  return {
+    short_description: product.short_description ?? "",
+    description: product.description ?? "",
+    seo_title: stringAttribute(product.extra_attributes, "seo_title"),
+    seo_description: stringAttribute(product.extra_attributes, "seo_description"),
+  };
+}
+
 async function apiRequestWithStatus<T>(path: string, init?: RequestInit): Promise<{ data: T; status: number }> {
   const requestUrl = buildBackendUrl(path);
   const response = await fetch(requestUrl, {
@@ -291,11 +323,13 @@ export default function AdminCatalogManager() {
   const [skuSearch, setSkuSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(null);
   const [skuForm, setSkuForm] = useState<SKUFormState>(emptySkuForm);
+  const [productSeoForm, setProductSeoForm] = useState<ProductSeoFormState>(emptyProductSeoForm);
   const [photoDrafts, setPhotoDrafts] = useState<Record<PhotoRole, PhotoDraft>>(createEmptyPhotoDrafts);
   const [categoryCoverDraft, setCategoryCoverDraft] = useState<PhotoDraft>(createEmptyPhotoDraft);
   const [skuPhotoDraft, setSkuPhotoDraft] = useState<PhotoDraft>(createEmptyPhotoDraft);
   const [status, setStatus] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
 
   const selectedCategory = useMemo(
     () => categories.find((category) => category.id === selectedCategoryId),
@@ -348,6 +382,7 @@ export default function AdminCatalogManager() {
   async function loadProduct(productId: string, skuId?: string) {
     const data = await apiRequest<AdminProduct>(`/api/v1/admin/products/${productId}`);
     setSelectedProduct(data);
+    setProductSeoForm(productToSeoForm(data));
     const selectedSku = skuId ? data.skus.find((sku) => sku.id === skuId) : data.skus[0];
     setSkuForm(selectedSku ? skuToForm(selectedSku) : emptySkuForm);
   }
@@ -394,6 +429,83 @@ export default function AdminCatalogManager() {
 
   function updateForm(field: keyof SKUFormState, value: string | boolean) {
     setSkuForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateProductSeoForm(field: keyof ProductSeoFormState, value: string) {
+    setProductSeoForm((current) => ({ ...current, [field]: value }));
+  }
+
+  async function saveProductSeo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedProduct) {
+      return;
+    }
+    setIsBusy(true);
+    setStatus("Сохраняю описание семейства...");
+    try {
+      const response = await apiRequestWithStatus<AdminProduct>(
+        `/api/v1/admin/products/${selectedProduct.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            short_description: textOrNull(productSeoForm.short_description),
+            description: textOrNull(productSeoForm.description),
+            seo_title: textOrNull(productSeoForm.seo_title),
+            seo_description: textOrNull(productSeoForm.seo_description),
+          }),
+        },
+      );
+      setSelectedProduct(response.data);
+      setProductSeoForm(productToSeoForm(response.data));
+      setStatus("Описание семейства сохранено");
+      window.alert(`Успешно\nSEO и описание семейства: HTTP ${response.status}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Не удалось сохранить описание семейства";
+      setStatus(message);
+      window.alert(
+        error instanceof ApiRequestError
+          ? `Ошибка [HTTP ${error.status}]\n${message}`
+          : `Ошибка [NETWORK]\n${message}`,
+      );
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function generateProductSeo() {
+    if (!selectedProduct) {
+      return;
+    }
+    const hasExistingText = Object.values(productSeoForm).some((value) => value.trim());
+    if (hasExistingText && !window.confirm("Заменить текущий SEO-текст новым черновиком Codex?")) {
+      return;
+    }
+
+    setIsGeneratingSeo(true);
+    setStatus("Codex формирует SEO-черновик по характеристикам SKU...");
+    try {
+      const response = await apiRequestWithStatus<GeneratedProductSeo>(
+        `/api/v1/admin/products/${selectedProduct.id}/seo/generate`,
+        { method: "POST" },
+      );
+      setProductSeoForm({
+        short_description: response.data.short_description,
+        description: response.data.description,
+        seo_title: response.data.seo_title,
+        seo_description: response.data.seo_description,
+      });
+      setStatus(`SEO-черновик создан (${response.data.model}). Проверьте текст и нажмите «Сохранить описание».`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Не удалось сгенерировать SEO";
+      setStatus(message);
+      window.alert(
+        error instanceof ApiRequestError
+          ? `Ошибка генерации [HTTP ${error.status}]\n${message}`
+          : `Ошибка генерации [NETWORK]\n${message}`,
+      );
+    } finally {
+      setIsGeneratingSeo(false);
+    }
   }
 
   function resetPhotoDrafts() {
@@ -958,6 +1070,73 @@ export default function AdminCatalogManager() {
                   {selectedProduct.category_name} · {selectedProduct.slug} · SKU {selectedProduct.skus.length}
                 </span>
               </div>
+
+              <form className={styles.seoEditor} onSubmit={saveProductSeo}>
+                <div className={styles.mediaSectionHeader}>
+                  <h3>SEO и описание семейства</h3>
+                  <p>Пишется один раз для семейства. Размеры, сталь, артикул и цена выбранного SKU добавляются автоматически.</p>
+                </div>
+                <label className={styles.wideField}>
+                  Короткое описание
+                  <textarea
+                    maxLength={500}
+                    onChange={(event) => updateProductSeoForm("short_description", event.target.value)}
+                    placeholder="Кратко: назначение изделия и главное преимущество"
+                    value={productSeoForm.short_description}
+                  />
+                  <small>{productSeoForm.short_description.length}/500</small>
+                </label>
+                <label className={styles.wideField}>
+                  Основное SEO-описание
+                  <textarea
+                    className={styles.descriptionTextarea}
+                    onChange={(event) => updateProductSeoForm("description", event.target.value)}
+                    placeholder="Назначение, конструкция, совместимость, материалы и особенности монтажа"
+                    value={productSeoForm.description}
+                  />
+                </label>
+                <div className={styles.seoMetaGrid}>
+                  <label className={styles.field}>
+                    SEO title
+                    <input
+                      maxLength={180}
+                      onChange={(event) => updateProductSeoForm("seo_title", event.target.value)}
+                      placeholder="{name} {d}×{D} мм, L={L} — купить | Дымоход Трейд"
+                      value={productSeoForm.seo_title}
+                    />
+                    <small>{productSeoForm.seo_title.length}/180</small>
+                  </label>
+                  <label className={styles.field}>
+                    Meta description
+                    <textarea
+                      maxLength={320}
+                      onChange={(event) => updateProductSeoForm("seo_description", event.target.value)}
+                      placeholder="Описание семейства для поисковой выдачи"
+                      value={productSeoForm.seo_description}
+                    />
+                    <small>{productSeoForm.seo_description.length}/320</small>
+                  </label>
+                </div>
+                <div className={styles.seoEditorActions}>
+                  <span>
+                    Доступны переменные: {"{name}"}, {"{article}"}, {"{d}"}, {"{D}"}, {"{L}"}, {"{S}"}, {"{steel}"}, {"{insulation}"}.
+                    Пустые поля заполняются автоматически.
+                  </span>
+                  <div className={styles.seoEditorButtons}>
+                    <button
+                      className={styles.ghostButton}
+                      disabled={isBusy || isGeneratingSeo}
+                      onClick={generateProductSeo}
+                      type="button"
+                    >
+                      <Sparkles size={15} /> {isGeneratingSeo ? "Генерирую…" : "Сгенерировать SEO"}
+                    </button>
+                    <button className={styles.button} disabled={isBusy || isGeneratingSeo} type="submit">
+                      <Save size={15} /> Сохранить описание
+                    </button>
+                  </div>
+                </div>
+              </form>
 
               <div className={styles.mediaSectionHeader}>
                 <h3>Фотографии семейства</h3>

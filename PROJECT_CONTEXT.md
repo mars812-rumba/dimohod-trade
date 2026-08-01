@@ -122,6 +122,8 @@
 - `GET /api/v1/admin/skus?category_id=&limit=&offset=&search=`
 - `GET /api/v1/admin/products?category_id=`
 - `GET /api/v1/admin/products/{product_id}`
+- `PATCH /api/v1/admin/products/{product_id}` — описание семейства и SEO-шаблоны
+- `POST /api/v1/admin/products/{product_id}/seo/generate` — SEO-черновик через OpenAI по фактическим характеристикам SKU; сам черновик БД не изменяет
 - `POST /api/v1/admin/products/{product_id}/skus`
 - `PATCH /api/v1/admin/skus/{sku_id}`
 - `DELETE /api/v1/admin/skus/{sku_id}` — soft delete через `is_active = false`
@@ -131,6 +133,17 @@
 - `GET /api/v1/products?limit=&offset=&product_kind=`
 - `GET /api/v1/products/filters`
 - `GET /api/v1/products/{slug}`
+
+Карточка семейства `/product/{slug}` поддерживает серверно выбранный вариант через `?sku=`:
+
+- первоначальный HTML содержит цену, артикул и характеристики выбранного SKU;
+- `generateMetadata` строит title, description, canonical и Open Graph;
+- JSON-LD содержит `ProductGroup`, выбранный `Product`, `Offer` и размерные `additionalProperty`;
+- клиентский переключатель группирует SKU по диаметру, длине, стали, толщине, утеплению и углу;
+- SEO-текст семейства хранится в `Product.description`, а шаблоны `seo_title` и
+  `seo_description` — в `Product.extra_attributes`.
+- В SEO-блоке админки Codex может заполнить четыре поля черновиком. Администратор проверяет
+  результат и сохраняет его отдельной кнопкой; генерация не перезаписывает БД автоматически.
 
 Текущая модель `products` уже содержит часть будущих структурных полей:
 

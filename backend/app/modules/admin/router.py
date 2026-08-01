@@ -10,6 +10,8 @@ from app.modules.admin.schemas import (
     AdminPhotoUpload,
     AdminProductListResponse,
     AdminProductRead,
+    AdminProductUpdate,
+    AdminSEOGenerateResponse,
     AdminSKUCreate,
     AdminSKUListResponse,
     AdminSKURead,
@@ -26,11 +28,13 @@ from app.modules.admin.service import (
     delete_product_photo,
     delete_sku_photo,
     get_admin_product,
+    generate_product_seo,
     list_admin_categories,
     list_admin_products,
     list_admin_skus,
     product_to_admin_read,
     update_sku,
+    update_product,
 )
 
 router = APIRouter()
@@ -104,6 +108,23 @@ async def read_admin_skus(
 async def read_admin_product(product_id: UUID, session: AsyncSession = Depends(get_db)) -> AdminProductRead:
     product = await get_admin_product(session, product_id)
     return product_to_admin_read(product)
+
+
+@router.patch("/products/{product_id}", response_model=AdminProductRead)
+async def update_admin_product(
+    product_id: UUID,
+    payload: AdminProductUpdate,
+    session: AsyncSession = Depends(get_db),
+) -> AdminProductRead:
+    return await update_product(session, product_id, payload)
+
+
+@router.post("/products/{product_id}/seo/generate", response_model=AdminSEOGenerateResponse)
+async def generate_admin_product_seo(
+    product_id: UUID,
+    session: AsyncSession = Depends(get_db),
+) -> AdminSEOGenerateResponse:
+    return await generate_product_seo(session, product_id)
 
 
 @router.post("/products/{product_id}/skus", response_model=AdminSKURead, status_code=201)
