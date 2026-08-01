@@ -331,30 +331,35 @@ def test_compatible_tubes_may_have_different_lengths_but_not_different_materials
     assert not compatible_tube_matches(source, unknown_insulation)
 
 
-def test_fastener_matches_sandwich_outer_diameter_and_material() -> None:
+def test_fastener_uses_source_outer_diameter_for_sandwich() -> None:
     source = SimpleNamespace(
-        diameter_mm=100,
-        outer_diameter_mm=200,
+        diameter_mm=250,
+        outer_diameter_mm=350,
         insulation_mm=50,
-        steel_grade="AISI 430",
-        material="Оцинкованная сталь",
+        steel_grade="AISI 321",
+        material="Нержавеющая сталь",
         contour="сэндвич",
     )
     fastener = SimpleNamespace(
-        diameter_mm=200,
+        diameter_mm=350,
         outer_diameter_mm=None,
-        steel_grade=None,
-        material="Оцинковка",
+        steel_grade="AISI 321",
+        material="Нержавейка",
+        contour="сэндвич",
     )
 
     assert compatible_fastener_matches(source, fastener)
     assert not compatible_fastener_matches(
         source,
-        SimpleNamespace(**{**fastener.__dict__, "diameter_mm": 100}),
+        SimpleNamespace(**{**fastener.__dict__, "diameter_mm": 250, "contour": "одностенный"}),
     )
     assert not compatible_fastener_matches(
         source,
-        SimpleNamespace(**{**fastener.__dict__, "material": "Нержавеющая сталь"}),
+        SimpleNamespace(**{**fastener.__dict__, "diameter_mm": 300, "contour": "одностенный"}),
+    )
+    assert not compatible_fastener_matches(
+        source,
+        SimpleNamespace(**{**fastener.__dict__, "material": "Оцинкованная сталь"}),
     )
 
 

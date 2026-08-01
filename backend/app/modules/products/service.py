@@ -84,10 +84,15 @@ def compatible_tube_matches(source_sku: SKU, tube_sku: SKU) -> bool:
 
 
 def compatible_fastener_matches(source_sku: SKU, fastener_sku: SKU) -> bool:
-    """Match a clamp/fastener to the outside of a sandwich element."""
-    source_outer_diameter = source_sku.outer_diameter_mm
+    """Match a fastener to the outside diameter of a sandwich source."""
     fastener_diameter = fastener_sku.outer_diameter_mm or fastener_sku.diameter_mm
-    if source_outer_diameter is None or fastener_diameter != source_outer_diameter:
+    source_contour = contour_group(getattr(source_sku, "contour", None))
+    connection_diameter = (
+        source_sku.outer_diameter_mm
+        if source_contour == "sandwich"
+        else source_sku.diameter_mm
+    )
+    if connection_diameter is None or fastener_diameter != connection_diameter:
         return False
 
     source_material = material_group(source_sku.material)
@@ -131,10 +136,16 @@ def compatibility_filter_expression(source_sku: SKU):
             )
         )
 
-    if source_sku.outer_diameter_mm is not None:
+    source_contour = contour_group(getattr(source_sku, "contour", None))
+    fastener_diameter = (
+        source_sku.outer_diameter_mm
+        if source_contour == "sandwich"
+        else source_sku.diameter_mm
+    )
+    if fastener_diameter is not None:
         fastener_conditions = [
             Product.product_kind == "крепеж",
-            func.coalesce(SKU.outer_diameter_mm, SKU.diameter_mm) == source_sku.outer_diameter_mm,
+            func.coalesce(SKU.outer_diameter_mm, SKU.diameter_mm) == fastener_diameter,
         ]
         source_material = material_group(source_sku.material)
         if source_material:
