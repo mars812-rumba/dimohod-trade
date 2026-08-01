@@ -19,4 +19,5 @@ coverage/
 *.pyc
 *.log
 .codex-telegram/
+graphify-out/
 .DS_Store

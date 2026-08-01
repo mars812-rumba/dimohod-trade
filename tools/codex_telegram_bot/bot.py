@@ -41,6 +41,8 @@ DEFAULT_CODEX_MODEL_KEY = "sol_medium"
 MEDIA_GROUP_SETTLE_SECONDS = 1.2
 PROJECT_INSTRUCTIONS = """Работай только над проектом Dimohod Trade в текущем каталоге.
 Перед изменениями прочитай PROJECT_CONTEXT.md и NEXT_STEPS.md.
+Используй приложенный контекст Graphify как карту связей проекта, затем проверяй важные выводы
+по исходным файлам. Если нужно исследовать дополнительные связи, выполни graphify query.
 Сохраняй существующие пользовательские незакоммиченные изменения. Не изменяй prices/ и
 backend/configurator/chimney-configurator-png.html, если задача явно этого не требует.
 Выполни запрос, проверь результат подходящими тестами и кратко сообщи итог.
@@ -56,6 +58,8 @@ Git commit/push и production deploy выполняются отдельными
 
 SUNNY_PROJECT_INSTRUCTIONS = """Работай только над проектом Sunny Rentals в текущем каталоге.
 Перед изменениями прочитай PROJECT.md и ARCHITECTURE.md. Рабочая ветка — marsel-collab.
+Используй приложенный контекст Graphify как карту связей проекта, затем проверяй важные выводы
+по исходным файлам. Если нужно исследовать дополнительные связи, выполни graphify query.
 В репозитории уже могут быть пользовательские незакоммиченные изменения: сохраняй их и не
 перезаписывай. Не изменяй .env, backend/data/, backend/media/, логи и credentials, если задача
 явно этого не требует. Выполни запрос, проверь результат подходящими тестами и кратко сообщи итог.
@@ -76,6 +80,7 @@ PROTECTED_COMMIT_PATHS = (
     "backend/configurator/chimney-configurator-png.html",
     ".codex-telegram/",
     ".env",
+    "graphify-out/",
 )
 
 
@@ -539,10 +544,9 @@ class StateStore:
             self.save()
 
     def thread_slot(self, project_key: str, model_key: str) -> str:
-        # Preserve the original project thread for the default Sol profile.
-        if model_key == DEFAULT_CODEX_MODEL_KEY:
-            return project_key
-        return f"{project_key}@{model_key}"
+        # Models share one conversation per project so they can be switched mid-task.
+        _ = model_key
+        return project_key
 
     def get_thread(self, chat_id: int, project_key: str = "dimohod") -> str | None:
         with self.lock:
@@ -1034,6 +1038,37 @@ def run_host_command(args: list[str], cwd: Path, timeout: int = 1200) -> str:
             f"{output[-5000:]}"
         )
     return output
+
+
+def graphify_query_context(
+    project_root: Path, prompt: str, budget: int = 1600
+) -> str:
+    """Return bounded structural context without blocking the task if Graphify fails."""
+    if not (project_root / "graphify-out" / "graph.json").exists():
+        return ""
+    try:
+        result = subprocess.run(
+            ["graphify", "query", prompt[:2000], "--budget", str(budget)],
+            cwd=project_root,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=45,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(f"Graphify query failed for {project_root}: {exc}", file=sys.stderr, flush=True)
+        return ""
+    if result.returncode != 0 or not result.stdout.strip():
+        details = (result.stderr or result.stdout).strip()[-1000:]
+        print(
+            f"Graphify query failed for {project_root}: {details}",
+            file=sys.stderr,
+            flush=True,
+        )
+        return ""
+    return result.stdout.strip()[-14000:]
 
 
 @dataclass
@@ -1682,7 +1717,7 @@ class BotApplication:
             self.api.send_message(
                 chat_id,
                 f"✅ Модель: *{model.label}*\n"
-                "Для этого режима используется отдельная история Codex.",
+                "Контекст проекта сохранён — можно продолжать текущую задачу этой моделью.",
                 message_id,
                 markdown=True,
             )
@@ -2122,9 +2157,23 @@ class BotApplication:
     ) -> None:
         project = self.projects[project_key]
         release = self.release_for(project_key)
-        before = worktree_snapshot(project.root, project.protected_paths)
         status_id = self.api.send_message(
-            chat_id, f"⏳ {project.label}: запускаю Codex…", message_id
+            chat_id, f"🗺 {project.label}: читаю граф проекта…", message_id
+        )
+        graph_context = graphify_query_context(project.root, prompt)
+        codex_prompt = prompt
+        if graph_context:
+            codex_prompt += (
+                "\n\nКонтекст Graphify для навигации по проекту "
+                "(проверяй выводы по исходным файлам):\n"
+                f"{graph_context}"
+            )
+        before = worktree_snapshot(project.root, project.protected_paths)
+        self.api.edit_message(
+            chat_id,
+            status_id,
+            f"⏳ {project.label}: запускаю Codex"
+            + (" с контекстом Graphify…" if graph_context else "…"),
         )
         last_status = ""
 
@@ -2139,7 +2188,7 @@ class BotApplication:
 
         try:
             summary, return_code, diagnostics = self.runner.run(
-                chat_id, prompt, update_status, project_key
+                chat_id, codex_prompt, update_status, project_key
             )
             with self.pending_lock:
                 post_action = self.post_codex_actions.pop(chat_id, None)

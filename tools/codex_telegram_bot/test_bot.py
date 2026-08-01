@@ -1,9 +1,11 @@
 import json
 import os
+import subprocess
 import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from tools.codex_telegram_bot.bot import (
     CODEX_MODELS,
@@ -27,6 +29,7 @@ from tools.codex_telegram_bot.bot import (
     detect_natural_release_intent,
     extract_file_requests,
     extract_openai_output_text,
+    graphify_query_context,
     is_protected_commit_path,
     load_dotenv,
     model_keyboard,
@@ -290,7 +293,7 @@ class BotUtilitiesTest(unittest.TestCase):
             state.set_active_project(10, "sunny")
             self.assertEqual(state.get_active_project(10), "sunny")
 
-    def test_model_selection_changes_command_and_uses_separate_thread(self) -> None:
+    def test_model_selection_changes_command_and_keeps_project_thread(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             state = StateStore(root / "state.json")
@@ -302,6 +305,29 @@ class BotUtilitiesTest(unittest.TestCase):
             self.assertIn("gpt-5.5", command)
             self.assertIn('model_reasoning_effort="high"', command)
             self.assertEqual(command[-3:], ["resume", "thread-55", "задача"])
+            self.assertEqual(
+                state.thread_slot("dimohod", "gpt55_high"),
+                state.thread_slot("dimohod", "sol_medium"),
+            )
+
+    def test_graphify_context_is_added_only_when_graph_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.assertEqual(graphify_query_context(root, "задача"), "")
+            graph_dir = root / "graphify-out"
+            graph_dir.mkdir()
+            (graph_dir / "graph.json").write_text("{}", encoding="utf-8")
+            completed = subprocess.CompletedProcess(
+                args=[], returncode=0, stdout="NODE App", stderr=""
+            )
+            with patch(
+                "tools.codex_telegram_bot.bot.subprocess.run",
+                return_value=completed,
+            ) as mocked:
+                self.assertEqual(
+                    graphify_query_context(root, "исправь меню"), "NODE App"
+                )
+                self.assertEqual(mocked.call_args.args[0][:2], ["graphify", "query"])
 
     def test_photo_album_collects_multiple_screenshots(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
