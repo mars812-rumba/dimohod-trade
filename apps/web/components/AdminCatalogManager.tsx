@@ -101,6 +101,14 @@ type SKUFormState = {
   is_active: boolean;
 };
 
+type PhotoRole = "general" | "top" | "connection";
+
+type PhotoDraft = {
+  file: File | null;
+  previewUrl: string | null;
+  alt: string;
+};
+
 class ApiRequestError extends Error {
   status: number;
   url: string;
@@ -118,6 +126,19 @@ const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const allCategoriesId = "all";
 const skuPageSize = 200;
 const maxPhotoBytes = 8 * 1024 * 1024;
+const photoSlots: Array<{ role: PhotoRole; number: string; title: string; hint: string }> = [
+  { role: "general", number: "01", title: "Фото 1", hint: "Общий вид" },
+  { role: "top", number: "02", title: "Фото 2", hint: "Вид сверху" },
+  { role: "connection", number: "03", title: "Фото 3", hint: "Узел соединения" },
+];
+
+function createEmptyPhotoDrafts(): Record<PhotoRole, PhotoDraft> {
+  return {
+    general: { file: null, previewUrl: null, alt: "" },
+    top: { file: null, previewUrl: null, alt: "" },
+    connection: { file: null, previewUrl: null, alt: "" },
+  };
+}
 
 const emptySkuForm: SKUFormState = {
   id: null,
@@ -243,9 +264,7 @@ export default function AdminCatalogManager() {
   const [skuSearch, setSkuSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(null);
   const [skuForm, setSkuForm] = useState<SKUFormState>(emptySkuForm);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoRole, setPhotoRole] = useState("general");
-  const [photoAlt, setPhotoAlt] = useState("");
+  const [photoDrafts, setPhotoDrafts] = useState<Record<PhotoRole, PhotoDraft>>(createEmptyPhotoDrafts);
   const [status, setStatus] = useState("");
   const [isBusy, setIsBusy] = useState(false);
 
@@ -257,6 +276,7 @@ export default function AdminCatalogManager() {
     () => categories.reduce((sum, category) => sum + category.product_count, 0),
     [categories],
   );
+  const pendingPhotoCount = photoSlots.filter(({ role }) => photoDrafts[role].file).length;
 
   async function loadCategories() {
     const data = await apiRequest<AdminCategory[]>("/api/v1/admin/categories");
@@ -296,6 +316,10 @@ export default function AdminCatalogManager() {
     loadSkus(selectedCategoryId, 0).catch((error) => setStatus(error.message));
   }, [selectedCategoryId]);
 
+  useEffect(() => {
+    resetPhotoDrafts();
+  }, [selectedProduct?.id]);
+
   async function refreshCurrentProduct(skuId?: string) {
     if (!selectedProduct) {
       return;
@@ -308,26 +332,65 @@ export default function AdminCatalogManager() {
     setSkuForm((current) => ({ ...current, [field]: value }));
   }
 
-  async function persistSelectedPhoto() {
-    if (!selectedProduct || !photoFile) {
+  function resetPhotoDrafts() {
+    setPhotoDrafts((current) => {
+      Object.values(current).forEach((draft) => {
+        if (draft.previewUrl) {
+          URL.revokeObjectURL(draft.previewUrl);
+        }
+      });
+      return createEmptyPhotoDrafts();
+    });
+  }
+
+  function updatePhotoDraft(role: PhotoRole, patch: Partial<PhotoDraft>) {
+    setPhotoDrafts((current) => ({
+      ...current,
+      [role]: { ...current[role], ...patch },
+    }));
+  }
+
+  function selectPhoto(role: PhotoRole, event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    const currentPreview = photoDrafts[role].previewUrl;
+    if (currentPreview) {
+      URL.revokeObjectURL(currentPreview);
+    }
+    updatePhotoDraft(role, {
+      file,
+      previewUrl: file ? URL.createObjectURL(file) : null,
+    });
+    event.target.value = "";
+  }
+
+  function clearPhotoDraft(role: PhotoRole) {
+    const currentPreview = photoDrafts[role].previewUrl;
+    if (currentPreview) {
+      URL.revokeObjectURL(currentPreview);
+    }
+    updatePhotoDraft(role, { file: null, previewUrl: null });
+  }
+
+  async function persistPhotoDraft(role: PhotoRole, draft: PhotoDraft) {
+    if (!selectedProduct || !draft.file) {
       throw new Error("Фото не выбрано");
     }
 
-    const contentBase64 = await fileToBase64(photoFile);
+    const contentBase64 = await fileToBase64(draft.file);
     const uploadResponse = await apiRequestWithStatus<AdminProduct>(
       `/api/v1/admin/products/${selectedProduct.id}/photos`,
       {
         method: "POST",
         body: JSON.stringify({
-          file_name: photoFile.name,
+          file_name: draft.file.name,
           content_base64: contentBase64,
-          role: textOrNull(photoRole),
-          alt: textOrNull(photoAlt),
+          role,
+          alt: textOrNull(draft.alt),
         }),
       },
     );
     const uploadedMedia =
-      uploadResponse.data.media.find((item) => item.role === photoRole) ?? uploadResponse.data.media.at(-1);
+      uploadResponse.data.media.find((item) => item.role === role) ?? uploadResponse.data.media.at(-1);
     if (!uploadedMedia) {
       throw new Error("Backend принял файл, но не вернул его в media форм-фактора");
     }
@@ -342,7 +405,7 @@ export default function AdminCatalogManager() {
       product: uploadResponse.data,
       uploadStatus: uploadResponse.status,
       mediaStatus: mediaResponse.status,
-      fileName: photoFile.name,
+      fileName: draft.file.name,
     };
   }
 
@@ -361,8 +424,9 @@ export default function AdminCatalogManager() {
       window.alert(message);
       return;
     }
-    if (photoFile && photoFile.size > maxPhotoBytes) {
-      const message = "Ошибка [CLIENT_VALIDATION]\nФото больше 8 МБ. Выберите файл меньшего размера";
+    const oversizedPhoto = photoSlots.find(({ role }) => (photoDrafts[role].file?.size ?? 0) > maxPhotoBytes);
+    if (oversizedPhoto) {
+      const message = `Ошибка [CLIENT_VALIDATION]\n${oversizedPhoto.title} больше 8 МБ. Выберите файл меньшего размера`;
       setStatus("Фото больше 8 МБ. Выберите файл меньшего размера");
       window.alert(message);
       return;
@@ -391,6 +455,7 @@ export default function AdminCatalogManager() {
     setStatus("Сохраняю SKU...");
     let savedSku: AdminSKU | null = null;
     let successStatus: number | null = null;
+    const savedPhotos: string[] = [];
     try {
       if (skuForm.id) {
         const response = await apiRequestWithStatus<AdminSKU>(`/api/v1/admin/skus/${skuForm.id}`, {
@@ -410,21 +475,32 @@ export default function AdminCatalogManager() {
         savedSku = response.data;
         successStatus = response.status;
       }
-      const photoResult = photoFile ? await persistSelectedPhoto() : null;
-      await refreshCurrentProduct(savedSku.id);
-      if (photoResult) {
-        setPhotoFile(null);
-        setPhotoAlt("");
+      const photoResults = [];
+      for (const slot of photoSlots) {
+        const draft = photoDrafts[slot.role];
+        if (draft.file) {
+          const result = await persistPhotoDraft(slot.role, draft);
+          photoResults.push(result);
+          savedPhotos.push(slot.title);
+        }
       }
-      setStatus("SKU сохранён");
-      const photoStatus = photoResult
-        ? `\nФото: UPLOAD HTTP ${photoResult.uploadStatus}, MEDIA HTTP ${photoResult.mediaStatus}`
-        : "\nФото не было выбрано";
+      await refreshCurrentProduct(savedSku.id);
+      if (photoResults.length) {
+        resetPhotoDrafts();
+      }
+      setStatus(photoResults.length ? `SKU и ${photoResults.length} фото сохранены` : "SKU сохранён");
+      const photoStatus = photoResults.length
+        ? `\nФото: ${photoResults.length} шт., UPLOAD HTTP ${photoResults.map((item) => item.uploadStatus).join(
+            "/",
+          )}, MEDIA HTTP ${photoResults.map((item) => item.mediaStatus).join("/")}`
+        : "\nНовых фото не было";
       window.alert(`Успешно\nSKU: HTTP ${successStatus}, ${savedSku.article}${photoStatus}`);
     } catch (error) {
       const statusMessage = error instanceof Error ? error.message : "Не удалось сохранить SKU";
       setStatus(statusMessage);
-      const partialSave = savedSku ? `SKU ${savedSku.article} сохранён (HTTP ${successStatus}), но фото не сохранено.\n` : "";
+      const partialSave = savedSku
+        ? `SKU ${savedSku.article} сохранён (HTTP ${successStatus}). Фото сохранено: ${savedPhotos.length}.\n`
+        : "";
       if (error instanceof ApiRequestError) {
         window.alert(`${partialSave}Ошибка [HTTP ${error.status}]\n${error.message}\n${error.url}`);
       } else {
@@ -452,41 +528,6 @@ export default function AdminCatalogManager() {
     }
   }
 
-  async function uploadPhoto() {
-    if (!selectedProduct || !photoFile) {
-      return;
-    }
-    if (photoFile.size > maxPhotoBytes) {
-      const message = "Ошибка [CLIENT_VALIDATION]\nФото больше 8 МБ. Выберите файл меньшего размера";
-      setStatus("Фото больше 8 МБ. Выберите файл меньшего размера");
-      window.alert(message);
-      return;
-    }
-    setIsBusy(true);
-    setStatus("Загружаю фото...");
-    try {
-      const result = await persistSelectedPhoto();
-      setSelectedProduct(result.product);
-      await loadSkus();
-      setPhotoFile(null);
-      setPhotoAlt("");
-      setStatus("Фото форм-фактора добавлено");
-      window.alert(
-        `Успешно\nUPLOAD HTTP ${result.uploadStatus}\nMEDIA HTTP ${result.mediaStatus}\nФото ${result.fileName} доступно`,
-      );
-    } catch (error) {
-      const statusMessage = error instanceof Error ? error.message : "Не удалось добавить фото";
-      setStatus(statusMessage);
-      if (error instanceof ApiRequestError) {
-        window.alert(`Ошибка [HTTP ${error.status}]\n${error.message}\n${error.url}`);
-      } else {
-        window.alert(`Ошибка [NETWORK]\n${statusMessage}`);
-      }
-    } finally {
-      setIsBusy(false);
-    }
-  }
-
   async function deletePhoto(index: number) {
     if (!selectedProduct) {
       return;
@@ -506,10 +547,6 @@ export default function AdminCatalogManager() {
     } finally {
       setIsBusy(false);
     }
-  }
-
-  function onPhotoChange(event: ChangeEvent<HTMLInputElement>) {
-    setPhotoFile(event.target.files?.[0] ?? null);
   }
 
   function submitSkuSearch(event: FormEvent<HTMLFormElement>) {
@@ -645,57 +682,89 @@ export default function AdminCatalogManager() {
                 </span>
               </div>
 
-              <div className={styles.mediaGrid}>
-                {selectedProduct.media.map((item, index) => (
-                  <div className={styles.mediaTile} key={`${item.url}-${index}`}>
-                    <img alt={item.alt ?? selectedProduct.name} src={buildBackendUrl(item.url)} />
-                    <button
-                      aria-label="Убрать фото"
-                      className={styles.deleteMedia}
-                      disabled={isBusy}
-                      onClick={() => deletePhoto(index)}
-                      title="Убрать фото"
-                      type="button"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                ))}
-                {selectedProduct.media.length < 3
-                  ? Array.from({ length: 3 - selectedProduct.media.length }).map((_, index) => (
-                      <div className={styles.emptyTile} key={`empty-${index}`}>
-                        фото форм-фактора {selectedProduct.media.length + index + 1}
+              <div className={styles.photoSlots}>
+                {photoSlots.map((slot) => {
+                  const draft = photoDrafts[slot.role];
+                  const existingIndex = selectedProduct.media.findIndex(
+                    (item) => item.role === slot.role || (slot.role === "connection" && item.role === "detail"),
+                  );
+                  const existing = existingIndex >= 0 ? selectedProduct.media[existingIndex] : null;
+                  const previewSrc = draft.previewUrl ?? (existing ? buildBackendUrl(existing.url) : null);
+                  const inputId = `photo-${selectedProduct.id}-${slot.role}`;
+
+                  return (
+                    <article className={styles.photoSlot} key={slot.role}>
+                      <div className={styles.photoSlotHead}>
+                        <span className={styles.photoNumber}>{slot.number}</span>
+                        <span>
+                          <strong>{slot.title}</strong>
+                          <small>{slot.hint}</small>
+                        </span>
+                        <span className={draft.file ? styles.pendingBadge : styles.savedBadge}>
+                          {draft.file ? "выбрано" : existing ? "сохранено" : "пусто"}
+                        </span>
                       </div>
-                    ))
-                  : null}
+
+                      <div className={styles.photoPreview}>
+                        {previewSrc ? (
+                          <img alt={draft.alt || existing?.alt || `${selectedProduct.name}, ${slot.hint}`} src={previewSrc} />
+                        ) : (
+                          <div className={styles.photoPlaceholder}>
+                            <ImagePlus size={24} />
+                            <span>{slot.hint}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={styles.photoSlotActions}>
+                        <input
+                          accept="image/*"
+                          className={styles.slotFileInput}
+                          id={inputId}
+                          onChange={(event) => selectPhoto(slot.role, event)}
+                          type="file"
+                        />
+                        <label className={styles.fileButton} htmlFor={inputId}>
+                          {previewSrc ? "Заменить файл" : "Выбрать файл"}
+                        </label>
+                        {draft.file ? (
+                          <button className={styles.clearButton} onClick={() => clearPhotoDraft(slot.role)} type="button">
+                            Отменить выбор
+                          </button>
+                        ) : existing ? (
+                          <button
+                            className={styles.clearButton}
+                            disabled={isBusy}
+                            onClick={() => deletePhoto(existingIndex)}
+                            type="button"
+                          >
+                            Удалить
+                          </button>
+                        ) : null}
+                      </div>
+
+                      <label className={styles.photoAltField}>
+                        Описание
+                        <input
+                          onChange={(event) => updatePhotoDraft(slot.role, { alt: event.target.value })}
+                          placeholder={`${selectedProduct.name}, ${slot.hint.toLocaleLowerCase("ru-RU")}`}
+                          value={draft.alt}
+                        />
+                      </label>
+                      {draft.file ? <span className={styles.fileName}>{draft.file.name}</span> : null}
+                    </article>
+                  );
+                })}
               </div>
 
-              <div className={styles.formGrid}>
-                <label className={styles.field}>
-                  Роль фото
-                  <select value={photoRole} onChange={(event) => setPhotoRole(event.target.value)}>
-                    <option value="general">Общий вид</option>
-                    <option value="top">Вид сверху</option>
-                    <option value="connection">Узел соединения</option>
-                    <option value="detail">Деталь</option>
-                  </select>
-                </label>
-                <label className={styles.field}>
-                  Файл
-                  <input accept="image/*" onChange={onPhotoChange} type="file" />
-                </label>
-                <label className={styles.wideField}>
-                  Базовое описание фото
-                  <input
-                    onChange={(event) => setPhotoAlt(event.target.value)}
-                    placeholder={`${selectedProduct.name}, общий вид`}
-                    value={photoAlt}
-                  />
-                </label>
-              </div>
-              <div className={styles.toolbar}>
-                <button className={styles.ghostButton} disabled={isBusy || !photoFile} onClick={uploadPhoto} type="button">
-                  <ImagePlus size={15} /> Загрузить выбранное фото сейчас
+              <div className={styles.saveBar}>
+                <span>
+                  {pendingPhotoCount
+                    ? `К сохранению: SKU и ${pendingPhotoCount} фото`
+                    : "Изменения SKU и фотографии сохраняются вместе"}
+                </span>
+                <button className={styles.button} disabled={isBusy} form="sku-editor-form" type="submit">
+                  <Save size={15} /> Сохранить всё{pendingPhotoCount ? ` · ${pendingPhotoCount} фото` : ""}
                 </button>
               </div>
 
@@ -736,7 +805,7 @@ export default function AdminCatalogManager() {
                 </table>
               </div>
 
-              <form className={styles.formGrid} onSubmit={saveSku}>
+              <form className={styles.formGrid} id="sku-editor-form" onSubmit={saveSku}>
                 <label className={styles.field}>
                   Артикул
                   <input required value={skuForm.article} onChange={(event) => updateForm("article", event.target.value)} />
@@ -816,9 +885,6 @@ export default function AdminCatalogManager() {
                   />
                 </label>
                 <div className={styles.toolbar}>
-                  <button className={styles.button} disabled={isBusy} type="submit">
-                    <Save size={15} /> Сохранить изменения{photoFile ? " и фото" : ""}
-                  </button>
                   <button className={styles.dangerButton} disabled={isBusy || !skuForm.id} onClick={deactivateSelectedSku} type="button">
                     <Trash2 size={15} /> Отключить
                   </button>

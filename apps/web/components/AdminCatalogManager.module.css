@@ -122,49 +122,192 @@
   font-size: 24px;
 }
 
-.mediaGrid {
+.photoSlots {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 14px;
 }
 
-.mediaTile {
-  position: relative;
-  min-height: 104px;
+.photoSlot {
+  min-width: 0;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface-muted);
+  border-radius: 8px;
+  background: #fff;
 }
 
-.mediaTile img {
+.photoSlotHead {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  background: #f6f9f9;
+}
+
+.photoSlotHead strong,
+.photoSlotHead small {
+  display: block;
+}
+
+.photoSlotHead strong {
+  font-size: 13px;
+}
+
+.photoSlotHead small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.photoNumber {
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.savedBadge,
+.pendingBadge {
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.savedBadge {
+  color: var(--steel);
+  background: #e5edef;
+}
+
+.pendingBadge {
+  color: #7a3218;
+  background: #ffe2d5;
+}
+
+.photoPreview {
+  min-height: 150px;
+  background:
+    linear-gradient(45deg, rgba(50, 98, 118, 0.04) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(50, 98, 118, 0.04) 25%, transparent 25%),
+    #eef3f3;
+  background-size: 20px 20px;
+}
+
+.photoPreview img {
+  display: block;
   width: 100%;
-  height: 118px;
-  object-fit: cover;
+  height: 190px;
+  object-fit: contain;
 }
 
-.deleteMedia {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  display: inline-flex;
-  width: 30px;
-  height: 30px;
+.photoPlaceholder {
+  display: flex;
+  min-height: 190px;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  color: #fff;
-  background: rgba(16, 33, 39, 0.76);
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.photoSlotActions {
+  display: flex;
+  gap: 6px;
+  padding: 10px 10px 0;
+}
+
+.slotFileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.fileButton,
+.clearButton {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 760;
   cursor: pointer;
 }
 
-.emptyTile {
-  display: grid;
-  min-height: 118px;
-  place-items: center;
+.fileButton {
+  flex: 1;
+  border: 1px solid var(--steel);
+  color: var(--steel);
+  background: #f8fbfb;
+}
+
+.clearButton {
+  border: 1px solid var(--line);
   color: var(--muted);
-  font-size: 13px;
+  background: #fff;
+}
+
+.photoAltField {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.photoAltField input {
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--text);
+  background: #fff;
+  font: inherit;
+}
+
+.fileName {
+  display: block;
+  overflow: hidden;
+  padding: 0 10px 10px;
+  color: var(--steel);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saveBar {
+  position: sticky;
+  top: 76px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 -4px 18px;
+  padding: 10px 12px;
+  border: 1px solid rgba(237, 91, 42, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 248, 244, 0.96);
+  box-shadow: 0 8px 22px rgba(16, 33, 39, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.saveBar span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .formGrid {
@@ -343,8 +486,31 @@
     max-height: 42vh;
   }
 
-  .formGrid,
-  .mediaGrid {
+  .formGrid {
     grid-template-columns: 1fr;
+  }
+
+  .photoSlots {
+    display: flex;
+    margin-right: -10px;
+    padding-right: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
+
+  .photoSlot {
+    min-width: min(82vw, 330px);
+    scroll-snap-align: start;
+  }
+
+  .saveBar {
+    top: 70px;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saveBar .button {
+    width: 100%;
   }
 }
