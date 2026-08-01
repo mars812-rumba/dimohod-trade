@@ -281,6 +281,15 @@ def test_catalog_filter_values_are_normalized() -> None:
     assert material_group("Оцинкованная сталь") == "galvanized"
 
 
+def test_seo_prompt_requires_natural_language_and_skips_empty_sections() -> None:
+    prompt = build_product_seo_prompt({"family_name": "Тест", "missing_confirmed_sections": []})
+
+    assert "как опытный специалист магазина" in prompt
+    assert "не используй «данное изделие»" in prompt
+    assert "пропускай раздел без подтверждённых фактов" in prompt
+    assert "не более одного раза" in prompt
+
+
 def test_compatible_tubes_may_have_different_lengths_but_not_different_materials() -> None:
     source = SimpleNamespace(
         diameter_mm=120,
