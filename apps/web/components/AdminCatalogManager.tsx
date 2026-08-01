@@ -52,6 +52,14 @@ type AdminSKU = {
   is_active: boolean;
 };
 
+type AdminSKUListItem = AdminSKU & {
+  product_name: string;
+  product_slug: string;
+  product_kind: string | null;
+  category_id: string;
+  category_name: string;
+};
+
 type AdminProduct = AdminProductListItem & {
   short_description: string | null;
   description: string | null;
@@ -93,6 +101,7 @@ type SKUFormState = {
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 const allCategoriesId = "all";
+const skuPageSize = 200;
 
 const emptySkuForm: SKUFormState = {
   id: null,
@@ -175,7 +184,10 @@ async function fileToDataUrl(file: File): Promise<string> {
 export default function AdminCatalogManager() {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(allCategoriesId);
-  const [products, setProducts] = useState<AdminProductListItem[]>([]);
+  const [skuItems, setSkuItems] = useState<AdminSKUListItem[]>([]);
+  const [skuTotal, setSkuTotal] = useState(0);
+  const [skuOffset, setSkuOffset] = useState(0);
+  const [skuSearch, setSkuSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(null);
   const [skuForm, setSkuForm] = useState<SKUFormState>(emptySkuForm);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -188,7 +200,7 @@ export default function AdminCatalogManager() {
     () => categories.find((category) => category.id === selectedCategoryId),
     [categories, selectedCategoryId],
   );
-  const totalProductCount = useMemo(
+  const totalSkuCount = useMemo(
     () => categories.reduce((sum, category) => sum + category.product_count, 0),
     [categories],
   );
@@ -198,19 +210,27 @@ export default function AdminCatalogManager() {
     setCategories(data);
   }
 
-  async function loadProducts(categoryId = selectedCategoryId) {
-    const params = new URLSearchParams({ limit: "200" });
+  async function loadSkus(categoryId = selectedCategoryId, offset = skuOffset) {
+    const params = new URLSearchParams({ limit: String(skuPageSize), offset: String(offset) });
     if (categoryId !== allCategoriesId) {
       params.set("category_id", categoryId);
     }
-    const data = await apiRequest<{ items: AdminProductListItem[] }>(`/api/v1/admin/products?${params.toString()}`);
-    setProducts(data.items);
+    if (skuSearch.trim()) {
+      params.set("search", skuSearch.trim());
+    }
+    const data = await apiRequest<{ items: AdminSKUListItem[]; total: number; offset: number }>(
+      `/api/v1/admin/skus?${params.toString()}`,
+    );
+    setSkuItems(data.items);
+    setSkuTotal(data.total);
+    setSkuOffset(data.offset);
   }
 
-  async function loadProduct(productId: string) {
+  async function loadProduct(productId: string, skuId?: string) {
     const data = await apiRequest<AdminProduct>(`/api/v1/admin/products/${productId}`);
     setSelectedProduct(data);
-    setSkuForm(data.skus[0] ? skuToForm(data.skus[0]) : emptySkuForm);
+    const selectedSku = skuId ? data.skus.find((sku) => sku.id === skuId) : data.skus[0];
+    setSkuForm(selectedSku ? skuToForm(selectedSku) : emptySkuForm);
   }
 
   useEffect(() => {
@@ -220,7 +240,7 @@ export default function AdminCatalogManager() {
   useEffect(() => {
     setSelectedProduct(null);
     setSkuForm(emptySkuForm);
-    loadProducts(selectedCategoryId).catch((error) => setStatus(error.message));
+    loadSkus(selectedCategoryId, 0).catch((error) => setStatus(error.message));
   }, [selectedCategoryId]);
 
   async function refreshCurrentProduct() {
@@ -228,7 +248,7 @@ export default function AdminCatalogManager() {
       return;
     }
     await loadProduct(selectedProduct.id);
-    await loadProducts();
+    await loadSkus();
   }
 
   function updateForm(field: keyof SKUFormState, value: string | boolean) {
@@ -326,7 +346,7 @@ export default function AdminCatalogManager() {
         }),
       });
       setSelectedProduct(product);
-      await loadProducts();
+      await loadSkus();
       setPhotoFile(null);
       setPhotoAlt("");
       setStatus("Фото добавлено");
@@ -349,7 +369,7 @@ export default function AdminCatalogManager() {
         { method: "DELETE" },
       );
       setSelectedProduct(product);
-      await loadProducts();
+      await loadSkus();
       setStatus("Фото убрано из карточки");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Не удалось убрать фото");
@@ -360,6 +380,11 @@ export default function AdminCatalogManager() {
 
   function onPhotoChange(event: ChangeEvent<HTMLInputElement>) {
     setPhotoFile(event.target.files?.[0] ?? null);
+  }
+
+  function submitSkuSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    loadSkus(selectedCategoryId, 0).catch((error) => setStatus(error.message));
   }
 
   return (
@@ -390,10 +415,10 @@ export default function AdminCatalogManager() {
               type="button"
             >
               <span>
-                <span className={styles.rowTitle}>Все товары</span>
+                <span className={styles.rowTitle}>Все SKU</span>
                 <span className={styles.rowMeta}>без фильтра по категории</span>
               </span>
-              <span className={styles.badge}>{totalProductCount}</span>
+              <span className={styles.badge}>{totalSkuCount}</span>
             </button>
             {categories.map((category) => (
               <button
@@ -416,37 +441,70 @@ export default function AdminCatalogManager() {
 
         <aside className={styles.panel}>
           <div className={styles.panelHeader}>
-            <h2>{selectedCategoryId === allCategoriesId ? "Все товары" : selectedCategory?.name ?? "Товары"}</h2>
-            <button className={styles.ghostButton} onClick={() => loadProducts()} type="button">
+            <h2>{selectedCategoryId === allCategoriesId ? "Все SKU" : selectedCategory?.name ?? "SKU"}</h2>
+            <span className={styles.badge}>{skuTotal}</span>
+          </div>
+          <form className={styles.listControls} onSubmit={submitSkuSearch}>
+            <input
+              placeholder="Артикул, название или товар"
+              value={skuSearch}
+              onChange={(event) => setSkuSearch(event.target.value)}
+            />
+            <button className={styles.ghostButton} type="submit">
+              Найти
+            </button>
+            <button className={styles.ghostButton} onClick={() => loadSkus()} type="button">
               <RefreshCcw size={15} /> Обновить
             </button>
-          </div>
+          </form>
           <div className={styles.scrollList}>
-            {products.map((product) => (
+            {skuItems.map((sku) => (
               <button
                 className={`${styles.rowButton} ${
-                  product.id === selectedProduct?.id ? styles.rowButtonActive : ""
+                  sku.id === skuForm.id ? styles.rowButtonActive : ""
                 }`}
-                key={product.id}
-                onClick={() => loadProduct(product.id).catch((error) => setStatus(error.message))}
+                key={sku.id}
+                onClick={() => loadProduct(sku.product_id, sku.id).catch((error) => setStatus(error.message))}
                 type="button"
               >
                 <span>
-                  <span className={styles.rowTitle}>{product.name}</span>
+                  <span className={styles.rowTitle}>{sku.article}</span>
                   <span className={styles.rowMeta}>
-                    {product.product_kind ?? "без типа"} · SKU {product.sku_count} · фото {product.media_count}
+                    {sku.product_name} · d {sku.diameter_mm ?? "—"} · D {sku.outer_diameter_mm ?? "—"} · L{" "}
+                    {sku.length_mm ?? "—"} · {sku.price_rub ?? "без цены"}
                   </span>
                 </span>
-                <span className={styles.badge}>{product.is_active ? "on" : "off"}</span>
+                <span className={styles.badge}>{sku.is_active ? "on" : "off"}</span>
               </button>
             ))}
-            {!products.length ? <p className={styles.notice}>В категории пока нет товаров.</p> : null}
+            {!skuItems.length ? <p className={styles.notice}>SKU не найдены.</p> : null}
+          </div>
+          <div className={styles.pager}>
+            <button
+              className={styles.ghostButton}
+              disabled={skuOffset <= 0}
+              onClick={() => loadSkus(selectedCategoryId, Math.max(0, skuOffset - skuPageSize))}
+              type="button"
+            >
+              Назад
+            </button>
+            <span className={styles.rowMeta}>
+              {skuTotal ? `${skuOffset + 1}-${Math.min(skuOffset + skuPageSize, skuTotal)} из ${skuTotal}` : "0 из 0"}
+            </span>
+            <button
+              className={styles.ghostButton}
+              disabled={skuOffset + skuPageSize >= skuTotal}
+              onClick={() => loadSkus(selectedCategoryId, skuOffset + skuPageSize)}
+              type="button"
+            >
+              Далее
+            </button>
           </div>
         </aside>
 
         <section className={styles.panel}>
           {!selectedProduct ? (
-            <p className={styles.notice}>Выберите товар, чтобы управлять SKU, фото и характеристиками.</p>
+            <p className={styles.notice}>Выберите SKU, чтобы управлять фото товара и характеристиками варианта.</p>
           ) : (
             <div className={styles.detail}>
               <div className={styles.productHead}>

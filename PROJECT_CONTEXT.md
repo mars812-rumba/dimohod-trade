@@ -1,6 +1,6 @@
 # Dimohod Trade — project context for Codex
 
-Обновлено: 2026-07-31
+Обновлено: 2026-08-01
 Репозиторий: `mars812-rumba/dimohod-trade`  
 Текущая рабочая ветка: `ui/replit-port`
 
@@ -73,8 +73,10 @@
 .
 ├── apps/web/                         # Next.js frontend
 │   ├── app/page.tsx                   # главная / wireframe landing
+│   ├── app/admin/page.tsx             # MVP админки каталога
 │   ├── app/catalog/page.tsx           # каталог
 │   ├── app/product/[slug]/page.tsx    # карточка товара
+│   ├── components/AdminCatalogManager.tsx
 │   ├── components/ProductExperience.tsx
 │   ├── lib/api.ts
 │   └── next.config.ts
@@ -112,6 +114,15 @@
 - `GET /api/v1/catalog/tree`
 - `GET /api/v1/compatibility/rules`
 - `POST /api/v1/compatibility/check`
+- `GET /api/v1/admin/categories`
+- `GET /api/v1/admin/skus?category_id=&limit=&offset=&search=`
+- `GET /api/v1/admin/products?category_id=`
+- `GET /api/v1/admin/products/{product_id}`
+- `POST /api/v1/admin/products/{product_id}/skus`
+- `PATCH /api/v1/admin/skus/{sku_id}`
+- `DELETE /api/v1/admin/skus/{sku_id}` — soft delete через `is_active = false`
+- `POST /api/v1/admin/products/{product_id}/photos`
+- `DELETE /api/v1/admin/products/{product_id}/photos/{photo_index}`
 - `GET /api/v1/products?limit=&offset=&product_kind=`
 - `GET /api/v1/products/filters`
 - `GET /api/v1/products/{slug}`
@@ -308,6 +319,14 @@ storage/catalog/products/sendvich-truba-115-200-nerzhaveyushchaya-stal-08/photos
 Текущая договоренность по медиа: фото, видео и документы должны жить рядом с сущностью каталога,
 но данные о ценах, совместимости, характеристиках и привязках должны идти из БД и управляться через
 админку.
+
+MVP админки доступен на `/admin`. Центральный список админки показывает SKU/варианты, а не только
+40 logical products: есть фильтр по категории, поиск по артикулу/названию/товару и пагинация.
+Реализовано управление SKU внутри выбранного товара, загрузка фото товара и редактирование
+характеристик SKU через `SKU.attributes`. Фото сохраняются в
+`storage/catalog/admin/<product-slug>/`, а backend раздает `storage/` через `/media`.
+В Docker для этого используется `MEDIA_STORAGE_DIR=/app/storage` и volume `./storage:/app/storage`.
+Авторизация и роли для админки пока не реализованы; перед production-доступом маршрут нужно закрыть.
 
 ## 6. Продуктовая структура главной страницы
 
