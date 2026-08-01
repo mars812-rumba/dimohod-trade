@@ -73,15 +73,11 @@ export function DimensionScheme({
         <path d="M135 105H365V225H135Z" fill="#e9eef0" />
         <path d="M135 132H365M135 198H365" fill="none" stroke="#65747c" strokeWidth="1.5" />
 
-        <path d="M205 270H295L325 320H175Z" fill="#e9eef0" />
+        <path d="M205 225H295L325 320H175Z" fill="#e9eef0" />
         <path d="M175 320H325V382H175Z" fill="#e9eef0" />
         <path d="M175 350H325" fill="none" stroke="#65747c" strokeWidth="1.5" />
         <path d="M200 382H300V418H200Z" fill="#e9eef0" />
 
-        <path
-          d="M215 225H285V244C285 255 289 263 295 270H205C211 263 215 255 215 244Z"
-          fill="#f8fafb"
-        />
       </g>
 
       <g className="dimension-scheme-dimensions" fill="none" stroke="#e56835" strokeWidth="1.5">
