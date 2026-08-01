@@ -37,6 +37,9 @@ export function DimensionScheme({
   material,
   compact = false,
 }: DimensionSchemeProps) {
+  const materialCaption =
+    [steelGrade, material].filter(Boolean).join(" · ") || "Материал не указан";
+  const materialCaptionFontSize = materialCaption.length > 25 ? 8 : 9;
   const description = [
     dimensionLabel("L", dimensions.L),
     dimensionLabel("D", dimensions.D),
@@ -121,9 +124,17 @@ export function DimensionScheme({
         </g>
       ) : (
         <g className="dimension-scheme-caption">
-          <rect x="112" y="83" width="276" height="27" rx="2" fill="#26343d" />
-          <text x="250" y="101" fill="#ffffff" fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" fontSize="11" fontWeight="700" textAnchor="middle">
-            {[steelGrade, material].filter(Boolean).join(" · ") || "Материал не указан"}
+          <rect x="292" y="24" width="164" height="28" rx="2" fill="#26343d" />
+          <text
+            x="374"
+            y="42"
+            fill="#ffffff"
+            fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+            fontSize={materialCaptionFontSize}
+            fontWeight="700"
+            textAnchor="middle"
+          >
+            {materialCaption}
           </text>
         </g>
       )}
