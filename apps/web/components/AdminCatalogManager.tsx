@@ -495,11 +495,13 @@ export default function AdminCatalogManager() {
     [categories],
   );
   const compatibleProductOptions = useMemo(
-    () => compatibilityCatalog.filter(
-      (product) =>
-        product.id !== selectedProduct?.id &&
-        (!compatibleCategoryId || product.category_id === compatibleCategoryId),
-    ),
+    () =>
+      compatibleCategoryId
+        ? compatibilityCatalog.filter(
+            (product) =>
+              product.id !== selectedProduct?.id && product.category_id === compatibleCategoryId,
+          )
+        : [],
     [compatibilityCatalog, compatibleCategoryId, selectedProduct?.id],
   );
   const selectedCompatibleProducts = useMemo(
@@ -537,11 +539,19 @@ export default function AdminCatalogManager() {
     setProductOffset(data.offset);
   }
 
-  async function loadCompatibilityCatalog() {
+  async function loadCompatibilityCatalog(categoryId = "") {
+    const params = new URLSearchParams({ limit: "500", offset: "0" });
+    if (categoryId) {
+      params.set("category_id", categoryId);
+    }
     const data = await apiRequest<{ items: AdminProductListItem[] }>(
-      "/api/v1/admin/products?limit=500&offset=0",
+      `/api/v1/admin/products?${params.toString()}`,
     );
-    setCompatibilityCatalog(data.items);
+    setCompatibilityCatalog((current) => {
+      const merged = new Map(current.map((product) => [product.id, product]));
+      data.items.forEach((product) => merged.set(product.id, product));
+      return Array.from(merged.values());
+    });
   }
 
   async function loadProduct(productId: string, skuId?: string) {
@@ -549,7 +559,8 @@ export default function AdminCatalogManager() {
     setSelectedProduct(data);
     setCompatibleProductIds(data.compatible_product_ids ?? []);
     setProductSeoForm(productToSeoForm(data));
-    const selectedSku = skuId ? data.skus.find((sku) => sku.id === skuId) : data.skus[0];
+    const activeSkus = data.skus.filter((sku) => sku.is_active);
+    const selectedSku = skuId ? activeSkus.find((sku) => sku.id === skuId) : activeSkus[0];
     setSkuForm(selectedSku ? skuToForm(selectedSku) : emptySkuForm);
   }
 
@@ -557,6 +568,12 @@ export default function AdminCatalogManager() {
     loadCategories().catch((error) => setStatus(error.message));
     loadCompatibilityCatalog().catch((error) => setStatus(error.message));
   }, []);
+
+  useEffect(() => {
+    if (compatibleCategoryId) {
+      loadCompatibilityCatalog(compatibleCategoryId).catch((error) => setStatus(error.message));
+    }
+  }, [compatibleCategoryId]);
 
   useEffect(() => {
     setSelectedProduct(null);
@@ -1138,6 +1155,7 @@ export default function AdminCatalogManager() {
 
   async function saveCompatibility() {
     if (!selectedProduct) {
+      window.alert("Ошибка [CLIENT_VALIDATION]\nСначала выберите семейство товара");
       return;
     }
     setIsBusy(true);
@@ -1150,9 +1168,21 @@ export default function AdminCatalogManager() {
           body: JSON.stringify({ compatibleProductIds }),
         },
       );
-      setSelectedProduct(response.data);
-      setCompatibleProductIds(response.data.compatible_product_ids ?? []);
-      setStatus("Совместимые изделия сохранены");
+      const persistedProduct = await apiRequest<AdminProduct>(
+        `/api/v1/admin/products/${selectedProduct.id}`,
+      );
+      const expectedIds = [...compatibleProductIds].sort();
+      const persistedIds = [...(persistedProduct.compatible_product_ids ?? [])].sort();
+      if (JSON.stringify(expectedIds) !== JSON.stringify(persistedIds)) {
+        throw new Error("Сервер не подтвердил сохранённый список совместимых изделий");
+      }
+      setSelectedProduct(persistedProduct);
+      setCompatibleProductIds(persistedIds);
+      const resultMessage = persistedIds.length
+        ? `Сохранено совместимых семейств: ${persistedIds.length}`
+        : "Список совместимых семейств очищен";
+      setStatus(resultMessage);
+      window.alert(`Успешно [HTTP ${response.status}]\n${resultMessage}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Не удалось сохранить совместимость";
       setStatus(message);
@@ -1688,7 +1718,7 @@ export default function AdminCatalogManager() {
                       }}
                       value={skuForm.id ?? ""}
                     >
-                      {selectedProduct.skus.map((sku) => (
+                      {selectedProduct.skus.filter((sku) => sku.is_active).map((sku) => (
                         <option key={sku.id} value={sku.id}>{sku.article}</option>
                       ))}
                     </select>
@@ -1713,7 +1743,7 @@ export default function AdminCatalogManager() {
                       }}
                       value={compatibleCategoryId}
                     >
-                      <option value="">Все категории</option>
+                      <option value="">Выберите категорию</option>
                       {categories.map((category) => (
                         <option key={category.id} value={category.id}>{category.name}</option>
                       ))}
