@@ -22,6 +22,14 @@ function dimensionLabel(name: string, value: DimensionValue) {
   return `${name} ${String(value).replace(".", ",")} мм`;
 }
 
+function insulationLabel(value: DimensionValue) {
+  if (value === null || value === "") {
+    return "Утепление —";
+  }
+
+  return `Утепление — ${String(value).replace(".", ",")} мм`;
+}
+
 export function DimensionScheme({
   title,
   dimensions,
@@ -55,42 +63,31 @@ export function DimensionScheme({
       <rect width="480" height="480" fill="#f8fafb" />
       <path d="M24 24H456V456H24Z" fill="none" stroke="#dce2e6" />
 
-      <path
+      <g
         className="dimension-scheme-object"
-        d="M150 112C150 101 195 93 250 93C305 93 350 101 350 112V201C350 214 332 221 315 224L299 244C296 250 307 255 318 261L340 316C347 320 350 327 350 334C350 343 337 349 315 353V389C315 396 304 401 286 404V418C286 426 270 431 250 431C230 431 214 426 214 418V404C196 401 185 396 185 389V353C163 349 150 343 150 334C150 327 153 320 160 316L182 261C193 255 204 250 201 244L185 224C168 221 150 214 150 201Z"
         fill="#e9eef0"
         stroke="#26343d"
-        strokeLinejoin="round"
-        strokeWidth="2.5"
-      />
-
-      <g
-        className="dimension-scheme-construction"
-        fill="none"
-        stroke="#65747c"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth="1.6"
+        strokeWidth="2.5"
       >
-        <path d="M170 116C170 108 206 102 250 102C294 102 330 108 330 116V188C330 198 294 205 250 205C206 205 170 198 170 188Z" />
-        <path d="M199 224C215 230 222 238 223 246C220 255 206 261 198 270L174 318C170 326 172 337 185 342V382C185 394 210 402 250 402C290 402 315 394 315 382V342C328 337 330 326 326 318L302 270C294 261 280 255 277 246C278 238 285 230 301 224" />
-        <path d="M214 353V410C214 418 230 423 250 423C270 423 286 418 286 410V353C276 356 264 358 250 358C236 358 224 356 214 353Z" />
+        <path d="M145 112C145 101 192 93 250 93C308 93 355 101 355 112V218H145Z" />
+        <path d="M195 234H305L338 292V370C314 379 284 384 250 384C216 384 186 379 162 370V292Z" />
+        <path d="M210 370H290V418C290 426 272 431 250 431C228 431 210 426 210 418Z" />
       </g>
 
       <g className="dimension-scheme-dimensions" fill="none" stroke="#e56835" strokeWidth="1.5">
-        <path d="M150 90V54M350 90V54M150 64H350" />
-        <path d="M150 64L160 59V69ZM350 64L340 59V69Z" fill="#e56835" stroke="none" />
+        <path d="M145 90V54M355 90V54M145 64H355" />
+        <path d="M145 64L155 59V69ZM355 64L345 59V69Z" fill="#e56835" stroke="none" />
 
-        <path d="M120 112H78M214 431H78M88 112V431" />
+        <path d="M120 112H78M210 431H78M88 112V431" />
         <path d="M88 112L83 122H93ZM88 431L83 421H93Z" fill="#e56835" stroke="none" />
 
-        <path d="M214 431V448M286 431V448M214 440H286" />
-        <path d="M214 440L224 435V445ZM286 440L276 435V445Z" fill="#e56835" stroke="none" />
+        <path d="M210 431V448M290 431V448M210 440H290" />
+        <path d="M210 440L220 435V445ZM290 440L280 435V445Z" fill="#e56835" stroke="none" />
 
-        <path d="M315 365H385L408 328" />
-        <circle cx="315" cy="365" r="3" fill="#e56835" stroke="none" />
-        <path d="M301 382H385L408 405" />
-        <circle cx="301" cy="382" r="3" fill="#e56835" stroke="none" />
+        <path d="M338 333H385L408 310" />
+        <circle cx="338" cy="333" r="3" fill="#e56835" stroke="none" />
       </g>
 
       <g className="dimension-scheme-labels" fill="#1f2d35" fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
@@ -103,11 +100,11 @@ export function DimensionScheme({
         <text x="250" y="470" textAnchor="middle" fontSize="15" fontWeight="700">
           {dimensionLabel("d", dimensions.d)}
         </text>
-        <text x="414" y="319" textAnchor="end" fontSize="13" fontWeight="700">
+        <text x="414" y="301" textAnchor="end" fontSize="13" fontWeight="700">
           {dimensionLabel("S", dimensions.S)}
         </text>
-        <text x="414" y="421" textAnchor="end" fontSize="12" fontWeight="700">
-          {dimensionLabel("Утепление", dimensions.insulation)}
+        <text x="414" y="392" textAnchor="end" fontSize="12" fontWeight="700">
+          {insulationLabel(dimensions.insulation)}
         </text>
       </g>
 
