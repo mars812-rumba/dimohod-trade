@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -33,6 +34,22 @@ type ProductSchemeItem = {
 
 type ProductMediaItem = ProductPhotoItem | ProductSchemeItem;
 
+type VariantDimensionKey =
+  | "diameter"
+  | "length_mm"
+  | "steel_grade"
+  | "wall_thickness_mm"
+  | "insulation_mm"
+  | "angle_deg"
+  | "material"
+  | "contour";
+
+type VariantDimension = {
+  key: VariantDimensionKey;
+  label: string;
+  options: Array<{ value: string; label: string }>;
+};
+
 function formatPrice(value: string | null) {
   if (value === null || Number(value) <= 0) {
     return "Цена по запросу";
@@ -43,6 +60,113 @@ function formatPrice(value: string | null) {
     currency: "RUB",
     maximumFractionDigits: 0,
   }).format(Number(value));
+}
+
+function compactDecimal(value: string | null) {
+  if (!value) {
+    return null;
+  }
+  return value.replace(/([.,]\d*?[1-9])0+$|[.,]0+$/, "$1").replace(".", ",");
+}
+
+function materialKey(value: string | null) {
+  if (!value) {
+    return null;
+  }
+  const normalized = value.toLocaleLowerCase("ru-RU");
+  if (normalized.includes("нерж") || normalized.includes("stainless")) {
+    return "stainless";
+  }
+  if (normalized.includes("оцинк") || normalized.includes("galvan")) {
+    return "galvanized";
+  }
+  return normalized.trim();
+}
+
+function materialLabel(value: string | null) {
+  const key = materialKey(value);
+  if (key === "stainless") {
+    return "Нержавейка";
+  }
+  if (key === "galvanized") {
+    return "Оцинковка";
+  }
+  return value;
+}
+
+function dimensionValue(sku: Product["skus"][number], key: VariantDimensionKey): string | null {
+  if (key === "diameter") {
+    if (sku.diameter_mm === null && sku.outer_diameter_mm === null) {
+      return null;
+    }
+    return `${sku.diameter_mm ?? ""}:${sku.outer_diameter_mm ?? ""}`;
+  }
+  if (key === "material") {
+    return materialKey(sku.material);
+  }
+  const value = sku[key];
+  return value === null || value === "" ? null : String(value);
+}
+
+function dimensionLabel(sku: Product["skus"][number], key: VariantDimensionKey): string | null {
+  if (key === "diameter") {
+    if (sku.diameter_mm !== null && sku.outer_diameter_mm !== null && sku.diameter_mm !== sku.outer_diameter_mm) {
+      return `${sku.diameter_mm}/${sku.outer_diameter_mm} мм`;
+    }
+    const diameter = sku.diameter_mm ?? sku.outer_diameter_mm;
+    return diameter === null ? null : `${diameter} мм`;
+  }
+  if (key === "wall_thickness_mm") {
+    const value = compactDecimal(sku.wall_thickness_mm);
+    return value ? `${value} мм` : null;
+  }
+  if (key === "length_mm" || key === "insulation_mm") {
+    const value = sku[key];
+    return value === null ? null : `${value} мм`;
+  }
+  if (key === "angle_deg") {
+    return sku.angle_deg === null ? null : `${sku.angle_deg}°`;
+  }
+  if (key === "material") {
+    return materialLabel(sku.material);
+  }
+  return sku[key] || null;
+}
+
+const dimensionDefinitions: Array<{ key: VariantDimensionKey; label: string }> = [
+  { key: "material", label: "Материал" },
+  { key: "diameter", label: "Диаметр d/D" },
+  { key: "steel_grade", label: "Марка стали" },
+  { key: "length_mm", label: "Длина" },
+  { key: "wall_thickness_mm", label: "Толщина стали" },
+  { key: "insulation_mm", label: "Утепление" },
+  { key: "angle_deg", label: "Угол" },
+  { key: "contour", label: "Контур" },
+];
+
+function buildVariantDimensions(skus: Product["skus"]): VariantDimension[] {
+  return dimensionDefinitions.flatMap((definition) => {
+    const options = new Map<string, string>();
+    for (const sku of skus) {
+      const value = dimensionValue(sku, definition.key);
+      const label = dimensionLabel(sku, definition.key);
+      if (value && label) {
+        options.set(value, label);
+      }
+    }
+    if (options.size <= 1) {
+      return [];
+    }
+    const collator = new Intl.Collator("ru", { numeric: true, sensitivity: "base" });
+    return [
+      {
+        ...definition,
+        options: Array.from(options, ([value, label]) => ({ value, label })).sort((left, right) =>
+          collator.compare(left.label, right.label),
+        ),
+      },
+    ];
+  });
 }
 
 const faqItems = [
@@ -129,10 +253,23 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   );
 }
 
-export function ProductExperience({ product }: { product: Product }) {
-  const [selectedSku, setSelectedSku] = useState(0);
+export function ProductExperience({ product, initialSkuKey }: { product: Product; initialSkuKey?: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const initialSku =
+    product.skus.find((sku) => sku.slug === initialSkuKey || sku.article === initialSkuKey || sku.id === initialSkuKey) ??
+    product.skus[0] ??
+    null;
+  const [selectedSkuId, setSelectedSkuId] = useState<string | null>(initialSku?.id ?? null);
   const [selectedImage, setSelectedImage] = useState(0);
-  const activeSku = product.skus[selectedSku] ?? product.skus[0] ?? null;
+  const activeSku = product.skus.find((sku) => sku.id === selectedSkuId) ?? product.skus[0] ?? null;
+  const variantDimensions = useMemo(() => buildVariantDimensions(product.skus), [product.skus]);
+
+  useEffect(() => {
+    if (initialSku) {
+      setSelectedSkuId(initialSku.id);
+    }
+  }, [initialSku?.id]);
   const normalizedProductName = product.name.toLocaleLowerCase("ru-RU");
   const isDeflector = normalizedProductName.includes("дефлектор");
   const isConeTermination =
@@ -178,6 +315,45 @@ export function ProductExperience({ product }: { product: Product }) {
     S: wallThicknessMm,
     insulation: insulationMm,
   };
+  const variantDescription = activeSku
+    ? `${product.name}: внутренний диаметр ${diameterMm ?? "не указан"} мм${
+        outerDiameter ? `, наружный диаметр ${outerDiameter} мм` : ""
+      }${steelGrade ? `, сталь ${steelGrade}` : ""}${wallThicknessMm ? ` толщиной ${compactDecimal(wallThicknessMm)} мм` : ""}${
+        insulationMm !== null ? `, утепление ${insulationMm} мм` : ""
+      }. Артикул ${activeSku.article}.`
+    : null;
+
+  function selectVariant(dimensionIndex: number, value: string) {
+    if (!activeSku) {
+      return;
+    }
+    const prefix = variantDimensions.slice(0, dimensionIndex);
+    const dimension = variantDimensions[dimensionIndex];
+    let candidates = product.skus.filter(
+      (sku) =>
+        dimensionValue(sku, dimension.key) === value &&
+        prefix.every((item) => dimensionValue(sku, item.key) === dimensionValue(activeSku, item.key)),
+    );
+    if (!candidates.length) {
+      candidates = product.skus.filter((sku) => dimensionValue(sku, dimension.key) === value);
+    }
+    const remaining = variantDimensions.slice(dimensionIndex + 1);
+    const selected = candidates.sort((left, right) => {
+      const leftScore = remaining.filter(
+        (item) => dimensionValue(left, item.key) === dimensionValue(activeSku, item.key),
+      ).length;
+      const rightScore = remaining.filter(
+        (item) => dimensionValue(right, item.key) === dimensionValue(activeSku, item.key),
+      ).length;
+      return rightScore - leftScore;
+    })[0];
+    if (!selected) {
+      return;
+    }
+    setSelectedSkuId(selected.id);
+    setSelectedImage(0);
+    router.replace(`${pathname}?sku=${encodeURIComponent(selected.slug ?? selected.article)}`, { scroll: false });
+  }
 
   return (
     <main className="page">
@@ -359,10 +535,11 @@ export function ProductExperience({ product }: { product: Product }) {
             ) : null}
           </section>
 
-          {product.description ? (
+          {product.description || variantDescription ? (
             <section className="product-section">
               <h2 className="product-section-title">Описание</h2>
-              <p className="product-copy">{product.description}</p>
+              {product.description ? <p className="product-copy">{product.description}</p> : null}
+              {variantDescription ? <p className="product-variant-copy">{variantDescription}</p> : null}
             </section>
           ) : null}
 
@@ -408,24 +585,73 @@ export function ProductExperience({ product }: { product: Product }) {
             )}
           </div>
 
-          {product.skus.length > 0 ? (
-            <div className="sku-list">
-              <p className="sku-list-label">Варианты</p>
-              {product.skus.map((sku, index) => (
-                <button
-                  key={sku.id}
-                  className={`sku-btn${selectedSku === index ? " sku-btn-active" : ""}`}
-                  onClick={() => {
-                    setSelectedSku(index);
-                    setSelectedImage(0);
-                  }}
-                  type="button"
-                >
-                  <span className="sku-btn-name">{sku.name}</span>
-                  <span className="sku-btn-art">Арт. {sku.article}</span>
-                  <span className="sku-btn-price">{formatPrice(sku.price_rub)}</span>
-                </button>
-              ))}
+          {activeSku ? (
+            <div className="variant-picker">
+              <div className="variant-picker-head">
+                <span>Выберите исполнение</span>
+                <strong>{product.skus.length} вариантов</strong>
+              </div>
+              {variantDimensions.map((dimension, dimensionIndex) => {
+                const prefix = variantDimensions.slice(0, dimensionIndex);
+                const selectedValue = dimensionValue(activeSku, dimension.key) ?? "";
+                const options = dimension.options.map((option) => ({
+                  ...option,
+                  disabled: !product.skus.some(
+                    (sku) =>
+                      dimensionValue(sku, dimension.key) === option.value &&
+                      prefix.every(
+                        (item) => dimensionValue(sku, item.key) === dimensionValue(activeSku, item.key),
+                      ),
+                  ),
+                }));
+                const usesMaterialButtons =
+                  dimension.key === "material" &&
+                  options.every((option) => option.value === "stainless" || option.value === "galvanized");
+                return (
+                  <fieldset className="variant-group" key={dimension.key}>
+                    <legend>{dimension.label}</legend>
+                    {usesMaterialButtons ? (
+                      <div className="variant-options variant-material-options">
+                        {options.map((option) => {
+                          const selected = selectedValue === option.value;
+                          return (
+                            <button
+                              aria-pressed={selected}
+                              className={`variant-option${selected ? " variant-option-active" : ""}`}
+                              disabled={option.disabled}
+                              key={option.value}
+                              onClick={() => selectVariant(dimensionIndex, option.value)}
+                              type="button"
+                            >
+                              {option.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="variant-select-wrap">
+                        <select
+                          aria-label={dimension.label}
+                          onChange={(event) => selectVariant(dimensionIndex, event.target.value)}
+                          value={selectedValue}
+                        >
+                          {options.map((option) => (
+                            <option disabled={option.disabled} key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown aria-hidden="true" size={16} />
+                      </div>
+                    )}
+                  </fieldset>
+                );
+              })}
+              <div className="variant-current">
+                <span>Выбрано</span>
+                <strong>{activeSku.name}</strong>
+                <small>Арт. {activeSku.article}</small>
+              </div>
             </div>
           ) : null}
 
