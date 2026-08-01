@@ -105,6 +105,7 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const allCategoriesId = "all";
 const skuPageSize = 200;
+const maxPhotoBytes = 8 * 1024 * 1024;
 
 const emptySkuForm: SKUFormState = {
   id: null,
@@ -134,6 +135,21 @@ function numberOrNull(value: string): number | null {
 function textOrNull(value: string): string | null {
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Не удалось прочитать выбранный файл"));
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        reject(new Error("Не удалось прочитать выбранный файл"));
+        return;
+      }
+      resolve(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function skuToForm(sku: AdminSKU): SKUFormState {
@@ -331,26 +347,23 @@ export default function AdminCatalogManager() {
     if (!selectedProduct || !photoFile) {
       return;
     }
+    if (photoFile.size > maxPhotoBytes) {
+      setStatus("Фото больше 8 МБ. Выберите файл меньшего размера");
+      return;
+    }
     setIsBusy(true);
     setStatus("Загружаю фото...");
     try {
-      const formData = new FormData();
-      formData.set("file", photoFile);
-      if (photoRole.trim()) {
-        formData.set("role", photoRole.trim());
-      }
-      if (photoAlt.trim()) {
-        formData.set("alt", photoAlt.trim());
-      }
-      const response = await fetch(buildBackendUrl(`/api/v1/admin/products/${selectedProduct.id}/photos/upload`), {
+      const contentBase64 = await fileToBase64(photoFile);
+      const product = await apiRequest<AdminProduct>(`/api/v1/admin/products/${selectedProduct.id}/photos`, {
         method: "POST",
-        body: formData,
+        body: JSON.stringify({
+          file_name: photoFile.name,
+          content_base64: contentBase64,
+          role: textOrNull(photoRole),
+          alt: textOrNull(photoAlt),
+        }),
       });
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        throw new Error(body?.detail ?? "Не удалось добавить фото");
-      }
-      const product = (await response.json()) as AdminProduct;
       setSelectedProduct(product);
       await loadSkus();
       setPhotoFile(null);

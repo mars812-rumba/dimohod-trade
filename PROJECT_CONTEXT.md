@@ -336,10 +336,11 @@ product-level media в `Product.extra_attributes.media` используются
 Для browser-запросов админки frontend использует `NEXT_PUBLIC_BASE_PATH=/dimohod` и Next rewrites:
 `/dimohod/api/* -> backend /api/*`, `/dimohod/media/* -> backend /media/*`. Если нужен прямой
 публичный backend URL, его можно задать через `NEXT_PUBLIC_API_BASE_URL` на этапе build.
-Загрузка фото из UI идет через multipart endpoint `/photos/upload`; JSON/base64 endpoint оставлен
-как fallback для совместимости. Роутер не использует декларативные `File/Form`, поэтому backend не
-падает на импорте без `python-multipart`, но сам upload требует rebuild backend image с этой
-зависимостью.
+Загрузка фото из UI идет через JSON/base64 endpoint `/photos`; это не зависит от наличия
+`python-multipart` в уже запущенном backend image. Multipart endpoint `/photos/upload` оставлен как
+дополнительный путь для внешних клиентов. Роутер не использует декларативные `File/Form`, поэтому
+backend не падает на импорте без `python-multipart`, но сам multipart upload требует rebuild backend
+image с этой зависимостью.
 Авторизация и роли для админки пока не реализованы; перед production-доступом маршрут нужно закрыть.
 
 ## 6. Продуктовая структура главной страницы
