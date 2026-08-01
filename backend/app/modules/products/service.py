@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import case, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
@@ -23,6 +25,77 @@ def material_filter_expression(value: str):
     if value == "galvanized":
         return or_(SKU.material.ilike("%оцинк%"), SKU.material.ilike("%galvan%"))
     return func.lower(SKU.material) == value.lower()
+
+
+def contour_group(value: str | None) -> str | None:
+    if not value:
+        return None
+    normalized = value.lower().strip()
+    if "сэндвич" in normalized or "сендвич" in normalized or "sandwich" in normalized:
+        return "sandwich"
+    return normalized
+
+
+def compatible_tube_signature(sku: SKU) -> tuple[int, int, int, str, str, str] | None:
+    material = material_group(sku.material)
+    contour = contour_group(sku.contour)
+    if (
+        sku.diameter_mm is None
+        or sku.outer_diameter_mm is None
+        or sku.insulation_mm is None
+        or not sku.steel_grade
+        or not material
+        or contour != "sandwich"
+    ):
+        return None
+    return (
+        sku.diameter_mm,
+        sku.outer_diameter_mm,
+        sku.insulation_mm,
+        sku.steel_grade.casefold().strip(),
+        material,
+        contour,
+    )
+
+
+def compatible_tube_matches(source_sku: SKU, tube_sku: SKU) -> bool:
+    source_signature = compatible_tube_signature(source_sku)
+    return source_signature is not None and source_signature == compatible_tube_signature(tube_sku)
+
+
+async def list_compatible_tube_skus(
+    session: AsyncSession,
+    source_skus: list[SKU],
+    *,
+    exclude_product_id: UUID,
+) -> list[tuple[SKU, Product]]:
+    signatures = {
+        signature
+        for sku in source_skus
+        if sku.is_active and (signature := compatible_tube_signature(sku)) is not None
+    }
+    if not signatures:
+        return []
+
+    result = await session.execute(
+        select(SKU, Product)
+        .join(Product, SKU.product_id == Product.id)
+        .where(
+            Product.is_active.is_(True),
+            Product.product_kind == "труба",
+            Product.id != exclude_product_id,
+            SKU.is_active.is_(True),
+            SKU.diameter_mm.in_({signature[0] for signature in signatures}),
+            SKU.outer_diameter_mm.in_({signature[1] for signature in signatures}),
+            SKU.insulation_mm.in_({signature[2] for signature in signatures}),
+        )
+        .order_by(Product.name.asc(), SKU.length_mm.asc().nulls_last(), SKU.article.asc())
+    )
+    return [
+        (sku, product)
+        for sku, product in result.all()
+        if compatible_tube_signature(sku) in signatures
+    ]
 
 
 async def list_products(

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   ChevronDown,
   FileText,
@@ -264,7 +265,8 @@ const seoSectionHeadings = new Set([
   "Расчёт комплекта",
 ]);
 
-function ProductSeoDescription({ value }: { value: string }) {
+function ProductSeoDescription({ value, omitConfiguratorSection }: { value: string; omitConfiguratorSection: boolean }) {
+  let insideConfiguratorSection = false;
   return (
     <div className="product-copy">
       {value.split(/\n+/).flatMap((rawLine, index) => {
@@ -273,9 +275,18 @@ function ProductSeoDescription({ value }: { value: string }) {
           return [];
         }
         const normalizedHeading = line.replace(/:$/, "");
+        if (normalizedHeading === "Расчёт комплекта") {
+          insideConfiguratorSection = true;
+          return omitConfiguratorSection
+            ? []
+            : [<h3 className="product-copy-heading" key={`${index}-${line}`}>{normalizedHeading}</h3>];
+        }
+        if (insideConfiguratorSection && omitConfiguratorSection) {
+          return [];
+        }
         return seoSectionHeadings.has(normalizedHeading)
           ? [<h3 className="product-copy-heading" key={`${index}-${line}`}>{normalizedHeading}</h3>]
-          : [<p key={`${index}-${line}`}>{line}</p>];
+          : [<p key={`${index}-${line}`}>{line.replace(/\s*:?[\s]*\/#calculator\b/g, "")}</p>];
       })}
     </div>
   );
@@ -329,6 +340,9 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const contour = activeSku?.contour ?? product.contour;
   const insulationMm = activeSku?.insulation_mm ?? product.insulation_mm;
   const compatibilityMessages = activeSku?.compatibility_messages ?? [];
+  const compatibleProducts = activeSku
+    ? (product.compatible_products ?? []).filter((item) => item.source_sku_id === activeSku.id)
+    : [];
   const configuratorCta = seoConfiguratorCta(product);
   const lengthMm = activeSku?.length_mm ?? null;
   const parametricAlt = `${product.name} ${outerDiameter ?? diameterMm ?? "—"} мм, L=${lengthMm ?? "—"} D=${
@@ -358,13 +372,17 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     S: wallThicknessMm,
     insulation: insulationMm,
   };
-  const variantDescription = activeSku
-    ? `${product.name}: внутренний диаметр ${diameterMm ?? "не указан"} мм${
-        outerDiameter ? `, наружный диаметр ${outerDiameter} мм` : ""
-      }${steelGrade ? `, сталь ${steelGrade}` : ""}${wallThicknessMm ? ` толщиной ${compactDecimal(wallThicknessMm)} мм` : ""}${
-        insulationMm !== null ? `, утепление ${insulationMm} мм` : ""
-      }. Артикул ${activeSku.article}.`
-    : null;
+  const variantSummary = activeSku
+    ? [
+        { label: "Артикул", value: activeSku.article },
+        { label: "Внутренний диаметр", value: diameterMm !== null ? `${diameterMm} мм` : null },
+        { label: "Наружный диаметр", value: outerDiameter !== null ? `${outerDiameter} мм` : null },
+        { label: "Толщина стали", value: wallThicknessMm ? `${compactDecimal(wallThicknessMm)} мм` : null },
+        { label: "Утепление", value: insulationMm !== null ? `${insulationMm} мм` : null },
+        { label: "Материал", value: material },
+        { label: "Марка стали", value: steelGrade },
+      ].filter((item): item is { label: string; value: string } => Boolean(item.value))
+    : [];
 
   function selectVariant(dimensionIndex: number, value: string) {
     if (!activeSku) {
@@ -576,17 +594,84 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                 {product.compatibility_notes}
               </div>
             ) : null}
+            {compatibleProducts.length > 0 ? (
+              <div className="compatible-products-block">
+                <div className="compatible-products-head">
+                  <div>
+                    <h3>Совместимые сэндвич-трубы</h3>
+                    <p>
+                      Подобраны по диаметрам, утеплению, марке и типу стали выбранного варианта.
+                      Длина трубы может отличаться.
+                    </p>
+                  </div>
+                  <span>{compatibleProducts.length} вариантов</span>
+                </div>
+                <div className="compatible-products-list">
+                  {compatibleProducts.map((item) => (
+                    <Link
+                      className="compatible-product-card"
+                      href={`/product/${item.product_slug}?sku=${encodeURIComponent(item.sku_key)}`}
+                      key={`${item.source_sku_id}-${item.sku_id}`}
+                    >
+                      <div className="compatible-product-media">
+                        {item.primary_image ? (
+                          <img
+                            alt={item.primary_image.alt ?? `${item.product_name} — общий вид`}
+                            src={publicMediaUrl(item.primary_image.url)}
+                          />
+                        ) : (
+                          <span>Сэндвич-труба</span>
+                        )}
+                      </div>
+                      <div className="compatible-product-body">
+                        <strong>{item.product_name}</strong>
+                        <small>Арт. {item.article}</small>
+                        <div className="compatible-product-specs">
+                          <span>{item.diameter_mm}/{item.outer_diameter_mm} мм</span>
+                          {item.length_mm !== null ? <span>L={item.length_mm} мм</span> : null}
+                          <span>утепление {item.insulation_mm} мм</span>
+                          <span>{item.steel_grade}</span>
+                          <span>{materialLabel(item.material)}</span>
+                        </div>
+                        <div className="compatible-product-footer">
+                          <b>{formatPrice(item.price_rub)}</b>
+                          <span>Открыть <ArrowRight size={14} /></span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </section>
 
-          {product.description || variantDescription ? (
+          {product.description || variantSummary.length ? (
             <section className="product-section">
               <h2 className="product-section-title">Описание</h2>
-              {product.description ? <ProductSeoDescription value={product.description} /> : null}
-              {variantDescription ? <p className="product-variant-copy">{variantDescription}</p> : null}
+              {product.description ? (
+                <ProductSeoDescription value={product.description} omitConfiguratorSection={Boolean(configuratorCta)} />
+              ) : null}
+              {variantSummary.length ? (
+                <div className="product-variant-block">
+                  <h3>Параметры выбранного варианта</h3>
+                  <dl className="product-variant-summary">
+                    {variantSummary.map((item) => (
+                      <div key={item.label}>
+                        <dt>{item.label}</dt>
+                        <dd>{item.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ) : null}
               {configuratorCta ? (
-                <Link className="product-configurator-cta" href={configuratorCta.href}>
-                  {configuratorCta.text}
-                </Link>
+                <div className="product-configurator-block">
+                  <h3>Расчёт комплекта</h3>
+                  <p>{configuratorCta.text}</p>
+                  <Link className="product-configurator-cta" href={configuratorCta.href}>
+                    Рассчитать комплект
+                  </Link>
+                </div>
               ) : null}
             </section>
           ) : null}

@@ -90,6 +90,26 @@ class ProductFiltersResponse(BaseModel):
     materials: list[ProductFilterOption] = Field(default_factory=list)
 
 
+class CompatibleProductItem(BaseModel):
+    source_sku_id: UUID
+    product_id: UUID
+    product_name: str
+    product_slug: str
+    sku_id: UUID
+    sku_key: str
+    article: str
+    name: str
+    length_mm: int | None
+    diameter_mm: int
+    outer_diameter_mm: int
+    insulation_mm: int
+    steel_grade: str
+    material: str
+    price_rub: Decimal | None
+    stock_status: str
+    primary_image: ProductMediaItem | None = None
+
+
 class ProductRead(BaseModel):
     id: UUID
     category: CategorySummary
@@ -111,5 +131,6 @@ class ProductRead(BaseModel):
     application_tags: list[str]
     compatibility_notes: str | None
     skus: list[SKURead]
+    compatible_products: list[CompatibleProductItem] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

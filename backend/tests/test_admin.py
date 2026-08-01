@@ -23,7 +23,7 @@ from app.modules.admin.service import (
     safe_storage_key,
 )
 from app.modules.products.router import parse_diameter_filter, primary_product_image
-from app.modules.products.service import material_group
+from app.modules.products.service import compatible_tube_matches, material_group
 
 
 def test_admin_routes_are_registered() -> None:
@@ -244,3 +244,24 @@ def test_catalog_filter_values_are_normalized() -> None:
     assert parse_diameter_filter("100:") == (100, None)
     assert material_group("Нержавеющая сталь") == "stainless"
     assert material_group("Оцинкованная сталь") == "galvanized"
+
+
+def test_compatible_tubes_may_have_different_lengths_but_not_different_materials() -> None:
+    source = SimpleNamespace(
+        diameter_mm=120,
+        outer_diameter_mm=220,
+        insulation_mm=50,
+        steel_grade="AISI 430",
+        material="Нержавеющая сталь",
+        contour="сэндвич",
+        length_mm=240,
+    )
+    tube = SimpleNamespace(**{**source.__dict__, "length_mm": 1000})
+
+    assert compatible_tube_matches(source, tube)
+
+    galvanized_tube = SimpleNamespace(**{**tube.__dict__, "material": "Оцинкованная сталь"})
+    assert not compatible_tube_matches(source, galvanized_tube)
+
+    unknown_insulation = SimpleNamespace(**{**tube.__dict__, "insulation_mm": None})
+    assert not compatible_tube_matches(source, unknown_insulation)

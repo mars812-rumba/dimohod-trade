@@ -93,6 +93,26 @@ export type ProductFiltersResponse = {
   materials: ProductFilterOption[];
 };
 
+export type CompatibleProduct = {
+  source_sku_id: string;
+  product_id: string;
+  product_name: string;
+  product_slug: string;
+  sku_id: string;
+  sku_key: string;
+  article: string;
+  name: string;
+  length_mm: number | null;
+  diameter_mm: number;
+  outer_diameter_mm: number;
+  insulation_mm: number;
+  steel_grade: string;
+  material: string;
+  price_rub: string | null;
+  stock_status: string;
+  primary_image: MediaItem | null;
+};
+
 export type Product = {
   id: string;
   category: {
@@ -118,6 +138,7 @@ export type Product = {
   application_tags: string[];
   compatibility_notes: string | null;
   skus: SKU[];
+  compatible_products: CompatibleProduct[];
 };
 
 const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8000";
