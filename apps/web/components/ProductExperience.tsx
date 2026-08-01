@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -319,6 +319,7 @@ const docs = [
 ];
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const publicApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 const mediaRoleLabels: Record<string, string> = {
   general: "Основное",
@@ -477,8 +478,18 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     product.skus.find((sku) => sku.slug === initialSkuKey || sku.article === initialSkuKey || sku.id === initialSkuKey) ??
     product.skus[0] ??
     null;
+  const initialCompatibleProducts = initialSku
+    ? (product.compatible_products ?? []).filter((item) => item.source_sku_id === initialSku.id)
+    : [];
   const [selectedSkuId, setSelectedSkuId] = useState<string | null>(initialSku?.id ?? null);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [compatibleProducts, setCompatibleProducts] = useState(initialCompatibleProducts);
+  const [isLoadingCompatibility, setIsLoadingCompatibility] = useState(false);
+  const compatibilityCache = useRef(
+    new Map<string, CompatibleProduct[]>(
+      initialSku ? [[initialSku.id, initialCompatibleProducts]] : [],
+    ),
+  );
   const activeSku = product.skus.find((sku) => sku.id === selectedSkuId) ?? product.skus[0] ?? null;
   const variantDimensions = useMemo(() => buildVariantDimensions(product.skus), [product.skus]);
 
@@ -487,6 +498,56 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
       setSelectedSkuId(initialSku.id);
     }
   }, [initialSku?.id]);
+
+  useEffect(() => {
+    compatibilityCache.current = new Map(
+      initialSku ? [[initialSku.id, initialCompatibleProducts]] : [],
+    );
+    setCompatibleProducts(initialCompatibleProducts);
+  }, [product.id]);
+
+  useEffect(() => {
+    if (!activeSku) {
+      setCompatibleProducts([]);
+      return;
+    }
+    const cached = compatibilityCache.current.get(activeSku.id);
+    if (cached) {
+      setCompatibleProducts(cached);
+      setIsLoadingCompatibility(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const skuKey = activeSku.slug ?? activeSku.article;
+    const apiPath = `/api/v1/products/${encodeURIComponent(product.slug)}/compatible?sku=${encodeURIComponent(skuKey)}`;
+    const requestUrl = publicApiBaseUrl ? `${publicApiBaseUrl}${apiPath}` : `${appBasePath}${apiPath}`;
+    setCompatibleProducts([]);
+    setIsLoadingCompatibility(true);
+    fetch(requestUrl, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Compatibility request failed: ${response.status}`);
+        }
+        return (await response.json()) as CompatibleProduct[];
+      })
+      .then((items) => {
+        compatibilityCache.current.set(activeSku.id, items);
+        setCompatibleProducts(items);
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setCompatibleProducts([]);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoadingCompatibility(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [activeSku?.id, activeSku?.article, activeSku?.slug, product.slug]);
   const normalizedProductName = product.name.toLocaleLowerCase("ru-RU");
   const isDeflector = normalizedProductName.includes("дефлектор");
   const isConeTermination =
@@ -504,9 +565,6 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const contour = activeSku?.contour ?? product.contour;
   const insulationMm = activeSku?.insulation_mm ?? product.insulation_mm;
   const compatibilityMessages = activeSku?.compatibility_messages ?? [];
-  const compatibleProducts = activeSku
-    ? (product.compatible_products ?? []).filter((item) => item.source_sku_id === activeSku.id)
-    : [];
   const compatibleProductFamilies = groupCompatibleProducts(compatibleProducts);
   const hasCompatibleLengthChoices = compatibleProductFamilies.some(
     (items) => new Set(items.map((item) => item.length_mm).filter((value) => value !== null)).size > 1,
@@ -760,6 +818,12 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
               <div className="compat-note">
                 <Info size={15} />
                 {product.compatibility_notes}
+              </div>
+            ) : null}
+            {isLoadingCompatibility ? (
+              <div className="compat-note" aria-live="polite">
+                <Info size={15} />
+                Подбираем совместимые изделия для выбранного варианта…
               </div>
             ) : null}
             {compatibleProducts.length > 0 ? (

@@ -19,6 +19,7 @@ from app.modules.products.schemas import (
     ProductMediaItem,
     ProductRead,
 )
+from app.modules.products.models import Product, SKU
 from app.modules.products.service import (
     compatible_product_matches,
     get_product_by_slug,
@@ -95,6 +96,60 @@ def sku_matches_filters(
         and (steel_grade is None or sku.steel_grade == steel_grade)
         and (material is None or material_group(sku.material) == material)
     )
+
+
+def select_active_sku(product: Product, sku_key: str | None, *, strict: bool = False) -> SKU | None:
+    active_skus = [sku for sku in product.skus if sku.is_active]
+    if sku_key:
+        selected = next(
+            (
+                sku
+                for sku in active_skus
+                if str(sku.id) == sku_key or sku.slug == sku_key or sku.article == sku_key
+            ),
+            None,
+        )
+        if selected is not None:
+            return selected
+        if strict:
+            return None
+    return active_skus[0] if active_skus else None
+
+
+async def compatible_items_for_sku(
+    session: AsyncSession,
+    product: Product,
+    source_sku: SKU,
+) -> list[CompatibleProductItem]:
+    compatible_items = await list_compatible_product_skus(
+        session,
+        [source_sku],
+        exclude_product_id=product.id,
+        allowed_product_ids=normalized_compatible_product_ids(product.extra_attributes),
+    )
+    return [
+        CompatibleProductItem(
+            source_sku_id=source_sku.id,
+            product_id=target_product.id,
+            product_name=target_product.name,
+            product_slug=target_product.slug,
+            sku_id=target_sku.id,
+            sku_key=target_sku.slug or target_sku.article,
+            article=target_sku.article,
+            name=target_sku.name,
+            length_mm=target_sku.length_mm,
+            diameter_mm=target_sku.diameter_mm,
+            outer_diameter_mm=target_sku.outer_diameter_mm,
+            insulation_mm=target_sku.insulation_mm,
+            steel_grade=target_sku.steel_grade,
+            material=target_sku.material,
+            price_rub=target_sku.price_rub,
+            stock_status=target_sku.stock_status,
+            primary_image=primary_product_image(target_product.extra_attributes),
+        )
+        for target_sku, target_product in compatible_items
+        if compatible_product_matches(source_sku, target_product, target_sku)
+    ]
 
 
 @router.get("", response_model=ProductListResponse)
@@ -215,7 +270,11 @@ async def read_product_filters(
 
 
 @router.get("/{slug}", response_model=ProductRead)
-async def read_product(slug: str, session: AsyncSession = Depends(get_db)) -> ProductRead:
+async def read_product(
+    slug: str,
+    sku: str | None = Query(default=None, min_length=1, max_length=240),
+    session: AsyncSession = Depends(get_db),
+) -> ProductRead:
     product = await get_product_by_slug(session, slug)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
@@ -227,37 +286,10 @@ async def read_product(slug: str, session: AsyncSession = Depends(get_db)) -> Pr
         sku_read for sku_read in product_read.skus if sku_by_id[sku_read.id].is_active
     ]
 
-    compatible_items = await list_compatible_product_skus(
-        session,
-        list(sku_by_id.values()),
-        exclude_product_id=product.id,
-        allowed_product_ids=normalized_compatible_product_ids(product.extra_attributes),
+    source_sku = select_active_sku(product, sku)
+    product_read.compatible_products = (
+        await compatible_items_for_sku(session, product, source_sku) if source_sku else []
     )
-    product_read.compatible_products = [
-        CompatibleProductItem(
-            source_sku_id=source_sku.id,
-            product_id=target_product.id,
-            product_name=target_product.name,
-            product_slug=target_product.slug,
-            sku_id=target_sku.id,
-            sku_key=target_sku.slug or target_sku.article,
-            article=target_sku.article,
-            name=target_sku.name,
-            length_mm=target_sku.length_mm,
-            diameter_mm=target_sku.diameter_mm,
-            outer_diameter_mm=target_sku.outer_diameter_mm,
-            insulation_mm=target_sku.insulation_mm,
-            steel_grade=target_sku.steel_grade,
-            material=target_sku.material,
-            price_rub=target_sku.price_rub,
-            stock_status=target_sku.stock_status,
-            primary_image=primary_product_image(target_product.extra_attributes),
-        )
-        for source_sku in product.skus
-        if source_sku.is_active
-        for target_sku, target_product in compatible_items
-        if compatible_product_matches(source_sku, target_product, target_sku)
-    ]
 
     for sku_read in product_read.skus:
         sku = sku_by_id.get(sku_read.id)
@@ -268,3 +300,18 @@ async def read_product(slug: str, session: AsyncSession = Depends(get_db)) -> Pr
         )
 
     return product_read
+
+
+@router.get("/{slug}/compatible", response_model=list[CompatibleProductItem])
+async def read_compatible_products(
+    slug: str,
+    sku: str = Query(min_length=1, max_length=240),
+    session: AsyncSession = Depends(get_db),
+) -> list[CompatibleProductItem]:
+    product = await get_product_by_slug(session, slug)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    source_sku = select_active_sku(product, sku, strict=True)
+    if source_sku is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
+    return await compatible_items_for_sku(session, product, source_sku)

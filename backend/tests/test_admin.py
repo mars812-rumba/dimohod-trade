@@ -24,7 +24,11 @@ from app.modules.admin.service import (
     safe_asset_name,
     safe_storage_key,
 )
-from app.modules.products.router import parse_diameter_filter, primary_product_image
+from app.modules.products.router import (
+    parse_diameter_filter,
+    primary_product_image,
+    select_active_sku,
+)
 from app.modules.products.service import (
     compatible_fastener_matches,
     compatible_tube_matches,
@@ -50,6 +54,7 @@ def test_admin_routes_are_registered() -> None:
     assert "/api/v1/admin/products/{product_id}/photos/upload" in paths
     assert "/api/v1/admin/categories/{category_id}/cover" in paths
     assert "/api/v1/admin/skus/{sku_id}/photo" in paths
+    assert "/api/v1/products/{slug}/compatible" in paths
 
 
 def test_normalize_media_list_skips_invalid_items() -> None:
@@ -280,6 +285,20 @@ def test_catalog_filter_values_are_normalized() -> None:
     assert parse_diameter_filter("100:") == (100, None)
     assert material_group("Нержавеющая сталь") == "stainless"
     assert material_group("Оцинкованная сталь") == "galvanized"
+
+
+def test_product_page_selects_only_requested_active_sku() -> None:
+    first = SimpleNamespace(id="sku-1", slug="first", article="DT-1", is_active=True)
+    second = SimpleNamespace(id="sku-2", slug="second", article="DT-2", is_active=True)
+    inactive = SimpleNamespace(id="sku-3", slug="inactive", article="DT-3", is_active=False)
+    product = SimpleNamespace(skus=[first, second, inactive])
+
+    assert select_active_sku(product, "second") is second
+    assert select_active_sku(product, "DT-2") is second
+    assert select_active_sku(product, "sku-2") is second
+    assert select_active_sku(product, "inactive", strict=True) is None
+    assert select_active_sku(product, "missing", strict=True) is None
+    assert select_active_sku(product, "missing") is first
 
 
 def test_seo_prompt_requires_natural_language_and_skips_empty_sections() -> None:

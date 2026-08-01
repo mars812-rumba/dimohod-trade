@@ -191,11 +191,12 @@ function productJsonLd(product: Product, sku: SKU | null) {
 
 export async function generateMetadata({ params, searchParams }: ProductPageProps): Promise<Metadata> {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
-  const product = await getProduct(slug);
+  const initialSkuKey = requestedSkuKey(query.sku);
+  const product = await getProduct(slug, initialSkuKey);
   if (!product) {
     return { title: "Товар не найден | Дымоход Трейд" };
   }
-  const sku = selectSku(product, requestedSkuKey(query.sku));
+  const sku = selectSku(product, initialSkuKey);
   const title = metadataTitle(product, sku);
   const description = metadataDescription(product, sku);
   const image = productImage(product, sku);
@@ -216,13 +217,13 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
 
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
-  const product = await getProduct(slug);
+  const initialSkuKey = requestedSkuKey(query.sku);
+  const product = await getProduct(slug, initialSkuKey);
 
   if (!product) {
     notFound();
   }
 
-  const initialSkuKey = requestedSkuKey(query.sku);
   const initialSku = selectSku(product, initialSkuKey);
   const jsonLd = productJsonLd(product, initialSku);
 

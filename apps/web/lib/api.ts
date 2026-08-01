@@ -225,8 +225,13 @@ export async function getProductFilters(category?: string): Promise<ProductFilte
   return (await response.json()) as ProductFiltersResponse;
 }
 
-export async function getProduct(slug: string): Promise<Product | null> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/products/${slug}`, {
+export async function getProduct(slug: string, sku?: string): Promise<Product | null> {
+  const params = new URLSearchParams();
+  if (sku) {
+    params.set("sku", sku);
+  }
+  const query = params.toString();
+  const response = await fetch(`${apiBaseUrl}/api/v1/products/${slug}${query ? `?${query}` : ""}`, {
     next: { revalidate: 60 },
   });
 

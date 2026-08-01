@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import case, exists, func, or_, select
+from sqlalchemy import and_, case, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -110,6 +110,50 @@ def compatible_product_matches(source_sku: SKU, target_product: Product, target_
     return False
 
 
+def compatibility_filter_expression(source_sku: SKU):
+    expressions = []
+    tube_signature = compatible_tube_signature(source_sku)
+    if tube_signature is not None:
+        diameter, outer_diameter, insulation, steel_grade, material, _contour = tube_signature
+        expressions.append(
+            and_(
+                Product.product_kind == "труба",
+                SKU.diameter_mm == diameter,
+                SKU.outer_diameter_mm == outer_diameter,
+                SKU.insulation_mm == insulation,
+                func.lower(func.trim(SKU.steel_grade)) == steel_grade,
+                material_filter_expression(material),
+                or_(
+                    SKU.contour.ilike("%сэндвич%"),
+                    SKU.contour.ilike("%сендвич%"),
+                    SKU.contour.ilike("%sandwich%"),
+                ),
+            )
+        )
+
+    if source_sku.outer_diameter_mm is not None:
+        fastener_conditions = [
+            Product.product_kind == "крепеж",
+            func.coalesce(SKU.outer_diameter_mm, SKU.diameter_mm) == source_sku.outer_diameter_mm,
+        ]
+        source_material = material_group(source_sku.material)
+        if source_material:
+            fastener_conditions.append(
+                or_(SKU.material.is_(None), material_filter_expression(source_material))
+            )
+        if source_sku.steel_grade:
+            fastener_conditions.append(
+                or_(
+                    SKU.steel_grade.is_(None),
+                    func.lower(func.trim(SKU.steel_grade))
+                    == source_sku.steel_grade.casefold().strip(),
+                )
+            )
+        expressions.append(and_(*fastener_conditions))
+
+    return or_(*expressions) if expressions else None
+
+
 async def list_compatible_product_skus(
     session: AsyncSession,
     source_skus: list[SKU],
@@ -122,6 +166,14 @@ async def list_compatible_product_skus(
         return []
 
     if allowed_product_ids == []:
+        return []
+
+    matching_expressions = [
+        expression
+        for sku in active_source_skus
+        if (expression := compatibility_filter_expression(sku)) is not None
+    ]
+    if not matching_expressions:
         return []
 
     product_filters = (
@@ -138,6 +190,7 @@ async def list_compatible_product_skus(
             *product_filters,
             Product.id != exclude_product_id,
             SKU.is_active.is_(True),
+            or_(*matching_expressions),
         )
         .order_by(Product.name.asc(), SKU.length_mm.asc().nulls_last(), SKU.article.asc())
     )
