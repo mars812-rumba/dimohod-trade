@@ -72,22 +72,30 @@ export function DimensionScheme({
         strokeWidth="2.5"
       >
         <path
-          d="M145 112C145 101 192 93 250 93C308 93 355 101 355 112V218H305L338 285V350C324 356 308 360 290 362V420C290 430 272 436 250 436C228 436 210 430 210 420V362C192 360 176 356 162 350V285L195 218H145Z"
+          d="M145 112C145 101 192 93 250 93C308 93 355 101 355 112V218H305L338 285V350C322 358 306 362 286 364V397C286 405 270 410 250 410C230 410 214 405 214 397V364C194 362 178 358 162 350V285L195 218H145Z"
           fill="#e9eef0"
         />
-        <path d="M145 218H195M305 218H355" stroke="#65747c" strokeWidth="1.6" />
-        <path d="M162 350C176 356 192 360 210 362M290 362C308 360 324 356 338 350" stroke="#65747c" strokeWidth="1.6" />
+        <path
+          d="M145 218H195C210 205 230 200 250 200C270 200 290 205 305 218H355"
+          stroke="#65747c"
+          strokeWidth="1.6"
+        />
+        <path
+          d="M162 350C178 358 194 362 214 364M286 364C306 362 322 358 338 350"
+          stroke="#65747c"
+          strokeWidth="1.6"
+        />
       </g>
 
       <g className="dimension-scheme-dimensions" fill="none" stroke="#e56835" strokeWidth="1.5">
         <path d="M145 90V54M355 90V54M145 64H355" />
         <path d="M145 64L155 59V69ZM355 64L345 59V69Z" fill="#e56835" stroke="none" />
 
-        <path d="M120 112H78M210 436H78M88 112V436" />
-        <path d="M88 112L83 122H93ZM88 436L83 426H93Z" fill="#e56835" stroke="none" />
+        <path d="M120 112H78M214 410H78M88 112V410" />
+        <path d="M88 112L83 122H93ZM88 410L83 400H93Z" fill="#e56835" stroke="none" />
 
-        <path d="M210 436V457M290 436V457M210 449H290" />
-        <path d="M210 449L220 444V454ZM290 449L280 444V454Z" fill="#e56835" stroke="none" />
+        <path d="M214 410V434M286 410V434M214 424H286" />
+        <path d="M214 424L224 419V429ZM286 424L276 419V429Z" fill="#e56835" stroke="none" />
 
         <path d="M338 333H385L408 310" />
         <circle cx="338" cy="333" r="3" fill="#e56835" stroke="none" />
@@ -100,13 +108,13 @@ export function DimensionScheme({
         <text x="68" y="262" textAnchor="middle" fontSize="15" fontWeight="700" transform="rotate(-90 68 262)">
           {dimensionLabel("L", dimensions.L)}
         </text>
-        <text x="250" y="474" textAnchor="middle" fontSize="15" fontWeight="700">
+        <text x="250" y="447" textAnchor="middle" fontSize="15" fontWeight="700">
           {dimensionLabel("d", dimensions.d)}
         </text>
         <text x="414" y="301" textAnchor="end" fontSize="13" fontWeight="700">
           {dimensionLabel("S", dimensions.S)}
         </text>
-        <text x="414" y="402" textAnchor="end" fontSize="12" fontWeight="700">
+        <text x="414" y="392" textAnchor="end" fontSize="12" fontWeight="700">
           {insulationLabel(dimensions.insulation)}
         </text>
       </g>
