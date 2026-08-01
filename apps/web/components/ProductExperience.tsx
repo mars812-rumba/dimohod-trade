@@ -150,8 +150,8 @@ function dimensionLabel(sku: Product["skus"][number], key: VariantDimensionKey):
 
 const dimensionDefinitions: Array<{ key: VariantDimensionKey; label: string }> = [
   { key: "material", label: "Материал" },
-  { key: "diameter", label: "Диаметр d/D" },
   { key: "steel_grade", label: "Марка стали" },
+  { key: "diameter", label: "Диаметр d/D" },
   { key: "length_mm", label: "Длина" },
   { key: "wall_thickness_mm", label: "Толщина стали" },
   { key: "insulation_mm", label: "Утепление" },
@@ -211,6 +211,22 @@ const docs = [
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
+const mediaRoleLabels: Record<string, string> = {
+  general: "Основное",
+  top: "Вид сверху",
+  connection: "Соединение",
+  connect: "Соединение",
+  detail: "Деталь",
+};
+
+function mediaRoleLabel(role: string) {
+  const normalizedRole = role.trim().toLowerCase();
+  if (normalizedRole.startsWith("connect")) {
+    return "Соединение";
+  }
+  return mediaRoleLabels[normalizedRole] ?? role;
+}
+
 function publicMediaUrl(url: string) {
   return url.startsWith("/media/") ? `${appBasePath}${url}` : url;
 }
@@ -225,7 +241,8 @@ function sharedProductMedia(product: Product): ProductPhotoItem[] {
     if (!item || typeof item !== "object" || !("url" in item) || typeof item.url !== "string") {
       return [];
     }
-    const role = "role" in item && typeof item.role === "string" ? item.role : "Фото";
+    const rawRole = "role" in item && typeof item.role === "string" ? item.role : "Фото";
+    const role = mediaRoleLabel(rawRole);
     const alt = "alt" in item && typeof item.alt === "string" ? item.alt : `${product.name} — ${role}`;
     return [
       {
@@ -397,7 +414,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
         ...productPhotos.slice(0, 3),
         {
           kind: "scheme",
-          role: "Схема размеров",
+          role: "Схема",
           alt: parametricAlt,
         },
       ]
@@ -787,7 +804,10 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   dimension.key === "material" &&
                   options.every((option) => option.value === "stainless" || option.value === "galvanized");
                 return (
-                  <fieldset className="variant-group" key={dimension.key}>
+                  <fieldset
+                    className={`variant-group variant-group-${dimension.key}`}
+                    key={dimension.key}
+                  >
                     <legend>{dimension.label}</legend>
                     {usesMaterialButtons ? (
                       <div className="variant-options variant-material-options">
