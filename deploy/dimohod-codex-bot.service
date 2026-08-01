@@ -11,7 +11,7 @@ ExecStart=/usr/bin/python3 -m tools.codex_telegram_bot.bot
 Restart=on-failure
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
-Environment=CODEX_BOT_CODEX_BINARY=/usr/local/bin/codex
+Environment=CODEX_BOT_CODEX_BINARY=/home/dimohod-trade/tools/codex_telegram_bot/codex-launcher.sh
 
 # Codex needs its state/workspace; Docker Buildx needs its activity metadata.
 NoNewPrivileges=true

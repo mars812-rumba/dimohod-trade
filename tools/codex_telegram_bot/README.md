@@ -48,7 +48,8 @@ OPENAI_IMAGE_QUALITY=medium
 # Отключает автоматическое назначение первого владельца и разрешает указанные ID.
 CODEX_BOT_ALLOWED_USER_IDS=123456789
 
-# Если codex отсутствует в PATH.
+# Если codex отсутствует в PATH. Production unit использует launcher,
+# который сам находит актуальный бинарник VS Code-расширения после обновлений.
 CODEX_BOT_CODEX_BINARY=/absolute/path/to/codex
 
 CODEX_BOT_MAX_WORKERS=2
