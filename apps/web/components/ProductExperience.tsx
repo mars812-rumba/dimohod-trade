@@ -485,11 +485,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const [selectedImage, setSelectedImage] = useState(0);
   const [compatibleProducts, setCompatibleProducts] = useState(initialCompatibleProducts);
   const [isLoadingCompatibility, setIsLoadingCompatibility] = useState(false);
-  const compatibilityCache = useRef(
-    new Map<string, CompatibleProduct[]>(
-      initialSku ? [[initialSku.id, initialCompatibleProducts]] : [],
-    ),
-  );
+  const compatibilityCache = useRef(new Map<string, CompatibleProduct[]>());
   const activeSku = product.skus.find((sku) => sku.id === selectedSkuId) ?? product.skus[0] ?? null;
   const variantDimensions = useMemo(() => buildVariantDimensions(product.skus), [product.skus]);
 
@@ -500,9 +496,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   }, [initialSku?.id]);
 
   useEffect(() => {
-    compatibilityCache.current = new Map(
-      initialSku ? [[initialSku.id, initialCompatibleProducts]] : [],
-    );
+    compatibilityCache.current = new Map();
     setCompatibleProducts(initialCompatibleProducts);
   }, [product.id]);
 
@@ -522,9 +516,8 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     const skuKey = activeSku.slug ?? activeSku.article;
     const apiPath = `/api/v1/products/${encodeURIComponent(product.slug)}/compatible?sku=${encodeURIComponent(skuKey)}`;
     const requestUrl = publicApiBaseUrl ? `${publicApiBaseUrl}${apiPath}` : `${appBasePath}${apiPath}`;
-    setCompatibleProducts([]);
     setIsLoadingCompatibility(true);
-    fetch(requestUrl, { signal: controller.signal })
+    fetch(requestUrl, { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) {
           throw new Error(`Compatibility request failed: ${response.status}`);
@@ -878,7 +871,8 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   <ProductCopyHeading title="Расчёт комплекта" />
                   <p>{configuratorCta.text}</p>
                   <Link className="product-configurator-cta" href={configuratorCta.href}>
-                    Рассчитать комплект
+                    <span>Рассчитать комплект</span>
+                    <ArrowRight aria-hidden="true" size={18} strokeWidth={2.4} />
                   </Link>
                 </div>
               ) : null}
@@ -916,17 +910,6 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
         </div>
 
         <aside className="sku-panel">
-          <div className="sku-price-block">
-            {activeSku ? (
-              <>
-                <div className="sku-price">{formatPrice(activeSku.price_rub)}</div>
-                <p className="sku-price-note">за штуку, включая НДС</p>
-              </>
-            ) : (
-              <div className="sku-price-na">Цена по запросу</div>
-            )}
-          </div>
-
           {activeSku ? (
             <div className="variant-picker">
               <div className="variant-picker-head">
@@ -1005,13 +988,16 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   </div>
                 </div>
               ) : null}
-              <div className="variant-current">
-                <span>Выбрано</span>
-                <strong>{activeSku.name}</strong>
-                <small>Арт. {activeSku.article}</small>
+              <div className="sku-price-block sku-price-block-selection">
+                <div className="sku-price">{formatPrice(activeSku.price_rub)}</div>
+                <p className="sku-price-note">за штуку, включая НДС</p>
               </div>
             </div>
-          ) : null}
+          ) : (
+            <div className="sku-price-block">
+              <div className="sku-price-na">Цена по запросу</div>
+            </div>
+          )}
 
           <div className="sku-cta">
             <button className="button full-button" type="button">
