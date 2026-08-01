@@ -2,6 +2,11 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getCatalogTree, type CategoryNode } from "@/lib/api";
 
+// The backend is not reachable from the isolated Next.js image build. Render the
+// directory at request time so a transient build-time failure is never frozen
+// into the published catalog page.
+export const dynamic = "force-dynamic";
+
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 function publicMediaUrl(url: string) {
