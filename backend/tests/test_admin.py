@@ -9,10 +9,11 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.modules.catalog.service import category_cover
 from app.modules.admin.service import (
-    extract_openai_output_text,
     build_product_seo_prompt,
     canonical_photo_name,
     decode_photo_payload,
+    extract_openai_output_text,
+    inherit_legacy_product_content,
     normalize_media_item,
     normalize_media_list,
     resolve_product_media,
@@ -116,6 +117,34 @@ def test_product_media_overrides_legacy_category_media() -> None:
     assert resolve_product_media(product_media, category_media)[0].url.endswith("photo-1.jpg")
     assert resolve_product_media({"media": []}, category_media) == []
     assert resolve_product_media({}, category_media)[0].url.endswith("category.jpg")
+
+
+def test_legacy_editor_content_is_inherited_once_without_overwriting_canonical_values() -> None:
+    product_id = UUID("11111111-1111-1111-1111-111111111111")
+    canonical = SimpleNamespace(
+        id=product_id,
+        description=None,
+        extra_attributes={"seo_title": "Сохранённый title активного семейства"},
+    )
+    legacy = SimpleNamespace(
+        description="Сохранённое описание",
+        extra_attributes={
+            "merged_into_product_id": str(product_id),
+            "seo_title": "Старый title не должен перезаписать новый",
+            "seo_description": "Сохранённый meta description",
+            "seo_knowledge": {"purpose": ["Подтверждённое назначение"]},
+            "media": [{"url": "/media/catalog/categories/family/photo-1.jpg"}],
+        },
+    )
+
+    assert inherit_legacy_product_content(canonical, [legacy])
+    assert canonical.extra_attributes["seo_title"] == "Сохранённый title активного семейства"
+    assert canonical.extra_attributes["seo_description"] == "Сохранённый meta description"
+    assert canonical.extra_attributes["seo_knowledge"]["purpose"] == ["Подтверждённое назначение"]
+    assert canonical.extra_attributes["media"][0]["url"].endswith("photo-1.jpg")
+    assert canonical.description == "Сохранённое описание"
+    assert canonical.extra_attributes["legacy_admin_content_migrated"] is True
+    assert not inherit_legacy_product_content(canonical, [legacy])
 
 
 def test_decode_photo_payload_accepts_data_url() -> None:

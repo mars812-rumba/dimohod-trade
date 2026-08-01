@@ -49,6 +49,7 @@ PHOTO_ROLE_FILENAMES = {
 }
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 SEO_KNOWLEDGE_KEY = "seo_knowledge"
+LEGACY_CONTENT_MIGRATION_KEY = "legacy_admin_content_migrated"
 SEO_JSON_SCHEMA = {
     "type": "object",
     "properties": {
@@ -470,6 +471,35 @@ def resolve_product_media(
     return normalize_media_list(category_extra_attributes)
 
 
+def inherit_legacy_product_content(product: Product, legacy_products: list[Product]) -> bool:
+    """Recover editor content left on Product rows merged into this family."""
+    attributes = dict(product.extra_attributes or {})
+    if attributes.get(LEGACY_CONTENT_MIGRATION_KEY) is True:
+        return False
+
+    matching_legacy = [
+        legacy
+        for legacy in legacy_products
+        if str((legacy.extra_attributes or {}).get("merged_into_product_id")) == str(product.id)
+    ]
+    if not matching_legacy:
+        return False
+
+    for legacy in matching_legacy:
+        legacy_attributes = legacy.extra_attributes or {}
+        for key in (MEDIA_KEY, SEO_KNOWLEDGE_KEY, "seo_title", "seo_description"):
+            if not attributes.get(key) and legacy_attributes.get(key):
+                attributes[key] = legacy_attributes[key]
+        if not product.description and legacy.description:
+            product.description = legacy.description
+
+    # Mark the one-time recovery even if the legacy rows had no editor content.
+    # This prevents intentionally cleared fields from being restored later.
+    attributes[LEGACY_CONTENT_MIGRATION_KEY] = True
+    product.extra_attributes = attributes
+    return True
+
+
 def decode_photo_payload(payload: str) -> bytes:
     if "," in payload and payload.lower().startswith("data:"):
         payload = payload.split(",", 1)[1]
@@ -528,7 +558,10 @@ async def list_admin_products(
     limit: int,
     offset: int,
 ) -> tuple[list[AdminProductListItem], int]:
-    filters = []
+    # Legacy Product rows remain in the database after variants are grouped into
+    # one canonical family. Their SKUs have already been moved away, so exposing
+    # those inactive shells produces an empty editor with no photos or variants.
+    filters = [Product.is_active.is_(True)]
     if category_id is not None:
         filters.append(Product.category_id == category_id)
     if search:
@@ -628,12 +661,23 @@ async def list_admin_skus(
 async def get_admin_product(session: AsyncSession, product_id: UUID) -> Product:
     result = await session.execute(
         select(Product)
-        .where(Product.id == product_id)
+        .where(Product.id == product_id, Product.is_active.is_(True))
         .options(joinedload(Product.category), selectinload(Product.skus))
     )
     product = result.scalar_one_or_none()
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    if not (product.extra_attributes or {}).get(LEGACY_CONTENT_MIGRATION_KEY):
+        legacy_result = await session.execute(
+            select(Product)
+            .where(
+                Product.category_id == product.category_id,
+                Product.is_active.is_(False),
+            )
+            .order_by(Product.updated_at.desc())
+        )
+        if inherit_legacy_product_content(product, list(legacy_result.scalars())):
+            await session.commit()
     return product
 
 
