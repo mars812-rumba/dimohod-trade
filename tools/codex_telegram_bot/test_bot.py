@@ -6,8 +6,10 @@ import unittest
 from pathlib import Path
 
 from tools.codex_telegram_bot.bot import (
+    CODEX_MODELS,
     PROJECT_INSTRUCTIONS,
     SUNNY_PROJECT_INSTRUCTIONS,
+    BotApplication,
     CodexRunner,
     PendingAction,
     POST_TASK_KEYBOARD,
@@ -27,6 +29,7 @@ from tools.codex_telegram_bot.bot import (
     extract_openai_output_text,
     is_protected_commit_path,
     load_dotenv,
+    model_keyboard,
     natural_image_prompt,
     safe_project_file,
     split_message,
@@ -133,6 +136,15 @@ class BotUtilitiesTest(unittest.TestCase):
             [button["callback_data"] for button in buttons],
             ["posttask:ship", "posttask:continue"],
         )
+
+    def test_model_keyboard_has_requested_profiles(self) -> None:
+        buttons = model_keyboard()["inline_keyboard"][0]
+        self.assertEqual(
+            [button["callback_data"] for button in buttons],
+            ["model:gpt55_high", "model:sol_medium"],
+        )
+        self.assertEqual(CODEX_MODELS["gpt55_high"].reasoning_effort, "high")
+        self.assertEqual(CODEX_MODELS["sol_medium"].model, "gpt-5.6-sol")
 
     def test_allowed_changes_exclude_protected_paths(self) -> None:
         status = (
@@ -277,6 +289,45 @@ class BotUtilitiesTest(unittest.TestCase):
             self.assertEqual(state.get_active_project(10), "dimohod")
             state.set_active_project(10, "sunny")
             self.assertEqual(state.get_active_project(10), "sunny")
+
+    def test_model_selection_changes_command_and_uses_separate_thread(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            state = StateStore(root / "state.json")
+            runner = CodexRunner(root, "/bin/codex", state)
+            state.set_model_key(1, "gpt55_high")
+            slot = state.thread_slot("dimohod", "gpt55_high")
+            state.set_thread(1, "thread-55", slot)
+            command = runner.build_command(1, "задача")
+            self.assertIn("gpt-5.5", command)
+            self.assertIn('model_reasoning_effort="high"', command)
+            self.assertEqual(command[-3:], ["resume", "thread-55", "задача"])
+
+    def test_photo_album_collects_multiple_screenshots(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            state = StateStore(root / "state.json")
+            runner = CodexRunner(root, "/bin/codex", state)
+            app = BotApplication(
+                object(),
+                state,
+                runner,
+                root,
+                "test-key",
+                "transcribe",
+                "vision",
+                "image",
+                "1024x1024",
+                "medium",
+            )
+            app.queue_photo_album(1, 10, "album-1", [{"file_id": "a"}], "ошибка")
+            app.queue_photo_album(1, 11, "album-1", [{"file_id": "b"}], "")
+            album = app.photo_albums[(1, "album-1")]
+            self.assertEqual(len(album.photos), 2)
+            self.assertEqual(album.caption, "ошибка")
+            self.assertTrue(app.has_pending_album(1))
+            assert album.timer is not None
+            album.timer.cancel()
 
     def test_codex_events_update_status(self) -> None:
         summary = StatusSummary(started_at=time.monotonic())

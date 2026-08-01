@@ -37,6 +37,8 @@ DEFAULT_VISION_MODEL = "gpt-5.6-luna"
 DEFAULT_IMAGE_MODEL = "gpt-image-2"
 DEFAULT_IMAGE_SIZE = "1024x1024"
 DEFAULT_IMAGE_QUALITY = "medium"
+DEFAULT_CODEX_MODEL_KEY = "sol_medium"
+MEDIA_GROUP_SETTLE_SECONDS = 1.2
 PROJECT_INSTRUCTIONS = """Работай только над проектом Dimohod Trade в текущем каталоге.
 Перед изменениями прочитай PROJECT_CONTEXT.md и NEXT_STEPS.md.
 Сохраняй существующие пользовательские незакоммиченные изменения. Не изменяй prices/ и
@@ -87,6 +89,30 @@ class ProjectConfig:
     protected_paths: tuple[str, ...]
     test_commands: tuple[tuple[str, ...], ...]
     deploy_commands: tuple[tuple[str, ...], ...]
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    key: str
+    label: str
+    model: str
+    reasoning_effort: str
+
+
+CODEX_MODELS = {
+    "gpt55_high": ModelConfig(
+        key="gpt55_high",
+        label="🧠 GPT-5.5 · high",
+        model="gpt-5.5",
+        reasoning_effort="high",
+    ),
+    "sol_medium": ModelConfig(
+        key="sol_medium",
+        label="⚡ GPT-5.6 Sol · medium",
+        model="gpt-5.6-sol",
+        reasoning_effort="medium",
+    ),
+}
 
 
 def build_project_configs(dimohod_root: Path) -> dict[str, ProjectConfig]:
@@ -140,6 +166,17 @@ def project_keyboard(projects: dict[str, ProjectConfig]) -> dict[str, Any]:
             [
                 {"text": project.label, "callback_data": f"project:{project.key}"}
                 for project in projects.values()
+            ]
+        ]
+    }
+
+
+def model_keyboard() -> dict[str, Any]:
+    return {
+        "inline_keyboard": [
+            [
+                {"text": model.label, "callback_data": f"model:{model.key}"}
+                for model in CODEX_MODELS.values()
             ]
         ]
     }
@@ -437,6 +474,7 @@ class StateStore:
             "owner_user_id": None,
             "threads": {},
             "active_projects": {},
+            "models": {},
         }
         self.configured_users = configured_users or set()
         if path.exists():
@@ -485,6 +523,27 @@ class StateStore:
             self.data.setdefault("active_projects", {})[str(chat_id)] = project_key
             self.save()
 
+    def get_model_key(self, chat_id: int) -> str:
+        with self.lock:
+            key = str(
+                self.data.setdefault("models", {}).get(str(chat_id))
+                or DEFAULT_CODEX_MODEL_KEY
+            )
+            return key if key in CODEX_MODELS else DEFAULT_CODEX_MODEL_KEY
+
+    def set_model_key(self, chat_id: int, model_key: str) -> None:
+        if model_key not in CODEX_MODELS:
+            raise ValueError(f"Неизвестная модель: {model_key}")
+        with self.lock:
+            self.data.setdefault("models", {})[str(chat_id)] = model_key
+            self.save()
+
+    def thread_slot(self, project_key: str, model_key: str) -> str:
+        # Preserve the original project thread for the default Sol profile.
+        if model_key == DEFAULT_CODEX_MODEL_KEY:
+            return project_key
+        return f"{project_key}@{model_key}"
+
     def get_thread(self, chat_id: int, project_key: str = "dimohod") -> str | None:
         with self.lock:
             threads = self.data.setdefault("threads", {})
@@ -521,6 +580,16 @@ class StateStore:
 class RunningTask:
     process: subprocess.Popen[str] | None = None
     cancel_requested: bool = False
+
+
+@dataclass
+class PhotoAlbum:
+    chat_id: int
+    first_message_id: int
+    project_key: str
+    caption: str = ""
+    photos: list[list[dict[str, Any]]] = field(default_factory=list)
+    timer: threading.Timer | None = None
 
 
 @dataclass
@@ -622,6 +691,9 @@ class CodexRunner:
         self, chat_id: int, prompt: str, project_key: str = "dimohod"
     ) -> list[str]:
         project = self.projects[project_key]
+        model_key = self.state.get_model_key(chat_id)
+        model = CODEX_MODELS[model_key]
+        thread_slot = self.state.thread_slot(project_key, model_key)
         common = [
             self.codex_binary,
             "exec",
@@ -632,8 +704,12 @@ class CodexRunner:
             str(project.root),
             "--sandbox",
             "workspace-write",
+            "--model",
+            model.model,
+            "--config",
+            f'model_reasoning_effort="{model.reasoning_effort}"',
         ]
-        thread_id = self.state.get_thread(chat_id, project_key)
+        thread_id = self.state.get_thread(chat_id, thread_slot)
         if thread_id:
             return [*common, "resume", thread_id, prompt]
         return [*common, project.instructions + prompt]
@@ -654,7 +730,9 @@ class CodexRunner:
         summary = StatusSummary()
         diagnostic_lines: list[str] = []
         project = self.projects[project_key]
-        saved_thread_id = self.state.get_thread(chat_id, project_key)
+        model_key = self.state.get_model_key(chat_id)
+        thread_slot = self.state.thread_slot(project_key, model_key)
+        saved_thread_id = self.state.get_thread(chat_id, thread_slot)
         try:
             process = subprocess.Popen(
                 self.build_command(chat_id, prompt, project_key),
@@ -683,7 +761,7 @@ class CodexRunner:
                     continue
                 changed = consume_codex_event(event, summary)
                 if summary.thread_id and summary.thread_id != saved_thread_id:
-                    self.state.set_thread(chat_id, summary.thread_id, project_key)
+                    self.state.set_thread(chat_id, summary.thread_id, thread_slot)
                     saved_thread_id = summary.thread_id
                 now = time.monotonic()
                 if changed and now - last_update >= 2.0:
@@ -734,29 +812,40 @@ def image_data_url(path: Path) -> str:
     return f"data:{guess_mime_type(path)};base64,{encoded}"
 
 
-def analyze_photo(path: Path, caption: str, openai_key: str, model: str) -> str:
+def analyze_photos(
+    paths: list[Path], caption: str, openai_key: str, model: str
+) -> str:
+    if not paths:
+        raise ValueError("Не переданы изображения для анализа")
     prompt = caption.strip() or (
-        "Опиши фото подробно по-русски. Если это изделие, чертёж, скриншот или ошибка, "
-        "выдели важные детали, текст на изображении и возможные действия для проекта."
+        "Проанализируй изображения вместе и подробно ответь по-русски. Если это последовательность "
+        "скриншотов, восстанови общий сценарий, выпиши ошибки и весь важный текст. "
+        "Укажи возможные действия для проекта."
+    )
+    content: list[dict[str, Any]] = [{"type": "input_text", "text": prompt}]
+    content.extend(
+        {"type": "input_image", "image_url": image_data_url(path), "detail": "high"}
+        for path in paths
     )
     payload = {
         "model": model,
         "input": [
             {
                 "role": "user",
-                "content": [
-                    {"type": "input_text", "text": prompt},
-                    {"type": "input_image", "image_url": image_data_url(path), "detail": "auto"},
-                ],
+                "content": content,
             }
         ],
-        "max_output_tokens": 900,
+        "max_output_tokens": 1600,
     }
     result = openai_json_request(openai_key, "responses", payload)
     text = extract_openai_output_text(result)
     if not text:
         raise RuntimeError("OpenAI vision вернул пустой ответ")
     return text
+
+
+def analyze_photo(path: Path, caption: str, openai_key: str, model: str) -> str:
+    return analyze_photos([path], caption, openai_key, model)
 
 
 def generate_image(prompt: str, openai_key: str, model: str, size: str, quality: str, output_path: Path) -> Path:
@@ -836,6 +925,7 @@ HELP_TEXT = """Я управляю Codex в проектах Dimohod Trade и Su
 
 Команды:
 /projects — выбрать активный проект
+/models — выбрать модель и уровень рассуждений
 /status — ветка, изменения и активная задача
 /file path/to/file — прислать файл из проекта
 /image описание — сгенерировать изображение и прислать в чат
@@ -1307,6 +1397,9 @@ class BotApplication:
         self.pending_actions: dict[int, PendingAction] = {}
         self.post_codex_actions: dict[int, PendingAction] = {}
         self.pending_lock = threading.Lock()
+        self.photo_albums: dict[tuple[int, str], PhotoAlbum] = {}
+        self.media_processing_chats: set[int] = set()
+        self.photo_album_lock = threading.Lock()
         self.executor = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="codex-bot")
 
     def active_project(self, chat_id: int) -> ProjectConfig:
@@ -1319,8 +1412,16 @@ class BotApplication:
     def any_release_running(self) -> bool:
         return any(release.is_running() for release in self.releases.values())
 
+    def has_pending_album(self, chat_id: int) -> bool:
+        with self.photo_album_lock:
+            return chat_id in self.media_processing_chats or any(
+                key[0] == chat_id for key in self.photo_albums
+            )
+
     def project_status(self, chat_id: int) -> str:
         project = self.active_project(chat_id)
+        model_key = self.state.get_model_key(chat_id)
+        model = CODEX_MODELS[model_key]
         release = self.release_for(project.key)
         result = subprocess.run(
             ["git", "status", "--short", "--branch"],
@@ -1329,7 +1430,9 @@ class BotApplication:
             text=True,
             timeout=10,
         )
-        thread = self.state.get_thread(chat_id, project.key)
+        thread = self.state.get_thread(
+            chat_id, self.state.thread_slot(project.key, model_key)
+        )
         running = "да" if self.runner.is_running(chat_id) else "нет"
         release_running = "да" if release.is_running() else "нет"
         env_path = project.root / ".env"
@@ -1345,6 +1448,7 @@ class BotApplication:
         )
         return (
             f"Проект: {project.label} ({project.root.name})\n"
+            f"Модель: {model.label}\n"
             f"Задача выполняется: {running}\n"
             f"Release выполняется: {release_running}\n"
             f"Сессия Codex: {thread or 'новая'}\n\n"
@@ -1527,7 +1631,11 @@ class BotApplication:
             if not project:
                 self.api.answer_callback_query(callback_id, "Неизвестный проект")
                 return
-            if self.runner.is_running(chat_id) or self.any_release_running():
+            if (
+                self.runner.is_running(chat_id)
+                or self.any_release_running()
+                or self.has_pending_album(chat_id)
+            ):
                 self.api.answer_callback_query(
                     callback_id, "Сначала дождитесь текущей операции"
                 )
@@ -1546,6 +1654,35 @@ class BotApplication:
                 f"✅ Активный проект: *{project.label}*\n"
                 f"Ветка: `{project.branch}`\n\n"
                 "Теперь отправьте задачу текстом или голосовым.",
+                message_id,
+                markdown=True,
+            )
+            return
+        if data.startswith("model:"):
+            model_key = data.partition(":")[2]
+            model = CODEX_MODELS.get(model_key)
+            if not model:
+                self.api.answer_callback_query(callback_id, "Неизвестная модель")
+                return
+            if (
+                self.runner.is_running(chat_id)
+                or self.any_release_running()
+                or self.has_pending_album(chat_id)
+            ):
+                self.api.answer_callback_query(
+                    callback_id, "Сначала дождитесь текущей операции"
+                )
+                return
+            self.state.set_model_key(chat_id, model_key)
+            self.api.answer_callback_query(callback_id, f"Выбрана: {model.label}")
+            try:
+                self.api.clear_inline_keyboard(chat_id, message_id)
+            except TelegramError:
+                pass
+            self.api.send_message(
+                chat_id,
+                f"✅ Модель: *{model.label}*\n"
+                "Для этого режима используется отдельная история Codex.",
                 message_id,
                 markdown=True,
             )
@@ -1621,7 +1758,23 @@ class BotApplication:
 
         if text.startswith("/"):
             command = text.split(maxsplit=1)[0].split("@", 1)[0].lower()
-            if command in {"/start", "/projects"}:
+            if command == "/start":
+                current = self.active_project(chat_id)
+                current_model = CODEX_MODELS[self.state.get_model_key(chat_id)]
+                self.api.send_message(
+                    chat_id,
+                    f"Выберите проект.\nСейчас активен: *{current.label}*",
+                    message_id,
+                    markdown=True,
+                    reply_markup=project_keyboard(self.projects),
+                )
+                self.api.send_message(
+                    chat_id,
+                    f"Выберите модель Codex.\nСейчас активна: *{current_model.label}*",
+                    markdown=True,
+                    reply_markup=model_keyboard(),
+                )
+            elif command == "/projects":
                 current = self.active_project(chat_id)
                 self.api.send_message(
                     chat_id,
@@ -1629,6 +1782,15 @@ class BotApplication:
                     message_id,
                     markdown=True,
                     reply_markup=project_keyboard(self.projects),
+                )
+            elif command == "/models":
+                current_model = CODEX_MODELS[self.state.get_model_key(chat_id)]
+                self.api.send_message(
+                    chat_id,
+                    f"Выберите модель Codex.\nСейчас активна: *{current_model.label}*",
+                    message_id,
+                    markdown=True,
+                    reply_markup=model_keyboard(),
                 )
             elif command == "/help":
                 self.api.send_message(chat_id, HELP_TEXT, message_id)
@@ -1661,7 +1823,12 @@ class BotApplication:
                     self.api.send_message(chat_id, "Сначала остановите текущую задачу: /cancel")
                 else:
                     project = self.active_project(chat_id)
-                    self.state.set_thread(chat_id, None, project.key)
+                    model_key = self.state.get_model_key(chat_id)
+                    self.state.set_thread(
+                        chat_id,
+                        None,
+                        self.state.thread_slot(project.key, model_key),
+                    )
                     self.api.send_message(chat_id, "Новая сессия Codex будет создана со следующей задачей.")
             elif command == "/cancel":
                 cancelled = self.runner.cancel(chat_id)
@@ -1695,6 +1862,16 @@ class BotApplication:
             if self.runner.is_running(chat_id):
                 self.api.send_message(chat_id, "Дождитесь завершения задачи или используйте /cancel")
                 return
+            media_group_id = str(message.get("media_group_id") or "")
+            if media_group_id:
+                self.queue_photo_album(
+                    chat_id,
+                    message_id,
+                    media_group_id,
+                    message["photo"],
+                    caption,
+                )
+                return
             self.executor.submit(self.process_photo, chat_id, message_id, message["photo"], caption)
             return
 
@@ -1725,6 +1902,53 @@ class BotApplication:
             except Exception as exc:
                 self.api.send_message(chat_id, f"Не смог отправить {requested_path}: {exc}")
 
+    def queue_photo_album(
+        self,
+        chat_id: int,
+        message_id: int,
+        media_group_id: str,
+        photos: list[dict[str, Any]],
+        caption: str,
+    ) -> None:
+        key = (chat_id, media_group_id)
+        with self.photo_album_lock:
+            album = self.photo_albums.get(key)
+            if album is None:
+                album = PhotoAlbum(
+                    chat_id=chat_id,
+                    first_message_id=message_id,
+                    project_key=self.active_project(chat_id).key,
+                )
+                self.photo_albums[key] = album
+            if len(album.photos) < 10:
+                album.photos.append(photos)
+            if caption:
+                album.caption = "\n".join(
+                    part for part in (album.caption, caption) if part
+                )
+            if album.timer:
+                album.timer.cancel()
+            album.timer = threading.Timer(
+                MEDIA_GROUP_SETTLE_SECONDS, self.flush_photo_album, args=(key,)
+            )
+            album.timer.daemon = True
+            album.timer.start()
+
+    def flush_photo_album(self, key: tuple[int, str]) -> None:
+        with self.photo_album_lock:
+            album = self.photo_albums.pop(key, None)
+        if album:
+            with self.photo_album_lock:
+                self.media_processing_chats.add(album.chat_id)
+            self.executor.submit(
+                self.process_photos,
+                album.chat_id,
+                album.first_message_id,
+                album.photos,
+                album.caption,
+                album.project_key,
+            )
+
     def process_voice(self, chat_id: int, message_id: int, file_id: str) -> None:
         status_id = self.api.send_message(chat_id, "🎙 Распознаю голосовое…", message_id)
         try:
@@ -1739,32 +1963,75 @@ class BotApplication:
             self.api.edit_message(chat_id, status_id, f"Не удалось распознать голосовое:\n{exc}")
 
     def process_photo(self, chat_id: int, message_id: int, photos: list[dict[str, Any]], caption: str) -> None:
-        status_id = self.api.send_message(chat_id, "🖼 Читаю фото…", message_id)
+        self.process_photos(
+            chat_id,
+            message_id,
+            [photos],
+            caption,
+            self.active_project(chat_id).key,
+        )
+
+    def process_photos(
+        self,
+        chat_id: int,
+        message_id: int,
+        photo_sets: list[list[dict[str, Any]]],
+        caption: str,
+        project_key: str,
+    ) -> None:
+        count = len(photo_sets)
+        status_id = self.api.send_message(
+            chat_id,
+            f"🖼 Читаю {'альбом' if count > 1 else 'фото'} ({count})…",
+            message_id,
+        )
         try:
-            project = self.active_project(chat_id)
-            largest = max(photos, key=lambda photo: int(photo.get("file_size") or 0))
-            saved_path = (
-                project.root
-                / ".codex-telegram"
-                / "uploads"
-                / str(chat_id)
-                / f"photo-{int(time.time())}.jpg"
-            )
-            self.api.download_file(str(largest["file_id"]), saved_path)
+            project = self.projects[project_key]
+            saved_paths: list[Path] = []
+            for index, photos in enumerate(photo_sets, start=1):
+                largest = max(
+                    photos, key=lambda photo: int(photo.get("file_size") or 0)
+                )
+                saved_path = (
+                    project.root
+                    / ".codex-telegram"
+                    / "uploads"
+                    / str(chat_id)
+                    / (
+                        f"screens-{int(time.time())}-{uuid.uuid4().hex[:8]}-"
+                        f"{index:02d}.jpg"
+                    )
+                )
+                self.api.download_file(str(largest["file_id"]), saved_path)
+                saved_paths.append(saved_path)
             assert self.openai_key is not None
-            analysis = analyze_photo(saved_path, caption, self.openai_key, self.vision_model)
-            self.api.edit_message(chat_id, status_id, f"🖼 Фото прочитано:\n{analysis[:3200]}")
+            analysis = analyze_photos(
+                saved_paths, caption, self.openai_key, self.vision_model
+            )
+            self.api.edit_message(
+                chat_id,
+                status_id,
+                f"🖼 {'Альбом' if count > 1 else 'Фото'} прочитан:\n{analysis[:3200]}",
+            )
+            relative_paths = "\n".join(
+                f"- {path.relative_to(project.root)}" for path in saved_paths
+            )
             prompt = (
-                "Пользователь отправил фото в Telegram.\n"
-                f"Локальный путь к фото: {saved_path.relative_to(project.root)}\n"
+                f"Пользователь отправил в Telegram изображений: {count}.\n"
+                f"Локальные пути:\n{relative_paths}\n"
                 f"Подпись пользователя: {caption or '(без подписи)'}\n\n"
                 "Визуальный анализ OpenAI:\n"
                 f"{analysis}\n\n"
                 "Используй этот анализ как контекст задачи. Если нужно изменить проект, действуй по обычным правилам."
             )
-            self.submit_codex(chat_id, message_id, prompt)
+            self.submit_codex(chat_id, message_id, prompt, project_key=project_key)
         except Exception as exc:
-            self.api.edit_message(chat_id, status_id, f"Не удалось прочитать фото:\n{exc}")
+            self.api.edit_message(
+                chat_id, status_id, f"Не удалось прочитать изображения:\n{exc}"
+            )
+        finally:
+            with self.photo_album_lock:
+                self.media_processing_chats.discard(chat_id)
 
     def process_image_generation(self, chat_id: int, message_id: int, prompt: str) -> None:
         status_id = self.api.send_message(chat_id, "🎨 Генерирую изображение…", message_id)
@@ -1799,8 +2066,15 @@ class BotApplication:
             print(f"Image generation failed chat={chat_id}: {exc}", file=sys.stderr, flush=True)
             self.api.edit_message(chat_id, status_id, f"Не удалось сгенерировать изображение:\n{exc}")
 
-    def submit_codex(self, chat_id: int, message_id: int, prompt: str) -> None:
-        project = self.active_project(chat_id)
+    def submit_codex(
+        self,
+        chat_id: int,
+        message_id: int,
+        prompt: str,
+        *,
+        project_key: str | None = None,
+    ) -> None:
+        project = self.projects[project_key] if project_key else self.active_project(chat_id)
         if self.runner.is_running(chat_id) or self.release_for(project.key).is_running():
             self.api.send_message(
                 chat_id,
