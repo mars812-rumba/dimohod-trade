@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -16,6 +16,7 @@ from app.modules.admin.schemas import (
 )
 from app.modules.admin.service import (
     attach_product_photo,
+    attach_product_photo_content,
     create_sku,
     deactivate_sku,
     delete_product_photo,
@@ -114,6 +115,25 @@ async def upload_admin_product_photo(
     session: AsyncSession = Depends(get_db),
 ) -> AdminProductRead:
     return await attach_product_photo(session, product_id, payload)
+
+
+@router.post("/products/{product_id}/photos/upload", response_model=AdminProductRead, status_code=201)
+async def upload_admin_product_photo_file(
+    product_id: UUID,
+    request: Request,
+    file_name: str = Query(min_length=1, max_length=180),
+    alt: str | None = Query(default=None, max_length=240),
+    role: str | None = Query(default=None, max_length=60),
+    session: AsyncSession = Depends(get_db),
+) -> AdminProductRead:
+    return await attach_product_photo_content(
+        session,
+        product_id,
+        file_name=file_name,
+        content=await request.body(),
+        alt=alt,
+        role=role,
+    )
 
 
 @router.delete("/products/{product_id}/photos/{photo_index}", response_model=AdminProductRead)

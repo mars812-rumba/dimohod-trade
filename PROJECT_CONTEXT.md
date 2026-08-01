@@ -126,6 +126,7 @@
 - `PATCH /api/v1/admin/skus/{sku_id}`
 - `DELETE /api/v1/admin/skus/{sku_id}` — soft delete через `is_active = false`
 - `POST /api/v1/admin/products/{product_id}/photos`
+- `POST /api/v1/admin/products/{product_id}/photos/upload` — raw binary upload фото категории
 - `DELETE /api/v1/admin/products/{product_id}/photos/{photo_index}`
 - `GET /api/v1/products?limit=&offset=&product_kind=`
 - `GET /api/v1/products/filters`
@@ -335,6 +336,9 @@ product-level media в `Product.extra_attributes.media` используются
 Для browser-запросов админки frontend использует `NEXT_PUBLIC_BASE_PATH=/dimohod` и Next rewrites:
 `/dimohod/api/* -> backend /api/*`, `/dimohod/media/* -> backend /media/*`. Если нужен прямой
 публичный backend URL, его можно задать через `NEXT_PUBLIC_API_BASE_URL` на этапе build.
+Загрузка фото из UI идет через raw binary endpoint `/photos/upload?file_name=...`; JSON/base64
+endpoint оставлен как fallback для совместимости. `python-multipart` не требуется, чтобы старый
+backend-контейнер не падал на импорте роутера до rebuild.
 Авторизация и роли для админки пока не реализованы; перед production-доступом маршрут нужно закрыть.
 
 ## 6. Продуктовая структура главной страницы

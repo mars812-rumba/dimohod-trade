@@ -180,15 +180,6 @@ function buildBackendUrl(path: string): string {
   return apiBaseUrl ? `${apiBaseUrl}${path}` : `${appBasePath}${path}`;
 }
 
-async function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
-    reader.readAsDataURL(file);
-  });
-}
-
 export default function AdminCatalogManager() {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(allCategoriesId);
@@ -343,21 +334,33 @@ export default function AdminCatalogManager() {
     setIsBusy(true);
     setStatus("Загружаю фото...");
     try {
-      const content_base64 = await fileToDataUrl(photoFile);
-      const product = await apiRequest<AdminProduct>(`/api/v1/admin/products/${selectedProduct.id}/photos`, {
-        method: "POST",
-        body: JSON.stringify({
-          file_name: photoFile.name,
-          content_base64,
-          role: textOrNull(photoRole),
-          alt: textOrNull(photoAlt),
-        }),
-      });
+      const params = new URLSearchParams({ file_name: photoFile.name });
+      if (photoRole.trim()) {
+        params.set("role", photoRole.trim());
+      }
+      if (photoAlt.trim()) {
+        params.set("alt", photoAlt.trim());
+      }
+      const response = await fetch(
+        buildBackendUrl(`/api/v1/admin/products/${selectedProduct.id}/photos/upload?${params.toString()}`),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": photoFile.type || "application/octet-stream",
+          },
+          body: photoFile,
+        },
+      );
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.detail ?? "Не удалось добавить фото");
+      }
+      const product = (await response.json()) as AdminProduct;
       setSelectedProduct(product);
       await loadSkus();
       setPhotoFile(null);
       setPhotoAlt("");
-      setStatus("Фото добавлено");
+      setStatus("Фото категории добавлено");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Не удалось добавить фото");
     } finally {
