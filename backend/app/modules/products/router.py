@@ -27,6 +27,7 @@ from app.modules.products.service import (
     list_products,
     list_variant_filter_options,
     material_group,
+    normalized_compatible_product_ids,
 )
 
 router = APIRouter()
@@ -230,6 +231,7 @@ async def read_product(slug: str, session: AsyncSession = Depends(get_db)) -> Pr
         session,
         list(sku_by_id.values()),
         exclude_product_id=product.id,
+        allowed_product_ids=normalized_compatible_product_ids(product.extra_attributes),
     )
     product_read.compatible_products = [
         CompatibleProductItem(

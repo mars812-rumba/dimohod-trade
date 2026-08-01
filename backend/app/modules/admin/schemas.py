@@ -91,6 +91,7 @@ class AdminProductRead(AdminProductListItem):
     compatibility_notes: str | None
     media: list[AdminMediaItem]
     skus: list[AdminSKURead]
+    compatible_product_ids: list[UUID] = Field(default_factory=list)
 
 
 class AdminProductListResponse(BaseModel):
@@ -133,6 +134,7 @@ class AdminProductUpdate(BaseModel):
     seo_title: str | None = Field(default=None, max_length=180)
     seo_description: str | None = Field(default=None, max_length=320)
     seo_knowledge: AdminSEOProductKnowledge | None = Field(default=None, alias="seoKnowledge")
+    compatible_product_ids: list[UUID] | None = Field(default=None, alias="compatibleProductIds")
 
     model_config = ConfigDict(populate_by_name=True)
 

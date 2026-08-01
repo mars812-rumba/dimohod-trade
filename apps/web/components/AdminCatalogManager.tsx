@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
-import { ImagePlus, Plus, RefreshCcw, Save, Sparkles, Trash2 } from "lucide-react";
+import { ImagePlus, Link2, Plus, RefreshCcw, Save, Sparkles, Trash2, X } from "lucide-react";
 import { DimensionScheme } from "./DimensionScheme";
 import styles from "./AdminCatalogManager.module.css";
 
@@ -80,6 +80,7 @@ type AdminProduct = AdminProductListItem & {
   compatibility_notes: string | null;
   media: AdminMediaItem[];
   skus: AdminSKU[];
+  compatible_product_ids: string[];
 };
 
 type SKUFormState = {
@@ -153,7 +154,7 @@ class ApiRequestError extends Error {
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const allCategoriesId = "all";
-const skuPageSize = 200;
+const productPageSize = 100;
 const maxPhotoBytes = 8 * 1024 * 1024;
 const photoSlots: Array<{ role: PhotoRole; number: string; title: string; hint: string }> = [
   { role: "general", number: "01", title: "Фото 1", hint: "Общий вид" },
@@ -455,11 +456,15 @@ function buildBackendUrl(path: string): string {
 export default function AdminCatalogManager() {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(allCategoriesId);
-  const [skuItems, setSkuItems] = useState<AdminSKUListItem[]>([]);
-  const [skuTotal, setSkuTotal] = useState(0);
-  const [skuOffset, setSkuOffset] = useState(0);
+  const [productItems, setProductItems] = useState<AdminProductListItem[]>([]);
+  const [productTotal, setProductTotal] = useState(0);
+  const [productOffset, setProductOffset] = useState(0);
   const [skuSearch, setSkuSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(null);
+  const [compatibilityCatalog, setCompatibilityCatalog] = useState<AdminProductListItem[]>([]);
+  const [compatibleCategoryId, setCompatibleCategoryId] = useState("");
+  const [compatibleCandidateId, setCompatibleCandidateId] = useState("");
+  const [compatibleProductIds, setCompatibleProductIds] = useState<string[]>([]);
   const [skuForm, setSkuForm] = useState<SKUFormState>(emptySkuForm);
   const [productSeoForm, setProductSeoForm] = useState<ProductSeoFormState>(emptyProductSeoForm);
   const [photoDrafts, setPhotoDrafts] = useState<Record<PhotoRole, PhotoDraft>>(createEmptyPhotoDrafts);
@@ -485,9 +490,24 @@ export default function AdminCatalogManager() {
     () => mediaItemFromValue(selectedSku?.attributes.sku_photo),
     [selectedSku],
   );
-  const totalSkuCount = useMemo(
+  const totalProductCount = useMemo(
     () => categories.reduce((sum, category) => sum + category.product_count, 0),
     [categories],
+  );
+  const compatibleProductOptions = useMemo(
+    () => compatibilityCatalog.filter(
+      (product) =>
+        product.id !== selectedProduct?.id &&
+        (!compatibleCategoryId || product.category_id === compatibleCategoryId),
+    ),
+    [compatibilityCatalog, compatibleCategoryId, selectedProduct?.id],
+  );
+  const selectedCompatibleProducts = useMemo(
+    () => compatibleProductIds.flatMap((productId) => {
+      const product = compatibilityCatalog.find((item) => item.id === productId);
+      return product ? [product] : [];
+    }),
+    [compatibilityCatalog, compatibleProductIds],
   );
   const pendingFamilyPhotoCount = photoSlots.filter(({ role }) => photoDrafts[role].file).length;
   const pendingPhotoCount = pendingFamilyPhotoCount + (skuPhotoDraft.file ? 1 : 0);
@@ -501,25 +521,33 @@ export default function AdminCatalogManager() {
     setCategories(data);
   }
 
-  async function loadSkus(categoryId = selectedCategoryId, offset = skuOffset) {
-    const params = new URLSearchParams({ limit: String(skuPageSize), offset: String(offset) });
+  async function loadProducts(categoryId = selectedCategoryId, offset = productOffset) {
+    const params = new URLSearchParams({ limit: String(productPageSize), offset: String(offset) });
     if (categoryId !== allCategoriesId) {
       params.set("category_id", categoryId);
     }
     if (skuSearch.trim()) {
       params.set("search", skuSearch.trim());
     }
-    const data = await apiRequest<{ items: AdminSKUListItem[]; total: number; offset: number }>(
-      `/api/v1/admin/skus?${params.toString()}`,
+    const data = await apiRequest<{ items: AdminProductListItem[]; total: number; offset: number }>(
+      `/api/v1/admin/products?${params.toString()}`,
     );
-    setSkuItems(data.items);
-    setSkuTotal(data.total);
-    setSkuOffset(data.offset);
+    setProductItems(data.items);
+    setProductTotal(data.total);
+    setProductOffset(data.offset);
+  }
+
+  async function loadCompatibilityCatalog() {
+    const data = await apiRequest<{ items: AdminProductListItem[] }>(
+      "/api/v1/admin/products?limit=500&offset=0",
+    );
+    setCompatibilityCatalog(data.items);
   }
 
   async function loadProduct(productId: string, skuId?: string) {
     const data = await apiRequest<AdminProduct>(`/api/v1/admin/products/${productId}`);
     setSelectedProduct(data);
+    setCompatibleProductIds(data.compatible_product_ids ?? []);
     setProductSeoForm(productToSeoForm(data));
     const selectedSku = skuId ? data.skus.find((sku) => sku.id === skuId) : data.skus[0];
     setSkuForm(selectedSku ? skuToForm(selectedSku) : emptySkuForm);
@@ -527,12 +555,13 @@ export default function AdminCatalogManager() {
 
   useEffect(() => {
     loadCategories().catch((error) => setStatus(error.message));
+    loadCompatibilityCatalog().catch((error) => setStatus(error.message));
   }, []);
 
   useEffect(() => {
     setSelectedProduct(null);
     setSkuForm(emptySkuForm);
-    loadSkus(selectedCategoryId, 0).catch((error) => setStatus(error.message));
+    loadProducts(selectedCategoryId, 0).catch((error) => setStatus(error.message));
   }, [selectedCategoryId]);
 
   useEffect(() => {
@@ -562,7 +591,7 @@ export default function AdminCatalogManager() {
       return;
     }
     await loadProduct(selectedProduct.id, skuId);
-    await loadSkus();
+    await loadProducts();
   }
 
   function updateForm(field: keyof SKUFormState, value: string | boolean) {
@@ -1000,6 +1029,58 @@ export default function AdminCatalogManager() {
     }
   }
 
+  async function savePendingPhotos() {
+    if (!selectedProduct || pendingPhotoCount === 0) {
+      return;
+    }
+    const oversizedPhoto = photoSlots.find(({ role }) => (photoDrafts[role].file?.size ?? 0) > maxPhotoBytes);
+    if (oversizedPhoto) {
+      const message = `Ошибка [CLIENT_VALIDATION]\n${oversizedPhoto.title} больше 8 МБ. Выберите файл меньшего размера`;
+      setStatus("Фото больше 8 МБ. Выберите файл меньшего размера");
+      window.alert(message);
+      return;
+    }
+    if ((skuPhotoDraft.file?.size ?? 0) > maxPhotoBytes) {
+      setStatus("Фото SKU больше 8 МБ. Выберите файл меньшего размера");
+      window.alert("Ошибка [CLIENT_VALIDATION]\nФото выбранного SKU больше 8 МБ");
+      return;
+    }
+
+    setIsBusy(true);
+    setStatus("Сохраняю фотографии...");
+    try {
+      let savedPhotoCount = 0;
+      for (const slot of photoSlots) {
+        const draft = photoDrafts[slot.role];
+        if (draft.file) {
+          await persistPhotoDraft(slot.role, draft);
+          savedPhotoCount += 1;
+        }
+      }
+      if (skuPhotoDraft.file) {
+        if (!selectedSku) {
+          throw new Error("Выберите SKU перед загрузкой его фотографии");
+        }
+        await persistSkuPhoto(selectedSku, skuPhotoDraft);
+        savedPhotoCount += 1;
+      }
+      await refreshCurrentProduct(selectedSku?.id);
+      resetPhotoDrafts();
+      clearSkuPhotoDraft();
+      setStatus(`Сохранено фотографий: ${savedPhotoCount}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Не удалось сохранить фотографии";
+      setStatus(message);
+      window.alert(
+        error instanceof ApiRequestError
+          ? `Ошибка [HTTP ${error.status}]\n${message}`
+          : `Ошибка [NETWORK]\n${message}`,
+      );
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   async function deactivateSelectedSku() {
     if (!skuForm.id) {
       return;
@@ -1029,7 +1110,7 @@ export default function AdminCatalogManager() {
         { method: "DELETE" },
       );
       setSelectedProduct(product);
-      await loadSkus();
+      await loadProducts();
       setStatus("Фото убрано из карточки");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Не удалось убрать фото");
@@ -1040,7 +1121,49 @@ export default function AdminCatalogManager() {
 
   function submitSkuSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    loadSkus(selectedCategoryId, 0).catch((error) => setStatus(error.message));
+    loadProducts(selectedCategoryId, 0).catch((error) => setStatus(error.message));
+  }
+
+  function addCompatibleProduct() {
+    if (!compatibleCandidateId || compatibleProductIds.includes(compatibleCandidateId)) {
+      return;
+    }
+    setCompatibleProductIds((current) => [...current, compatibleCandidateId]);
+    setCompatibleCandidateId("");
+  }
+
+  function removeCompatibleProduct(productId: string) {
+    setCompatibleProductIds((current) => current.filter((value) => value !== productId));
+  }
+
+  async function saveCompatibility() {
+    if (!selectedProduct) {
+      return;
+    }
+    setIsBusy(true);
+    setStatus("Сохраняю совместимые изделия...");
+    try {
+      const response = await apiRequestWithStatus<AdminProduct>(
+        `/api/v1/admin/products/${selectedProduct.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ compatibleProductIds }),
+        },
+      );
+      setSelectedProduct(response.data);
+      setCompatibleProductIds(response.data.compatible_product_ids ?? []);
+      setStatus("Совместимые изделия сохранены");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Не удалось сохранить совместимость";
+      setStatus(message);
+      window.alert(
+        error instanceof ApiRequestError
+          ? `Ошибка [HTTP ${error.status}]\n${message}`
+          : `Ошибка [NETWORK]\n${message}`,
+      );
+    } finally {
+      setIsBusy(false);
+    }
   }
 
   return (
@@ -1069,10 +1192,10 @@ export default function AdminCatalogManager() {
               onChange={(event) => setSelectedCategoryId(event.target.value)}
               value={selectedCategoryId}
             >
-              <option value={allCategoriesId}>Все категории · {totalSkuCount} SKU</option>
+              <option value={allCategoriesId}>Все категории · {totalProductCount} семейств</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
-                  {category.name} · {category.product_count} SKU
+                  {category.name} · {category.product_count} семейств
                 </option>
               ))}
             </select>
@@ -1159,60 +1282,61 @@ export default function AdminCatalogManager() {
                 {selectedCategoryId === allCategoriesId ? "Все категории" : selectedCategory?.name ?? "Категория"}
               </span>
             </div>
-            <span className={styles.badge}>{skuTotal}</span>
+            <span className={styles.badge}>{productTotal}</span>
           </div>
           <form className={styles.listControls} onSubmit={submitSkuSearch}>
             <input
-              placeholder="Артикул, название или товар"
+              placeholder="Название или slug семейства"
               value={skuSearch}
               onChange={(event) => setSkuSearch(event.target.value)}
             />
             <button className={styles.ghostButton} type="submit">
               Найти
             </button>
-            <button className={styles.ghostButton} onClick={() => loadSkus()} type="button">
+            <button className={styles.ghostButton} onClick={() => loadProducts()} type="button">
               <RefreshCcw size={15} /> Обновить
             </button>
           </form>
           <div className={styles.scrollList}>
-            {skuItems.map((sku) => (
+            {productItems.map((product) => (
               <button
                 className={`${styles.rowButton} ${
-                  sku.id === skuForm.id ? styles.rowButtonActive : ""
+                  product.id === selectedProduct?.id ? styles.rowButtonActive : ""
                 }`}
-                key={sku.id}
-                onClick={() => loadProduct(sku.product_id, sku.id).catch((error) => setStatus(error.message))}
+                key={product.id}
+                onClick={() => loadProduct(product.id).catch((error) => setStatus(error.message))}
                 type="button"
               >
                 <span className={styles.rowContent}>
-                  <span className={styles.rowTitle}>{sku.product_name}</span>
-                  <span className={styles.rowMeta}>{sku.article}</span>
+                  <span className={styles.rowTitle}>{product.name}</span>
+                  <span className={styles.rowMeta}>{product.slug}</span>
                   <span className={styles.rowDetails}>
-                    d {sku.diameter_mm ?? "—"} · D {sku.outer_diameter_mm ?? "—"} · L {sku.length_mm ?? "—"} ·{" "}
-                    {sku.price_rub ?? "без цены"}
+                    {product.category_name} · {product.product_kind ?? "тип не задан"} · {product.sku_count} SKU
                   </span>
                 </span>
-                <span className={styles.badge}>{sku.is_active ? "on" : "off"}</span>
+                <span className={styles.badge}>{product.is_active ? "on" : "off"}</span>
               </button>
             ))}
-            {!skuItems.length ? <p className={styles.notice}>SKU не найдены.</p> : null}
+            {!productItems.length ? <p className={styles.notice}>Семейства не найдены.</p> : null}
           </div>
           <div className={styles.pager}>
             <button
               className={styles.ghostButton}
-              disabled={skuOffset <= 0}
-              onClick={() => loadSkus(selectedCategoryId, Math.max(0, skuOffset - skuPageSize))}
+              disabled={productOffset <= 0}
+              onClick={() => loadProducts(selectedCategoryId, Math.max(0, productOffset - productPageSize))}
               type="button"
             >
               Назад
             </button>
             <span className={styles.rowMeta}>
-              {skuTotal ? `${skuOffset + 1}-${Math.min(skuOffset + skuPageSize, skuTotal)} из ${skuTotal}` : "0 из 0"}
+              {productTotal
+                ? `${productOffset + 1}-${Math.min(productOffset + productPageSize, productTotal)} из ${productTotal}`
+                : "0 из 0"}
             </span>
             <button
               className={styles.ghostButton}
-              disabled={skuOffset + skuPageSize >= skuTotal}
-              onClick={() => loadSkus(selectedCategoryId, skuOffset + skuPageSize)}
+              disabled={productOffset + productPageSize >= productTotal}
+              onClick={() => loadProducts(selectedCategoryId, productOffset + productPageSize)}
               type="button"
             >
               Далее
@@ -1529,136 +1653,127 @@ export default function AdminCatalogManager() {
               <div className={styles.saveBar}>
                 <span>
                   {pendingPhotoCount
-                    ? `К сохранению: SKU и ${pendingPhotoCount} фото`
-                    : "Изменения SKU и фотографии сохраняются вместе"}
+                    ? `К сохранению: ${pendingPhotoCount} фото`
+                    : "Новые фотографии не выбраны"}
                 </span>
-                <button className={styles.button} disabled={isBusy} form="sku-editor-form" type="submit">
-                  <Save size={15} /> Сохранить всё{pendingPhotoCount ? ` · ${pendingPhotoCount} фото` : ""}
+                <button
+                  className={styles.button}
+                  disabled={isBusy || pendingPhotoCount === 0}
+                  onClick={savePendingPhotos}
+                  type="button"
+                >
+                  <Save size={15} /> Сохранить фото{pendingPhotoCount ? ` · ${pendingPhotoCount}` : ""}
                 </button>
               </div>
 
-              <div className={styles.panelHeader}>
-                <h2>SKU</h2>
-                <button className={styles.ghostButton} onClick={() => setSkuForm(emptySkuForm)} type="button">
-                  <Plus size={15} /> Новый SKU
-                </button>
-              </div>
-              <div className={styles.scrollList}>
-                <table className={styles.skuTable}>
-                  <thead>
-                    <tr>
-                      <th>Артикул</th>
-                      <th>D</th>
-                      <th>d</th>
-                      <th>L</th>
-                      <th>Цена</th>
-                      <th>Статус</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedProduct.skus.map((sku) => (
-                      <tr className={sku.is_active ? "" : styles.inactive} key={sku.id}>
-                        <td>
-                          <button onClick={() => setSkuForm(skuToForm(sku))} type="button">
-                            {sku.article}
-                          </button>
-                        </td>
-                        <td>{sku.outer_diameter_mm ?? "—"}</td>
-                        <td>{sku.diameter_mm ?? "—"}</td>
-                        <td>{sku.length_mm ?? "—"}</td>
-                        <td>{sku.price_rub ?? "—"}</td>
-                        <td>{sku.stock_status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <section className={styles.compatibilityEditor}>
+                <div className={styles.compatibilityHeader}>
+                  <span className={styles.compatibilityIcon}><Link2 size={20} /></span>
+                  <div>
+                    <h2>Совместимые детали</h2>
+                    <p>
+                      Выберите допустимые семейства. Конкретная деталь для карточки подбирается
+                      автоматически по параметрам выбранного SKU.
+                    </p>
+                  </div>
+                </div>
 
-              <form className={styles.formGrid} id="sku-editor-form" onSubmit={saveSku}>
-                <label className={styles.field}>
-                  Артикул
-                  <input required value={skuForm.article} onChange={(event) => updateForm("article", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Название
-                  <input required value={skuForm.name} onChange={(event) => updateForm("name", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Slug
-                  <input value={skuForm.slug} onChange={(event) => updateForm("slug", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Материал
-                  <input value={skuForm.material} onChange={(event) => updateForm("material", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Сталь
-                  <input value={skuForm.steel_grade} onChange={(event) => updateForm("steel_grade", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Толщина стали S
-                  <input value={skuForm.wall_thickness_mm} onChange={(event) => updateForm("wall_thickness_mm", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  d, мм
-                  <input inputMode="numeric" value={skuForm.diameter_mm} onChange={(event) => updateForm("diameter_mm", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  D, мм
-                  <input inputMode="numeric" value={skuForm.outer_diameter_mm} onChange={(event) => updateForm("outer_diameter_mm", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  L, мм
-                  <input inputMode="numeric" value={skuForm.length_mm} onChange={(event) => updateForm("length_mm", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Угол
-                  <input inputMode="numeric" value={skuForm.angle_deg} onChange={(event) => updateForm("angle_deg", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Контур
-                  <select value={skuForm.contour} onChange={(event) => updateForm("contour", event.target.value)}>
-                    <option value="">Не задано</option>
-                    <option value="одностенный">Одностенный</option>
-                    <option value="сэндвич">Сэндвич</option>
-                  </select>
-                </label>
-                <label className={styles.field}>
-                  Утепление, мм
-                  <input inputMode="numeric" value={skuForm.insulation_mm} onChange={(event) => updateForm("insulation_mm", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Цена
-                  <input inputMode="decimal" value={skuForm.price_rub} onChange={(event) => updateForm("price_rub", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Наличие
-                  <input value={skuForm.stock_status} onChange={(event) => updateForm("stock_status", event.target.value)} />
-                </label>
-                <label className={styles.field}>
-                  Активен
-                  <select
-                    value={skuForm.is_active ? "true" : "false"}
-                    onChange={(event) => updateForm("is_active", event.target.value === "true")}
+                <div className={styles.sourceVariant}>
+                  <label className={styles.field}>
+                    Вариант для проверки
+                    <select
+                      onChange={(event) => {
+                        const sku = selectedProduct.skus.find((item) => item.id === event.target.value);
+                        if (sku) setSkuForm(skuToForm(sku));
+                      }}
+                      value={skuForm.id ?? ""}
+                    >
+                      {selectedProduct.skus.map((sku) => (
+                        <option key={sku.id} value={sku.id}>{sku.article}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className={styles.autoFacts}>
+                    <span><small>Категория</small><strong>{selectedProduct.category_name}</strong></span>
+                    <span><small>Товар</small><strong>{selectedProduct.name}</strong></span>
+                    <span><small>Диаметр d/D</small><strong>{skuForm.diameter_mm || "—"}/{skuForm.outer_diameter_mm || "—"} мм</strong></span>
+                    <span><small>Марка стали</small><strong>{skuForm.steel_grade || "—"}</strong></span>
+                    <span><small>Вид стали</small><strong>{skuForm.material || "—"}</strong></span>
+                    <span><small>Утепление</small><strong>{skuForm.insulation_mm ? `${skuForm.insulation_mm} мм` : "—"}</strong></span>
+                  </div>
+                </div>
+
+                <div className={styles.compatibilityPicker}>
+                  <label className={styles.field}>
+                    Категория совместимой детали
+                    <select
+                      onChange={(event) => {
+                        setCompatibleCategoryId(event.target.value);
+                        setCompatibleCandidateId("");
+                      }}
+                      value={compatibleCategoryId}
+                    >
+                      <option value="">Все категории</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>{category.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className={styles.field}>
+                    Семейство изделия
+                    <select
+                      onChange={(event) => setCompatibleCandidateId(event.target.value)}
+                      value={compatibleCandidateId}
+                    >
+                      <option value="">Выберите изделие</option>
+                      {compatibleProductOptions.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} · {product.sku_count} SKU
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    className={styles.ghostButton}
+                    disabled={!compatibleCandidateId || compatibleProductIds.includes(compatibleCandidateId)}
+                    onClick={addCompatibleProduct}
+                    type="button"
                   >
-                    <option value="true">Да</option>
-                    <option value="false">Нет</option>
-                  </select>
-                </label>
-                <label className={styles.wideField}>
-                  Характеристики JSON
-                  <textarea
-                    spellCheck={false}
-                    value={skuForm.attributesText}
-                    onChange={(event) => updateForm("attributesText", event.target.value)}
-                  />
-                </label>
-                <div className={styles.toolbar}>
-                  <button className={styles.dangerButton} disabled={isBusy || !skuForm.id} onClick={deactivateSelectedSku} type="button">
-                    <Trash2 size={15} /> Отключить
+                    <Plus size={15} /> Добавить
                   </button>
                 </div>
-              </form>
+
+                <div className={styles.compatibilityList}>
+                  {selectedCompatibleProducts.map((product) => (
+                    <article key={product.id}>
+                      <div>
+                        <strong>{product.name}</strong>
+                        <span>{product.category_name} · {product.product_kind ?? "тип не задан"} · {product.sku_count} SKU</span>
+                      </div>
+                      <button
+                        aria-label={`Убрать ${product.name}`}
+                        onClick={() => removeCompatibleProduct(product.id)}
+                        type="button"
+                      >
+                        <X size={16} />
+                      </button>
+                    </article>
+                  ))}
+                  {!selectedCompatibleProducts.length ? (
+                    <p className={styles.compatibilityEmpty}>
+                      Совместимые семейства ещё не выбраны. Публичная карточка не будет показывать
+                      детали, пока список не сохранён.
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className={styles.compatibilityActions}>
+                  <span>Диаметр, утепление, марка и вид стали берутся из SKU автоматически.</span>
+                  <button className={styles.button} disabled={isBusy} onClick={saveCompatibility} type="button">
+                    <Save size={15} /> Сохранить совместимость
+                  </button>
+                </div>
+              </section>
             </div>
           )}
         </section>

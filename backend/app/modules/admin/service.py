@@ -31,6 +31,10 @@ from app.modules.admin.schemas import (
 from app.modules.catalog.models import Category
 from app.modules.compatibility.service import context_from_product_sku, list_active_rules, rule_matches
 from app.modules.products.models import Product, SKU
+from app.modules.products.service import (
+    COMPATIBLE_PRODUCT_IDS_KEY,
+    normalized_compatible_product_ids,
+)
 
 MEDIA_KEY = "media"
 CATEGORY_COVER_KEY = "category_cover"
@@ -512,6 +516,7 @@ def product_to_admin_read(product: Product) -> AdminProductRead:
         compatibility_notes=product.compatibility_notes,
         media=media,
         skus=product.skus,
+        compatible_product_ids=normalized_compatible_product_ids(product.extra_attributes) or [],
     )
 
 
@@ -519,12 +524,16 @@ async def list_admin_products(
     session: AsyncSession,
     *,
     category_id: UUID | None,
+    search: str | None,
     limit: int,
     offset: int,
 ) -> tuple[list[AdminProductListItem], int]:
     filters = []
     if category_id is not None:
         filters.append(Product.category_id == category_id)
+    if search:
+        search_pattern = f"%{search.strip()}%"
+        filters.append(or_(Product.name.ilike(search_pattern), Product.slug.ilike(search_pattern)))
 
     total = await session.scalar(select(func.count(Product.id)).where(*filters))
     result = await session.execute(
@@ -656,6 +665,29 @@ async def update_product(
             extra_attributes[SEO_KNOWLEDGE_KEY] = AdminSEOProductKnowledge.model_validate(knowledge).model_dump(
                 by_alias=True
             )
+    if "compatible_product_ids" in values:
+        requested_ids = list(dict.fromkeys(values["compatible_product_ids"] or []))
+        if product_id in requested_ids:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Product cannot be compatible with itself",
+            )
+        if requested_ids:
+            existing_ids = set(
+                await session.scalars(
+                    select(Product.id).where(
+                        Product.id.in_(requested_ids),
+                        Product.is_active.is_(True),
+                    )
+                )
+            )
+            missing_ids = [str(value) for value in requested_ids if value not in existing_ids]
+            if missing_ids:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail={"unknown_compatible_product_ids": missing_ids},
+                )
+        extra_attributes[COMPATIBLE_PRODUCT_IDS_KEY] = [str(value) for value in requested_ids]
     product.extra_attributes = extra_attributes
 
     await session.commit()

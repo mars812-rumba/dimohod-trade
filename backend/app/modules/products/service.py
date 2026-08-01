@@ -7,6 +7,26 @@ from sqlalchemy.orm import joinedload, selectinload
 from app.modules.catalog.models import Category
 from app.modules.products.models import Product, SKU
 
+COMPATIBLE_PRODUCT_IDS_KEY = "compatible_product_ids"
+
+
+def normalized_compatible_product_ids(extra_attributes: dict | None) -> list[UUID] | None:
+    attributes = extra_attributes or {}
+    if COMPATIBLE_PRODUCT_IDS_KEY not in attributes:
+        return None
+    raw_ids = attributes.get(COMPATIBLE_PRODUCT_IDS_KEY)
+    if not isinstance(raw_ids, list):
+        return []
+    result: list[UUID] = []
+    for value in raw_ids:
+        try:
+            product_id = UUID(str(value))
+        except (TypeError, ValueError):
+            continue
+        if product_id not in result:
+            result.append(product_id)
+    return result
+
 
 def material_group(value: str | None) -> str | None:
     if not value:
@@ -68,6 +88,7 @@ async def list_compatible_tube_skus(
     source_skus: list[SKU],
     *,
     exclude_product_id: UUID,
+    allowed_product_ids: list[UUID] | None = None,
 ) -> list[tuple[SKU, Product]]:
     signatures = {
         signature
@@ -77,12 +98,19 @@ async def list_compatible_tube_skus(
     if not signatures:
         return []
 
+    if allowed_product_ids == []:
+        return []
+
+    product_filters = [Product.id.in_(allowed_product_ids)] if allowed_product_ids is not None else [
+        Product.product_kind == "труба"
+    ]
+
     result = await session.execute(
         select(SKU, Product)
         .join(Product, SKU.product_id == Product.id)
         .where(
             Product.is_active.is_(True),
-            Product.product_kind == "труба",
+            *product_filters,
             Product.id != exclude_product_id,
             SKU.is_active.is_(True),
             SKU.diameter_mm.in_({signature[0] for signature in signatures}),

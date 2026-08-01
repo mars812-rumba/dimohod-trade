@@ -1,5 +1,6 @@
 import base64
 from types import SimpleNamespace
+from uuid import UUID
 
 import pytest
 from fastapi import HTTPException
@@ -23,7 +24,11 @@ from app.modules.admin.service import (
     safe_storage_key,
 )
 from app.modules.products.router import parse_diameter_filter, primary_product_image
-from app.modules.products.service import compatible_tube_matches, material_group
+from app.modules.products.service import (
+    compatible_tube_matches,
+    material_group,
+    normalized_compatible_product_ids,
+)
 
 
 def test_admin_routes_are_registered() -> None:
@@ -34,6 +39,7 @@ def test_admin_routes_are_registered() -> None:
     assert response.status_code == 200
     paths = response.json()["paths"]
     assert "/api/v1/admin/categories" in paths
+    assert "/api/v1/admin/products" in paths
     assert "/api/v1/admin/skus" in paths
     assert "/api/v1/admin/products/{product_id}/skus" in paths
     assert "patch" in paths["/api/v1/admin/products/{product_id}"]
@@ -265,3 +271,16 @@ def test_compatible_tubes_may_have_different_lengths_but_not_different_materials
 
     unknown_insulation = SimpleNamespace(**{**tube.__dict__, "insulation_mm": None})
     assert not compatible_tube_matches(source, unknown_insulation)
+
+
+def test_explicit_compatible_product_ids_are_normalized_without_duplicates() -> None:
+    first = UUID("11111111-1111-1111-1111-111111111111")
+    second = UUID("22222222-2222-2222-2222-222222222222")
+
+    assert normalized_compatible_product_ids({}) is None
+    assert normalized_compatible_product_ids({"compatible_product_ids": []}) == []
+    assert normalized_compatible_product_ids(
+        {
+            "compatible_product_ids": [str(first), "invalid", str(first), second],
+        }
+    ) == [first, second]

@@ -79,11 +79,18 @@ async def delete_admin_category_cover(
 @router.get("/products", response_model=AdminProductListResponse)
 async def read_admin_products(
     category_id: UUID | None = Query(default=None),
-    limit: int = Query(default=48, ge=1, le=200),
+    search: str | None = Query(default=None, min_length=1, max_length=120),
+    limit: int = Query(default=48, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_db),
 ) -> AdminProductListResponse:
-    items, total = await list_admin_products(session, category_id=category_id, limit=limit, offset=offset)
+    items, total = await list_admin_products(
+        session,
+        category_id=category_id,
+        search=search,
+        limit=limit,
+        offset=offset,
+    )
     return AdminProductListResponse(items=items, total=total, limit=limit, offset=offset)
 
 

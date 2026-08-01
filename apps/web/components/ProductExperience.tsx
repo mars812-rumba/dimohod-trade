@@ -605,7 +605,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
               <div className="compatible-products-block">
                 <div className="compatible-products-head">
                   <div>
-                    <h3>Совместимые сэндвич-трубы</h3>
+                    <h3>Совместимые изделия</h3>
                     <p>
                       Подобраны по диаметрам, утеплению, марке и типу стали выбранного варианта.
                       Длина трубы может отличаться.
@@ -629,7 +629,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                         ) : (
                           <span className="compatible-product-placeholder">
                             <Package aria-hidden="true" size={25} strokeWidth={1.7} />
-                            Сэндвич-труба
+                            {item.product_name}
                           </span>
                         )}
                       </div>
