@@ -369,3 +369,30 @@ async def get_product_by_slug(session: AsyncSession, slug: str) -> Product | Non
         .options(joinedload(Product.category), selectinload(Product.skus))
     )
     return result.scalar_one_or_none()
+
+
+async def get_product_sku_by_key(
+    session: AsyncSession,
+    *,
+    product_slug: str,
+    sku_key: str,
+) -> tuple[Product, SKU] | None:
+    """Load one active SKU directly, without hydrating the whole product family."""
+    identifiers = [SKU.slug == sku_key, SKU.article == sku_key]
+    try:
+        identifiers.append(SKU.id == UUID(sku_key))
+    except ValueError:
+        pass
+
+    result = await session.execute(
+        select(Product, SKU)
+        .join(SKU, SKU.product_id == Product.id)
+        .where(
+            Product.slug == product_slug,
+            Product.is_active.is_(True),
+            SKU.is_active.is_(True),
+            or_(*identifiers),
+        )
+        .limit(1)
+    )
+    return result.one_or_none()

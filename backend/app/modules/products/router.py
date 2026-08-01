@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -23,6 +23,7 @@ from app.modules.products.models import Product, SKU
 from app.modules.products.service import (
     compatible_product_matches,
     get_product_by_slug,
+    get_product_sku_by_key,
     list_compatible_product_skus,
     list_product_kind_filters,
     list_products,
@@ -305,13 +306,17 @@ async def read_product(
 @router.get("/{slug}/compatible", response_model=list[CompatibleProductItem])
 async def read_compatible_products(
     slug: str,
+    response: Response,
     sku: str = Query(min_length=1, max_length=240),
     session: AsyncSession = Depends(get_db),
 ) -> list[CompatibleProductItem]:
-    product = await get_product_by_slug(session, slug)
-    if product is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-    source_sku = select_active_sku(product, sku, strict=True)
-    if source_sku is None:
+    product_sku = await get_product_sku_by_key(
+        session,
+        product_slug=slug,
+        sku_key=sku,
+    )
+    if product_sku is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
+    product, source_sku = product_sku
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
     return await compatible_items_for_sku(session, product, source_sku)

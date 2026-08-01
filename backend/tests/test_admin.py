@@ -1,5 +1,6 @@
 import base64
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 from uuid import UUID
 
 import pytest
@@ -32,6 +33,7 @@ from app.modules.products.router import (
 from app.modules.products.service import (
     compatible_fastener_matches,
     compatible_tube_matches,
+    get_product_sku_by_key,
     material_group,
     normalized_compatible_product_ids,
 )
@@ -374,3 +376,19 @@ def test_explicit_compatible_product_ids_are_normalized_without_duplicates() -> 
             "compatible_product_ids": [str(first), "invalid", str(first), second],
         }
     ) == [first, second]
+
+
+@pytest.mark.asyncio
+async def test_product_sku_lookup_uses_one_direct_query() -> None:
+    expected = (SimpleNamespace(slug="sandwich-pipe"), SimpleNamespace(article="DT-1"))
+    query_result = SimpleNamespace(one_or_none=lambda: expected)
+    session = SimpleNamespace(execute=AsyncMock(return_value=query_result))
+
+    result = await get_product_sku_by_key(
+        session,
+        product_slug="sandwich-pipe",
+        sku_key="DT-1",
+    )
+
+    assert result == expected
+    session.execute.assert_awaited_once()

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -64,6 +64,33 @@ type VariantDimension = {
   label: string;
   options: Array<{ value: string; label: string }>;
 };
+
+const COMPATIBILITY_PREFETCH_LIMIT = 6;
+
+function normalizedCompatibilityValue(value: string | null) {
+  const normalized = value?.trim().toLocaleLowerCase("ru-RU") ?? "";
+  if (normalized.includes("нерж") || normalized.includes("stainless")) {
+    return "stainless";
+  }
+  if (normalized.includes("оцинк") || normalized.includes("galvan")) {
+    return "galvanized";
+  }
+  if (normalized.includes("сэндвич") || normalized.includes("сендвич") || normalized.includes("sandwich")) {
+    return "sandwich";
+  }
+  return normalized;
+}
+
+function compatibilityCacheKey(sku: Product["skus"][number]) {
+  return JSON.stringify([
+    sku.diameter_mm,
+    sku.outer_diameter_mm,
+    sku.insulation_mm,
+    normalizedCompatibilityValue(sku.steel_grade),
+    normalizedCompatibilityValue(sku.material),
+    normalizedCompatibilityValue(sku.contour),
+  ]);
+}
 
 function formatPrice(value: string | null) {
   if (value === null || Number(value) <= 0) {
@@ -472,7 +499,6 @@ function seoConfiguratorCta(product: Product): { text: string; href: string } | 
 }
 
 export function ProductExperience({ product, initialSkuKey }: { product: Product; initialSkuKey?: string }) {
-  const router = useRouter();
   const pathname = usePathname();
   const initialSku =
     product.skus.find((sku) => sku.slug === initialSkuKey || sku.article === initialSkuKey || sku.id === initialSkuKey) ??
@@ -485,9 +511,49 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const [selectedImage, setSelectedImage] = useState(0);
   const [compatibleProducts, setCompatibleProducts] = useState(initialCompatibleProducts);
   const [isLoadingCompatibility, setIsLoadingCompatibility] = useState(false);
-  const compatibilityCache = useRef(new Map<string, CompatibleProduct[]>());
+  const compatibilityCache = useRef(
+    new Map<string, CompatibleProduct[]>(
+      initialSku ? [[compatibilityCacheKey(initialSku), initialCompatibleProducts]] : [],
+    ),
+  );
+  const compatibilityRequests = useRef(new Map<string, Promise<CompatibleProduct[]>>());
   const activeSku = product.skus.find((sku) => sku.id === selectedSkuId) ?? product.skus[0] ?? null;
   const variantDimensions = useMemo(() => buildVariantDimensions(product.skus), [product.skus]);
+
+  const loadCompatibility = useCallback(
+    (sku: Product["skus"][number]) => {
+      const cacheKey = compatibilityCacheKey(sku);
+      const cached = compatibilityCache.current.get(cacheKey);
+      if (cached) {
+        return Promise.resolve(cached);
+      }
+      const pending = compatibilityRequests.current.get(cacheKey);
+      if (pending) {
+        return pending;
+      }
+
+      const skuKey = sku.slug ?? sku.article;
+      const apiPath = `/api/v1/products/${encodeURIComponent(product.slug)}/compatible?sku=${encodeURIComponent(skuKey)}`;
+      const requestUrl = publicApiBaseUrl ? `${publicApiBaseUrl}${apiPath}` : `${appBasePath}${apiPath}`;
+      const request = fetch(requestUrl)
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`Compatibility request failed: ${response.status}`);
+          }
+          return (await response.json()) as CompatibleProduct[];
+        })
+        .then((items) => {
+          compatibilityCache.current.set(cacheKey, items);
+          return items;
+        })
+        .finally(() => {
+          compatibilityRequests.current.delete(cacheKey);
+        });
+      compatibilityRequests.current.set(cacheKey, request);
+      return request;
+    },
+    [product.slug],
+  );
 
   useEffect(() => {
     if (initialSku) {
@@ -496,7 +562,10 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   }, [initialSku?.id]);
 
   useEffect(() => {
-    compatibilityCache.current = new Map();
+    compatibilityCache.current = new Map(
+      initialSku ? [[compatibilityCacheKey(initialSku), initialCompatibleProducts]] : [],
+    );
+    compatibilityRequests.current = new Map();
     setCompatibleProducts(initialCompatibleProducts);
   }, [product.id]);
 
@@ -505,42 +574,66 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
       setCompatibleProducts([]);
       return;
     }
-    const cached = compatibilityCache.current.get(activeSku.id);
+    const cacheKey = compatibilityCacheKey(activeSku);
+    const cached = compatibilityCache.current.get(cacheKey);
     if (cached) {
       setCompatibleProducts(cached);
       setIsLoadingCompatibility(false);
       return;
     }
 
-    const controller = new AbortController();
-    const skuKey = activeSku.slug ?? activeSku.article;
-    const apiPath = `/api/v1/products/${encodeURIComponent(product.slug)}/compatible?sku=${encodeURIComponent(skuKey)}`;
-    const requestUrl = publicApiBaseUrl ? `${publicApiBaseUrl}${apiPath}` : `${appBasePath}${apiPath}`;
+    let cancelled = false;
     setIsLoadingCompatibility(true);
-    fetch(requestUrl, { cache: "no-store", signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Compatibility request failed: ${response.status}`);
-        }
-        return (await response.json()) as CompatibleProduct[];
-      })
+    loadCompatibility(activeSku)
       .then((items) => {
-        compatibilityCache.current.set(activeSku.id, items);
-        setCompatibleProducts(items);
+        if (!cancelled) {
+          setCompatibleProducts(items);
+        }
       })
-      .catch((error: unknown) => {
-        if (!(error instanceof DOMException && error.name === "AbortError")) {
+      .catch(() => {
+        if (!cancelled) {
           setCompatibleProducts([]);
         }
       })
       .finally(() => {
-        if (!controller.signal.aborted) {
+        if (!cancelled) {
           setIsLoadingCompatibility(false);
         }
       });
 
-    return () => controller.abort();
-  }, [activeSku?.id, activeSku?.article, activeSku?.slug, product.slug]);
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSku, loadCompatibility]);
+
+  useEffect(() => {
+    if (!activeSku) {
+      return;
+    }
+    const activeCacheKey = compatibilityCacheKey(activeSku);
+    const representatives = new Map<string, Product["skus"][number]>();
+    for (const sku of product.skus) {
+      const cacheKey = compatibilityCacheKey(sku);
+      if (
+        cacheKey !== activeCacheKey &&
+        !compatibilityCache.current.has(cacheKey) &&
+        !representatives.has(cacheKey)
+      ) {
+        representatives.set(cacheKey, sku);
+      }
+      if (representatives.size >= COMPATIBILITY_PREFETCH_LIMIT) {
+        break;
+      }
+    }
+    if (representatives.size === 0) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void Promise.allSettled(Array.from(representatives.values(), (sku) => loadCompatibility(sku)));
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [activeSku, loadCompatibility, product.skus]);
   const normalizedProductName = product.name.toLocaleLowerCase("ru-RU");
   const isDeflector = normalizedProductName.includes("дефлектор");
   const isConeTermination =
@@ -632,7 +725,9 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     }
     setSelectedSkuId(selected.id);
     setSelectedImage(0);
-    router.replace(`${pathname}?sku=${encodeURIComponent(selected.slug ?? selected.article)}`, { scroll: false });
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set("sku", selected.slug ?? selected.article);
+    window.history.replaceState(null, "", `${pathname}?${searchParams.toString()}`);
   }
 
   return (
