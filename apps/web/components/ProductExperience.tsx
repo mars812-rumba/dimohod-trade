@@ -992,6 +992,48 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   </fieldset>
                 );
               })}
+              {isConeTermination ? (
+                <div className="variant-scheme-preview">
+                  <div className="variant-scheme-graphic">
+                    <DimensionScheme
+                      title={product.name}
+                      dimensions={schemeDimensions}
+                      steelGrade={steelGrade}
+                      material={material}
+                      compact
+                    />
+                  </div>
+                  <div className="variant-scheme-details">
+                    <span>Размеры выбранного варианта</span>
+                    <dl>
+                      <div>
+                        <dt>Диаметр d/D</dt>
+                        <dd>
+                          {diameterMm ?? "—"}/{outerDiameter ?? "—"} мм
+                        </dd>
+                      </div>
+                      {lengthMm !== null ? (
+                        <div>
+                          <dt>Длина L</dt>
+                          <dd>{lengthMm} мм</dd>
+                        </div>
+                      ) : null}
+                      {wallThicknessMm ? (
+                        <div>
+                          <dt>Толщина S</dt>
+                          <dd>{compactDecimal(wallThicknessMm)} мм</dd>
+                        </div>
+                      ) : null}
+                      {insulationMm !== null ? (
+                        <div>
+                          <dt>Утепление</dt>
+                          <dd>{insulationMm} мм</dd>
+                        </div>
+                      ) : null}
+                    </dl>
+                  </div>
+                </div>
+              ) : null}
               <div className="variant-current">
                 <span>Выбрано</span>
                 <strong>{activeSku.name}</strong>
