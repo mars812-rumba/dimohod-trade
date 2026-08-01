@@ -101,6 +101,18 @@ type SKUFormState = {
   is_active: boolean;
 };
 
+class ApiRequestError extends Error {
+  status: number;
+  url: string;
+
+  constructor(status: number, url: string, message: string) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.url = url;
+  }
+}
+
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const allCategoriesId = "all";
@@ -152,6 +164,27 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+function formatApiDetail(detail: unknown): string {
+  if (typeof detail === "string") {
+    return detail;
+  }
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (item && typeof item === "object" && "msg" in item) {
+          const location = "loc" in item && Array.isArray(item.loc) ? item.loc.join(" → ") : "поле";
+          return `${location}: ${String(item.msg)}`;
+        }
+        return JSON.stringify(item);
+      })
+      .join("\n");
+  }
+  if (detail && typeof detail === "object") {
+    return JSON.stringify(detail);
+  }
+  return "Запрос не выполнен";
+}
+
 function skuToForm(sku: AdminSKU): SKUFormState {
   return {
     id: sku.id,
@@ -174,7 +207,7 @@ function skuToForm(sku: AdminSKU): SKUFormState {
   };
 }
 
-async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+async function apiRequestWithStatus<T>(path: string, init?: RequestInit): Promise<{ data: T; status: number }> {
   const requestUrl = buildBackendUrl(path);
   const response = await fetch(requestUrl, {
     ...init,
@@ -186,10 +219,15 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    throw new Error(body?.detail ?? "Запрос не выполнен");
+    throw new ApiRequestError(response.status, requestUrl, formatApiDetail(body?.detail));
   }
 
-  return (await response.json()) as T;
+  return { data: (await response.json()) as T, status: response.status };
+}
+
+async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await apiRequestWithStatus<T>(path, init);
+  return response.data;
 }
 
 function buildBackendUrl(path: string): string {
@@ -258,11 +296,11 @@ export default function AdminCatalogManager() {
     loadSkus(selectedCategoryId, 0).catch((error) => setStatus(error.message));
   }, [selectedCategoryId]);
 
-  async function refreshCurrentProduct() {
+  async function refreshCurrentProduct(skuId?: string) {
     if (!selectedProduct) {
       return;
     }
-    await loadProduct(selectedProduct.id);
+    await loadProduct(selectedProduct.id, skuId);
     await loadSkus();
   }
 
@@ -280,7 +318,9 @@ export default function AdminCatalogManager() {
     try {
       attributes = JSON.parse(skuForm.attributesText) as Record<string, unknown>;
     } catch {
+      const message = "Ошибка [CLIENT_VALIDATION]\nХарактеристики должны быть валидным JSON";
       setStatus("Характеристики должны быть валидным JSON");
+      window.alert(message);
       return;
     }
 
@@ -306,21 +346,37 @@ export default function AdminCatalogManager() {
     setIsBusy(true);
     setStatus("Сохраняю SKU...");
     try {
+      let savedSku: AdminSKU;
+      let successStatus: number;
       if (skuForm.id) {
-        await apiRequest<AdminSKU>(`/api/v1/admin/skus/${skuForm.id}`, {
+        const response = await apiRequestWithStatus<AdminSKU>(`/api/v1/admin/skus/${skuForm.id}`, {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
+        savedSku = response.data;
+        successStatus = response.status;
       } else {
-        await apiRequest<AdminSKU>(`/api/v1/admin/products/${selectedProduct.id}/skus`, {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
+        const response = await apiRequestWithStatus<AdminSKU>(
+          `/api/v1/admin/products/${selectedProduct.id}/skus`,
+          {
+            method: "POST",
+            body: JSON.stringify(payload),
+          },
+        );
+        savedSku = response.data;
+        successStatus = response.status;
       }
-      await refreshCurrentProduct();
+      await refreshCurrentProduct(savedSku.id);
       setStatus("SKU сохранён");
+      window.alert(`Успешно [HTTP ${successStatus}]\nSKU ${savedSku.article} сохранён`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Не удалось сохранить SKU");
+      const statusMessage = error instanceof Error ? error.message : "Не удалось сохранить SKU";
+      setStatus(statusMessage);
+      if (error instanceof ApiRequestError) {
+        window.alert(`Ошибка [HTTP ${error.status}]\n${error.message}\n${error.url}`);
+      } else {
+        window.alert(`Ошибка [NETWORK]\n${statusMessage}`);
+      }
     } finally {
       setIsBusy(false);
     }
@@ -348,29 +404,42 @@ export default function AdminCatalogManager() {
       return;
     }
     if (photoFile.size > maxPhotoBytes) {
+      const message = "Ошибка [CLIENT_VALIDATION]\nФото больше 8 МБ. Выберите файл меньшего размера";
       setStatus("Фото больше 8 МБ. Выберите файл меньшего размера");
+      window.alert(message);
       return;
     }
     setIsBusy(true);
     setStatus("Загружаю фото...");
     try {
       const contentBase64 = await fileToBase64(photoFile);
-      const product = await apiRequest<AdminProduct>(`/api/v1/admin/products/${selectedProduct.id}/photos`, {
-        method: "POST",
-        body: JSON.stringify({
-          file_name: photoFile.name,
-          content_base64: contentBase64,
-          role: textOrNull(photoRole),
-          alt: textOrNull(photoAlt),
-        }),
-      });
+      const response = await apiRequestWithStatus<AdminProduct>(
+        `/api/v1/admin/products/${selectedProduct.id}/photos`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            file_name: photoFile.name,
+            content_base64: contentBase64,
+            role: textOrNull(photoRole),
+            alt: textOrNull(photoAlt),
+          }),
+        },
+      );
+      const product = response.data;
       setSelectedProduct(product);
       await loadSkus();
       setPhotoFile(null);
       setPhotoAlt("");
       setStatus("Фото категории добавлено");
+      window.alert(`Успешно [HTTP ${response.status}]\nФото ${photoFile.name} сохранено в категории`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Не удалось добавить фото");
+      const statusMessage = error instanceof Error ? error.message : "Не удалось добавить фото";
+      setStatus(statusMessage);
+      if (error instanceof ApiRequestError) {
+        window.alert(`Ошибка [HTTP ${error.status}]\n${error.message}\n${error.url}`);
+      } else {
+        window.alert(`Ошибка [NETWORK]\n${statusMessage}`);
+      }
     } finally {
       setIsBusy(false);
     }
