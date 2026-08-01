@@ -100,11 +100,48 @@ class AdminProductListResponse(BaseModel):
     offset: int
 
 
+class AdminSEOConfiguratorCTA(BaseModel):
+    text: str = Field(
+        default="Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе.",
+        max_length=500,
+    )
+    href: str = Field(default="/#calculator", max_length=500)
+
+
+class AdminSEOProductKnowledge(BaseModel):
+    purpose: list[str] = Field(default_factory=list)
+    installation_zones: list[str] = Field(default_factory=list, alias="installationZones")
+    compatible_with: list[str] = Field(default_factory=list, alias="compatibleWith")
+    incompatible_with: list[str] = Field(default_factory=list, alias="incompatibleWith")
+    installation_variants: list[str] = Field(default_factory=list, alias="installationVariants")
+    selection_rules: list[str] = Field(default_factory=list, alias="selectionRules")
+    installation_warnings: list[str] = Field(default_factory=list, alias="installationWarnings")
+    fire_safety: list[str] = Field(default_factory=list, alias="fireSafety")
+    required_input_data: list[str] = Field(default_factory=list, alias="requiredInputData")
+    source_notes: list[str] = Field(default_factory=list, alias="sourceNotes")
+    configurator_cta: AdminSEOConfiguratorCTA = Field(
+        default_factory=AdminSEOConfiguratorCTA,
+        alias="configuratorCta",
+    )
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
 class AdminProductUpdate(BaseModel):
     short_description: str | None = Field(default=None, max_length=500)
     description: str | None = None
     seo_title: str | None = Field(default=None, max_length=180)
     seo_description: str | None = Field(default=None, max_length=320)
+    seo_knowledge: AdminSEOProductKnowledge | None = Field(default=None, alias="seoKnowledge")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class AdminSEOGenerateRequest(BaseModel):
+    selected_sku_id: UUID | None = None
+    seo_knowledge: AdminSEOProductKnowledge | None = Field(default=None, alias="seoKnowledge")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AdminSEOGenerateResponse(BaseModel):
@@ -113,6 +150,7 @@ class AdminSEOGenerateResponse(BaseModel):
     seo_title: str = Field(max_length=180)
     seo_description: str = Field(max_length=320)
     model: str
+    fact_warnings: list[str] = Field(default_factory=list)
 
 
 class AdminSKUBase(BaseModel):

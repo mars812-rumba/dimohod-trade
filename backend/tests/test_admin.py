@@ -1,4 +1,5 @@
 import base64
+from types import SimpleNamespace
 
 import pytest
 from fastapi import HTTPException
@@ -8,11 +9,14 @@ from app.main import app
 from app.modules.catalog.service import category_cover
 from app.modules.admin.service import (
     extract_openai_output_text,
+    build_product_seo_prompt,
     canonical_photo_name,
     decode_photo_payload,
     normalize_media_item,
     normalize_media_list,
     resolve_product_media,
+    normalize_seo_knowledge,
+    product_seo_facts,
     safe_asset_name,
     safe_storage_key,
 )
@@ -133,6 +137,63 @@ def test_extract_openai_output_text_reads_responses_payload() -> None:
     }
 
     assert extract_openai_output_text(payload) == '{"seo_title":"Тест"}'
+
+
+def test_product_seo_facts_separate_selected_sku_from_family_ranges() -> None:
+    selected_sku = SimpleNamespace(
+        id="sku-1",
+        is_active=True,
+        article="DT-100-200",
+        name="Сэндвич-дефлектор 100/200",
+        diameter_mm=100,
+        outer_diameter_mm=200,
+        length_mm=240,
+        wall_thickness_mm=None,
+        insulation_mm=50,
+        steel_grade="AISI 430",
+        material="Нержавеющая сталь",
+        contour="сэндвич",
+        angle_deg=None,
+    )
+    other_sku = SimpleNamespace(**{**selected_sku.__dict__, "id": "sku-2", "diameter_mm": 150})
+    product = SimpleNamespace(
+        name="Сэндвич-дефлектор",
+        category=SimpleNamespace(name="Оголовки"),
+        product_kind="оголовок",
+        brand="Дымоход Трейд",
+        purpose=[],
+        application_tags=[],
+        compatibility_notes=None,
+        extra_attributes={
+            "seo_knowledge": {
+                "purpose": ["Защищает верхнее завершение дымохода от атмосферных осадков."],
+                "fireSafety": [],
+                "sourceNotes": ["Паспорт семейства, раздел 2"],
+            }
+        },
+        skus=[selected_sku, other_sku],
+    )
+
+    facts = product_seo_facts(product, selected_sku=selected_sku)
+
+    assert facts["selected_sku"]["diameter_d_mm"] == 100
+    assert facts["diameter_d_mm"] == [100, 150]
+    assert facts["seo_knowledge"]["purpose"]
+    assert "fireSafety" in facts["missing_confirmed_sections"]
+
+
+def test_product_seo_prompt_forbids_unconfirmed_fire_safety_claims() -> None:
+    prompt = build_product_seo_prompt({"seo_knowledge": {"fireSafety": [], "sourceNotes": []}})
+
+    assert "Пожарную безопасность описывай только" in prompt
+    assert "Не выдумывай" in prompt
+
+
+def test_invalid_seo_knowledge_falls_back_to_safe_empty_structure() -> None:
+    knowledge = normalize_seo_knowledge({"installationZones": "outdoor"})
+
+    assert knowledge.installation_zones == []
+    assert knowledge.configurator_cta.href == "/#calculator"
 
 
 def test_catalog_filter_values_are_normalized() -> None:

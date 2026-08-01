@@ -253,6 +253,48 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   );
 }
 
+const seoSectionHeadings = new Set([
+  "Назначение",
+  "Где применяется",
+  "Совместимость",
+  "Варианты монтажа",
+  "Что учитывать при подборе",
+  "Пожарная безопасность",
+  "Характеристики выбранного SKU",
+  "Расчёт комплекта",
+]);
+
+function ProductSeoDescription({ value }: { value: string }) {
+  return (
+    <div className="product-copy">
+      {value.split(/\n+/).flatMap((rawLine, index) => {
+        const line = rawLine.trim();
+        if (!line) {
+          return [];
+        }
+        const normalizedHeading = line.replace(/:$/, "");
+        return seoSectionHeadings.has(normalizedHeading)
+          ? [<h3 className="product-copy-heading" key={`${index}-${line}`}>{normalizedHeading}</h3>]
+          : [<p key={`${index}-${line}`}>{line}</p>];
+      })}
+    </div>
+  );
+}
+
+function seoConfiguratorCta(product: Product): { text: string; href: string } | null {
+  const rawKnowledge = product.extra_attributes.seo_knowledge;
+  if (!rawKnowledge || typeof rawKnowledge !== "object" || !("configuratorCta" in rawKnowledge)) {
+    return null;
+  }
+  const rawCta = rawKnowledge.configuratorCta;
+  if (!rawCta || typeof rawCta !== "object" || !("text" in rawCta) || !("href" in rawCta)) {
+    return null;
+  }
+  return typeof rawCta.text === "string" && typeof rawCta.href === "string" && rawCta.text && rawCta.href
+    ? { text: rawCta.text, href: rawCta.href }
+    : null;
+}
+
 export function ProductExperience({ product, initialSkuKey }: { product: Product; initialSkuKey?: string }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -287,6 +329,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const contour = activeSku?.contour ?? product.contour;
   const insulationMm = activeSku?.insulation_mm ?? product.insulation_mm;
   const compatibilityMessages = activeSku?.compatibility_messages ?? [];
+  const configuratorCta = seoConfiguratorCta(product);
   const lengthMm = activeSku?.length_mm ?? null;
   const parametricAlt = `${product.name} ${outerDiameter ?? diameterMm ?? "—"} мм, L=${lengthMm ?? "—"} D=${
     outerDiameter ?? "—"
@@ -538,8 +581,13 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
           {product.description || variantDescription ? (
             <section className="product-section">
               <h2 className="product-section-title">Описание</h2>
-              {product.description ? <p className="product-copy">{product.description}</p> : null}
+              {product.description ? <ProductSeoDescription value={product.description} /> : null}
               {variantDescription ? <p className="product-variant-copy">{variantDescription}</p> : null}
+              {configuratorCta ? (
+                <Link className="product-configurator-cta" href={configuratorCta.href}>
+                  {configuratorCta.text}
+                </Link>
+              ) : null}
             </section>
           ) : null}
 

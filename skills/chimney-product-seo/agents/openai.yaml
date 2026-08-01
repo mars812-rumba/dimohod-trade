@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO для товаров дымохода"
+  short_description: "Проверяемый SEO-контент товарных семейств"
+  default_prompt: "Используй $chimney-product-seo, чтобы подготовить достоверный SEO-черновик семейства и выбранного SKU."

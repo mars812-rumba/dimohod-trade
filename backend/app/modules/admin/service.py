@@ -22,12 +22,14 @@ from app.modules.admin.schemas import (
     AdminProductListItem,
     AdminProductRead,
     AdminProductUpdate,
+    AdminSEOProductKnowledge,
     AdminSEOGenerateResponse,
     AdminSKUCreate,
     AdminSKUListItem,
     AdminSKUUpdate,
 )
 from app.modules.catalog.models import Category
+from app.modules.compatibility.service import context_from_product_sku, list_active_rules, rule_matches
 from app.modules.products.models import Product, SKU
 
 MEDIA_KEY = "media"
@@ -42,6 +44,7 @@ PHOTO_ROLE_FILENAMES = {
     "detail": "photo-3",
 }
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
+SEO_KNOWLEDGE_KEY = "seo_knowledge"
 SEO_JSON_SCHEMA = {
     "type": "object",
     "properties": {
@@ -82,9 +85,66 @@ def _unique_values(values: list[Any], *, limit: int = 40) -> list[Any] | dict[st
     return {"first": normalized[:limit], "total_unique": len(normalized)}
 
 
-def product_seo_facts(product: Product) -> dict[str, Any]:
-    skus = [sku for sku in product.skus if sku.is_active]
+def normalize_seo_knowledge(value: Any) -> AdminSEOProductKnowledge:
+    if not isinstance(value, dict):
+        return AdminSEOProductKnowledge()
+    try:
+        return AdminSEOProductKnowledge.model_validate(value)
+    except ValidationError:
+        return AdminSEOProductKnowledge()
+
+
+def _sku_facts(sku: SKU | None) -> dict[str, Any] | None:
+    if sku is None:
+        return None
     return {
+        "article": sku.article,
+        "name": sku.name,
+        "diameter_d_mm": sku.diameter_mm,
+        "outer_diameter_D_mm": sku.outer_diameter_mm,
+        "length_L_mm": sku.length_mm,
+        "wall_thickness_S_mm": str(sku.wall_thickness_mm) if sku.wall_thickness_mm is not None else None,
+        "insulation_mm": sku.insulation_mm,
+        "steel_grade": sku.steel_grade,
+        "material": sku.material,
+        "contour": sku.contour,
+        "angle_deg": sku.angle_deg,
+    }
+
+
+def product_seo_facts(
+    product: Product,
+    *,
+    selected_sku: SKU | None = None,
+    compatibility_rules: list[dict[str, Any]] | None = None,
+    seo_knowledge: AdminSEOProductKnowledge | None = None,
+) -> dict[str, Any]:
+    skus = [sku for sku in product.skus if sku.is_active]
+    knowledge = seo_knowledge or normalize_seo_knowledge((product.extra_attributes or {}).get(SEO_KNOWLEDGE_KEY))
+    knowledge_payload = knowledge.model_dump(by_alias=True)
+    missing_sections = []
+    for key in (
+        "purpose",
+        "installationZones",
+        "compatibleWith",
+        "installationVariants",
+        "selectionRules",
+        "installationWarnings",
+        "fireSafety",
+        "requiredInputData",
+        "sourceNotes",
+    ):
+        has_legacy_source = (key == "purpose" and bool(product.purpose)) or (
+            key == "compatibleWith" and bool(product.compatibility_notes)
+        )
+        if not knowledge_payload.get(key) and not has_legacy_source:
+            missing_sections.append(key)
+    return {
+        "evidence_policy": (
+            "Use only fields in this JSON. Missing fields are unknown, not permission to infer. "
+            "Fire-safety claims may come only from seo_knowledge.fireSafety with sourceNotes, "
+            "or an applicable compatibility rule explicitly typed fire_safety."
+        ),
         "family_name": product.name,
         "category": product.category.name,
         "product_kind": product.product_kind,
@@ -92,6 +152,10 @@ def product_seo_facts(product: Product) -> dict[str, Any]:
         "purpose": product.purpose,
         "application_tags": product.application_tags,
         "compatibility_notes": product.compatibility_notes,
+        "seo_knowledge": knowledge_payload,
+        "selected_sku": _sku_facts(selected_sku),
+        "applicable_compatibility_rules": compatibility_rules or [],
+        "missing_confirmed_sections": missing_sections,
         "active_sku_count": len(skus),
         "diameter_d_mm": _unique_values([sku.diameter_mm for sku in skus]),
         "outer_diameter_D_mm": _unique_values([sku.outer_diameter_mm for sku in skus]),
@@ -105,30 +169,83 @@ def product_seo_facts(product: Product) -> dict[str, Any]:
     }
 
 
-def build_product_seo_prompt(product: Product) -> str:
-    facts = json.dumps(product_seo_facts(product), ensure_ascii=False, indent=2)
-    return f"""Сформируй SEO-черновик на русском языке для семейства товаров «Дымоход Трейд».
+def build_product_seo_prompt(facts_payload: dict[str, Any]) -> str:
+    facts = json.dumps(facts_payload, ensure_ascii=False, indent=2)
+    return f"""Сформируй проверяемый SEO-черновик на русском языке для семейства товаров «Дымоход Трейд».
 
 Используй только факты из JSON ниже. Не выдумывай сертификаты, температуры, наличие,
-гарантии, совместимость, способ монтажа или технические преимущества, которых нет в данных.
-Текст должен быть полезным покупателю, естественным, без HTML, Markdown и переспама.
+гарантии, нормы, расстояния, совместимость, способ монтажа или технические преимущества.
+Отсутствующее утверждение пропусти или отметь как требующее уточнения специалистом.
+Пожарную безопасность описывай только из seo_knowledge.fireSafety при наличии sourceNotes
+или из applicable_compatibility_rules с type=fire_safety. Остальные правила не являются
+разрешением создавать пожарные нормы.
+Текст должен объяснять роль изделия в системе, помогать с выбором и вести к конфигуратору.
+Не перечисляй все диаметры и SKU. Подзаголовки пиши обычным текстом, без HTML.
 
 Требования к полям:
-- short_description: 1–2 предложения, до 500 символов;
-- description: уникальное описание семейства примерно 900–1600 символов: назначение,
-  конструкция и доступные варианты только по подтверждённым данным;
-- seo_title: шаблон до 180 символов, обязательно с {{name}} и брендом «Дымоход Трейд»;
-- seo_description: шаблон до 320 символов с конкретикой о товаре;
+- short_description: 2–3 предложения — что это, где применяется, главная польза;
+- description: читаемый текст с разделами «Назначение», «Где применяется», «Совместимость»,
+  «Варианты монтажа», «Что учитывать при подборе», «Пожарная безопасность»,
+  «Характеристики выбранного SKU», «Расчёт комплекта»;
+- пустой неподтверждённый раздел можно кратко обозначить «Требует уточнения специалистом»;
+- seo_title: ориентир 50–70 символов, название и ключевая функция/место применения;
+- seo_description: ориентир 130–170 символов: назначение, важный параметр SKU,
+  совместимость/сценарий и мягкий призыв рассчитать комплект; не копируй title;
 - в шаблонах разрешены только переменные {{name}}, {{article}}, {{d}}, {{D}}, {{L}},
   {{S}}, {{steel}}, {{insulation}}. Сохраняй фигурные скобки дословно;
-- не перечисляй все SKU и не вставляй цену.
+- характеристики выбранного SKU бери только из selected_sku; если он не передан,
+  используй разрешённые переменные, не приписывай один вариант всему семейству;
+- заверши description CTA из seo_knowledge.configuratorCta;
+- не используй рекламные штампы и не вставляй цену.
 
-Факты о семействе:
+Подтверждённый пакет фактов (этап 1 завершён приложением):
 {facts}
 """
 
 
-async def generate_product_seo(session: AsyncSession, product_id: UUID) -> AdminSEOGenerateResponse:
+async def collect_product_seo_facts(
+    session: AsyncSession,
+    product: Product,
+    *,
+    selected_sku_id: UUID | None,
+    seo_knowledge: AdminSEOProductKnowledge | None = None,
+) -> dict[str, Any]:
+    selected_sku = next(
+        (sku for sku in product.skus if sku.id == selected_sku_id and sku.is_active),
+        None,
+    )
+    if selected_sku_id is not None and selected_sku is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected SKU does not belong to product")
+
+    applicable_rules: list[dict[str, Any]] = []
+    if selected_sku is not None:
+        context = context_from_product_sku(product, selected_sku)
+        for rule in await list_active_rules(session):
+            if rule_matches(rule, context):
+                applicable_rules.append(
+                    {
+                        "code": rule.code,
+                        "name": rule.name,
+                        "type": rule.rule_type,
+                        "severity": rule.severity,
+                        "message": rule.message,
+                    }
+                )
+    return product_seo_facts(
+        product,
+        selected_sku=selected_sku,
+        compatibility_rules=applicable_rules,
+        seo_knowledge=seo_knowledge,
+    )
+
+
+async def generate_product_seo(
+    session: AsyncSession,
+    product_id: UUID,
+    *,
+    selected_sku_id: UUID | None = None,
+    seo_knowledge: AdminSEOProductKnowledge | None = None,
+) -> AdminSEOGenerateResponse:
     product = await get_admin_product(session, product_id)
     if not settings.openai_api_key:
         raise HTTPException(
@@ -136,6 +253,12 @@ async def generate_product_seo(session: AsyncSession, product_id: UUID) -> Admin
             detail="OPENAI_API_KEY не настроен для backend",
         )
 
+    facts_payload = await collect_product_seo_facts(
+        session,
+        product,
+        selected_sku_id=selected_sku_id,
+        seo_knowledge=seo_knowledge,
+    )
     request_payload = {
         "model": settings.openai_seo_model,
         "input": [
@@ -143,10 +266,11 @@ async def generate_product_seo(session: AsyncSession, product_id: UUID) -> Admin
                 "role": "system",
                 "content": (
                     "Ты редактор технического каталога дымоходов. "
-                    "Возвращай только проверяемый SEO-текст."
+                    "Сначала доверяй только предоставленному пакету фактов, затем создавай черновик. "
+                    "Не восполняй отсутствующие технические данные знаниями модели."
                 ),
             },
-            {"role": "user", "content": build_product_seo_prompt(product)},
+            {"role": "user", "content": build_product_seo_prompt(facts_payload)},
         ],
         "text": {
             "format": {
@@ -156,7 +280,7 @@ async def generate_product_seo(session: AsyncSession, product_id: UUID) -> Admin
                 "schema": SEO_JSON_SCHEMA,
             }
         },
-        "max_output_tokens": 2400,
+        "max_output_tokens": 3600,
         "store": False,
     }
     try:
@@ -171,7 +295,14 @@ async def generate_product_seo(session: AsyncSession, product_id: UUID) -> Admin
             )
             response.raise_for_status()
         generated = json.loads(extract_openai_output_text(response.json()))
-        return AdminSEOGenerateResponse(**generated, model=settings.openai_seo_model)
+        return AdminSEOGenerateResponse(
+            **generated,
+            model=settings.openai_seo_model,
+            fact_warnings=[
+                f"Нет подтверждённых данных: {field}"
+                for field in facts_payload["missing_confirmed_sections"]
+            ],
+        )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -432,6 +563,14 @@ async def update_product(
             extra_attributes[field] = value
         else:
             extra_attributes.pop(field, None)
+    if "seo_knowledge" in values:
+        knowledge = values["seo_knowledge"]
+        if knowledge is None:
+            extra_attributes.pop(SEO_KNOWLEDGE_KEY, None)
+        else:
+            extra_attributes[SEO_KNOWLEDGE_KEY] = AdminSEOProductKnowledge.model_validate(knowledge).model_dump(
+                by_alias=True
+            )
     product.extra_attributes = extra_attributes
 
     await session.commit()

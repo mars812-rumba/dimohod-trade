@@ -2424,6 +2424,36 @@ ul {
   line-height: 1.65;
 }
 
+.product-copy p {
+  margin: 0 0 12px;
+}
+
+.product-copy-heading {
+  margin: 24px 0 8px;
+  font-size: 16px;
+  font-weight: 780;
+}
+
+.product-copy-heading:first-child {
+  margin-top: 0;
+}
+
+.product-configurator-cta {
+  display: inline-flex;
+  margin-top: 18px;
+  padding: 11px 15px;
+  border-radius: 6px;
+  color: #fff;
+  background: var(--accent);
+  font-weight: 760;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.product-configurator-cta:hover {
+  background: var(--accent-hover);
+}
+
 .product-variant-copy {
   margin-top: 16px;
   padding: 14px 16px;

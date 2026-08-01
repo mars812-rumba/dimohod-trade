@@ -11,6 +11,7 @@ from app.modules.admin.schemas import (
     AdminProductListResponse,
     AdminProductRead,
     AdminProductUpdate,
+    AdminSEOGenerateRequest,
     AdminSEOGenerateResponse,
     AdminSKUCreate,
     AdminSKUListResponse,
@@ -122,9 +123,15 @@ async def update_admin_product(
 @router.post("/products/{product_id}/seo/generate", response_model=AdminSEOGenerateResponse)
 async def generate_admin_product_seo(
     product_id: UUID,
+    payload: AdminSEOGenerateRequest | None = None,
     session: AsyncSession = Depends(get_db),
 ) -> AdminSEOGenerateResponse:
-    return await generate_product_seo(session, product_id)
+    return await generate_product_seo(
+        session,
+        product_id,
+        selected_sku_id=payload.selected_sku_id if payload else None,
+        seo_knowledge=payload.seo_knowledge if payload else None,
+    )
 
 
 @router.post("/products/{product_id}/skus", response_model=AdminSKURead, status_code=201)

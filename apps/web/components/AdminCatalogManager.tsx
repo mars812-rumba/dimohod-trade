@@ -107,10 +107,27 @@ type ProductSeoFormState = {
   description: string;
   seo_title: string;
   seo_description: string;
+  knowledge: ProductSeoKnowledgeFormState;
 };
 
-type GeneratedProductSeo = ProductSeoFormState & {
+type GeneratedProductSeo = Omit<ProductSeoFormState, "knowledge"> & {
   model: string;
+  fact_warnings: string[];
+};
+
+type ProductSeoKnowledgeFormState = {
+  purpose: string;
+  installationZones: string;
+  compatibleWith: string;
+  incompatibleWith: string;
+  installationVariants: string;
+  selectionRules: string;
+  installationWarnings: string;
+  fireSafety: string;
+  requiredInputData: string;
+  sourceNotes: string;
+  configuratorCtaText: string;
+  configuratorCtaHref: string;
 };
 
 type PhotoRole = "general" | "top" | "connection";
@@ -193,6 +210,20 @@ const emptyProductSeoForm: ProductSeoFormState = {
   description: "",
   seo_title: "",
   seo_description: "",
+  knowledge: {
+    purpose: "",
+    installationZones: "",
+    compatibleWith: "",
+    incompatibleWith: "",
+    installationVariants: "",
+    selectionRules: "",
+    installationWarnings: "",
+    fireSafety: "",
+    requiredInputData: "",
+    sourceNotes: "",
+    configuratorCtaText: "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе.",
+    configuratorCtaHref: "/#calculator",
+  },
 };
 
 function numberOrNull(value: string): number | null {
@@ -268,14 +299,76 @@ function stringAttribute(attributes: Record<string, unknown>, key: string): stri
   return typeof value === "string" ? value : "";
 }
 
+function stringList(value: unknown): string {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").join("\n") : "";
+}
+
+function lines(value: string): string[] {
+  return value.split("\n").map((item) => item.trim()).filter(Boolean);
+}
+
+function knowledgeFromProduct(product: AdminProduct): ProductSeoKnowledgeFormState {
+  const raw = product.extra_attributes.seo_knowledge;
+  const knowledge = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+  const rawCta = knowledge.configuratorCta;
+  const cta = rawCta && typeof rawCta === "object" ? rawCta as Record<string, unknown> : {};
+  return {
+    purpose: stringList(knowledge.purpose),
+    installationZones: stringList(knowledge.installationZones),
+    compatibleWith: stringList(knowledge.compatibleWith),
+    incompatibleWith: stringList(knowledge.incompatibleWith),
+    installationVariants: stringList(knowledge.installationVariants),
+    selectionRules: stringList(knowledge.selectionRules),
+    installationWarnings: stringList(knowledge.installationWarnings),
+    fireSafety: stringList(knowledge.fireSafety),
+    requiredInputData: stringList(knowledge.requiredInputData),
+    sourceNotes: stringList(knowledge.sourceNotes),
+    configuratorCtaText: typeof cta.text === "string" ? cta.text : emptyProductSeoForm.knowledge.configuratorCtaText,
+    configuratorCtaHref: typeof cta.href === "string" ? cta.href : emptyProductSeoForm.knowledge.configuratorCtaHref,
+  };
+}
+
+function knowledgePayload(knowledge: ProductSeoKnowledgeFormState) {
+  return {
+    purpose: lines(knowledge.purpose),
+    installationZones: lines(knowledge.installationZones),
+    compatibleWith: lines(knowledge.compatibleWith),
+    incompatibleWith: lines(knowledge.incompatibleWith),
+    installationVariants: lines(knowledge.installationVariants),
+    selectionRules: lines(knowledge.selectionRules),
+    installationWarnings: lines(knowledge.installationWarnings),
+    fireSafety: lines(knowledge.fireSafety),
+    requiredInputData: lines(knowledge.requiredInputData),
+    sourceNotes: lines(knowledge.sourceNotes),
+    configuratorCta: {
+      text: knowledge.configuratorCtaText.trim(),
+      href: knowledge.configuratorCtaHref.trim(),
+    },
+  };
+}
+
 function productToSeoForm(product: AdminProduct): ProductSeoFormState {
   return {
     short_description: product.short_description ?? "",
     description: product.description ?? "",
     seo_title: stringAttribute(product.extra_attributes, "seo_title"),
     seo_description: stringAttribute(product.extra_attributes, "seo_description"),
+    knowledge: knowledgeFromProduct(product),
   };
 }
+
+const seoKnowledgeFields: Array<{ key: keyof ProductSeoKnowledgeFormState; label: string; hint: string }> = [
+  { key: "purpose", label: "Назначение", hint: "Что делает элемент и какую задачу решает" },
+  { key: "installationZones", label: "Зоны установки", hint: "По одному подтверждённому варианту на строку" },
+  { key: "compatibleWith", label: "Совместимо с", hint: "Семейства и соседние элементы" },
+  { key: "incompatibleWith", label: "Несовместимо с", hint: "Только подтверждённые ограничения" },
+  { key: "installationVariants", label: "Варианты монтажа", hint: "Без универсальных монтажных советов" },
+  { key: "selectionRules", label: "Правила подбора", hint: "Какие параметры должны совпасть" },
+  { key: "installationWarnings", label: "Ошибки и ограничения", hint: "Типичные подтверждённые ошибки выбора" },
+  { key: "fireSafety", label: "Пожарная безопасность", hint: "Только требования с источником" },
+  { key: "requiredInputData", label: "Данные для расчёта", hint: "Что нужно знать об объекте" },
+  { key: "sourceNotes", label: "Источники", hint: "Документ, правило БД, раздел или примечание" },
+];
 
 async function apiRequestWithStatus<T>(path: string, init?: RequestInit): Promise<{ data: T; status: number }> {
   const requestUrl = buildBackendUrl(path);
@@ -431,8 +524,15 @@ export default function AdminCatalogManager() {
     setSkuForm((current) => ({ ...current, [field]: value }));
   }
 
-  function updateProductSeoForm(field: keyof ProductSeoFormState, value: string) {
+  function updateProductSeoForm(field: Exclude<keyof ProductSeoFormState, "knowledge">, value: string) {
     setProductSeoForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateSeoKnowledge(field: keyof ProductSeoKnowledgeFormState, value: string) {
+    setProductSeoForm((current) => ({
+      ...current,
+      knowledge: { ...current.knowledge, [field]: value },
+    }));
   }
 
   async function saveProductSeo(event: FormEvent<HTMLFormElement>) {
@@ -452,6 +552,7 @@ export default function AdminCatalogManager() {
             description: textOrNull(productSeoForm.description),
             seo_title: textOrNull(productSeoForm.seo_title),
             seo_description: textOrNull(productSeoForm.seo_description),
+            seoKnowledge: knowledgePayload(productSeoForm.knowledge),
           }),
         },
       );
@@ -476,7 +577,12 @@ export default function AdminCatalogManager() {
     if (!selectedProduct) {
       return;
     }
-    const hasExistingText = Object.values(productSeoForm).some((value) => value.trim());
+    const hasExistingText = [
+      productSeoForm.short_description,
+      productSeoForm.description,
+      productSeoForm.seo_title,
+      productSeoForm.seo_description,
+    ].some((value) => value.trim());
     if (hasExistingText && !window.confirm("Заменить текущий SEO-текст новым черновиком Codex?")) {
       return;
     }
@@ -486,15 +592,25 @@ export default function AdminCatalogManager() {
     try {
       const response = await apiRequestWithStatus<GeneratedProductSeo>(
         `/api/v1/admin/products/${selectedProduct.id}/seo/generate`,
-        { method: "POST" },
+        {
+          method: "POST",
+          body: JSON.stringify({
+            selected_sku_id: skuForm.id,
+            seoKnowledge: knowledgePayload(productSeoForm.knowledge),
+          }),
+        },
       );
       setProductSeoForm({
         short_description: response.data.short_description,
         description: response.data.description,
         seo_title: response.data.seo_title,
         seo_description: response.data.seo_description,
+        knowledge: productSeoForm.knowledge,
       });
-      setStatus(`SEO-черновик создан (${response.data.model}). Проверьте текст и нажмите «Сохранить описание».`);
+      const warning = response.data.fact_warnings.length
+        ? ` Не заполнено подтверждённых разделов: ${response.data.fact_warnings.length}.`
+        : "";
+      setStatus(`SEO-черновик создан (${response.data.model}).${warning} Проверьте текст и нажмите «Сохранить описание».`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Не удалось сгенерировать SEO";
       setStatus(message);
@@ -1076,6 +1192,39 @@ export default function AdminCatalogManager() {
                   <h3>SEO и описание семейства</h3>
                   <p>Пишется один раз для семейства. Размеры, сталь, артикул и цена выбранного SKU добавляются автоматически.</p>
                 </div>
+                <details className={styles.seoKnowledge}>
+                  <summary>Подтверждённые данные для SEO</summary>
+                  <p>
+                    Сначала заполните известные факты. Одна самостоятельная запись на строку. Генератор не должен
+                    дополнять отсутствующие технические сведения самостоятельно.
+                  </p>
+                  <div className={styles.seoKnowledgeGrid}>
+                    {seoKnowledgeFields.map((field) => (
+                      <label className={styles.wideField} key={field.key}>
+                        {field.label}
+                        <textarea
+                          onChange={(event) => updateSeoKnowledge(field.key, event.target.value)}
+                          placeholder={field.hint}
+                          value={productSeoForm.knowledge[field.key]}
+                        />
+                      </label>
+                    ))}
+                    <label className={styles.wideField}>
+                      CTA конфигуратора
+                      <textarea
+                        onChange={(event) => updateSeoKnowledge("configuratorCtaText", event.target.value)}
+                        value={productSeoForm.knowledge.configuratorCtaText}
+                      />
+                    </label>
+                    <label className={styles.field}>
+                      Ссылка на конфигуратор
+                      <input
+                        onChange={(event) => updateSeoKnowledge("configuratorCtaHref", event.target.value)}
+                        value={productSeoForm.knowledge.configuratorCtaHref}
+                      />
+                    </label>
+                  </div>
+                </details>
                 <label className={styles.wideField}>
                   Короткое описание
                   <textarea

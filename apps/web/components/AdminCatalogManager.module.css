@@ -256,6 +256,36 @@
   text-align: right;
 }
 
+.seoKnowledge {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.seoKnowledge summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.seoKnowledge > p {
+  margin: 10px 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.seoKnowledgeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.seoKnowledgeGrid textarea {
+  min-height: 92px;
+}
+
 .seoMetaGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -719,6 +749,10 @@
   }
 
   .seoMetaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .seoKnowledgeGrid {
     grid-template-columns: 1fr;
   }
 
