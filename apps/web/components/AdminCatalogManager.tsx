@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { ImagePlus, Plus, RefreshCcw, Save, Trash2 } from "lucide-react";
+import { DimensionScheme } from "./DimensionScheme";
 import styles from "./AdminCatalogManager.module.css";
 
 type AdminCategory = {
@@ -277,6 +278,10 @@ export default function AdminCatalogManager() {
     [categories],
   );
   const pendingPhotoCount = photoSlots.filter(({ role }) => photoDrafts[role].file).length;
+  const normalizedProductName = selectedProduct?.name.toLocaleLowerCase("ru-RU") ?? "";
+  const hasConeTerminationScheme =
+    normalizedProductName.includes("конус") &&
+    (normalizedProductName.includes("дефлектор") || normalizedProductName.includes("оголовок"));
 
   async function loadCategories() {
     const data = await apiRequest<AdminCategory[]>("/api/v1/admin/categories");
@@ -755,6 +760,36 @@ export default function AdminCatalogManager() {
                     </article>
                   );
                 })}
+                {hasConeTerminationScheme ? (
+                  <article className={`${styles.photoSlot} ${styles.schemeSlot}`}>
+                    <div className={styles.photoSlotHead}>
+                      <span className={styles.photoNumber}>04</span>
+                      <span>
+                        <strong>SVG-схема</strong>
+                        <small>Размеры выбранного SKU</small>
+                      </span>
+                      <span className={styles.savedBadge}>авто</span>
+                    </div>
+
+                    <div className={`${styles.photoPreview} ${styles.schemePreview}`}>
+                      <DimensionScheme
+                        title={selectedProduct.name}
+                        dimensions={{
+                          L: skuForm.length_mm,
+                          D: skuForm.outer_diameter_mm,
+                          d: skuForm.diameter_mm,
+                          S: skuForm.wall_thickness_mm,
+                          insulation: skuForm.insulation_mm,
+                        }}
+                        steelGrade={textOrNull(skuForm.steel_grade) ?? selectedProduct.steel_grade}
+                        material={textOrNull(skuForm.material) ?? selectedProduct.material}
+                      />
+                    </div>
+                    <p className={styles.schemeNote}>
+                      Контур общий для форм-фактора. Значения подставляются из выбранного SKU.
+                    </p>
+                  </article>
+                ) : null}
               </div>
 
               <div className={styles.saveBar}>
