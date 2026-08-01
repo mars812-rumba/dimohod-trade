@@ -334,23 +334,18 @@ export default function AdminCatalogManager() {
     setIsBusy(true);
     setStatus("Загружаю фото...");
     try {
-      const params = new URLSearchParams({ file_name: photoFile.name });
+      const formData = new FormData();
+      formData.set("file", photoFile);
       if (photoRole.trim()) {
-        params.set("role", photoRole.trim());
+        formData.set("role", photoRole.trim());
       }
       if (photoAlt.trim()) {
-        params.set("alt", photoAlt.trim());
+        formData.set("alt", photoAlt.trim());
       }
-      const response = await fetch(
-        buildBackendUrl(`/api/v1/admin/products/${selectedProduct.id}/photos/upload?${params.toString()}`),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": photoFile.type || "application/octet-stream",
-          },
-          body: photoFile,
-        },
-      );
+      const response = await fetch(buildBackendUrl(`/api/v1/admin/products/${selectedProduct.id}/photos/upload`), {
+        method: "POST",
+        body: formData,
+      });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
         throw new Error(body?.detail ?? "Не удалось добавить фото");

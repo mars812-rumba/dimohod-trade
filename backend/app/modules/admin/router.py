@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -121,18 +121,31 @@ async def upload_admin_product_photo(
 async def upload_admin_product_photo_file(
     product_id: UUID,
     request: Request,
-    file_name: str = Query(min_length=1, max_length=180),
-    alt: str | None = Query(default=None, max_length=240),
-    role: str | None = Query(default=None, max_length=60),
     session: AsyncSession = Depends(get_db),
 ) -> AdminProductRead:
+    try:
+        form = await request.form()
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Photo upload requires python-multipart in the backend image",
+        ) from exc
+
+    file = form.get("file")
+    if file is None or not hasattr(file, "read"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Photo file is required")
+
+    file_name = getattr(file, "filename", None) or "photo.jpg"
+    content = await file.read()
+    alt = form.get("alt")
+    role = form.get("role")
     return await attach_product_photo_content(
         session,
         product_id,
         file_name=file_name,
-        content=await request.body(),
-        alt=alt,
-        role=role,
+        content=content,
+        alt=alt if isinstance(alt, str) else None,
+        role=role if isinstance(role, str) else None,
     )
 
 
