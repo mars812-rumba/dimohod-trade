@@ -64,6 +64,19 @@ export function DimensionScheme({
         strokeWidth="2.5"
       />
 
+      <g
+        className="dimension-scheme-construction"
+        fill="none"
+        stroke="#65747c"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.6"
+      >
+        <path d="M170 116C170 108 206 102 250 102C294 102 330 108 330 116V188C330 198 294 205 250 205C206 205 170 198 170 188Z" />
+        <path d="M199 224C215 230 222 238 223 246C220 255 206 261 198 270L174 318C170 326 172 337 185 342V382C185 394 210 402 250 402C290 402 315 394 315 382V342C328 337 330 326 326 318L302 270C294 261 280 255 277 246C278 238 285 230 301 224" />
+        <path d="M214 353V410C214 418 230 423 250 423C270 423 286 418 286 410V353C276 356 264 358 250 358C236 358 224 356 214 353Z" />
+      </g>
+
       <g className="dimension-scheme-dimensions" fill="none" stroke="#e56835" strokeWidth="1.5">
         <path d="M150 90V54M350 90V54M150 64H350" />
         <path d="M150 64L160 59V69ZM350 64L340 59V69Z" fill="#e56835" stroke="none" />
