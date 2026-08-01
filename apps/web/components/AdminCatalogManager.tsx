@@ -347,6 +347,51 @@ function knowledgePayload(knowledge: ProductSeoKnowledgeFormState) {
   };
 }
 
+function renderSeoTemplatePreview(template: string, product: AdminProduct, sku: SKUFormState): string {
+  const diameter = sku.diameter_mm && sku.outer_diameter_mm
+    ? `${sku.diameter_mm}×${sku.outer_diameter_mm} мм`
+    : sku.diameter_mm
+      ? `${sku.diameter_mm} мм`
+      : "";
+  const dimensions = [
+    sku.diameter_mm ? `d=${sku.diameter_mm} мм` : null,
+    sku.outer_diameter_mm ? `D=${sku.outer_diameter_mm} мм` : null,
+    sku.length_mm ? `L=${sku.length_mm} мм` : null,
+    sku.wall_thickness_mm ? `S=${sku.wall_thickness_mm} мм` : null,
+  ].filter(Boolean).join(", ");
+  const replacements: Record<string, string> = {
+    "{name}": product.name,
+    "{article}": sku.article,
+    "{d}": sku.diameter_mm,
+    "{D}": sku.outer_diameter_mm,
+    "{L}": sku.length_mm,
+    "{S}": sku.wall_thickness_mm,
+    "{thickness}": sku.wall_thickness_mm,
+    "{steel}": sku.steel_grade,
+    "{material}": sku.material,
+    "{contour}": sku.contour,
+    "{angle}": sku.angle_deg,
+    "{insulation}": sku.insulation_mm,
+    "{diameter}": diameter,
+    "{dimensions}": dimensions,
+  };
+  return Object.entries(replacements)
+    .reduce((result, [token, replacement]) => result.replaceAll(token, replacement), template)
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function staleDiameterWarning(template: string, sku: SKUFormState): string | null {
+  const match = template.match(/(?:Ø\s*)?(\d{2,4})\s*[/×xх]\s*(\d{2,4})/i);
+  if (!match || !sku.diameter_mm || !sku.outer_diameter_mm) {
+    return null;
+  }
+  if (match[1] === sku.diameter_mm && match[2] === sku.outer_diameter_mm) {
+    return "В поле записан конкретный диаметр. Замените его на {diameter} или {d}/{D}, чтобы он менялся вместе с SKU.";
+  }
+  return `В тексте указан Ø${match[1]}/${match[2]}, а выбран SKU Ø${sku.diameter_mm}/${sku.outer_diameter_mm}. Перегенерируйте SEO.`;
+}
+
 function productToSeoForm(product: AdminProduct): ProductSeoFormState {
   return {
     short_description: product.short_description ?? "",
@@ -1254,6 +1299,11 @@ export default function AdminCatalogManager() {
                       value={productSeoForm.seo_title}
                     />
                     <small>{productSeoForm.seo_title.length}/180</small>
+                    {productSeoForm.seo_title ? (
+                      <span className={styles.seoPreview}>
+                        Предпросмотр: {renderSeoTemplatePreview(productSeoForm.seo_title, selectedProduct, skuForm)}
+                      </span>
+                    ) : null}
                   </label>
                   <label className={styles.field}>
                     Meta description
@@ -1264,11 +1314,21 @@ export default function AdminCatalogManager() {
                       value={productSeoForm.seo_description}
                     />
                     <small>{productSeoForm.seo_description.length}/320</small>
+                    {productSeoForm.seo_description ? (
+                      <span className={styles.seoPreview}>
+                        Предпросмотр: {renderSeoTemplatePreview(productSeoForm.seo_description, selectedProduct, skuForm)}
+                      </span>
+                    ) : null}
+                    {staleDiameterWarning(productSeoForm.seo_description, skuForm) ? (
+                      <span className={styles.seoTemplateWarning}>
+                        {staleDiameterWarning(productSeoForm.seo_description, skuForm)}
+                      </span>
+                    ) : null}
                   </label>
                 </div>
                 <div className={styles.seoEditorActions}>
                   <span>
-                    Доступны переменные: {"{name}"}, {"{article}"}, {"{d}"}, {"{D}"}, {"{L}"}, {"{S}"}, {"{steel}"}, {"{insulation}"}.
+                    Доступны переменные: {"{name}"}, {"{article}"}, {"{diameter}"}, {"{dimensions}"}, {"{d}"}, {"{D}"}, {"{L}"}, {"{S}"}, {"{material}"}, {"{steel}"}, {"{contour}"}, {"{angle}"}, {"{insulation}"}.
                     Пустые поля заполняются автоматически.
                   </span>
                   <div className={styles.seoEditorButtons}>

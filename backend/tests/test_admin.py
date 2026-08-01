@@ -16,7 +16,9 @@ from app.modules.admin.service import (
     normalize_media_list,
     resolve_product_media,
     normalize_seo_knowledge,
+    parameterize_sku_meta,
     product_seo_facts,
+    remove_dynamic_sku_section,
     safe_asset_name,
     safe_storage_key,
 )
@@ -178,6 +180,7 @@ def test_product_seo_facts_separate_selected_sku_from_family_ranges() -> None:
 
     assert facts["selected_sku"]["diameter_d_mm"] == 100
     assert facts["diameter_d_mm"] == [100, 150]
+    assert facts["family_ranges"]["diameter_d_mm"] == {"min": 100, "max": 150, "is_fixed": False}
     assert facts["seo_knowledge"]["purpose"]
     assert "fireSafety" in facts["missing_confirmed_sections"]
 
@@ -194,6 +197,46 @@ def test_invalid_seo_knowledge_falls_back_to_safe_empty_structure() -> None:
 
     assert knowledge.installation_zones == []
     assert knowledge.configurator_cta.href == "/#calculator"
+
+
+def test_generated_meta_replaces_selected_sku_literals_with_tokens() -> None:
+    sku = SimpleNamespace(
+        article="DT-SW50-29-15-D180-280",
+        diameter_mm=180,
+        outer_diameter_mm=280,
+        wall_thickness_mm=None,
+        insulation_mm=50,
+        steel_grade="AISI 430",
+        material="оцинковка",
+    )
+
+    result = parameterize_sku_meta(
+        "Оголовок Ø180/280 мм, AISI 430 и оцинковка. Артикул DT-SW50-29-15-D180-280.",
+        sku,
+    )
+
+    assert "180/280" not in result
+    assert "{d}/{D}" in result
+    assert "{steel}" in result
+    assert "{material}" in result
+    assert "{article}" in result
+
+
+def test_dynamic_sku_section_is_not_saved_in_family_description() -> None:
+    description = """Назначение
+Семейный текст.
+
+Характеристики выбранного SKU
+Диаметр 180/280 мм.
+
+Расчёт комплекта
+Подберите комплект."""
+
+    result = remove_dynamic_sku_section(description)
+
+    assert "180/280" not in result
+    assert "Назначение" in result
+    assert "Расчёт комплекта" in result
 
 
 def test_catalog_filter_values_are_normalized() -> None:

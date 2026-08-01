@@ -256,6 +256,25 @@
   text-align: right;
 }
 
+.seoPreview,
+.seoTemplateWarning {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.seoPreview {
+  color: var(--steel);
+}
+
+.seoTemplateWarning {
+  padding: 7px 9px;
+  border-left: 3px solid #d96b2b;
+  color: #783716;
+  background: #fff3e9;
+}
+
 .seoKnowledge {
   padding: 10px 12px;
   border: 1px solid var(--line);

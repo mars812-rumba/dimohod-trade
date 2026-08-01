@@ -85,6 +85,23 @@ def _unique_values(values: list[Any], *, limit: int = 40) -> list[Any] | dict[st
     return {"first": normalized[:limit], "total_unique": len(normalized)}
 
 
+def _value_range(values: list[Any]) -> dict[str, Any] | None:
+    normalized = sorted({value for value in values if value is not None})
+    if not normalized:
+        return None
+    minimum = normalized[0]
+    maximum = normalized[-1]
+    if isinstance(minimum, Decimal):
+        minimum = str(minimum)
+    if isinstance(maximum, Decimal):
+        maximum = str(maximum)
+    return {
+        "min": minimum,
+        "max": maximum,
+        "is_fixed": minimum == maximum,
+    }
+
+
 def normalize_seo_knowledge(value: Any) -> AdminSEOProductKnowledge:
     if not isinstance(value, dict):
         return AdminSEOProductKnowledge()
@@ -157,6 +174,13 @@ def product_seo_facts(
         "applicable_compatibility_rules": compatibility_rules or [],
         "missing_confirmed_sections": missing_sections,
         "active_sku_count": len(skus),
+        "family_ranges": {
+            "diameter_d_mm": _value_range([sku.diameter_mm for sku in skus]),
+            "outer_diameter_D_mm": _value_range([sku.outer_diameter_mm for sku in skus]),
+            "length_L_mm": _value_range([sku.length_mm for sku in skus]),
+            "wall_thickness_S_mm": _value_range([sku.wall_thickness_mm for sku in skus]),
+            "insulation_mm": _value_range([sku.insulation_mm for sku in skus]),
+        },
         "diameter_d_mm": _unique_values([sku.diameter_mm for sku in skus]),
         "outer_diameter_D_mm": _unique_values([sku.outer_diameter_mm for sku in skus]),
         "length_L_mm": _unique_values([sku.length_mm for sku in skus]),
@@ -184,23 +208,77 @@ def build_product_seo_prompt(facts_payload: dict[str, Any]) -> str:
 
 Требования к полям:
 - short_description: 2–3 предложения — что это, где применяется, главная польза;
-- description: читаемый текст с разделами «Назначение», «Где применяется», «Совместимость»,
-  «Варианты монтажа», «Что учитывать при подборе», «Пожарная безопасность»,
-  «Характеристики выбранного SKU», «Расчёт комплекта»;
+- description: семейный текст с разделами «Назначение», «Где применяется», «Совместимость»,
+  «Варианты монтажа», «Что учитывать при подборе», «Пожарная безопасность», «Расчёт комплекта»;
+- не создавай раздел «Характеристики выбранного SKU»: приложение строит его динамически из БД;
 - пустой неподтверждённый раздел можно кратко обозначить «Требует уточнения специалистом»;
 - seo_title: ориентир 50–70 символов, название и ключевая функция/место применения;
 - seo_description: ориентир 130–170 символов: назначение, важный параметр SKU,
   совместимость/сценарий и мягкий призыв рассчитать комплект; не копируй title;
 - в шаблонах разрешены только переменные {{name}}, {{article}}, {{d}}, {{D}}, {{L}},
-  {{S}}, {{steel}}, {{insulation}}. Сохраняй фигурные скобки дословно;
-- характеристики выбранного SKU бери только из selected_sku; если он не передан,
-  используй разрешённые переменные, не приписывай один вариант всему семейству;
-- заверши description CTA из seo_knowledge.configuratorCta;
+  {{S}}, {{thickness}}, {{steel}}, {{material}}, {{contour}}, {{angle}}, {{insulation}},
+  {{diameter}}, {{dimensions}}. Сохраняй фигурные скобки дословно;
+- short_description и description не должны содержать параметры одного selected_sku как свойства
+  семейства. Допустим только краткий диапазон из family_ranges или фиксированное для всех SKU значение;
+- seo_title и seo_description являются шаблонами семейства. Любое меняющееся значение SKU
+  записывай только переменной, никогда конкретной цифрой или артикулом selected_sku;
+- заверши description текстом CTA из seo_knowledge.configuratorCta.text;
+- не вставляй configuratorCta.href или другой URL в description: ссылка рендерится отдельно;
 - не используй рекламные штампы и не вставляй цену.
 
 Подтверждённый пакет фактов (этап 1 завершён приложением):
 {facts}
 """
+
+
+def parameterize_sku_meta(value: str, sku: SKU | None) -> str:
+    if sku is None:
+        return value
+
+    result = value
+    if sku.diameter_mm is not None and sku.outer_diameter_mm is not None:
+        d = str(sku.diameter_mm)
+        outer_d = str(sku.outer_diameter_mm)
+        pair_pattern = rf"(?<!\d){re.escape(d)}\s*[/×xх]\s*{re.escape(outer_d)}(?!\d)"
+        result = re.sub(pair_pattern, "{d}/{D}", result, flags=re.IGNORECASE)
+    elif sku.diameter_mm is not None:
+        diameter_pattern = rf"(?<!\d){sku.diameter_mm}(?!\d)(?=\s*мм)"
+        result = re.sub(diameter_pattern, "{d}", result)
+
+    replacements = (
+        (sku.article, "{article}"),
+        (sku.steel_grade, "{steel}"),
+        (sku.material, "{material}"),
+    )
+    for literal, token in replacements:
+        if literal:
+            result = re.sub(re.escape(literal), token, result, flags=re.IGNORECASE)
+
+    if sku.wall_thickness_mm is not None:
+        thickness_values = {str(sku.wall_thickness_mm), str(sku.wall_thickness_mm).replace(".", ",")}
+        for thickness in thickness_values:
+            result = re.sub(
+                rf"(толщин(?:а|ой)\s){re.escape(thickness)}(?=\s*мм)",
+                r"\1{S}",
+                result,
+                flags=re.IGNORECASE,
+            )
+    if sku.insulation_mm is not None:
+        result = re.sub(
+            rf"(утеплени(?:е|ем)\s){sku.insulation_mm}(?=\s*мм)",
+            r"\1{insulation}",
+            result,
+            flags=re.IGNORECASE,
+        )
+    return result
+
+
+def remove_dynamic_sku_section(value: str) -> str:
+    pattern = (
+        r"(?ims)^\s*Характеристики выбранного SKU\s*:?[ \t]*$.*?"
+        r"(?=^\s*Расч[её]т комплекта\s*:?[ \t]*$|\Z)"
+    )
+    return re.sub(pattern, "", value).strip()
 
 
 async def collect_product_seo_facts(
@@ -295,6 +373,13 @@ async def generate_product_seo(
             )
             response.raise_for_status()
         generated = json.loads(extract_openai_output_text(response.json()))
+        selected_sku = next(
+            (sku for sku in product.skus if sku.id == selected_sku_id and sku.is_active),
+            None,
+        )
+        generated["description"] = remove_dynamic_sku_section(generated["description"])
+        generated["seo_title"] = parameterize_sku_meta(generated["seo_title"], selected_sku)
+        generated["seo_description"] = parameterize_sku_meta(generated["seo_description"], selected_sku)
         return AdminSEOGenerateResponse(
             **generated,
             model=settings.openai_seo_model,
