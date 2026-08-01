@@ -574,47 +574,41 @@ export default function AdminCatalogManager() {
       <section className={styles.workspace}>
         <aside className={styles.panel}>
           <div className={styles.panelHeader}>
-            <h2>Категории</h2>
+            <h2>Категория</h2>
             <span className={styles.badge}>{categories.length}</span>
           </div>
-          <div className={styles.scrollList}>
-            <button
-              className={`${styles.rowButton} ${
-                selectedCategoryId === allCategoriesId ? styles.rowButtonActive : ""
-              }`}
-              onClick={() => setSelectedCategoryId(allCategoriesId)}
-              type="button"
+          <div className={styles.categoryPicker}>
+            <label htmlFor="admin-category-select">Выберите категорию</label>
+            <select
+              className={styles.categorySelect}
+              id="admin-category-select"
+              onChange={(event) => setSelectedCategoryId(event.target.value)}
+              value={selectedCategoryId}
             >
-              <span>
-                <span className={styles.rowTitle}>Все SKU</span>
-                <span className={styles.rowMeta}>без фильтра по категории</span>
+              <option value={allCategoriesId}>Все категории · {totalSkuCount} SKU</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name} · {category.product_count} SKU
+                </option>
+              ))}
+            </select>
+            <div className={styles.categorySummary}>
+              <strong>{selectedCategory?.name ?? "Все категории"}</strong>
+              <span className={styles.categoryFolder}>
+                Папка: {selectedCategory?.slug ?? "без фильтра по категории"}
               </span>
-              <span className={styles.badge}>{totalSkuCount}</span>
-            </button>
-            {categories.map((category) => (
-              <button
-                className={`${styles.rowButton} ${
-                  category.id === selectedCategoryId ? styles.rowButtonActive : ""
-                }`}
-                key={category.id}
-                onClick={() => setSelectedCategoryId(category.id)}
-                type="button"
-              >
-                <span>
-                  <span className={styles.rowTitle}>{category.name}</span>
-                  <span className={styles.rowMeta}>
-                    {category.slug} · SKU {category.product_count}
-                  </span>
-                </span>
-                <span className={styles.badge}>{category.product_count}</span>
-              </button>
-            ))}
+            </div>
           </div>
         </aside>
 
         <aside className={styles.panel}>
           <div className={styles.panelHeader}>
-            <h2>{selectedCategoryId === allCategoriesId ? "Все SKU" : selectedCategory?.name ?? "SKU"}</h2>
+            <div>
+              <h2>Семейства изделий</h2>
+              <span className={styles.rowMeta}>
+                {selectedCategoryId === allCategoriesId ? "Все категории" : selectedCategory?.name ?? "Категория"}
+              </span>
+            </div>
             <span className={styles.badge}>{skuTotal}</span>
           </div>
           <form className={styles.listControls} onSubmit={submitSkuSearch}>
@@ -640,11 +634,12 @@ export default function AdminCatalogManager() {
                 onClick={() => loadProduct(sku.product_id, sku.id).catch((error) => setStatus(error.message))}
                 type="button"
               >
-                <span>
-                  <span className={styles.rowTitle}>{sku.article}</span>
-                  <span className={styles.rowMeta}>
-                    {sku.product_name} · d {sku.diameter_mm ?? "—"} · D {sku.outer_diameter_mm ?? "—"} · L{" "}
-                    {sku.length_mm ?? "—"} · {sku.price_rub ?? "без цены"}
+                <span className={styles.rowContent}>
+                  <span className={styles.rowTitle}>{sku.product_name}</span>
+                  <span className={styles.rowMeta}>{sku.article}</span>
+                  <span className={styles.rowDetails}>
+                    d {sku.diameter_mm ?? "—"} · D {sku.outer_diameter_mm ?? "—"} · L {sku.length_mm ?? "—"} ·{" "}
+                    {sku.price_rub ?? "без цены"}
                   </span>
                 </span>
                 <span className={styles.badge}>{sku.is_active ? "on" : "off"}</span>
