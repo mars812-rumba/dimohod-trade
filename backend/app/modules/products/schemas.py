@@ -59,6 +59,7 @@ class ProductListItem(BaseModel):
     primary_image: ProductMediaItem | None = None
     price_rub: Decimal | None
     sku_count: int
+    selected_sku: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -76,8 +77,17 @@ class ProductKindFilter(BaseModel):
     count: int
 
 
+class ProductFilterOption(BaseModel):
+    value: str
+    label: str
+    count: int
+
+
 class ProductFiltersResponse(BaseModel):
     product_kinds: list[ProductKindFilter]
+    diameters: list[ProductFilterOption] = Field(default_factory=list)
+    steel_grades: list[ProductFilterOption] = Field(default_factory=list)
+    materials: list[ProductFilterOption] = Field(default_factory=list)
 
 
 class ProductRead(BaseModel):

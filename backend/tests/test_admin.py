@@ -16,7 +16,8 @@ from app.modules.admin.service import (
     safe_asset_name,
     safe_storage_key,
 )
-from app.modules.products.router import primary_product_image
+from app.modules.products.router import parse_diameter_filter, primary_product_image
+from app.modules.products.service import material_group
 
 
 def test_admin_routes_are_registered() -> None:
@@ -132,3 +133,10 @@ def test_extract_openai_output_text_reads_responses_payload() -> None:
     }
 
     assert extract_openai_output_text(payload) == '{"seo_title":"Тест"}'
+
+
+def test_catalog_filter_values_are_normalized() -> None:
+    assert parse_diameter_filter("100:200") == (100, 200)
+    assert parse_diameter_filter("100:") == (100, None)
+    assert material_group("Нержавеющая сталь") == "stainless"
+    assert material_group("Оцинкованная сталь") == "galvanized"

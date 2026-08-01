@@ -64,6 +64,7 @@ export type ProductListItem = {
   primary_image: MediaItem | null;
   price_rub: string | null;
   sku_count: number;
+  selected_sku: string | null;
 };
 
 export type ProductListResponse = {
@@ -79,8 +80,17 @@ export type ProductKindFilter = {
   count: number;
 };
 
+export type ProductFilterOption = {
+  value: string;
+  label: string;
+  count: number;
+};
+
 export type ProductFiltersResponse = {
   product_kinds: ProductKindFilter[];
+  diameters: ProductFilterOption[];
+  steel_grades: ProductFilterOption[];
+  materials: ProductFilterOption[];
 };
 
 export type Product = {
@@ -129,10 +139,20 @@ export async function getProducts({
   limit = 48,
   offset = 0,
   productKind,
+  category,
+  search,
+  diameter,
+  steelGrade,
+  material,
 }: {
   limit?: number;
   offset?: number;
   productKind?: string;
+  category?: string;
+  search?: string;
+  diameter?: string;
+  steelGrade?: string;
+  material?: string;
 } = {}): Promise<ProductListResponse> {
   const params = new URLSearchParams({
     limit: String(limit),
@@ -140,6 +160,21 @@ export async function getProducts({
   });
   if (productKind) {
     params.set("product_kind", productKind);
+  }
+  if (category) {
+    params.set("category", category);
+  }
+  if (search) {
+    params.set("q", search);
+  }
+  if (diameter) {
+    params.set("diameter", diameter);
+  }
+  if (steelGrade) {
+    params.set("steel_grade", steelGrade);
+  }
+  if (material) {
+    params.set("material", material);
   }
   const response = await fetch(`${apiBaseUrl}/api/v1/products?${params.toString()}`, {
     next: { revalidate: 60 },
@@ -152,8 +187,13 @@ export async function getProducts({
   return (await response.json()) as ProductListResponse;
 }
 
-export async function getProductFilters(): Promise<ProductFiltersResponse> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/products/filters`, {
+export async function getProductFilters(category?: string): Promise<ProductFiltersResponse> {
+  const params = new URLSearchParams();
+  if (category) {
+    params.set("category", category);
+  }
+  const query = params.toString();
+  const response = await fetch(`${apiBaseUrl}/api/v1/products/filters${query ? `?${query}` : ""}`, {
     next: { revalidate: 60 },
   });
 

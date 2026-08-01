@@ -130,8 +130,8 @@
 - `POST /api/v1/admin/products/{product_id}/photos`
 - `POST /api/v1/admin/products/{product_id}/photos/upload` — raw binary upload фото категории
 - `DELETE /api/v1/admin/products/{product_id}/photos/{photo_index}`
-- `GET /api/v1/products?limit=&offset=&product_kind=`
-- `GET /api/v1/products/filters`
+- `GET /api/v1/products?limit=&offset=&product_kind=&category=&q=&diameter=&steel_grade=&material=`
+- `GET /api/v1/products/filters?category=`
 - `GET /api/v1/products/{slug}`
 
 Карточка семейства `/product/{slug}` поддерживает серверно выбранный вариант через `?sku=`:
@@ -144,6 +144,13 @@
   `seo_description` — в `Product.extra_attributes`.
 - В SEO-блоке админки Codex может заполнить четыре поля черновиком. Администратор проверяет
   результат и сохраняет его отдельной кнопкой; генерация не перезаписывает БД автоматически.
+
+Публичный каталог разделён по назначению:
+
+- `/catalog` показывает только компактные кликабельные карточки категорий;
+- `/catalog/{category_slug}` серверно выводит семейства выбранной категории;
+- поиск по названию и фильтры `d/D`, марки стали и материала применяются backend к одному SKU;
+- страницы фильтров сохраняют canonical на чистый URL категории.
 
 Текущая модель `products` уже содержит часть будущих структурных полей:
 
