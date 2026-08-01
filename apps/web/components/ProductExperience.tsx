@@ -105,7 +105,7 @@ function publicMediaUrl(url: string) {
   return url.startsWith("/media/") ? `${appBasePath}${url}` : url;
 }
 
-function sharedProductMedia(product: Product, alt: string): ProductPhotoItem[] {
+function sharedProductMedia(product: Product): ProductPhotoItem[] {
   const rawMedia = product.extra_attributes.media;
   if (!Array.isArray(rawMedia)) {
     return [];
@@ -116,6 +116,7 @@ function sharedProductMedia(product: Product, alt: string): ProductPhotoItem[] {
       return [];
     }
     const role = "role" in item && typeof item.role === "string" ? item.role : "Фото";
+    const alt = "alt" in item && typeof item.alt === "string" ? item.alt : `${product.name} — ${role}`;
     return [
       {
         role,
@@ -125,6 +126,22 @@ function sharedProductMedia(product: Product, alt: string): ProductPhotoItem[] {
       },
     ];
   });
+}
+
+function skuSpecificPhoto(sku: Product["skus"][number] | null): ProductPhotoItem | null {
+  const value = sku?.attributes.sku_photo;
+  if (!value || typeof value !== "object" || !("url" in value) || typeof value.url !== "string") {
+    return null;
+  }
+  return {
+    role: "Фото SKU",
+    src: publicMediaUrl(value.url),
+    alt:
+      "alt" in value && typeof value.alt === "string"
+        ? value.alt
+        : `${sku.name} (${sku.article}) — общий вид`,
+    fit: "contain",
+  };
 }
 
 function FaqItem({ q, a }: { q: string; a: string }) {
@@ -147,7 +164,9 @@ export function ProductExperience({ product }: { product: Product }) {
   const activeSku = product.skus[selectedSku] ?? product.skus[0] ?? null;
   const normalizedProductName = product.name.toLocaleLowerCase("ru-RU");
   const isDeflector = normalizedProductName.includes("дефлектор");
-  const hasDeflectorConeScheme = isDeflector && normalizedProductName.includes("конус");
+  const isConeTermination =
+    normalizedProductName.includes("конус") &&
+    (isDeflector || normalizedProductName.includes("оголовок"));
   const outerDiameter =
     activeSku?.outer_diameter_mm ??
     (typeof product.extra_attributes.outer_diameter_mm === "number"
@@ -166,11 +185,13 @@ export function ProductExperience({ product }: { product: Product }) {
   } d=${diameterMm ?? "—"} S=${wallThicknessMm ?? "—"}, утепление=${insulationMm ?? "—"} мм, сталь ${
     steelGrade ?? "не указана"
   }`;
-  const storedMedia = sharedProductMedia(product, parametricAlt);
-  const productPhotos = storedMedia.length
+  const storedMedia = sharedProductMedia(product);
+  const sharedPhotos = storedMedia.length
     ? storedMedia
     : tempProductMedia[product.slug] ?? (isDeflector ? deflectorMedia : []);
-  const media: ProductMediaItem[] = hasDeflectorConeScheme
+  const skuPhoto = skuSpecificPhoto(activeSku);
+  const productPhotos = skuPhoto ? [skuPhoto, ...sharedPhotos] : sharedPhotos;
+  const media: ProductMediaItem[] = isConeTermination
     ? [
         ...productPhotos.slice(0, 3),
         {
@@ -425,7 +446,10 @@ export function ProductExperience({ product }: { product: Product }) {
                 <button
                   key={sku.id}
                   className={`sku-btn${selectedSku === index ? " sku-btn-active" : ""}`}
-                  onClick={() => setSelectedSku(index)}
+                  onClick={() => {
+                    setSelectedSku(index);
+                    setSelectedImage(0);
+                  }}
                   type="button"
                 >
                   <span className="sku-btn-name">{sku.name}</span>

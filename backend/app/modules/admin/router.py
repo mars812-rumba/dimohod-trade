@@ -1,11 +1,12 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.modules.admin.schemas import (
     AdminCategoryRead,
+    AdminMediaItem,
     AdminPhotoUpload,
     AdminProductListResponse,
     AdminProductRead,
@@ -15,11 +16,15 @@ from app.modules.admin.schemas import (
     AdminSKUUpdate,
 )
 from app.modules.admin.service import (
+    attach_category_cover,
     attach_product_photo,
     attach_product_photo_content,
+    attach_sku_photo,
     create_sku,
     deactivate_sku,
+    delete_category_cover,
     delete_product_photo,
+    delete_sku_photo,
     get_admin_product,
     list_admin_categories,
     list_admin_products,
@@ -41,13 +46,29 @@ async def read_admin_categories(session: AsyncSession = Depends(get_db)) -> list
             name=category.name,
             slug=category.slug,
             product_count=count,
-            media_count=len(category.extra_attributes.get("media", []))
-            if isinstance(category.extra_attributes.get("media"), list)
-            else 0,
+            media_count=(1 if isinstance(category.extra_attributes.get("category_cover"), dict) else 0),
             extra_attributes=category.extra_attributes,
         )
         for category, count in rows
     ]
+
+
+@router.post("/categories/{category_id}/cover", response_model=AdminMediaItem, status_code=201)
+async def upload_admin_category_cover(
+    category_id: UUID,
+    payload: AdminPhotoUpload,
+    session: AsyncSession = Depends(get_db),
+) -> AdminMediaItem:
+    return await attach_category_cover(session, category_id, payload)
+
+
+@router.delete("/categories/{category_id}/cover", status_code=204)
+async def delete_admin_category_cover(
+    category_id: UUID,
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    await delete_category_cover(session, category_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/products", response_model=AdminProductListResponse)
@@ -106,6 +127,24 @@ async def update_admin_sku(
 @router.delete("/skus/{sku_id}", response_model=AdminSKURead)
 async def delete_admin_sku(sku_id: UUID, session: AsyncSession = Depends(get_db)) -> AdminSKURead:
     return await deactivate_sku(session, sku_id)
+
+
+@router.post("/skus/{sku_id}/photo", response_model=AdminMediaItem, status_code=201)
+async def upload_admin_sku_photo(
+    sku_id: UUID,
+    payload: AdminPhotoUpload,
+    session: AsyncSession = Depends(get_db),
+) -> AdminMediaItem:
+    return await attach_sku_photo(session, sku_id, payload)
+
+
+@router.delete("/skus/{sku_id}/photo", status_code=204)
+async def delete_admin_sku_photo(
+    sku_id: UUID,
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    await delete_sku_photo(session, sku_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/products/{product_id}/photos", response_model=AdminProductRead, status_code=201)

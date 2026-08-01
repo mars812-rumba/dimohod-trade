@@ -8,6 +8,7 @@ from app.main import app
 from app.modules.admin.service import (
     canonical_photo_name,
     decode_photo_payload,
+    normalize_media_item,
     normalize_media_list,
     resolve_product_media,
     safe_asset_name,
@@ -27,6 +28,8 @@ def test_admin_routes_are_registered() -> None:
     assert "/api/v1/admin/products/{product_id}/skus" in paths
     assert "/api/v1/admin/products/{product_id}/photos" in paths
     assert "/api/v1/admin/products/{product_id}/photos/upload" in paths
+    assert "/api/v1/admin/categories/{category_id}/cover" in paths
+    assert "/api/v1/admin/skus/{sku_id}/photo" in paths
 
 
 def test_normalize_media_list_skips_invalid_items() -> None:
@@ -44,6 +47,17 @@ def test_normalize_media_list_skips_invalid_items() -> None:
     assert media[0].url == "/media/catalog/photo.jpg"
     assert media[0].alt == "Фото"
     assert media[0].role == "general"
+
+
+def test_normalize_media_item_reads_category_or_sku_photo() -> None:
+    media = normalize_media_item(
+        {"url": "/media/catalog/category-covers/deflectors/category-cover.jpg", "role": "category-cover"}
+    )
+
+    assert media is not None
+    assert media.url.endswith("category-cover.jpg")
+    assert media.role == "category-cover"
+    assert normalize_media_item({"alt": "broken"}) is None
 
 
 def test_safe_asset_name_keeps_allowed_extension_and_removes_path() -> None:

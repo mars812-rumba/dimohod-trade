@@ -117,9 +117,25 @@ insulation -> skus.insulation_mm
 
 ## 4. Хранение медиа
 
+Медиа разделены по трём уровням:
+
+1. `Category.extra_attributes.category_cover` — одна маркетинговая обложка категории; на ней может
+   быть несколько разных семейств изделий;
+2. `Product.extra_attributes.media` — три фотографии логического семейства/форм-фактора, общие для
+   всех входящих в него SKU;
+3. `SKU.attributes.sku_photo` — необязательное фото конкретного варианта, только когда он визуально
+   отличается от общей фотографии семейства.
+
+Приоритет публичной карточки: `sku_photo`, затем общая галерея `Product.media`. Категорийная
+обложка предназначена для навигации и листинга категории и не подменяет товарную галерею.
+Отсутствие `sku_photo` является штатным состоянием и не требует копирования файлов по всем SKU.
+
 Предлагаемая структура:
 
 ```text
+storage/catalog/category-covers/
+  ogolovki-i-deflektory/
+    category-cover.jpg
 storage/catalog/categories/
   deflector-standard/
     photo-1.jpg
@@ -136,6 +152,9 @@ storage/catalog/categories/
     photo-2.jpg
     photo-3.jpg
     scheme.svg
+storage/catalog/skus/
+  dt-sw50-03-15-d100-200/
+    sku-photo.jpg
 ```
 
 Имена файлов:

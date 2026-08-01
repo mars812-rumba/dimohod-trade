@@ -114,6 +114,43 @@
   line-height: 1.4;
 }
 
+.categoryCoverBlock {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--surface-muted);
+}
+
+.categoryCoverBlock .photoPreview {
+  overflow: hidden;
+  min-height: 150px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.categoryCoverBlock .photoPreview img {
+  height: 170px;
+}
+
+.categoryCoverBlock .photoSlotActions,
+.categoryCoverBlock .photoAltField {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.categoryCoverBlock > .button {
+  width: 100%;
+}
+
+.categoryHint {
+  margin: 0;
+  padding-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .rowButton {
   display: grid;
   width: 100%;
@@ -190,6 +227,27 @@
 .productHead h2 {
   margin: 0;
   font-size: 24px;
+}
+
+.mediaSectionHeader {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 9px;
+}
+
+.mediaSectionHeader h3,
+.mediaSectionHeader p {
+  margin: 0;
+}
+
+.mediaSectionHeader h3 {
+  font-size: 15px;
+}
+
+.mediaSectionHeader p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .photoSlots {
@@ -298,6 +356,15 @@
   color: var(--muted);
   font-size: 11px;
   line-height: 1.45;
+}
+
+.skuPhotoSection {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.skuPhotoSlot {
+  width: min(100%, 360px);
 }
 
 .photoPlaceholder {

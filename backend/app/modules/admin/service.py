@@ -25,6 +25,8 @@ from app.modules.catalog.models import Category
 from app.modules.products.models import Product, SKU
 
 MEDIA_KEY = "media"
+CATEGORY_COVER_KEY = "category_cover"
+SKU_PHOTO_KEY = "sku_photo"
 MAX_PHOTO_BYTES = 8 * 1024 * 1024
 ALLOWED_PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".svg"}
 PHOTO_ROLE_FILENAMES = {
@@ -53,6 +55,17 @@ def normalize_media_list(extra_attributes: dict[str, Any] | None) -> list[AdminM
             )
         )
     return media
+
+
+def normalize_media_item(value: Any) -> AdminMediaItem | None:
+    if not isinstance(value, dict) or not isinstance(value.get("url"), str):
+        return None
+    return AdminMediaItem(
+        url=value["url"],
+        alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
+        role=value.get("role") if isinstance(value.get("role"), str) else None,
+        file_name=value.get("file_name") if isinstance(value.get("file_name"), str) else None,
+    )
 
 
 def safe_asset_name(file_name: str) -> str:
@@ -352,6 +365,90 @@ async def attach_product_photo_content(
     }
     await session.commit()
     return product_to_admin_read(await get_admin_product(session, product_id))
+
+
+async def attach_category_cover(
+    session: AsyncSession,
+    category_id: UUID,
+    payload: AdminPhotoUpload,
+) -> AdminMediaItem:
+    category = await session.get(Category, category_id)
+    if category is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+
+    content = decode_photo_payload(payload.content_base64)
+    safe_name = safe_asset_name(payload.file_name)
+    file_name = f"category-cover{Path(safe_name).suffix}"
+    category_dir = Path(settings.media_storage_dir) / "catalog" / "category-covers" / safe_storage_key(category.slug)
+    category_dir.mkdir(parents=True, exist_ok=True)
+    target = category_dir / file_name
+    target.write_bytes(content)
+
+    relative = target.relative_to(Path(settings.media_storage_dir))
+    media_item = AdminMediaItem(
+        url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
+        alt=payload.alt,
+        role="category-cover",
+        file_name=file_name,
+    )
+    category.extra_attributes = {
+        **(category.extra_attributes or {}),
+        CATEGORY_COVER_KEY: media_item.model_dump(exclude_none=True),
+    }
+    await session.commit()
+    return media_item
+
+
+async def delete_category_cover(session: AsyncSession, category_id: UUID) -> None:
+    category = await session.get(Category, category_id)
+    if category is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+    attributes = dict(category.extra_attributes or {})
+    attributes.pop(CATEGORY_COVER_KEY, None)
+    category.extra_attributes = attributes
+    await session.commit()
+
+
+async def attach_sku_photo(
+    session: AsyncSession,
+    sku_id: UUID,
+    payload: AdminPhotoUpload,
+) -> AdminMediaItem:
+    sku = await session.get(SKU, sku_id)
+    if sku is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
+
+    content = decode_photo_payload(payload.content_base64)
+    safe_name = safe_asset_name(payload.file_name)
+    file_name = f"sku-photo{Path(safe_name).suffix}"
+    sku_dir = Path(settings.media_storage_dir) / "catalog" / "skus" / safe_storage_key(sku.article)
+    sku_dir.mkdir(parents=True, exist_ok=True)
+    target = sku_dir / file_name
+    target.write_bytes(content)
+
+    relative = target.relative_to(Path(settings.media_storage_dir))
+    media_item = AdminMediaItem(
+        url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
+        alt=payload.alt,
+        role="sku",
+        file_name=file_name,
+    )
+    sku.attributes = {
+        **(sku.attributes or {}),
+        SKU_PHOTO_KEY: media_item.model_dump(exclude_none=True),
+    }
+    await session.commit()
+    return media_item
+
+
+async def delete_sku_photo(session: AsyncSession, sku_id: UUID) -> None:
+    sku = await session.get(SKU, sku_id)
+    if sku is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
+    attributes = dict(sku.attributes or {})
+    attributes.pop(SKU_PHOTO_KEY, None)
+    sku.attributes = attributes
+    await session.commit()
 
 
 async def delete_product_photo(session: AsyncSession, product_id: UUID, photo_index: int) -> AdminProductRead:
