@@ -1,4 +1,5 @@
 from decimal import Decimal
+from time import perf_counter
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -273,32 +274,57 @@ async def read_product_filters(
 @router.get("/{slug}", response_model=ProductRead)
 async def read_product(
     slug: str,
+    response: Response,
     sku: str | None = Query(default=None, min_length=1, max_length=240),
     session: AsyncSession = Depends(get_db),
 ) -> ProductRead:
+    started_at = perf_counter()
     product = await get_product_by_slug(session, slug)
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    product_loaded_at = perf_counter()
 
+    source_sku = select_active_sku(product, sku)
     product_read = ProductRead.model_validate(product)
-    rules = await list_active_rules(session)
     sku_by_id = {sku.id: sku for sku in product.skus}
     product_read.skus = [
         sku_read for sku_read in product_read.skus if sku_by_id[sku_read.id].is_active
     ]
 
-    source_sku = select_active_sku(product, sku)
+    for sku_read in product_read.skus:
+        sku_model = sku_by_id.get(sku_read.id)
+        if sku_model is None:
+            continue
+        sku_photo = sku_model.attributes.get("sku_photo") if sku_model.attributes else None
+        sku_read.attributes = {"sku_photo": sku_photo} if sku_photo else {}
+    product_built_at = perf_counter()
+
     product_read.compatible_products = (
         await compatible_items_for_sku(session, product, source_sku) if source_sku else []
     )
+    compatibility_built_at = perf_counter()
 
-    for sku_read in product_read.skus:
-        sku = sku_by_id.get(sku_read.id)
-        if sku is None:
-            continue
-        sku_read.compatibility_messages = evaluate_rules(
-            rules, context_from_product_sku(product, sku)
+    if source_sku is not None:
+        selected_read = next(
+            (sku_read for sku_read in product_read.skus if sku_read.id == source_sku.id),
+            None,
         )
+        if selected_read is not None:
+            rules = await list_active_rules(session)
+            selected_read.compatibility_messages = evaluate_rules(
+                rules,
+                context_from_product_sku(product, source_sku),
+            )
+    finished_at = perf_counter()
+    response.headers["Server-Timing"] = ", ".join(
+        [
+            f"product_db;dur={(product_loaded_at - started_at) * 1000:.1f}",
+            f"product_build;dur={(product_built_at - product_loaded_at) * 1000:.1f}",
+            f"compatibility;dur={(compatibility_built_at - product_built_at) * 1000:.1f}",
+            f"rules;dur={(finished_at - compatibility_built_at) * 1000:.1f}",
+        ]
+    )
+    response.headers["X-Product-SKU-Count"] = str(len(product_read.skus))
 
     return product_read
 

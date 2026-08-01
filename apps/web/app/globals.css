@@ -955,6 +955,156 @@ ul {
   padding-bottom: 72px;
 }
 
+.product-loading-line,
+.product-loading-image,
+.product-loading-panel {
+  position: relative;
+  overflow: hidden;
+  background: #e8eef0;
+}
+
+.product-loading-line::after,
+.product-loading-image::after,
+.product-loading-panel::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 25%, rgba(255, 255, 255, 0.72) 48%, transparent 72%);
+  content: "";
+  transform: translateX(-100%);
+  animation: product-loading-scan 1.35s ease-in-out infinite;
+}
+
+.product-loading-breadcrumb {
+  width: 240px;
+  height: 14px;
+  margin-bottom: 28px;
+  border-radius: 5px;
+}
+
+.product-loading-image {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  place-items: center;
+  border: 1px solid #d8e1e4;
+  border-radius: var(--radius-lg);
+}
+
+.product-loading-image span {
+  width: 42%;
+  height: 58%;
+  border: 2px solid rgba(68, 91, 99, 0.14);
+  border-top-width: 10px;
+  border-radius: 8px 8px 18px 18px;
+}
+
+.product-loading-eyebrow {
+  width: 160px;
+  height: 13px;
+  margin-top: 24px;
+  border-radius: 4px;
+}
+
+.product-loading-title {
+  width: min(520px, 84%);
+  height: 42px;
+  margin-top: 16px;
+  border-radius: 8px;
+}
+
+.product-loading-lead {
+  width: min(640px, 96%);
+  height: 18px;
+  margin-top: 18px;
+  border-radius: 5px;
+}
+
+.product-loading-lead-short {
+  width: min(440px, 70%);
+  margin-top: 10px;
+}
+
+.product-loading-specs {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+
+.product-loading-section-title {
+  width: 190px;
+  height: 24px;
+  margin-bottom: 22px;
+  border-radius: 6px;
+}
+
+.product-loading-spec-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.product-loading-spec-row span {
+  width: 34%;
+  height: 15px;
+  border-radius: 4px;
+}
+
+.product-loading-spec-row strong {
+  width: 24%;
+  height: 17px;
+  border-radius: 4px;
+}
+
+.product-loading-panel {
+  padding: 24px;
+  border: 1px solid #d8e1e4;
+  border-top: 4px solid rgba(237, 91, 42, 0.72);
+  border-radius: var(--radius-lg);
+  background: #f3f6f7;
+}
+
+.product-loading-panel-title {
+  width: 72%;
+  height: 22px;
+  border-radius: 6px;
+}
+
+.product-loading-select {
+  width: 100%;
+  height: 48px;
+  margin-top: 20px;
+  border-radius: 9px;
+}
+
+.product-loading-price {
+  width: 48%;
+  height: 30px;
+  margin-top: 30px;
+  border-radius: 6px;
+}
+
+.product-loading-button {
+  width: 100%;
+  height: 50px;
+  margin-top: 18px;
+  border-radius: 9px;
+}
+
+@keyframes product-loading-scan {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-loading-line::after,
+  .product-loading-image::after,
+  .product-loading-panel::after {
+    animation: none;
+  }
+}
+
 .hero-side {
   display: grid;
   gap: 18px;
