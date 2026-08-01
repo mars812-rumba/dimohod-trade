@@ -31,7 +31,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { DimensionScheme } from "@/components/DimensionScheme";
-import type { Product } from "@/lib/api";
+import type { CompatibleProduct, Product } from "@/lib/api";
 
 type ProductPhotoItem = {
   kind?: "photo";
@@ -82,6 +82,115 @@ function compactDecimal(value: string | null) {
     return null;
   }
   return value.replace(/([.,]\d*?[1-9])0+$|[.,]0+$/, "$1").replace(".", ",");
+}
+
+function compatibleDiameterLabel(item: CompatibleProduct) {
+  if (item.diameter_mm !== null && item.outer_diameter_mm !== null) {
+    return `${item.diameter_mm}/${item.outer_diameter_mm} мм`;
+  }
+  const diameter = item.outer_diameter_mm ?? item.diameter_mm;
+  return diameter !== null ? `${diameter} мм` : null;
+}
+
+function groupCompatibleProducts(items: CompatibleProduct[]) {
+  const groups = new Map<string, CompatibleProduct[]>();
+  items.forEach((item) => {
+    const group = groups.get(item.product_id) ?? [];
+    group.push(item);
+    groups.set(item.product_id, group);
+  });
+  return Array.from(groups.values()).map((group) =>
+    group.sort((left, right) =>
+      (left.length_mm ?? Number.MAX_SAFE_INTEGER) - (right.length_mm ?? Number.MAX_SAFE_INTEGER),
+    ),
+  );
+}
+
+function familyCountLabel(count: number) {
+  const lastTwoDigits = count % 100;
+  const lastDigit = count % 10;
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return `${count} семейств`;
+  }
+  if (lastDigit === 1) {
+    return `${count} семейство`;
+  }
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return `${count} семейства`;
+  }
+  return `${count} семейств`;
+}
+
+function CompatibleProductFamilyCard({ items }: { items: CompatibleProduct[] }) {
+  const [selectedSkuId, setSelectedSkuId] = useState(items[0]?.sku_id ?? "");
+  const selected = items.find((item) => item.sku_id === selectedSkuId) ?? items[0];
+  if (!selected) {
+    return null;
+  }
+  const lengthOptions = Array.from(
+    new Map(
+      items.flatMap((item) => item.length_mm === null ? [] : [[item.length_mm, item] as const]),
+    ).values(),
+  );
+  const diameter = compatibleDiameterLabel(selected);
+
+  return (
+    <article className="compatible-product-card">
+      <div className="compatible-product-media">
+        {selected.primary_image ? (
+          <img
+            alt={selected.primary_image.alt ?? `${selected.product_name} — общий вид`}
+            src={publicMediaUrl(selected.primary_image.url)}
+          />
+        ) : (
+          <span className="compatible-product-placeholder">
+            <Package aria-hidden="true" size={25} strokeWidth={1.7} />
+            {selected.product_name}
+          </span>
+        )}
+      </div>
+      <div className="compatible-product-body">
+        <strong>{selected.product_name}</strong>
+        <small><Barcode aria-hidden="true" size={12} /> Арт. {selected.article}</small>
+        <div className="compatible-product-specs">
+          {diameter ? <span><CircleDot aria-hidden="true" size={13} /> {diameter}</span> : null}
+          {selected.insulation_mm !== null ? (
+            <span><Layers3 aria-hidden="true" size={13} /> утепление {selected.insulation_mm} мм</span>
+          ) : null}
+          {selected.steel_grade ? <span><Cog aria-hidden="true" size={13} /> {selected.steel_grade}</span> : null}
+          {selected.material ? (
+            <span><PanelsTopLeft aria-hidden="true" size={13} /> {materialLabel(selected.material)}</span>
+          ) : null}
+        </div>
+        {lengthOptions.length > 1 ? (
+          <div className="compatible-length-picker">
+            <span><Ruler aria-hidden="true" size={13} /> Длина</span>
+            <div>
+              {lengthOptions.map((item) => (
+                <button
+                  aria-pressed={item.sku_id === selected.sku_id}
+                  className={item.sku_id === selected.sku_id ? "active" : ""}
+                  key={item.sku_id}
+                  onClick={() => setSelectedSkuId(item.sku_id)}
+                  type="button"
+                >
+                  {item.length_mm} мм
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : selected.length_mm !== null ? (
+          <div className="compatible-single-length"><Ruler aria-hidden="true" size={13} /> L={selected.length_mm} мм</div>
+        ) : null}
+        <div className="compatible-product-footer">
+          <b>{formatPrice(selected.price_rub)}</b>
+          <Link href={`/product/${selected.product_slug}?sku=${encodeURIComponent(selected.sku_key)}`}>
+            Открыть <ArrowRight size={14} />
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
 }
 
 function materialKey(value: string | null) {
@@ -398,6 +507,10 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const compatibleProducts = activeSku
     ? (product.compatible_products ?? []).filter((item) => item.source_sku_id === activeSku.id)
     : [];
+  const compatibleProductFamilies = groupCompatibleProducts(compatibleProducts);
+  const hasCompatibleLengthChoices = compatibleProductFamilies.some(
+    (items) => new Set(items.map((item) => item.length_mm).filter((value) => value !== null)).size > 1,
+  );
   const configuratorCta = seoConfiguratorCta(product);
   const lengthMm = activeSku?.length_mm ?? null;
   const parametricAlt = `${product.name} ${outerDiameter ?? diameterMm ?? "—"} мм, L=${lengthMm ?? "—"} D=${
@@ -655,50 +768,19 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   <div>
                     <h3>Совместимые изделия</h3>
                     <p>
-                      Подобраны по диаметрам, утеплению, марке и типу стали выбранного варианта.
-                      Длина трубы может отличаться.
+                      Показываем варианты из выбранных в админке семейств, которые подходят
+                      к текущему SKU по правилам подбора.
+                      {hasCompatibleLengthChoices ? " У труб длину можно выбрать прямо в карточке." : ""}
                     </p>
                   </div>
-                  <span>{compatibleProducts.length} вариантов</span>
+                  <span>{familyCountLabel(compatibleProductFamilies.length)}</span>
                 </div>
                 <div className="compatible-products-list">
-                  {compatibleProducts.map((item) => (
-                    <Link
-                      className="compatible-product-card"
-                      href={`/product/${item.product_slug}?sku=${encodeURIComponent(item.sku_key)}`}
-                      key={`${item.source_sku_id}-${item.sku_id}`}
-                    >
-                      <div className="compatible-product-media">
-                        {item.primary_image ? (
-                          <img
-                            alt={item.primary_image.alt ?? `${item.product_name} — общий вид`}
-                            src={publicMediaUrl(item.primary_image.url)}
-                          />
-                        ) : (
-                          <span className="compatible-product-placeholder">
-                            <Package aria-hidden="true" size={25} strokeWidth={1.7} />
-                            {item.product_name}
-                          </span>
-                        )}
-                      </div>
-                      <div className="compatible-product-body">
-                        <strong>{item.product_name}</strong>
-                        <small><Barcode aria-hidden="true" size={12} /> Арт. {item.article}</small>
-                        <div className="compatible-product-specs">
-                          <span><CircleDot aria-hidden="true" size={13} /> {item.diameter_mm}/{item.outer_diameter_mm} мм</span>
-                          {item.length_mm !== null ? (
-                            <span><Ruler aria-hidden="true" size={13} /> L={item.length_mm} мм</span>
-                          ) : null}
-                          <span><Layers3 aria-hidden="true" size={13} /> утепление {item.insulation_mm} мм</span>
-                          <span><Cog aria-hidden="true" size={13} /> {item.steel_grade}</span>
-                          <span><PanelsTopLeft aria-hidden="true" size={13} /> {materialLabel(item.material)}</span>
-                        </div>
-                        <div className="compatible-product-footer">
-                          <b>{formatPrice(item.price_rub)}</b>
-                          <span>Открыть <ArrowRight size={14} /></span>
-                        </div>
-                      </div>
-                    </Link>
+                  {compatibleProductFamilies.map((items) => (
+                    <CompatibleProductFamilyCard
+                      items={items}
+                      key={`${activeSku?.id}-${items[0]?.product_id}`}
+                    />
                   ))}
                 </div>
               </div>

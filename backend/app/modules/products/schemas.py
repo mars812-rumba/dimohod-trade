@@ -100,11 +100,11 @@ class CompatibleProductItem(BaseModel):
     article: str
     name: str
     length_mm: int | None
-    diameter_mm: int
-    outer_diameter_mm: int
-    insulation_mm: int
-    steel_grade: str
-    material: str
+    diameter_mm: int | None
+    outer_diameter_mm: int | None
+    insulation_mm: int | None
+    steel_grade: str | None
+    material: str | None
     price_rub: Decimal | None
     stock_status: str
     primary_image: ProductMediaItem | None = None

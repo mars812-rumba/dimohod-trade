@@ -2846,6 +2846,58 @@ ul {
   stroke-width: 1.8;
 }
 
+.compatible-length-picker {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+
+.compatible-length-picker > span,
+.compatible-single-length {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.compatible-length-picker > span svg,
+.compatible-single-length svg {
+  color: var(--accent);
+}
+
+.compatible-length-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.compatible-length-picker button {
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid #cbd5d7;
+  border-radius: 5px;
+  background: #f7f9f9;
+  color: var(--steel);
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.compatible-length-picker button:hover,
+.compatible-length-picker button.active {
+  border-color: var(--accent);
+  color: #fff;
+  background: var(--accent);
+}
+
+.compatible-single-length {
+  margin-top: 11px;
+}
+
 .compatible-product-footer {
   display: flex;
   gap: 10px;
@@ -2859,7 +2911,7 @@ ul {
   font-size: 14px;
 }
 
-.compatible-product-footer span {
+.compatible-product-footer a {
   display: inline-flex;
   gap: 4px;
   align-items: center;

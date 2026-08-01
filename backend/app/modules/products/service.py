@@ -83,27 +83,52 @@ def compatible_tube_matches(source_sku: SKU, tube_sku: SKU) -> bool:
     return source_signature is not None and source_signature == compatible_tube_signature(tube_sku)
 
 
-async def list_compatible_tube_skus(
+def compatible_fastener_matches(source_sku: SKU, fastener_sku: SKU) -> bool:
+    """Match a clamp/fastener to the outside of a sandwich element."""
+    source_outer_diameter = source_sku.outer_diameter_mm
+    fastener_diameter = fastener_sku.outer_diameter_mm or fastener_sku.diameter_mm
+    if source_outer_diameter is None or fastener_diameter != source_outer_diameter:
+        return False
+
+    source_material = material_group(source_sku.material)
+    fastener_material = material_group(fastener_sku.material)
+    if source_material and fastener_material and source_material != fastener_material:
+        return False
+
+    source_steel = source_sku.steel_grade.casefold().strip() if source_sku.steel_grade else None
+    fastener_steel = fastener_sku.steel_grade.casefold().strip() if fastener_sku.steel_grade else None
+    if source_steel and fastener_steel and source_steel != fastener_steel:
+        return False
+    return True
+
+
+def compatible_product_matches(source_sku: SKU, target_product: Product, target_sku: SKU) -> bool:
+    if target_product.product_kind == "труба":
+        return compatible_tube_matches(source_sku, target_sku)
+    if target_product.product_kind == "крепеж":
+        return compatible_fastener_matches(source_sku, target_sku)
+    return False
+
+
+async def list_compatible_product_skus(
     session: AsyncSession,
     source_skus: list[SKU],
     *,
     exclude_product_id: UUID,
     allowed_product_ids: list[UUID] | None = None,
 ) -> list[tuple[SKU, Product]]:
-    signatures = {
-        signature
-        for sku in source_skus
-        if sku.is_active and (signature := compatible_tube_signature(sku)) is not None
-    }
-    if not signatures:
+    active_source_skus = [sku for sku in source_skus if sku.is_active]
+    if not active_source_skus:
         return []
 
     if allowed_product_ids == []:
         return []
 
-    product_filters = [Product.id.in_(allowed_product_ids)] if allowed_product_ids is not None else [
-        Product.product_kind == "труба"
-    ]
+    product_filters = (
+        [Product.id.in_(allowed_product_ids)]
+        if allowed_product_ids is not None
+        else [Product.product_kind == "труба"]
+    )
 
     result = await session.execute(
         select(SKU, Product)
@@ -113,17 +138,30 @@ async def list_compatible_tube_skus(
             *product_filters,
             Product.id != exclude_product_id,
             SKU.is_active.is_(True),
-            SKU.diameter_mm.in_({signature[0] for signature in signatures}),
-            SKU.outer_diameter_mm.in_({signature[1] for signature in signatures}),
-            SKU.insulation_mm.in_({signature[2] for signature in signatures}),
         )
         .order_by(Product.name.asc(), SKU.length_mm.asc().nulls_last(), SKU.article.asc())
     )
     return [
         (sku, product)
         for sku, product in result.all()
-        if compatible_tube_signature(sku) in signatures
+        if any(compatible_product_matches(source_sku, product, sku) for source_sku in active_source_skus)
     ]
+
+
+async def list_compatible_tube_skus(
+    session: AsyncSession,
+    source_skus: list[SKU],
+    *,
+    exclude_product_id: UUID,
+    allowed_product_ids: list[UUID] | None = None,
+) -> list[tuple[SKU, Product]]:
+    """Backward-compatible alias for callers outside the product endpoint."""
+    return await list_compatible_product_skus(
+        session,
+        source_skus,
+        exclude_product_id=exclude_product_id,
+        allowed_product_ids=allowed_product_ids,
+    )
 
 
 async def list_products(

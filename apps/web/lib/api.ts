@@ -103,11 +103,11 @@ export type CompatibleProduct = {
   article: string;
   name: string;
   length_mm: number | null;
-  diameter_mm: number;
-  outer_diameter_mm: number;
-  insulation_mm: number;
-  steel_grade: string;
-  material: string;
+  diameter_mm: number | null;
+  outer_diameter_mm: number | null;
+  insulation_mm: number | null;
+  steel_grade: string | null;
+  material: string | null;
   price_rub: string | null;
   stock_status: string;
   primary_image: MediaItem | null;

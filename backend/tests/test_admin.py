@@ -26,6 +26,7 @@ from app.modules.admin.service import (
 )
 from app.modules.products.router import parse_diameter_filter, primary_product_image
 from app.modules.products.service import (
+    compatible_fastener_matches,
     compatible_tube_matches,
     material_group,
     normalized_compatible_product_ids,
@@ -309,6 +310,33 @@ def test_compatible_tubes_may_have_different_lengths_but_not_different_materials
 
     unknown_insulation = SimpleNamespace(**{**tube.__dict__, "insulation_mm": None})
     assert not compatible_tube_matches(source, unknown_insulation)
+
+
+def test_fastener_matches_sandwich_outer_diameter_and_material() -> None:
+    source = SimpleNamespace(
+        diameter_mm=100,
+        outer_diameter_mm=200,
+        insulation_mm=50,
+        steel_grade="AISI 430",
+        material="Оцинкованная сталь",
+        contour="сэндвич",
+    )
+    fastener = SimpleNamespace(
+        diameter_mm=200,
+        outer_diameter_mm=None,
+        steel_grade=None,
+        material="Оцинковка",
+    )
+
+    assert compatible_fastener_matches(source, fastener)
+    assert not compatible_fastener_matches(
+        source,
+        SimpleNamespace(**{**fastener.__dict__, "diameter_mm": 100}),
+    )
+    assert not compatible_fastener_matches(
+        source,
+        SimpleNamespace(**{**fastener.__dict__, "material": "Нержавеющая сталь"}),
+    )
 
 
 def test_explicit_compatible_product_ids_are_normalized_without_duplicates() -> None:

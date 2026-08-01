@@ -20,9 +20,9 @@ from app.modules.products.schemas import (
     ProductRead,
 )
 from app.modules.products.service import (
-    compatible_tube_matches,
+    compatible_product_matches,
     get_product_by_slug,
-    list_compatible_tube_skus,
+    list_compatible_product_skus,
     list_product_kind_filters,
     list_products,
     list_variant_filter_options,
@@ -227,7 +227,7 @@ async def read_product(slug: str, session: AsyncSession = Depends(get_db)) -> Pr
         sku_read for sku_read in product_read.skus if sku_by_id[sku_read.id].is_active
     ]
 
-    compatible_tubes = await list_compatible_tube_skus(
+    compatible_items = await list_compatible_product_skus(
         session,
         list(sku_by_id.values()),
         exclude_product_id=product.id,
@@ -236,27 +236,27 @@ async def read_product(slug: str, session: AsyncSession = Depends(get_db)) -> Pr
     product_read.compatible_products = [
         CompatibleProductItem(
             source_sku_id=source_sku.id,
-            product_id=tube_product.id,
-            product_name=tube_product.name,
-            product_slug=tube_product.slug,
-            sku_id=tube_sku.id,
-            sku_key=tube_sku.slug or tube_sku.article,
-            article=tube_sku.article,
-            name=tube_sku.name,
-            length_mm=tube_sku.length_mm,
-            diameter_mm=tube_sku.diameter_mm,
-            outer_diameter_mm=tube_sku.outer_diameter_mm,
-            insulation_mm=tube_sku.insulation_mm,
-            steel_grade=tube_sku.steel_grade,
-            material=tube_sku.material,
-            price_rub=tube_sku.price_rub,
-            stock_status=tube_sku.stock_status,
-            primary_image=primary_product_image(tube_product.extra_attributes),
+            product_id=target_product.id,
+            product_name=target_product.name,
+            product_slug=target_product.slug,
+            sku_id=target_sku.id,
+            sku_key=target_sku.slug or target_sku.article,
+            article=target_sku.article,
+            name=target_sku.name,
+            length_mm=target_sku.length_mm,
+            diameter_mm=target_sku.diameter_mm,
+            outer_diameter_mm=target_sku.outer_diameter_mm,
+            insulation_mm=target_sku.insulation_mm,
+            steel_grade=target_sku.steel_grade,
+            material=target_sku.material,
+            price_rub=target_sku.price_rub,
+            stock_status=target_sku.stock_status,
+            primary_image=primary_product_image(target_product.extra_attributes),
         )
         for source_sku in product.skus
         if source_sku.is_active
-        for tube_sku, tube_product in compatible_tubes
-        if compatible_tube_matches(source_sku, tube_sku)
+        for target_sku, target_product in compatible_items
+        if compatible_product_matches(source_sku, target_product, target_sku)
     ]
 
     for sku_read in product_read.skus:
