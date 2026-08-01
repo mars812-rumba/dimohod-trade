@@ -15,6 +15,12 @@ class CategorySummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProductMediaItem(BaseModel):
+    url: str
+    alt: str | None = None
+    role: str | None = None
+
+
 class SKURead(BaseModel):
     id: UUID
     article: str
@@ -50,6 +56,7 @@ class ProductListItem(BaseModel):
     contour: str | None
     insulation_mm: int | None
     product_kind: str | None
+    primary_image: ProductMediaItem | None = None
     price_rub: Decimal | None
     sku_count: int
 

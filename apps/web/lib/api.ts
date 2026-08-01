@@ -5,7 +5,14 @@ export type CategoryNode = {
   slug: string;
   description: string | null;
   sort_order: number;
+  cover: MediaItem | null;
   children: CategoryNode[];
+};
+
+export type MediaItem = {
+  url: string;
+  alt: string | null;
+  role: string | null;
 };
 
 export type CatalogTreeResponse = {
@@ -54,6 +61,7 @@ export type ProductListItem = {
   contour: string | null;
   insulation_mm: number | null;
   product_kind: string | null;
+  primary_image: MediaItem | null;
   price_rub: string | null;
   sku_count: number;
 };

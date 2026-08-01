@@ -10,6 +10,7 @@ from app.modules.products.schemas import (
     ProductKindFilter,
     ProductListItem,
     ProductListResponse,
+    ProductMediaItem,
     ProductRead,
 )
 from app.modules.products.service import get_product_by_slug, list_product_kind_filters, list_products
@@ -29,6 +30,23 @@ PRODUCT_KIND_LABELS = {
     "оголовок": "Оголовки",
     "проходной_узел": "Проходные узлы",
 }
+
+
+def primary_product_image(extra_attributes: dict[str, object] | None) -> ProductMediaItem | None:
+    raw_media = (extra_attributes or {}).get("media")
+    if not isinstance(raw_media, list):
+        return None
+    valid_media = [
+        item for item in raw_media if isinstance(item, dict) and isinstance(item.get("url"), str)
+    ]
+    if not valid_media:
+        return None
+    value = next((item for item in valid_media if item.get("role") == "general"), valid_media[0])
+    return ProductMediaItem(
+        url=value["url"],
+        alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
+        role=value.get("role") if isinstance(value.get("role"), str) else None,
+    )
 
 
 @router.get("", response_model=ProductListResponse)
@@ -67,6 +85,7 @@ async def read_products(
                 contour=product.contour,
                 insulation_mm=product.insulation_mm or (representative_sku.insulation_mm if representative_sku else None),
                 product_kind=product.product_kind,
+                primary_image=primary_product_image(product.extra_attributes),
                 price_rub=price_rub,
                 sku_count=len(active_skus),
             )

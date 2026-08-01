@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.modules.catalog.service import category_cover
 from app.modules.admin.service import (
     canonical_photo_name,
     decode_photo_payload,
@@ -14,6 +15,7 @@ from app.modules.admin.service import (
     safe_asset_name,
     safe_storage_key,
 )
+from app.modules.products.router import primary_product_image
 
 
 def test_admin_routes_are_registered() -> None:
@@ -58,6 +60,25 @@ def test_normalize_media_item_reads_category_or_sku_photo() -> None:
     assert media.url.endswith("category-cover.jpg")
     assert media.role == "category-cover"
     assert normalize_media_item({"alt": "broken"}) is None
+
+
+def test_public_catalog_media_comes_from_stored_attributes() -> None:
+    cover = category_cover(
+        {"category_cover": {"url": "/media/catalog/category-covers/deflectors/category-cover.jpg", "alt": "Ассортимент"}}
+    )
+    image = primary_product_image(
+        {
+            "media": [
+                {"url": "/media/catalog/categories/deflector/photo-2.jpg", "role": "top"},
+                {"url": "/media/catalog/categories/deflector/photo-1.jpg", "role": "general"},
+            ]
+        }
+    )
+
+    assert cover is not None and cover.alt == "Ассортимент"
+    assert image is not None and image.url.endswith("photo-1.jpg")
+    assert category_cover({}) is None
+    assert primary_product_image({"media": []}) is None
 
 
 def test_safe_asset_name_keeps_allowed_extension_and_removes_path() -> None:

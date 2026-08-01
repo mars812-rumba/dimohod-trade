@@ -10,6 +10,11 @@ import {
 } from "@/lib/api";
 
 const PAGE_SIZE = 48;
+const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+function publicMediaUrl(url: string) {
+  return url.startsWith("/media/") ? `${appBasePath}${url}` : url;
+}
 
 function formatPrice(value: string | null) {
   if (value === null || Number(value) <= 0) {
@@ -25,7 +30,15 @@ function formatPrice(value: string | null) {
 
 function CategoryRow({ category }: { category: CategoryNode }) {
   return (
-    <article className="category-row">
+    <article className={`category-row catalog-category-row${category.cover ? " has-cover" : ""}`}>
+      {category.cover ? (
+        <div className="catalog-category-cover">
+          <img
+            alt={category.cover.alt ?? `${category.name} — ассортимент изделий`}
+            src={publicMediaUrl(category.cover.url)}
+          />
+        </div>
+      ) : null}
       <div>
         <p className="meta">/{category.slug}</p>
         <h3>{category.name}</h3>
@@ -48,7 +61,6 @@ function CategoryRow({ category }: { category: CategoryNode }) {
 }
 
 function ProductCard({ product }: { product: ProductListItem }) {
-  const isDeflector = product.name.toLocaleLowerCase("ru-RU").includes("дефлектор");
   const diameterLabel = product.diameter_mm
     ? product.outer_diameter_mm
       ? `Ø ${product.diameter_mm}/${product.outer_diameter_mm} мм`
@@ -65,11 +77,10 @@ function ProductCard({ product }: { product: ProductListItem }) {
   return (
     <Link className="catalog-product-card" href={`/product/${product.slug}`}>
       <div className="catalog-product-media">
-        {isDeflector ? (
+        {product.primary_image ? (
           <img
-            src="/dimohod-media/catalog/products/deflectors/photos/main.jpg"
-            alt=""
-            aria-hidden="true"
+            src={publicMediaUrl(product.primary_image.url)}
+            alt={product.primary_image.alt ?? `${product.name} — общий вид`}
           />
         ) : (
           <span>{product.product_kind ?? "товар"}</span>

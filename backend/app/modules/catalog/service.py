@@ -2,7 +2,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.catalog.models import Category
-from app.modules.catalog.schemas import CategoryTreeNode
+from app.modules.catalog.schemas import CatalogMediaItem, CategoryTreeNode
+
+
+def category_cover(extra_attributes: dict[str, object] | None) -> CatalogMediaItem | None:
+    value = (extra_attributes or {}).get("category_cover")
+    if not isinstance(value, dict) or not isinstance(value.get("url"), str):
+        return None
+    return CatalogMediaItem(
+        url=value["url"],
+        alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
+        role=value.get("role") if isinstance(value.get("role"), str) else None,
+    )
 
 
 async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
@@ -21,6 +32,7 @@ async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
             slug=category.slug,
             description=category.description,
             sort_order=category.sort_order,
+            cover=category_cover(category.extra_attributes),
         )
         for category in categories
     }
@@ -34,4 +46,3 @@ async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
             roots.append(node)
 
     return roots
-

@@ -70,35 +70,6 @@ const docs = [
   { icon: FileText, label: "Инструкция по монтажу", note: "PDF" },
 ];
 
-const tempProductMedia: Record<string, ProductMediaItem[]> = {
-  "sendvich-truba-115-200-nerzhaveyushchaya-stal-08": [
-    {
-      role: "Фото",
-      src: "/dimohod-media/catalog/products/sendvich-truba-115-200-nerzhaveyushchaya-stal-08/photos/main.png",
-      alt: "Сэндвич-труба 115/200, нержавеющая сталь, товарное фото",
-    },
-    {
-      role: "Размеры",
-      src: "/dimohod-media/catalog/products/sendvich-truba-115-200-nerzhaveyushchaya-stal-08/photos/dimensions.png",
-      alt: "Чертеж размеров сэндвич-трубы 115/200",
-    },
-    {
-      role: "Монтаж",
-      src: "/dimohod-media/catalog/products/sendvich-truba-115-200-nerzhaveyushchaya-stal-08/photos/installed.png",
-      alt: "Сэндвич-труба 115/200 в установленном дымоходе",
-    },
-  ],
-};
-
-const deflectorMedia = [
-  {
-    role: "Фото",
-    src: "/dimohod-media/catalog/products/deflectors/photos/main.jpg",
-    alt: "Дефлектор дымохода из нержавеющей стали, товарное фото",
-    fit: "contain" as const,
-  },
-];
-
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 function publicMediaUrl(url: string) {
@@ -186,9 +157,7 @@ export function ProductExperience({ product }: { product: Product }) {
     steelGrade ?? "не указана"
   }`;
   const storedMedia = sharedProductMedia(product);
-  const sharedPhotos = storedMedia.length
-    ? storedMedia
-    : tempProductMedia[product.slug] ?? (isDeflector ? deflectorMedia : []);
+  const sharedPhotos = storedMedia;
   const skuPhoto = skuSpecificPhoto(activeSku);
   const productPhotos = skuPhoto ? [skuPhoto, ...sharedPhotos] : sharedPhotos;
   const media: ProductMediaItem[] = isConeTermination
