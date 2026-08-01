@@ -5,7 +5,14 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.modules.admin.service import decode_photo_payload, normalize_media_list, safe_asset_name
+from app.modules.admin.service import (
+    canonical_photo_name,
+    decode_photo_payload,
+    normalize_media_list,
+    resolve_product_media,
+    safe_asset_name,
+    safe_storage_key,
+)
 
 
 def test_admin_routes_are_registered() -> None:
@@ -19,6 +26,7 @@ def test_admin_routes_are_registered() -> None:
     assert "/api/v1/admin/skus" in paths
     assert "/api/v1/admin/products/{product_id}/skus" in paths
     assert "/api/v1/admin/products/{product_id}/photos" in paths
+    assert "/api/v1/admin/products/{product_id}/photos/upload" in paths
 
 
 def test_normalize_media_list_skips_invalid_items() -> None:
@@ -41,6 +49,22 @@ def test_normalize_media_list_skips_invalid_items() -> None:
 def test_safe_asset_name_keeps_allowed_extension_and_removes_path() -> None:
     assert safe_asset_name("../IMG 100.PNG") == "img-100.png"
     assert safe_asset_name("фото товара.exe") == "photo.jpg"
+
+
+def test_form_factor_photo_names_are_canonical() -> None:
+    assert canonical_photo_name("IMG 100.PNG", "general") == "photo-1.png"
+    assert canonical_photo_name("top.webp", "top") == "photo-2.webp"
+    assert canonical_photo_name("detail.jpg", "connection") == "photo-3.jpg"
+    assert safe_storage_key("Deflector Standard") == "deflector-standard"
+
+
+def test_product_media_overrides_legacy_category_media() -> None:
+    product_media = {"media": [{"url": "/media/catalog/categories/deflector/photo-1.jpg"}]}
+    category_media = {"media": [{"url": "/media/legacy/category.jpg"}]}
+
+    assert resolve_product_media(product_media, category_media)[0].url.endswith("photo-1.jpg")
+    assert resolve_product_media({"media": []}, category_media) == []
+    assert resolve_product_media({}, category_media)[0].url.endswith("category.jpg")
 
 
 def test_decode_photo_payload_accepts_data_url() -> None:

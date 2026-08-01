@@ -327,11 +327,13 @@ storage/catalog/products/sendvich-truba-115-200-nerzhaveyushchaya-stal-08/photos
 
 MVP админки доступен на `/admin`. Центральный список админки показывает SKU/варианты, а не только
 40 logical products: есть фильтр по категории, поиск по артикулу/названию/товару и пагинация.
-Реализовано управление SKU внутри выбранного товара, загрузка фото категории и редактирование
-характеристик SKU через `SKU.attributes`. Фото сохраняются один раз на категорию в
-`storage/categories/<category-slug>/`, а backend раздает `storage/` через `/media`. Старые
-product-level media в `Product.extra_attributes.media` используются только как fallback, чтобы ранее
-загруженное фото не пропало.
+Реализовано управление SKU внутри выбранного товара, загрузка общих фото форм-фактора и
+редактирование характеристик SKU через `SKU.attributes`. В терминах текущей БД владельцем медиа
+является logical `Product` (или будущая `geometry_family`), а не навигационная `Category` и не SKU.
+Фото сохраняются в `storage/catalog/categories/<geometry-family-or-product-slug>/photo-1..3.*`, а
+ссылки — в `Product.extra_attributes.media`; backend раздает `storage/` через `/media`. Ранее
+записанные category-level media используются только как legacy fallback, чтобы загруженные файлы не
+пропали.
 В Docker для этого используется `MEDIA_STORAGE_DIR=/app/storage` и volume `./storage:/app/storage`.
 Для browser-запросов админки frontend использует `NEXT_PUBLIC_BASE_PATH=/dimohod` и Next rewrites:
 `/dimohod/api/* -> backend /api/*`, `/dimohod/media/* -> backend /media/*`. Если нужен прямой

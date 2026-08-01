@@ -16,6 +16,13 @@ import {
 } from "lucide-react";
 import type { Product } from "@/lib/api";
 
+type ProductMediaItem = {
+  role: string;
+  src: string;
+  alt: string;
+  fit?: "cover" | "contain";
+};
+
 function formatPrice(value: string | null) {
   if (value === null || Number(value) <= 0) {
     return "Цена по запросу";
@@ -53,15 +60,7 @@ const docs = [
   { icon: FileText, label: "Инструкция по монтажу", note: "PDF" },
 ];
 
-const tempProductMedia: Record<
-  string,
-  Array<{
-    role: string;
-    src: string;
-    alt: string;
-    fit?: "cover" | "contain";
-  }>
-> = {
+const tempProductMedia: Record<string, ProductMediaItem[]> = {
   "sendvich-truba-115-200-nerzhaveyushchaya-stal-08": [
     {
       role: "Фото",
@@ -90,6 +89,34 @@ const deflectorMedia = [
   },
 ];
 
+const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+function publicMediaUrl(url: string) {
+  return url.startsWith("/media/") ? `${appBasePath}${url}` : url;
+}
+
+function sharedProductMedia(product: Product, alt: string): ProductMediaItem[] {
+  const rawMedia = product.extra_attributes.media;
+  if (!Array.isArray(rawMedia)) {
+    return [];
+  }
+
+  return rawMedia.flatMap((item) => {
+    if (!item || typeof item !== "object" || !("url" in item) || typeof item.url !== "string") {
+      return [];
+    }
+    const role = "role" in item && typeof item.role === "string" ? item.role : "Фото";
+    return [
+      {
+        role,
+        src: publicMediaUrl(item.url),
+        alt,
+        fit: "contain" as const,
+      },
+    ];
+  });
+}
+
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
 
@@ -109,8 +136,6 @@ export function ProductExperience({ product }: { product: Product }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const activeSku = product.skus[selectedSku] ?? product.skus[0] ?? null;
   const isDeflector = product.name.toLocaleLowerCase("ru-RU").includes("дефлектор");
-  const media = tempProductMedia[product.slug] ?? (isDeflector ? deflectorMedia : []);
-  const activeImage = media[selectedImage] ?? media[0] ?? null;
   const outerDiameter =
     activeSku?.outer_diameter_mm ??
     (typeof product.extra_attributes.outer_diameter_mm === "number"
@@ -123,6 +148,13 @@ export function ProductExperience({ product }: { product: Product }) {
   const contour = activeSku?.contour ?? product.contour;
   const insulationMm = activeSku?.insulation_mm ?? product.insulation_mm;
   const compatibilityMessages = activeSku?.compatibility_messages ?? [];
+  const lengthMm = activeSku?.length_mm ?? null;
+  const parametricAlt = `${product.name} ${outerDiameter ?? diameterMm ?? "—"} мм, L=${lengthMm ?? "—"} D=${
+    outerDiameter ?? "—"
+  } d=${diameterMm ?? "—"} S=${wallThicknessMm ?? "—"}`;
+  const storedMedia = sharedProductMedia(product, parametricAlt);
+  const media = storedMedia.length ? storedMedia : tempProductMedia[product.slug] ?? (isDeflector ? deflectorMedia : []);
+  const activeImage = media[selectedImage] ?? media[0] ?? null;
 
   return (
     <main className="page">

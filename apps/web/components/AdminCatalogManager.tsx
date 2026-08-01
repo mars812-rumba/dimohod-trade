@@ -308,6 +308,44 @@ export default function AdminCatalogManager() {
     setSkuForm((current) => ({ ...current, [field]: value }));
   }
 
+  async function persistSelectedPhoto() {
+    if (!selectedProduct || !photoFile) {
+      throw new Error("Фото не выбрано");
+    }
+
+    const contentBase64 = await fileToBase64(photoFile);
+    const uploadResponse = await apiRequestWithStatus<AdminProduct>(
+      `/api/v1/admin/products/${selectedProduct.id}/photos`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          file_name: photoFile.name,
+          content_base64: contentBase64,
+          role: textOrNull(photoRole),
+          alt: textOrNull(photoAlt),
+        }),
+      },
+    );
+    const uploadedMedia =
+      uploadResponse.data.media.find((item) => item.role === photoRole) ?? uploadResponse.data.media.at(-1);
+    if (!uploadedMedia) {
+      throw new Error("Backend принял файл, но не вернул его в media форм-фактора");
+    }
+
+    const mediaUrl = buildBackendUrl(uploadedMedia.url);
+    const mediaResponse = await fetch(mediaUrl, { cache: "no-store" });
+    if (!mediaResponse.ok) {
+      throw new ApiRequestError(mediaResponse.status, mediaUrl, "Фото записано, но URL изображения недоступен");
+    }
+
+    return {
+      product: uploadResponse.data,
+      uploadStatus: uploadResponse.status,
+      mediaStatus: mediaResponse.status,
+      fileName: photoFile.name,
+    };
+  }
+
   async function saveSku(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedProduct) {
@@ -320,6 +358,12 @@ export default function AdminCatalogManager() {
     } catch {
       const message = "Ошибка [CLIENT_VALIDATION]\nХарактеристики должны быть валидным JSON";
       setStatus("Характеристики должны быть валидным JSON");
+      window.alert(message);
+      return;
+    }
+    if (photoFile && photoFile.size > maxPhotoBytes) {
+      const message = "Ошибка [CLIENT_VALIDATION]\nФото больше 8 МБ. Выберите файл меньшего размера";
+      setStatus("Фото больше 8 МБ. Выберите файл меньшего размера");
       window.alert(message);
       return;
     }
@@ -345,9 +389,9 @@ export default function AdminCatalogManager() {
 
     setIsBusy(true);
     setStatus("Сохраняю SKU...");
+    let savedSku: AdminSKU | null = null;
+    let successStatus: number | null = null;
     try {
-      let savedSku: AdminSKU;
-      let successStatus: number;
       if (skuForm.id) {
         const response = await apiRequestWithStatus<AdminSKU>(`/api/v1/admin/skus/${skuForm.id}`, {
           method: "PATCH",
@@ -366,16 +410,25 @@ export default function AdminCatalogManager() {
         savedSku = response.data;
         successStatus = response.status;
       }
+      const photoResult = photoFile ? await persistSelectedPhoto() : null;
       await refreshCurrentProduct(savedSku.id);
+      if (photoResult) {
+        setPhotoFile(null);
+        setPhotoAlt("");
+      }
       setStatus("SKU сохранён");
-      window.alert(`Успешно [HTTP ${successStatus}]\nSKU ${savedSku.article} сохранён`);
+      const photoStatus = photoResult
+        ? `\nФото: UPLOAD HTTP ${photoResult.uploadStatus}, MEDIA HTTP ${photoResult.mediaStatus}`
+        : "\nФото не было выбрано";
+      window.alert(`Успешно\nSKU: HTTP ${successStatus}, ${savedSku.article}${photoStatus}`);
     } catch (error) {
       const statusMessage = error instanceof Error ? error.message : "Не удалось сохранить SKU";
       setStatus(statusMessage);
+      const partialSave = savedSku ? `SKU ${savedSku.article} сохранён (HTTP ${successStatus}), но фото не сохранено.\n` : "";
       if (error instanceof ApiRequestError) {
-        window.alert(`Ошибка [HTTP ${error.status}]\n${error.message}\n${error.url}`);
+        window.alert(`${partialSave}Ошибка [HTTP ${error.status}]\n${error.message}\n${error.url}`);
       } else {
-        window.alert(`Ошибка [NETWORK]\n${statusMessage}`);
+        window.alert(`${partialSave}Ошибка [NETWORK]\n${statusMessage}`);
       }
     } finally {
       setIsBusy(false);
@@ -412,26 +465,15 @@ export default function AdminCatalogManager() {
     setIsBusy(true);
     setStatus("Загружаю фото...");
     try {
-      const contentBase64 = await fileToBase64(photoFile);
-      const response = await apiRequestWithStatus<AdminProduct>(
-        `/api/v1/admin/products/${selectedProduct.id}/photos`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            file_name: photoFile.name,
-            content_base64: contentBase64,
-            role: textOrNull(photoRole),
-            alt: textOrNull(photoAlt),
-          }),
-        },
-      );
-      const product = response.data;
-      setSelectedProduct(product);
+      const result = await persistSelectedPhoto();
+      setSelectedProduct(result.product);
       await loadSkus();
       setPhotoFile(null);
       setPhotoAlt("");
-      setStatus("Фото категории добавлено");
-      window.alert(`Успешно [HTTP ${response.status}]\nФото ${photoFile.name} сохранено в категории`);
+      setStatus("Фото форм-фактора добавлено");
+      window.alert(
+        `Успешно\nUPLOAD HTTP ${result.uploadStatus}\nMEDIA HTTP ${result.mediaStatus}\nФото ${result.fileName} доступно`,
+      );
     } catch (error) {
       const statusMessage = error instanceof Error ? error.message : "Не удалось добавить фото";
       setStatus(statusMessage);
@@ -481,8 +523,7 @@ export default function AdminCatalogManager() {
         <div>
           <h1 className={styles.title}>Админка каталога</h1>
           <p className={styles.subtitle}>
-            SKU редактируются внутри выбранной категории. Фото и схемы хранятся один раз на категорию,
-            характеристики конкретного SKU ведутся в JSON.
+            Фото и схемы хранятся один раз на логический форм-фактор товара, размеры и цена — в SKU.
           </p>
         </div>
         <div className={styles.status}>{status}</div>
@@ -520,7 +561,7 @@ export default function AdminCatalogManager() {
                 <span>
                   <span className={styles.rowTitle}>{category.name}</span>
                   <span className={styles.rowMeta}>
-                    {category.slug} · фото {category.media_count}
+                    {category.slug} · SKU {category.product_count}
                   </span>
                 </span>
                 <span className={styles.badge}>{category.product_count}</span>
@@ -594,7 +635,7 @@ export default function AdminCatalogManager() {
 
         <section className={styles.panel}>
           {!selectedProduct ? (
-            <p className={styles.notice}>Выберите SKU, чтобы управлять фото категории и характеристиками варианта.</p>
+            <p className={styles.notice}>Выберите SKU, чтобы управлять общими фото форм-фактора и характеристиками варианта.</p>
           ) : (
             <div className={styles.detail}>
               <div className={styles.productHead}>
@@ -623,7 +664,7 @@ export default function AdminCatalogManager() {
                 {selectedProduct.media.length < 3
                   ? Array.from({ length: 3 - selectedProduct.media.length }).map((_, index) => (
                       <div className={styles.emptyTile} key={`empty-${index}`}>
-                        фото категории {selectedProduct.media.length + index + 1}
+                        фото форм-фактора {selectedProduct.media.length + index + 1}
                       </div>
                     ))
                   : null}
@@ -644,17 +685,17 @@ export default function AdminCatalogManager() {
                   <input accept="image/*" onChange={onPhotoChange} type="file" />
                 </label>
                 <label className={styles.wideField}>
-                  Alt
+                  Базовое описание фото
                   <input
                     onChange={(event) => setPhotoAlt(event.target.value)}
-                    placeholder={`${selectedProduct.category_name}, фото категории`}
+                    placeholder={`${selectedProduct.name}, общий вид`}
                     value={photoAlt}
                   />
                 </label>
               </div>
               <div className={styles.toolbar}>
                 <button className={styles.ghostButton} disabled={isBusy || !photoFile} onClick={uploadPhoto} type="button">
-                  <ImagePlus size={15} /> Добавить фото категории
+                  <ImagePlus size={15} /> Загрузить выбранное фото сейчас
                 </button>
               </div>
 
@@ -776,7 +817,7 @@ export default function AdminCatalogManager() {
                 </label>
                 <div className={styles.toolbar}>
                   <button className={styles.button} disabled={isBusy} type="submit">
-                    <Save size={15} /> Сохранить SKU
+                    <Save size={15} /> Сохранить изменения{photoFile ? " и фото" : ""}
                   </button>
                   <button className={styles.dangerButton} disabled={isBusy || !skuForm.id} onClick={deactivateSelectedSku} type="button">
                     <Trash2 size={15} /> Отключить

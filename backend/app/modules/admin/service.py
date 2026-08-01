@@ -27,6 +27,12 @@ from app.modules.products.models import Product, SKU
 MEDIA_KEY = "media"
 MAX_PHOTO_BYTES = 8 * 1024 * 1024
 ALLOWED_PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".svg"}
+PHOTO_ROLE_FILENAMES = {
+    "general": "photo-1",
+    "top": "photo-2",
+    "connection": "photo-3",
+    "detail": "photo-3",
+}
 
 
 def normalize_media_list(extra_attributes: dict[str, Any] | None) -> list[AdminMediaItem]:
@@ -58,6 +64,27 @@ def safe_asset_name(file_name: str) -> str:
     return f"{safe_stem or 'photo'}{safe_suffix}"
 
 
+def safe_storage_key(value: str) -> str:
+    safe_value = re.sub(r"[^a-z0-9_-]+", "-", value.strip().lower()).strip("-")
+    return safe_value or "product"
+
+
+def canonical_photo_name(file_name: str, role: str | None) -> str:
+    safe_name = safe_asset_name(file_name)
+    canonical_stem = PHOTO_ROLE_FILENAMES.get(role or "")
+    return f"{canonical_stem}{Path(safe_name).suffix}" if canonical_stem else safe_name
+
+
+def resolve_product_media(
+    product_extra_attributes: dict[str, Any] | None,
+    category_extra_attributes: dict[str, Any] | None,
+) -> list[AdminMediaItem]:
+    """Logical Product owns form-factor media; Category media is legacy fallback only."""
+    if isinstance((product_extra_attributes or {}).get(MEDIA_KEY), list):
+        return normalize_media_list(product_extra_attributes)
+    return normalize_media_list(category_extra_attributes)
+
+
 def decode_photo_payload(payload: str) -> bytes:
     if "," in payload and payload.lower().startswith("data:"):
         payload = payload.split(",", 1)[1]
@@ -65,17 +92,19 @@ def decode_photo_payload(payload: str) -> bytes:
         content = base64.b64decode(payload, validate=True)
     except (binascii.Error, ValueError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid base64 photo payload") from exc
+    validate_photo_content(content)
+    return content
+
+
+def validate_photo_content(content: bytes) -> None:
     if not content:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Photo payload is empty")
     if len(content) > MAX_PHOTO_BYTES:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Photo is too large")
-    return content
 
 
 def product_to_admin_read(product: Product) -> AdminProductRead:
-    category_media = normalize_media_list(product.category.extra_attributes)
-    product_media = normalize_media_list(product.extra_attributes)
-    media = category_media or product_media
+    media = resolve_product_media(product.extra_attributes, product.category.extra_attributes)
     return AdminProductRead(
         id=product.id,
         category_id=product.category_id,
@@ -135,7 +164,7 @@ async def list_admin_products(
             slug=product.slug,
             product_kind=product.product_kind,
             sku_count=len(product.skus),
-            media_count=len(normalize_media_list(product.category.extra_attributes)),
+            media_count=len(resolve_product_media(product.extra_attributes, product.category.extra_attributes)),
             is_active=product.is_active,
         )
         for product in products
@@ -258,32 +287,67 @@ async def deactivate_sku(session: AsyncSession, sku_id: UUID) -> SKU:
 
 
 async def attach_product_photo(session: AsyncSession, product_id: UUID, payload: AdminPhotoUpload) -> AdminProductRead:
+    return await attach_product_photo_content(
+        session,
+        product_id,
+        file_name=payload.file_name,
+        content=decode_photo_payload(payload.content_base64),
+        alt=payload.alt,
+        role=payload.role,
+    )
+
+
+async def attach_product_photo_content(
+    session: AsyncSession,
+    product_id: UUID,
+    *,
+    file_name: str,
+    content: bytes,
+    alt: str | None,
+    role: str | None,
+) -> AdminProductRead:
     product = await get_admin_product(session, product_id)
-    content = decode_photo_payload(payload.content_base64)
-    file_name = safe_asset_name(payload.file_name)
+    validate_photo_content(content)
+    file_name = canonical_photo_name(file_name, role)
 
-    category = product.category
-    category_dir = Path(settings.media_storage_dir) / "categories" / category.slug
-    category_dir.mkdir(parents=True, exist_ok=True)
+    geometry_family = product.extra_attributes.get("geometry_family")
+    storage_key = safe_storage_key(geometry_family if isinstance(geometry_family, str) else product.slug)
+    product_dir = Path(settings.media_storage_dir) / "catalog" / "categories" / storage_key
+    product_dir.mkdir(parents=True, exist_ok=True)
 
-    target = category_dir / file_name
-    if target.exists():
-        target = category_dir / f"{target.stem}-{len(normalize_media_list(category.extra_attributes)) + 1}{target.suffix}"
-        file_name = target.name
+    # First write also migrates any legacy category-level media into this form-factor.
+    media = resolve_product_media(product.extra_attributes, product.category.extra_attributes)
+    replace_index = next(
+        (
+            index
+            for index, item in enumerate(media)
+            if (role and item.role == role) or item.file_name == file_name
+        ),
+        None,
+    )
+    if replace_index is None and len(media) >= 3:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Form-factor already has three photos; choose a role to replace",
+        )
+
+    target = product_dir / file_name
     target.write_bytes(content)
 
     relative = target.relative_to(Path(settings.media_storage_dir))
-    media = normalize_media_list(category.extra_attributes)
-    media.append(
-        AdminMediaItem(
-            url=f"/media/{relative.as_posix()}",
-            alt=payload.alt,
-            role=payload.role,
-            file_name=file_name,
-        )
+    media_item = AdminMediaItem(
+        url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
+        alt=alt,
+        role=role,
+        file_name=file_name,
     )
-    category.extra_attributes = {
-        **(category.extra_attributes or {}),
+    if replace_index is None:
+        media.append(media_item)
+    else:
+        media[replace_index] = media_item
+
+    product.extra_attributes = {
+        **(product.extra_attributes or {}),
         MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
     }
     await session.commit()
@@ -292,30 +356,19 @@ async def attach_product_photo(session: AsyncSession, product_id: UUID, payload:
 
 async def delete_product_photo(session: AsyncSession, product_id: UUID, photo_index: int) -> AdminProductRead:
     product = await get_admin_product(session, product_id)
-    category = product.category
-    media = normalize_media_list(category.extra_attributes)
+    media = normalize_media_list(product.extra_attributes)
     if not media:
-        media = normalize_media_list(product.extra_attributes)
-        if photo_index < 0 or photo_index >= len(media):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found")
-        media.pop(photo_index)
-        product.extra_attributes = {
-            **(product.extra_attributes or {}),
-            MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
-        }
-        await session.commit()
-        return product_to_admin_read(await get_admin_product(session, product_id))
+        media = normalize_media_list(product.category.extra_attributes)
 
     if photo_index < 0 or photo_index >= len(media):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found")
 
     media.pop(photo_index)
-    category.extra_attributes = {
-        **(category.extra_attributes or {}),
+    product.extra_attributes = {
+        **(product.extra_attributes or {}),
         MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
     }
     await session.commit()
-    await session.refresh(product)
     return product_to_admin_read(await get_admin_product(session, product_id))
 
 
