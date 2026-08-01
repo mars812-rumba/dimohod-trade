@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Barcode,
+  Calculator,
   CheckCircle2,
   ChevronDown,
   CircleDot,
@@ -14,14 +15,20 @@ import {
   FileText,
   Info,
   Layers3,
+  Link2,
+  ListChecks,
   Mail,
+  MapPin,
   Package,
   PanelsTopLeft,
   Phone,
   Ruler,
   ShieldCheck,
+  Target,
   Truck,
+  Wrench,
   XCircle,
+  type LucideIcon,
 } from "lucide-react";
 import { DimensionScheme } from "@/components/DimensionScheme";
 import type { Product } from "@/lib/api";
@@ -272,6 +279,30 @@ const seoSectionHeadings = new Set([
   "Расчёт комплекта",
 ]);
 
+const seoSectionIcons: Record<string, LucideIcon> = {
+  "Назначение": Target,
+  "Где применяется": MapPin,
+  "Совместимость": Link2,
+  "Варианты монтажа": Wrench,
+  "Что учитывать при подборе": ListChecks,
+  "Пожарная безопасность": ShieldCheck,
+  "Характеристики выбранного SKU": Ruler,
+  "Параметры выбранного варианта": Ruler,
+  "Расчёт комплекта": Calculator,
+};
+
+function ProductCopyHeading({ title }: { title: string }) {
+  const Icon = seoSectionIcons[title] ?? FileText;
+  return (
+    <h3 className="product-copy-heading">
+      <span className="product-copy-heading-icon" aria-hidden="true">
+        <Icon size={17} strokeWidth={2} />
+      </span>
+      <span>{title}</span>
+    </h3>
+  );
+}
+
 function ProductSeoDescription({ value, omitConfiguratorSection }: { value: string; omitConfiguratorSection: boolean }) {
   let insideConfiguratorSection = false;
   return (
@@ -286,13 +317,13 @@ function ProductSeoDescription({ value, omitConfiguratorSection }: { value: stri
           insideConfiguratorSection = true;
           return omitConfiguratorSection
             ? []
-            : [<h3 className="product-copy-heading" key={`${index}-${line}`}>{normalizedHeading}</h3>];
+            : [<ProductCopyHeading key={`${index}-${line}`} title={normalizedHeading} />];
         }
         if (insideConfiguratorSection && omitConfiguratorSection) {
           return [];
         }
         return seoSectionHeadings.has(normalizedHeading)
-          ? [<h3 className="product-copy-heading" key={`${index}-${line}`}>{normalizedHeading}</h3>]
+          ? [<ProductCopyHeading key={`${index}-${line}`} title={normalizedHeading} />]
           : [<p key={`${index}-${line}`}>{line.replace(/\s*:?[\s]*\/#calculator\b/g, "")}</p>];
       })}
     </div>
@@ -659,13 +690,16 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
 
           {product.description || variantSummary.length ? (
             <section className="product-section">
-              <h2 className="product-section-title">Описание</h2>
+              <h2 className="product-section-title product-section-title-with-icon">
+                <FileText aria-hidden="true" size={19} />
+                Описание
+              </h2>
               {product.description ? (
                 <ProductSeoDescription value={product.description} omitConfiguratorSection={Boolean(configuratorCta)} />
               ) : null}
               {variantSummary.length ? (
                 <div className="product-variant-block">
-                  <h3>Параметры выбранного варианта</h3>
+                  <ProductCopyHeading title="Параметры выбранного варианта" />
                   <dl className="product-variant-summary">
                     {variantSummary.map((item) => (
                       <div key={item.label}>
@@ -678,7 +712,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
               ) : null}
               {configuratorCta ? (
                 <div className="product-configurator-block">
-                  <h3>Расчёт комплекта</h3>
+                  <ProductCopyHeading title="Расчёт комплекта" />
                   <p>{configuratorCta.text}</p>
                   <Link className="product-configurator-cta" href={configuratorCta.href}>
                     Рассчитать комплект
