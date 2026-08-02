@@ -97,12 +97,21 @@
     "reason": "Все SKU одного форм-фактора используют одинаковую читаемую схему 480×480; меняются только подписи."
   },
   "dimension_callouts": {
-    "D": {"position": "Над изделием", "orientation": "horizontal", "dynamic": true},
+    "D": {"position": "У измеряемого патрубка; для дефлектора-конуса — снизу под наружными границами нижней трубы", "orientation": "horizontal", "dynamic": true},
     "L": {"position": "Слева", "orientation": "vertical", "dynamic": true},
-    "d": {"position": "Под посадочным патрубком", "orientation": "horizontal", "dynamic": true},
+    "d": {"position": "Только если внутренний диаметр действительно нужен на схеме и явно указан в требованиях", "orientation": "horizontal", "dynamic": true},
     "S": {"position": "Справа, с выноской к стенке", "dynamic": true},
     "insulation": {"position": "Справа внизу", "format": "Утепление — {{insulation}} мм", "leader_line": false, "dynamic": true},
     "material": {"position": "На компактной тёмной плашке в правом верхнем углу рабочей области", "format": "{{steelGrade}} · {{material}}", "dynamic": true}
+  },
+  "deflector_cone_dimension_rule": {
+    "instruction": "Для дефлектора-конуса D обозначает наружный диаметр нижней присоединительной трубы, а не ширину верхнего колпака.",
+    "placement": "Размерную линию D располагать снизу и привязывать выносные линии к наружным стенкам нижней трубы.",
+    "forbidden": [
+      "Не ставить D над колпаком.",
+      "Не подменять нижнюю подпись D подписью d.",
+      "Не выводить d отдельной нижней линией без явного требования."
+    ]
   },
   "information_badge": {
     "position": "Правый верхний угол внутри рамки чертежа",

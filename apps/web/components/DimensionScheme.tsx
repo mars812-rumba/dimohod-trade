@@ -43,7 +43,6 @@ export function DimensionScheme({
   const description = [
     dimensionLabel("L", dimensions.L),
     dimensionLabel("D", dimensions.D),
-    dimensionLabel("d", dimensions.d),
     dimensionLabel("S", dimensions.S),
     dimensionLabel("утепление", dimensions.insulation),
     steelGrade ? `сталь ${steelGrade}` : null,
@@ -84,28 +83,22 @@ export function DimensionScheme({
       </g>
 
       <g className="dimension-scheme-dimensions" fill="none" stroke="#e56835" strokeWidth="1.5">
-        <path d="M135 90V54M365 90V54M135 64H365" />
-        <path d="M135 64L145 59V69ZM365 64L355 59V69Z" fill="#e56835" stroke="none" />
-
         <path d="M120 105H78M200 418H78M88 105V418" />
         <path d="M88 105L83 115H93ZM88 418L83 408H93Z" fill="#e56835" stroke="none" />
 
-        <path d="M200 418V440M300 418V440M200 430H300" />
-        <path d="M200 430L210 425V435ZM300 430L290 425V435Z" fill="#e56835" stroke="none" />
+        <path d="M175 344V440M325 344V440M175 430H325" />
+        <path d="M175 430L185 425V435ZM325 430L315 425V435Z" fill="#e56835" stroke="none" />
 
         <path d="M325 350H385L408 322" />
         <circle cx="325" cy="350" r="3" fill="#e56835" stroke="none" />
       </g>
 
       <g className="dimension-scheme-labels" fill="#1f2d35" fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
-        <text x="250" y="48" textAnchor="middle" fontSize="15" fontWeight="700">
-          {dimensionLabel("D", dimensions.D)}
-        </text>
         <text x="68" y="262" textAnchor="middle" fontSize="15" fontWeight="700" transform="rotate(-90 68 262)">
           {dimensionLabel("L", dimensions.L)}
         </text>
         <text x="250" y="454" textAnchor="middle" fontSize="15" fontWeight="700">
-          {dimensionLabel("d", dimensions.d)}
+          {dimensionLabel("D", dimensions.D)}
         </text>
         <text x="414" y="313" textAnchor="end" fontSize="13" fontWeight="700">
           {dimensionLabel("S", dimensions.S)}
