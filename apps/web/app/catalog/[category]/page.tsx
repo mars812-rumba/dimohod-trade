@@ -153,7 +153,11 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           <summary>
             <SlidersHorizontal size={17} /> Фильтры
           </summary>
-          <form className="catalog-variant-filters" method="get">
+          <form
+            className="catalog-variant-filters"
+            key={[search, diameter, steel, material].map((value) => value ?? "").join("|")}
+            method="get"
+          >
             <label className="catalog-search-field">
               <span>Поиск по названию</span>
               <div>
@@ -163,39 +167,28 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             </label>
             <FilterSelect label="Диаметр d/D" name="diameter" options={filters.diameters} value={diameter} />
             <FilterSelect label="Марка стали" name="steel" options={filters.steel_grades} value={steel} />
-            {material ? <input name="material" type="hidden" value={material} /> : null}
             <button className="button catalog-filter-submit" type="submit">
               Показать
             </button>
             <div className="catalog-material-filter" aria-label="Материал">
               <span>Материал</span>
               <div>
-                <Link
-                  aria-pressed={!material}
-                  className={`filter-chip ${!material ? "active" : ""}`}
-                  href={categoryHref(category.slug, currentFilters, {
-                    material: undefined,
-                    steel: undefined,
-                    page: undefined,
-                  })}
-                >
+                <label className="filter-chip">
+                  <input defaultChecked={!material} name="material" type="radio" value="" />
                   Любой
-                </Link>
+                </label>
                 {filters.materials
                   .filter((option) => option.value === "stainless" || option.value === "galvanized")
                   .map((option) => (
-                    <Link
-                      aria-pressed={material === option.value}
-                      className={`filter-chip ${material === option.value ? "active" : ""}`}
-                      href={categoryHref(category.slug, currentFilters, {
-                        material: option.value,
-                        steel: undefined,
-                        page: undefined,
-                      })}
-                      key={option.value}
-                    >
+                    <label className="filter-chip" key={option.value}>
+                      <input
+                        defaultChecked={material === option.value}
+                        name="material"
+                        type="radio"
+                        value={option.value}
+                      />
                       {option.label} <span>{option.count}</span>
-                    </Link>
+                    </label>
                   ))}
               </div>
             </div>
