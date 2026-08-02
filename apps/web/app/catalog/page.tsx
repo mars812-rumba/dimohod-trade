@@ -53,7 +53,7 @@ export default async function CatalogPage() {
   }
 
   return (
-    <main className="page">
+    <main className="page catalog-page">
       <section className="section catalog-directory">
         <div className="section-head">
           <div>

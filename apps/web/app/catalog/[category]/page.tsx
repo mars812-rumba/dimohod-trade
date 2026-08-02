@@ -127,7 +127,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const totalPages = Math.max(1, Math.ceil(productResponse.total / PAGE_SIZE));
 
   return (
-    <main className="page">
+    <main className="page catalog-page">
       <section className="section catalog-category-page">
         <nav className="breadcrumb" aria-label="Навигация">
           <Link href="/">Главная</Link>
