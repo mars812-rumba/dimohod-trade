@@ -3619,11 +3619,7 @@ ul {
 }
 
 .home-wireframe {
-  background:
-    linear-gradient(rgba(34, 32, 29, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 32, 29, 0.025) 1px, transparent 1px),
-    var(--bg);
-  background-size: 28px 28px;
+  background: #f5f4ef;
 }
 
 .wire-hero {
@@ -4274,10 +4270,7 @@ ul {
   width: min(1240px, calc(100% - 48px));
   padding-top: 30px;
   color: var(--product-ink);
-  background:
-    linear-gradient(rgba(50, 98, 118, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(50, 98, 118, 0.045) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background: #f5f4ef;
 }
 
 .product-page .breadcrumb {
@@ -4483,11 +4476,7 @@ ul {
   margin-top: 34px;
   padding: 28px;
   border: 1px solid var(--line);
-  background:
-    linear-gradient(rgba(50, 98, 118, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(50, 98, 118, 0.045) 1px, transparent 1px),
-    #f8faf9;
-  background-size: 22px 22px;
+  background: #f8f7f3;
 }
 
 .product-page .compatible-products-head h3 {
@@ -4604,11 +4593,7 @@ ul {
 
 .product-page .variant-scheme-preview {
   padding: 10px;
-  background:
-    linear-gradient(rgba(50, 98, 118, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(50, 98, 118, 0.05) 1px, transparent 1px),
-    #eef2f2;
-  background-size: 18px 18px;
+  background: #f1f2ef;
 }
 
 .product-page .sku-price {
@@ -4664,7 +4649,6 @@ ul {
   .product-page {
     width: min(100% - 28px, 1240px);
     padding-top: 18px;
-    background-size: 22px 22px;
   }
 
   .product-page .breadcrumb {
@@ -5134,10 +5118,7 @@ ul {
   width: min(1240px, calc(100% - 48px));
   padding-top: 30px;
   color: var(--catalog-ink);
-  background:
-    linear-gradient(rgba(50, 98, 118, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(50, 98, 118, 0.045) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background: #f5f4ef;
 }
 
 .catalog-page .section {
@@ -5275,11 +5256,7 @@ ul {
 .catalog-page .catalog-category-media {
   flex-basis: min(36%, 330px);
   border-right-style: solid;
-  background:
-    linear-gradient(rgba(50, 98, 118, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(50, 98, 118, 0.055) 1px, transparent 1px),
-    #e9eeee;
-  background-size: 20px 20px;
+  background: #eef0ed;
 }
 
 .catalog-page .catalog-category-media img {
@@ -5336,11 +5313,7 @@ ul {
   margin-bottom: 34px;
   overflow: hidden;
   border-radius: 2px;
-  background:
-    linear-gradient(rgba(50, 98, 118, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(50, 98, 118, 0.05) 1px, transparent 1px),
-    #eef2f2;
-  background-size: 20px 20px;
+  background: #f1f2ef;
   box-shadow: 0 14px 38px rgba(16, 33, 39, 0.08);
 }
 
@@ -5439,11 +5412,7 @@ ul {
 .catalog-page .catalog-product-media {
   min-height: 190px;
   border-bottom-style: solid;
-  background:
-    linear-gradient(rgba(50, 98, 118, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(50, 98, 118, 0.05) 1px, transparent 1px),
-    #eef2f2;
-  background-size: 18px 18px;
+  background: #f1f2ef;
 }
 
 .catalog-page .catalog-product-media img {
@@ -5553,7 +5522,6 @@ ul {
   .catalog-page {
     width: min(100% - 28px, 1240px);
     padding-top: 18px;
-    background-size: 22px 22px;
   }
 
   .catalog-page .section {
