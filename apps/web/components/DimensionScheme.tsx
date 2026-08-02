@@ -43,6 +43,7 @@ export function DimensionScheme({
   const description = [
     dimensionLabel("L", dimensions.L),
     dimensionLabel("D", dimensions.D),
+    dimensionLabel("d", dimensions.d),
     dimensionLabel("S", dimensions.S),
     dimensionLabel("утепление", dimensions.insulation),
     steelGrade ? `сталь ${steelGrade}` : null,
@@ -89,6 +90,9 @@ export function DimensionScheme({
         <path d="M175 344V440M325 344V440M175 430H325" />
         <path d="M175 430L185 425V435ZM325 430L315 425V435Z" fill="#e56835" stroke="none" />
 
+        <path d="M200 380V408M300 380V408M200 398H300" />
+        <path d="M200 398L210 393V403ZM300 398L290 393V403Z" fill="#e56835" stroke="none" />
+
         <path d="M325 350H385L408 322" />
         <circle cx="325" cy="350" r="3" fill="#e56835" stroke="none" />
       </g>
@@ -100,10 +104,13 @@ export function DimensionScheme({
         <text x="250" y="454" textAnchor="middle" fontSize="15" fontWeight="700">
           {dimensionLabel("D", dimensions.D)}
         </text>
+        <text x="250" y="418" textAnchor="middle" fontSize="13" fontWeight="700">
+          {dimensionLabel("d", dimensions.d)}
+        </text>
         <text x="414" y="313" textAnchor="end" fontSize="13" fontWeight="700">
           {dimensionLabel("S", dimensions.S)}
         </text>
-        <text x="414" y="400" textAnchor="end" fontSize="12" fontWeight="700">
+        <text x="332" y="382" textAnchor="start" fontSize="11" fontWeight="700">
           {insulationLabel(dimensions.insulation)}
         </text>
       </g>
