@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, SlidersHorizontal, X } from "lucide-react";
 import { notFound } from "next/navigation";
 import { CatalogProductCard } from "@/components/CatalogProductCard";
+import { CatalogVariantFilters } from "@/components/CatalogVariantFilters";
 import {
   getCatalogTree,
   getProductFilters,
   getProducts,
   type CategoryNode,
-  type ProductFilterOption,
 } from "@/lib/api";
+import {
+  type CatalogMaterial,
+  defaultCatalogMaterial,
+  steelGradesForMaterial,
+} from "@/lib/catalogFilters";
 
 const PAGE_SIZE = 48;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -18,7 +23,6 @@ const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 type CategoryPageProps = {
   params: Promise<{ category: string }>;
   searchParams: Promise<{
-    q?: string;
     diameter?: string;
     steel?: string;
     material?: string;
@@ -54,32 +58,6 @@ function categoryHref(
   return `/catalog/${slug}${query ? `?${query}` : ""}`;
 }
 
-function FilterSelect({
-  label,
-  name,
-  value,
-  options,
-}: {
-  label: string;
-  name: string;
-  value?: string;
-  options: ProductFilterOption[];
-}) {
-  return (
-    <label className="catalog-filter-field">
-      <span>{label}</span>
-      <select defaultValue={value ?? ""} name={name}>
-        <option value="">Все</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label} · {option.count}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { category: slug } = await params;
   const category = await categoryBySlug(slug);
@@ -104,26 +82,35 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     notFound();
   }
 
-  const search = query.q?.trim() || undefined;
-  const diameter = query.diameter?.trim() || undefined;
-  const steel = query.steel?.trim() || undefined;
-  const material = query.material === "stainless" || query.material === "galvanized" ? query.material : undefined;
+  const filters = await getProductFilters(category.slug);
+  const requestedDiameter = query.diameter?.trim();
+  const diameter = filters.diameters.some((option) => option.value === requestedDiameter)
+    ? requestedDiameter
+    : filters.diameters[0]?.value;
+  const requestedMaterial =
+    query.material === "stainless" || query.material === "galvanized"
+      ? query.material
+      : undefined;
+  const material = (requestedMaterial && filters.materials.some((option) => option.value === requestedMaterial)
+    ? requestedMaterial
+    : defaultCatalogMaterial(filters.materials)) as CatalogMaterial;
+  const materialSteels = steelGradesForMaterial(filters.steel_grades, material);
+  const requestedSteel = query.steel?.trim();
+  const steel = materialSteels.some((option) => option.value === requestedSteel)
+    ? requestedSteel
+    : materialSteels[0]?.value;
   const page = Math.max(1, Number(query.page ?? "1") || 1);
   const offset = (page - 1) * PAGE_SIZE;
-  const currentFilters = { q: search, diameter, steel, material };
+  const currentFilters = { diameter, steel, material };
 
-  const [filters, productResponse] = await Promise.all([
-    getProductFilters(category.slug),
-    getProducts({
-      limit: PAGE_SIZE,
-      offset,
-      category: category.slug,
-      search,
-      diameter,
-      steelGrade: steel,
-      material,
-    }),
-  ]);
+  const productResponse = await getProducts({
+    limit: PAGE_SIZE,
+    offset,
+    category: category.slug,
+    diameter,
+    steelGrade: steel,
+    material,
+  });
   const totalPages = Math.max(1, Math.ceil(productResponse.total / PAGE_SIZE));
 
   return (
@@ -155,44 +142,18 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           </summary>
           <form
             className="catalog-variant-filters"
-            key={[search, diameter, steel, material].map((value) => value ?? "").join("|")}
+            key={[diameter, steel, material].map((value) => value ?? "").join("|")}
             method="get"
           >
-            <label className="catalog-search-field">
-              <span>Поиск по названию</span>
-              <div>
-                <Search aria-hidden="true" size={17} />
-                <input defaultValue={search ?? ""} name="q" placeholder="Например, дефлектор" type="search" />
-              </div>
-            </label>
-            <FilterSelect label="Диаметр d/D" name="diameter" options={filters.diameters} value={diameter} />
-            <FilterSelect label="Марка стали" name="steel" options={filters.steel_grades} value={steel} />
-            <button className="button catalog-filter-submit" type="submit">
-              Показать
-            </button>
-            <div className="catalog-material-filter" aria-label="Материал">
-              <span>Материал</span>
-              <div>
-                <label className="filter-chip">
-                  <input defaultChecked={!material} name="material" type="radio" value="" />
-                  Любой
-                </label>
-                {filters.materials
-                  .filter((option) => option.value === "stainless" || option.value === "galvanized")
-                  .map((option) => (
-                    <label className="filter-chip" key={option.value}>
-                      <input
-                        defaultChecked={material === option.value}
-                        name="material"
-                        type="radio"
-                        value={option.value}
-                      />
-                      {option.label} <span>{option.count}</span>
-                    </label>
-                  ))}
-              </div>
-            </div>
-            {search || diameter || steel || material ? (
+            <CatalogVariantFilters
+              diameter={diameter}
+              diameters={filters.diameters}
+              material={material}
+              materials={filters.materials}
+              steel={steel}
+              steelGrades={filters.steel_grades}
+            />
+            {query.diameter || query.steel || query.material ? (
               <Link className="catalog-filter-reset" href={`/catalog/${category.slug}`}>
                 <X size={14} /> Сбросить
               </Link>

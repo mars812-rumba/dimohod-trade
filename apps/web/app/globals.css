@@ -4750,7 +4750,9 @@ ul {
 
 .catalog-filter-field > span,
 .catalog-search-field > span,
-.catalog-material-filter > span {
+.catalog-material-filter > span,
+.catalog-material-filter > legend {
+  padding: 0;
   color: var(--muted);
   font-size: 10px;
   font-weight: 760;
@@ -4803,7 +4805,10 @@ ul {
 }
 
 .catalog-material-filter {
-  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .catalog-material-filter > div {
@@ -5360,7 +5365,8 @@ ul {
 
 .catalog-page .catalog-filter-field > span,
 .catalog-page .catalog-search-field > span,
-.catalog-page .catalog-material-filter > span {
+.catalog-page .catalog-material-filter > span,
+.catalog-page .catalog-material-filter > legend {
   color: var(--catalog-steel);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-weight: 800;
