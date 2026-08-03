@@ -22,6 +22,7 @@ class AdminMediaItem(BaseModel):
     alt: str | None = None
     role: str | None = None
     file_name: str | None = None
+    diameter_specific: bool = False
 
 
 class AdminSKURead(BaseModel):
@@ -202,3 +203,4 @@ class AdminPhotoUpload(BaseModel):
     content_base64: str = Field(min_length=1)
     alt: str | None = Field(default=None, max_length=240)
     role: str | None = Field(default=None, max_length=60)
+    diameter_specific: bool = False

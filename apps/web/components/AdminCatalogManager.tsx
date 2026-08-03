@@ -32,6 +32,7 @@ type AdminMediaItem = {
   alt: string | null;
   role: string | null;
   file_name: string | null;
+  diameter_specific: boolean;
 };
 
 type AdminSKU = {
@@ -142,6 +143,7 @@ type PhotoDraft = {
   file: File | null;
   previewUrl: string | null;
   alt: string;
+  diameterSpecific: boolean;
 };
 
 class ApiRequestError extends Error {
@@ -169,14 +171,14 @@ const photoSlots: Array<{ role: PhotoRole; number: string; title: string; hint: 
 
 function createEmptyPhotoDrafts(): Record<PhotoRole, PhotoDraft> {
   return {
-    general: { file: null, previewUrl: null, alt: "" },
-    top: { file: null, previewUrl: null, alt: "" },
-    connection: { file: null, previewUrl: null, alt: "" },
+    general: { file: null, previewUrl: null, alt: "", diameterSpecific: false },
+    top: { file: null, previewUrl: null, alt: "", diameterSpecific: false },
+    connection: { file: null, previewUrl: null, alt: "", diameterSpecific: false },
   };
 }
 
 function createEmptyPhotoDraft(): PhotoDraft {
-  return { file: null, previewUrl: null, alt: "" };
+  return { file: null, previewUrl: null, alt: "", diameterSpecific: false };
 }
 
 function mediaItemFromValue(value: unknown): AdminMediaItem | null {
@@ -188,6 +190,7 @@ function mediaItemFromValue(value: unknown): AdminMediaItem | null {
     alt: "alt" in value && typeof value.alt === "string" ? value.alt : null,
     role: "role" in value && typeof value.role === "string" ? value.role : null,
     file_name: "file_name" in value && typeof value.file_name === "string" ? value.file_name : null,
+    diameter_specific: "diameter_specific" in value && value.diameter_specific === true,
   };
 }
 
@@ -243,9 +246,14 @@ function skuMaterialGroup(material: string | null | undefined) {
 function skuHasSameVisualExecution(left: AdminSKU, right: AdminSKU) {
   return (
     skuMaterialGroup(left.material) === skuMaterialGroup(right.material) &&
-    left.length_mm === right.length_mm &&
-    left.diameter_mm === right.diameter_mm &&
-    left.outer_diameter_mm === right.outer_diameter_mm
+    left.length_mm === right.length_mm
+  );
+}
+
+function skuMediaAppliesToExecution(media: AdminMediaItem, owner: AdminSKU, target: AdminSKU) {
+  return !media.diameter_specific || (
+    owner.diameter_mm === target.diameter_mm &&
+    owner.outer_diameter_mm === target.outer_diameter_mm
   );
 }
 
@@ -256,14 +264,37 @@ function visualSkuMediaByRole(
   if (!selectedSku) {
     return {};
   }
-  const result = skuMediaByRole(selectedSku.attributes);
+  const result: Partial<Record<PhotoRole, AdminMediaItem>> = {};
+  const mediaVersion = (url: string) => {
+    try {
+      const value = new URL(url, "http://local.invalid").searchParams.get("v");
+      return value && /^\d+$/.test(value) ? Number(value) : 0;
+    } catch {
+      return 0;
+    }
+  };
   for (const sibling of skus) {
-    if (sibling.id === selectedSku.id || !skuHasSameVisualExecution(sibling, selectedSku)) {
+    if (!skuHasSameVisualExecution(sibling, selectedSku)) {
       continue;
     }
     const siblingMedia = skuMediaByRole(sibling.attributes);
     for (const slot of photoSlots) {
-      result[slot.role] ??= siblingMedia[slot.role];
+      const candidate = siblingMedia[slot.role];
+      const current = result[slot.role];
+      if (
+        candidate &&
+        skuMediaAppliesToExecution(candidate, sibling, selectedSku) &&
+        (
+          !current ||
+          Number(candidate.diameter_specific) > Number(current.diameter_specific) ||
+          (
+            candidate.diameter_specific === current.diameter_specific &&
+            mediaVersion(candidate.url) > mediaVersion(current.url)
+          )
+        )
+      ) {
+        result[slot.role] = candidate;
+      }
     }
   }
   return result;
@@ -515,6 +546,7 @@ async function apiRequestWithStatus<T>(path: string, init?: RequestInit): Promis
   const requestUrl = buildBackendUrl(path);
   const response = await fetch(requestUrl, {
     ...init,
+    cache: init?.cache ?? "no-store",
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),
@@ -666,6 +698,7 @@ export default function AdminCatalogManager() {
     const activeSkus = data.skus.filter((sku) => sku.is_active);
     const selectedSku = skuId ? activeSkus.find((sku) => sku.id === skuId) : activeSkus[0];
     setSkuForm(selectedSku ? skuToForm(selectedSku) : emptySkuForm);
+    return data;
   }
 
   useEffect(() => {
@@ -704,10 +737,11 @@ export default function AdminCatalogManager() {
 
   async function refreshCurrentProduct(skuId?: string) {
     if (!selectedProduct) {
-      return;
+      return null;
     }
-    await loadProduct(selectedProduct.id, skuId);
+    const product = await loadProduct(selectedProduct.id, skuId);
     await loadProducts();
+    return product;
   }
 
   function updateForm(field: keyof SKUFormState, value: string | boolean) {
@@ -925,6 +959,7 @@ export default function AdminCatalogManager() {
     updateSkuPhotoDraft(role, {
       file,
       previewUrl: file ? URL.createObjectURL(file) : null,
+      diameterSpecific: file ? Boolean(selectedSkuOwnMedia[role]?.diameter_specific) : false,
     });
     event.target.value = "";
   }
@@ -934,7 +969,7 @@ export default function AdminCatalogManager() {
     if (currentPreview) {
       URL.revokeObjectURL(currentPreview);
     }
-    updateSkuPhotoDraft(role, { file: null, previewUrl: null });
+    updateSkuPhotoDraft(role, { file: null, previewUrl: null, diameterSpecific: false });
   }
 
   async function persistPhotoDraft(role: PhotoRole, draft: PhotoDraft) {
@@ -990,6 +1025,7 @@ export default function AdminCatalogManager() {
         file_name: draft.file.name,
         content_base64: contentBase64,
         role,
+        diameter_specific: draft.diameterSpecific,
         alt:
           textOrNull(draft.alt) ??
           `${sku.name} (${sku.article}) — ${photoSlots
@@ -1002,7 +1038,13 @@ export default function AdminCatalogManager() {
     if (!mediaResponse.ok) {
       throw new ApiRequestError(mediaResponse.status, mediaUrl, "Фото SKU записано, но URL изображения недоступен");
     }
-    return { uploadStatus: uploadResponse.status, mediaStatus: mediaResponse.status };
+    return {
+      media: uploadResponse.data,
+      role,
+      skuId: sku.id,
+      uploadStatus: uploadResponse.status,
+      mediaStatus: mediaResponse.status,
+    };
   }
 
   async function saveCategoryCover() {
@@ -1233,15 +1275,40 @@ export default function AdminCatalogManager() {
       window.alert(`Ошибка [CLIENT_VALIDATION]\nФото SKU «${oversizedSkuPhoto.hint}» больше 8 МБ`);
       return;
     }
+    if (selectedSku) {
+      const persistedVisualFields = JSON.stringify([
+        skuMaterialGroup(selectedSku.material),
+        selectedSku.length_mm,
+        selectedSku.diameter_mm,
+        selectedSku.outer_diameter_mm,
+      ]);
+      const formVisualFields = JSON.stringify([
+        skuMaterialGroup(skuForm.material),
+        numberOrNull(skuForm.length_mm),
+        numberOrNull(skuForm.diameter_mm),
+        numberOrNull(skuForm.outer_diameter_mm),
+      ]);
+      if (persistedVisualFields !== formVisualFields) {
+        const message =
+          "Материал, длина или диаметр изменены, но ещё не сохранены. " +
+          "Сначала нажмите «Сохранить SKU», затем загрузите фото в правильную группу исполнения.";
+        setStatus(message);
+        window.alert(`Фото не сохранено\n${message}`);
+        return;
+      }
+    }
 
     setIsBusy(true);
     setStatus("Сохраняю фотографии...");
     try {
       let savedPhotoCount = 0;
+      const photoStatuses: Array<{ uploadStatus: number; mediaStatus: number }> = [];
+      const savedSkuPhotos: Array<Awaited<ReturnType<typeof persistSkuPhoto>>> = [];
       for (const slot of photoSlots) {
         const draft = photoDrafts[slot.role];
         if (draft.file) {
-          await persistPhotoDraft(slot.role, draft);
+          const result = await persistPhotoDraft(slot.role, draft);
+          photoStatuses.push(result);
           savedPhotoCount += 1;
         }
       }
@@ -1253,13 +1320,34 @@ export default function AdminCatalogManager() {
         if (!selectedSku) {
           throw new Error("Выберите SKU перед загрузкой его фотографий");
         }
-        await persistSkuPhoto(selectedSku, slot.role, draft);
+        const result = await persistSkuPhoto(selectedSku, slot.role, draft);
+        photoStatuses.push(result);
+        savedSkuPhotos.push(result);
         savedPhotoCount += 1;
       }
-      await refreshCurrentProduct(selectedSku?.id);
+      const refreshedProduct = await refreshCurrentProduct(selectedSku?.id);
+      for (const savedPhoto of savedSkuPhotos) {
+        const refreshedSku = refreshedProduct?.skus.find((sku) => sku.id === savedPhoto.skuId);
+        const persistedMedia = skuMediaByRole(refreshedSku?.attributes)[savedPhoto.role];
+        if (!persistedMedia || persistedMedia.url !== savedPhoto.media.url) {
+          throw new Error(
+            `Фото ${savedPhoto.role} принято backend, но отсутствует в SKU после повторного чтения`,
+          );
+        }
+      }
       resetPhotoDrafts();
       resetSkuPhotoDrafts();
-      setStatus(`Сохранено фотографий: ${savedPhotoCount}`);
+      const target = selectedSku
+        ? `SKU ${selectedSku.article} · ${selectedSku.material ?? "материал не задан"} · ` +
+          `L=${selectedSku.length_mm ?? "—"} · d/D=${selectedSku.diameter_mm ?? "—"}/${selectedSku.outer_diameter_mm ?? "—"}`
+        : `семейство ${selectedProduct.name}`;
+      const uploadStatuses = photoStatuses.map((item) => item.uploadStatus).join("/");
+      const mediaStatuses = photoStatuses.map((item) => item.mediaStatus).join("/");
+      const successMessage =
+        `Сохранено фотографий: ${savedPhotoCount}. ${target}. ` +
+        `UPLOAD HTTP ${uploadStatuses}; MEDIA HTTP ${mediaStatuses}`;
+      setStatus(successMessage);
+      window.alert(`Успешно\n${successMessage}\nЗапись повторно прочитана из базы.`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Не удалось сохранить фотографии";
       setStatus(message);
@@ -1979,8 +2067,9 @@ export default function AdminCatalogManager() {
                 <div className={styles.mediaSectionHeader}>
                   <h3>Фотографии выбранного SKU</h3>
                   <p>
-                    Фото объединяются по материалу, длине и диаметру. Марки нержавеющей стали используют
-                    одну галерею; если фото исполнения нет, показывается фото семейства.
+                    По умолчанию фото объединяются по виду материала и длине для всех диаметров.
+                    Марки нержавеющей стали используют одну галерею. Если внешний вид зависит от d/D,
+                    отметьте это у конкретного файла.
                   </p>
                 </div>
                 <div className={`${styles.photoSlots} ${styles.skuPhotoSlots}`}>
@@ -2076,6 +2165,22 @@ export default function AdminCatalogManager() {
                             value={draft.alt}
                           />
                         </label>
+                        <label className={styles.photoScopeField}>
+                          <input
+                            checked={draft.diameterSpecific}
+                            disabled={!draft.file}
+                            onChange={(event) => updateSkuPhotoDraft(slot.role, {
+                              diameterSpecific: event.target.checked,
+                            })}
+                            type="checkbox"
+                          />
+                          Только для выбранного диаметра d/D
+                        </label>
+                        <small className={styles.photoScopeHint}>
+                          {ownMedia?.diameter_specific && !draft.file
+                            ? "Сохранённое фото действует только для d/D этого SKU."
+                            : "По умолчанию фото применяется ко всем диаметрам этого материала и длины."}
+                        </small>
                         {draft.file ? <span className={styles.fileName}>{draft.file.name}</span> : null}
                       </article>
                     );

@@ -13,6 +13,7 @@ export type MediaItem = {
   url: string;
   alt: string | null;
   role: string | null;
+  diameter_specific?: boolean;
 };
 
 export type CatalogTreeResponse = {

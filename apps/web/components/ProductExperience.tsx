@@ -39,6 +39,7 @@ type ProductPhotoItem = {
   src: string;
   alt: string;
   fit?: "cover" | "contain";
+  diameterSpecific?: boolean;
 };
 
 type ProductSchemeItem = {
@@ -399,6 +400,8 @@ function photoFromValue(
     src: publicMediaUrl(value.url),
     alt: "alt" in value && typeof value.alt === "string" ? value.alt : fallbackAlt,
     fit: "contain",
+    diameterSpecific:
+      "diameter_specific" in value && value.diameter_specific === true,
   };
 }
 
@@ -477,9 +480,18 @@ function hasSameVisualExecution(
 ) {
   return (
     skuVisualMaterial(left.material) === skuVisualMaterial(right.material) &&
-    left.length_mm === right.length_mm &&
-    left.diameter_mm === right.diameter_mm &&
-    left.outer_diameter_mm === right.outer_diameter_mm
+    left.length_mm === right.length_mm
+  );
+}
+
+function skuPhotoAppliesToExecution(
+  photo: ProductPhotoItem,
+  owner: Product["skus"][number],
+  target: Product["skus"][number],
+) {
+  return !photo.diameterSpecific || (
+    owner.diameter_mm === target.diameter_mm &&
+    owner.outer_diameter_mm === target.outer_diameter_mm
   );
 }
 
@@ -507,7 +519,18 @@ function visualSkuMediaByRole(
     for (const role of galleryPhotoRoles) {
       const candidate = siblingMedia[role];
       const current = result[role];
-      if (candidate && (!current || mediaVersion(candidate.src) > mediaVersion(current.src))) {
+      if (
+        candidate &&
+        skuPhotoAppliesToExecution(candidate, sibling, activeSku) &&
+        (
+          !current ||
+          Number(candidate.diameterSpecific) > Number(current.diameterSpecific) ||
+          (
+            candidate.diameterSpecific === current.diameterSpecific &&
+            mediaVersion(candidate.src) > mediaVersion(current.src)
+          )
+        )
+      ) {
         result[role] = candidate;
       }
     }

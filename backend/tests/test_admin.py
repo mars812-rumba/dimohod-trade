@@ -364,7 +364,7 @@ def test_catalog_card_uses_photo_from_visually_equivalent_sku() -> None:
         },
     )
     photographed = SimpleNamespace(
-        **shared_fields,
+        **{**shared_fields, "diameter_mm": 115},
         id="sku-01",
         attributes={
             "sku_media": [
@@ -382,6 +382,65 @@ def test_catalog_card_uses_photo_from_visually_equivalent_sku() -> None:
     assert image is not None
     assert image.url.endswith("sku-photo-1.jpg?v=2")
     assert image.alt == "Новая фотография трубы"
+
+
+def test_diameter_specific_photo_overrides_generic_only_for_matching_diameter() -> None:
+    shared_fields = {
+        "is_active": True,
+        "material": "Нержавеющая сталь",
+        "length_mm": 1000,
+        "outer_diameter_mm": None,
+    }
+    target = SimpleNamespace(
+        **shared_fields,
+        id="target-100",
+        diameter_mm=100,
+        attributes={
+            "sku_media": [
+                {
+                    "url": "/media/generic.jpg?v=5",
+                    "role": "general",
+                }
+            ]
+        },
+    )
+    wrong_diameter = SimpleNamespace(
+        **shared_fields,
+        id="specific-115",
+        diameter_mm=115,
+        attributes={
+            "sku_media": [
+                {
+                    "url": "/media/specific-115.jpg?v=20",
+                    "role": "general",
+                    "diameter_specific": True,
+                }
+            ]
+        },
+    )
+    matching_diameter = SimpleNamespace(
+        **shared_fields,
+        id="specific-100",
+        diameter_mm=100,
+        attributes={
+            "sku_media": [
+                {
+                    "url": "/media/specific-100.jpg?v=2",
+                    "role": "general",
+                    "diameter_specific": True,
+                }
+            ]
+        },
+    )
+
+    image = primary_visual_sku_image(
+        target,
+        [target, wrong_diameter, matching_diameter],
+    )
+
+    assert image is not None
+    assert image.url.endswith("specific-100.jpg?v=2")
+    assert image.diameter_specific is True
 
 
 def test_catalog_sku_filters_apply_all_available_parameters_with_and_logic() -> None:

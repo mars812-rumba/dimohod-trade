@@ -65,6 +65,7 @@ def primary_product_image(extra_attributes: dict[str, object] | None) -> Product
         url=value["url"],
         alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
         role=value.get("role") if isinstance(value.get("role"), str) else None,
+        diameter_specific=value.get("diameter_specific") is True,
     )
 
 
@@ -84,6 +85,7 @@ def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem 
                 url=value["url"],
                 alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
                 role=value.get("role") if isinstance(value.get("role"), str) else "general",
+                diameter_specific=value.get("diameter_specific") is True,
             )
 
     legacy = values.get("sku_photo")
@@ -92,6 +94,7 @@ def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem 
             url=legacy["url"],
             alt=legacy.get("alt") if isinstance(legacy.get("alt"), str) else None,
             role="general",
+            diameter_specific=legacy.get("diameter_specific") is True,
         )
     return None
 
@@ -100,8 +103,13 @@ def same_visual_sku(left: SKU, right: SKU) -> bool:
     return (
         material_group(left.material) == material_group(right.material)
         and left.length_mm == right.length_mm
-        and left.diameter_mm == right.diameter_mm
-        and left.outer_diameter_mm == right.outer_diameter_mm
+    )
+
+
+def image_applies_to_sku(image: ProductMediaItem, owner_sku: SKU, target_sku: SKU) -> bool:
+    return not image.diameter_specific or (
+        owner_sku.diameter_mm == target_sku.diameter_mm
+        and owner_sku.outer_diameter_mm == target_sku.outer_diameter_mm
     )
 
 
@@ -117,9 +125,10 @@ def primary_visual_sku_image(
         if sku.is_active and same_visual_sku(sku, representative_sku)
     ]
     images = [
-        image
+        (image, sku)
         for sku in visual_skus
         if (image := primary_sku_image(sku.attributes)) is not None
+        and image_applies_to_sku(image, sku, representative_sku)
     ]
     if not images:
         return None
@@ -131,7 +140,11 @@ def primary_visual_sku_image(
         except (TypeError, ValueError):
             return 0
 
-    return max(images, key=version)
+    image, _owner = max(
+        images,
+        key=lambda item: (1 if item[0].diameter_specific else 0, version(item[0])),
+    )
+    return image
 
 
 def public_sku_media_attributes(attributes: dict[str, object] | None) -> dict[str, object]:

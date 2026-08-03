@@ -19,6 +19,7 @@ class ProductMediaItem(BaseModel):
     url: str
     alt: str | None = None
     role: str | None = None
+    diameter_specific: bool = False
 
 
 class SKURead(BaseModel):

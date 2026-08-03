@@ -447,6 +447,7 @@ def normalize_media_list(extra_attributes: dict[str, Any] | None) -> list[AdminM
                 alt=item.get("alt") if isinstance(item.get("alt"), str) else None,
                 role=item.get("role") if isinstance(item.get("role"), str) else None,
                 file_name=item.get("file_name") if isinstance(item.get("file_name"), str) else None,
+                diameter_specific=item.get("diameter_specific") is True,
             )
         )
     return media
@@ -460,6 +461,7 @@ def normalize_media_item(value: Any) -> AdminMediaItem | None:
         alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
         role=value.get("role") if isinstance(value.get("role"), str) else None,
         file_name=value.get("file_name") if isinstance(value.get("file_name"), str) else None,
+        diameter_specific=value.get("diameter_specific") is True,
     )
 
 
@@ -958,6 +960,7 @@ async def attach_sku_photo(
         alt=payload.alt,
         role=role,
         file_name=file_name,
+        diameter_specific=payload.diameter_specific,
     )
     media = [item for item in normalize_sku_media(sku.attributes) if item.role != role]
     media.append(media_item)
