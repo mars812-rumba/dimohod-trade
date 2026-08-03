@@ -71,7 +71,7 @@ def public_sku_media_attributes(attributes: dict[str, object] | None) -> dict[st
     values = attributes or {}
     return {
         key: value
-        for key in ("sku_photo", "sku_media")
+        for key in ("sku_photo", "sku_media", "sku_seo")
         if (value := values.get(key))
     }
 

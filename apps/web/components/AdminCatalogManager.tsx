@@ -99,6 +99,11 @@ type SKUFormState = {
   angle_deg: string;
   price_rub: string;
   stock_status: string;
+  seo_h1: string;
+  seo_short_description: string;
+  seo_description: string;
+  seo_title: string;
+  seo_meta_description: string;
   attributesText: string;
   is_active: boolean;
 };
@@ -240,6 +245,11 @@ const emptySkuForm: SKUFormState = {
   angle_deg: "",
   price_rub: "",
   stock_status: "unknown",
+  seo_h1: "",
+  seo_short_description: "",
+  seo_description: "",
+  seo_title: "",
+  seo_meta_description: "",
   attributesText: "{}",
   is_active: true,
 };
@@ -312,6 +322,8 @@ function formatApiDetail(detail: unknown): string {
 }
 
 function skuToForm(sku: AdminSKU): SKUFormState {
+  const rawSeo = sku.attributes?.sku_seo;
+  const seo = rawSeo && typeof rawSeo === "object" ? rawSeo as Record<string, unknown> : {};
   return {
     id: sku.id,
     article: sku.article,
@@ -328,6 +340,11 @@ function skuToForm(sku: AdminSKU): SKUFormState {
     angle_deg: sku.angle_deg?.toString() ?? "",
     price_rub: sku.price_rub ?? "",
     stock_status: sku.stock_status,
+    seo_h1: stringAttribute(seo, "h1"),
+    seo_short_description: stringAttribute(seo, "short_description"),
+    seo_description: stringAttribute(seo, "description"),
+    seo_title: stringAttribute(seo, "seo_title"),
+    seo_meta_description: stringAttribute(seo, "seo_description"),
     attributesText: JSON.stringify(sku.attributes ?? {}, null, 2),
     is_active: sku.is_active,
   };
@@ -662,6 +679,23 @@ export default function AdminCatalogManager() {
       ...current,
       knowledge: { ...current.knowledge, [field]: value },
     }));
+  }
+
+  function copyFamilySeoToSku() {
+    if (!selectedProduct) {
+      return;
+    }
+    setSkuForm((current) => ({
+      ...current,
+      seo_h1: current.seo_h1 || current.name || selectedProduct.name,
+      seo_short_description: current.seo_short_description || productSeoForm.short_description,
+      seo_description: current.seo_description || productSeoForm.description,
+      seo_title: current.seo_title || renderSeoTemplatePreview(productSeoForm.seo_title, selectedProduct, current),
+      seo_meta_description:
+        current.seo_meta_description ||
+        renderSeoTemplatePreview(productSeoForm.seo_description, selectedProduct, current),
+    }));
+    setStatus("SEO семейства скопировано в пустые поля выбранного SKU. Проверьте текст перед сохранением.");
   }
 
   async function saveProductSeo(event: FormEvent<HTMLFormElement>) {
@@ -1007,6 +1041,21 @@ export default function AdminCatalogManager() {
       setStatus("Характеристики должны быть валидным JSON");
       window.alert(message);
       return;
+    }
+    const skuSeo = {
+      h1: textOrNull(skuForm.seo_h1),
+      short_description: textOrNull(skuForm.seo_short_description),
+      description: textOrNull(skuForm.seo_description),
+      seo_title: textOrNull(skuForm.seo_title),
+      seo_description: textOrNull(skuForm.seo_meta_description),
+    };
+    const persistedSkuSeo = Object.fromEntries(
+      Object.entries(skuSeo).filter((entry): entry is [string, string] => Boolean(entry[1])),
+    );
+    if (Object.keys(persistedSkuSeo).length) {
+      attributes.sku_seo = persistedSkuSeo;
+    } else {
+      delete attributes.sku_seo;
     }
     const oversizedPhoto = photoSlots.find(({ role }) => (photoDrafts[role].file?.size ?? 0) > maxPhotoBytes);
     if (oversizedPhoto) {
@@ -1459,6 +1508,162 @@ export default function AdminCatalogManager() {
                   {selectedProduct.category_name} · {selectedProduct.slug} · SKU {selectedProduct.skus.length}
                 </span>
               </div>
+
+              <section className={styles.skuEditor}>
+                <div className={styles.skuEditorHead}>
+                  <div>
+                    <span className={styles.skuEditorEyebrow}>Конкретная модель</span>
+                    <h3>{skuForm.id ? skuForm.name : "Новый SKU"}</h3>
+                    <p>
+                      Выберите исполнение семейства и заполните его размеры, цену, фотографии и собственное SEO.
+                    </p>
+                  </div>
+                  <span className={styles.skuArticle}>{skuForm.article || "без артикула"}</span>
+                </div>
+
+                <div className={styles.skuChooser}>
+                  <label className={styles.field}>
+                    Модель в этом семействе
+                    <select
+                      onChange={(event) => {
+                        const sku = selectedProduct.skus.find((item) => item.id === event.target.value);
+                        setSkuForm(sku ? skuToForm(sku) : emptySkuForm);
+                      }}
+                      value={skuForm.id ?? ""}
+                    >
+                      <option value="">Новый SKU</option>
+                      {selectedProduct.skus.filter((sku) => sku.is_active).map((sku) => (
+                        <option key={sku.id} value={sku.id}>
+                          {sku.article} · L={sku.length_mm ?? "—"} · d/D={sku.diameter_mm ?? "—"}/{sku.outer_diameter_mm ?? "—"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button className={styles.ghostButton} onClick={() => setSkuForm(emptySkuForm)} type="button">
+                    <Plus size={15} /> Создать SKU
+                  </button>
+                </div>
+
+                <form className={styles.skuForm} onSubmit={saveSku}>
+                  <div className={styles.formGrid}>
+                    <label className={styles.field}>
+                      Артикул
+                      <input required maxLength={120} onChange={(event) => updateForm("article", event.target.value)} value={skuForm.article} />
+                    </label>
+                    <label className={styles.field}>
+                      Название модели
+                      <input required maxLength={220} onChange={(event) => updateForm("name", event.target.value)} value={skuForm.name} />
+                    </label>
+                    <label className={styles.field}>
+                      Slug модели
+                      <input maxLength={240} onChange={(event) => updateForm("slug", event.target.value)} placeholder="odnokonturnaya-truba-l500-d115" value={skuForm.slug} />
+                    </label>
+                    <label className={styles.field}>
+                      Длина L, мм
+                      <input inputMode="numeric" onChange={(event) => updateForm("length_mm", event.target.value)} value={skuForm.length_mm} />
+                    </label>
+                    <label className={styles.field}>
+                      Внутренний диаметр d, мм
+                      <input inputMode="numeric" onChange={(event) => updateForm("diameter_mm", event.target.value)} value={skuForm.diameter_mm} />
+                    </label>
+                    <label className={styles.field}>
+                      Наружный диаметр D, мм
+                      <input inputMode="numeric" onChange={(event) => updateForm("outer_diameter_mm", event.target.value)} value={skuForm.outer_diameter_mm} />
+                    </label>
+                    <label className={styles.field}>
+                      Материал
+                      <input onChange={(event) => updateForm("material", event.target.value)} value={skuForm.material} />
+                    </label>
+                    <label className={styles.field}>
+                      Марка стали
+                      <input onChange={(event) => updateForm("steel_grade", event.target.value)} value={skuForm.steel_grade} />
+                    </label>
+                    <label className={styles.field}>
+                      Толщина стали S, мм
+                      <input inputMode="decimal" onChange={(event) => updateForm("wall_thickness_mm", event.target.value)} value={skuForm.wall_thickness_mm} />
+                    </label>
+                    <label className={styles.field}>
+                      Утепление, мм
+                      <input inputMode="numeric" onChange={(event) => updateForm("insulation_mm", event.target.value)} value={skuForm.insulation_mm} />
+                    </label>
+                    <label className={styles.field}>
+                      Цена, ₽
+                      <input inputMode="decimal" onChange={(event) => updateForm("price_rub", event.target.value)} value={skuForm.price_rub} />
+                    </label>
+                    <label className={styles.field}>
+                      Наличие
+                      <select onChange={(event) => updateForm("stock_status", event.target.value)} value={skuForm.stock_status}>
+                        <option value="unknown">Не указано</option>
+                        <option value="in_stock">В наличии</option>
+                        <option value="out_of_stock">Нет в наличии</option>
+                        <option value="on_order">Под заказ</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className={styles.skuSeoEditor}>
+                    <div className={styles.mediaSectionHeader}>
+                      <h3>SEO выбранного SKU</h3>
+                      <p>
+                        Эти поля относятся только к модели {skuForm.article || "без артикула"}. Пустые поля наследуются от семейства.
+                      </p>
+                    </div>
+                    <div className={styles.formGrid}>
+                      <label className={styles.wideField}>
+                        H1 модели
+                        <input maxLength={220} onChange={(event) => updateForm("seo_h1", event.target.value)} placeholder={skuForm.name || selectedProduct.name} value={skuForm.seo_h1} />
+                      </label>
+                      <label className={styles.wideField}>
+                        Короткое описание модели
+                        <textarea maxLength={500} onChange={(event) => updateForm("seo_short_description", event.target.value)} placeholder="Чем отличается именно это исполнение" value={skuForm.seo_short_description} />
+                        <small>{skuForm.seo_short_description.length}/500</small>
+                      </label>
+                      <label className={styles.wideField}>
+                        SEO-описание модели
+                        <textarea className={styles.descriptionTextarea} onChange={(event) => updateForm("seo_description", event.target.value)} placeholder="Текст только о выбранном SKU; характеристики уже известны из полей выше" value={skuForm.seo_description} />
+                      </label>
+                      <label className={styles.field}>
+                        SEO title модели
+                        <input maxLength={180} onChange={(event) => updateForm("seo_title", event.target.value)} placeholder={`${skuForm.name || selectedProduct.name} — купить | Дымоход Трейд`} value={skuForm.seo_title} />
+                        <small>{skuForm.seo_title.length}/180</small>
+                      </label>
+                      <label className={styles.field}>
+                        Meta description модели
+                        <textarea maxLength={320} onChange={(event) => updateForm("seo_meta_description", event.target.value)} placeholder="Описание конкретной модели для поисковой выдачи" value={skuForm.seo_meta_description} />
+                        <small>{skuForm.seo_meta_description.length}/320</small>
+                      </label>
+                    </div>
+                    <button className={styles.ghostButton} onClick={copyFamilySeoToSku} type="button">
+                      Скопировать пустые поля из семейства
+                    </button>
+                  </div>
+
+                  <details className={styles.seoKnowledge}>
+                    <summary>Дополнительные атрибуты SKU (JSON)</summary>
+                    <label className={styles.wideField}>
+                      Служебные характеристики
+                      <textarea onChange={(event) => updateForm("attributesText", event.target.value)} value={skuForm.attributesText} />
+                    </label>
+                  </details>
+
+                  <div className={styles.skuEditorActions}>
+                    <label className={styles.activeToggle}>
+                      <input checked={skuForm.is_active} onChange={(event) => updateForm("is_active", event.target.checked)} type="checkbox" />
+                      Модель активна
+                    </label>
+                    <div className={styles.seoEditorButtons}>
+                      {skuForm.id ? (
+                        <button className={styles.clearButton} disabled={isBusy} onClick={deactivateSelectedSku} type="button">
+                          Отключить SKU
+                        </button>
+                      ) : null}
+                      <button className={styles.button} disabled={isBusy} type="submit">
+                        <Save size={15} /> Сохранить модель и SEO
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </section>
 
               <form className={styles.seoEditor} onSubmit={saveProductSeo}>
                 <div className={styles.mediaSectionHeader}>

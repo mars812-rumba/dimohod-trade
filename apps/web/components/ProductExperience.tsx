@@ -377,6 +377,15 @@ function publicMediaUrl(url: string) {
   return url.startsWith("/media/") ? `${appBasePath}${url}` : url;
 }
 
+function skuSeoText(sku: Product["skus"][number] | null, key: string): string | null {
+  const rawSeo = sku?.attributes.sku_seo;
+  if (!rawSeo || typeof rawSeo !== "object") {
+    return null;
+  }
+  const value = (rawSeo as Record<string, unknown>)[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
 function photoFromValue(
   value: unknown,
   role: GalleryPhotoRole,
@@ -561,6 +570,9 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   );
   const compatibilityRequests = useRef(new Map<string, Promise<CompatibleProduct[]>>());
   const activeSku = product.skus.find((sku) => sku.id === selectedSkuId) ?? product.skus[0] ?? null;
+  const skuH1 = skuSeoText(activeSku, "h1") ?? product.name;
+  const skuShortDescription = skuSeoText(activeSku, "short_description") ?? product.short_description;
+  const skuDescription = skuSeoText(activeSku, "description") ?? product.description;
   const variantDimensions = useMemo(() => buildVariantDimensions(product.skus), [product.skus]);
 
   const loadCompatibility = useCallback(
@@ -843,8 +855,8 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
           </div>
 
           <p className="eyebrow product-eyebrow">{product.category.name}</p>
-          <h1 className="product-title">{product.name}</h1>
-          {product.short_description ? <p className="lead">{product.short_description}</p> : null}
+          <h1 className="product-title">{skuH1}</h1>
+          {skuShortDescription ? <p className="lead">{skuShortDescription}</p> : null}
 
           <section className="product-section">
             <h2 className="product-section-title">Характеристики</h2>
@@ -984,14 +996,14 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
             ) : null}
           </section>
 
-          {product.description || variantSummary.length ? (
+          {skuDescription || variantSummary.length ? (
             <section className="product-section">
               <h2 className="product-section-title product-section-title-with-icon">
                 <FileText aria-hidden="true" size={19} />
                 Описание
               </h2>
-              {product.description ? (
-                <ProductSeoDescription value={product.description} omitConfiguratorSection={Boolean(configuratorCta)} />
+              {skuDescription ? (
+                <ProductSeoDescription value={skuDescription} omitConfiguratorSection={Boolean(configuratorCta)} />
               ) : null}
               {variantSummary.length ? (
                 <div className="product-variant-block">

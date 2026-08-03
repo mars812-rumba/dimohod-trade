@@ -23,6 +23,19 @@ function textAttribute(product: Product, key: string): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function skuSeoAttribute(sku: SKU | null, key: string): string | null {
+  const rawSeo = sku?.attributes.sku_seo;
+  if (!rawSeo || typeof rawSeo !== "object") {
+    return null;
+  }
+  const value = (rawSeo as Record<string, unknown>)[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function hasSkuSeo(sku: SKU | null) {
+  return Boolean(sku && sku.attributes.sku_seo && typeof sku.attributes.sku_seo === "object");
+}
+
 function requestedSkuKey(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -86,6 +99,10 @@ function isLegacySkuSpecificSeo(value: string, product: Product) {
 }
 
 function metadataTitle(product: Product, sku: SKU | null) {
+  const skuTitle = skuSeoAttribute(sku, "seo_title");
+  if (skuTitle) {
+    return applySeoTemplate(skuTitle, product, sku);
+  }
   const customTitle = textAttribute(product, "seo_title");
   if (customTitle && !isLegacySkuSpecificSeo(customTitle, product)) {
     return applySeoTemplate(customTitle, product, sku);
@@ -96,6 +113,10 @@ function metadataTitle(product: Product, sku: SKU | null) {
 }
 
 function metadataDescription(product: Product, sku: SKU | null) {
+  const skuDescription = skuSeoAttribute(sku, "seo_description");
+  if (skuDescription) {
+    return applySeoTemplate(skuDescription, product, sku).slice(0, 320);
+  }
   const customDescription = textAttribute(product, "seo_description");
   const familyDescription = customDescription && !isLegacySkuSpecificSeo(customDescription, product)
     ? customDescription
@@ -115,6 +136,20 @@ function metadataDescription(product: Product, sku: SKU | null) {
 }
 
 function productImage(product: Product, sku: SKU | null) {
+  const skuMedia = sku?.attributes.sku_media;
+  if (Array.isArray(skuMedia)) {
+    const general = skuMedia.find(
+      (value) =>
+        value &&
+        typeof value === "object" &&
+        "url" in value &&
+        "role" in value &&
+        value.role === "general",
+    );
+    if (general && typeof general === "object" && "url" in general && typeof general.url === "string") {
+      return absoluteUrl(general.url);
+    }
+  }
   const skuPhoto = sku?.attributes.sku_photo;
   if (skuPhoto && typeof skuPhoto === "object" && "url" in skuPhoto && typeof skuPhoto.url === "string") {
     return absoluteUrl(skuPhoto.url);
@@ -159,7 +194,7 @@ function productJsonLd(product: Product, sku: SKU | null) {
   const variant = sku
     ? {
         "@type": "Product",
-        name: sku.name,
+        name: skuSeoAttribute(sku, "h1") ?? sku.name,
         sku: sku.article,
         url: variantUrl,
         description: metadataDescription(product, sku),
@@ -200,16 +235,20 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
   const title = metadataTitle(product, sku);
   const description = metadataDescription(product, sku);
   const image = productImage(product, sku);
+  const familyPath = `/product/${product.slug}`;
+  const canonicalPath = initialSkuKey && hasSkuSeo(sku)
+    ? `${familyPath}?sku=${encodeURIComponent(sku?.slug ?? sku?.article ?? initialSkuKey)}`
+    : familyPath;
 
   return {
     title,
     description,
-    alternates: { canonical: absoluteUrl(`/product/${product.slug}`) },
+    alternates: { canonical: absoluteUrl(canonicalPath) },
     openGraph: {
       type: "website",
       title,
       description,
-      url: absoluteUrl(`/product/${product.slug}`),
+      url: absoluteUrl(canonicalPath),
       images: image ? [{ url: image, alt: product.name }] : undefined,
     },
   };

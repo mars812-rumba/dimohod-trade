@@ -109,12 +109,13 @@ def test_public_catalog_media_comes_from_stored_attributes() -> None:
     assert primary_product_image({"media": []}) is None
 
 
-def test_public_sku_attributes_expose_role_gallery_and_legacy_photo_only() -> None:
+def test_public_sku_attributes_expose_gallery_and_seo_only() -> None:
     media = [{"url": "/media/catalog/skus/item/sku-photo-2.jpg", "role": "top"}]
+    seo = {"h1": "Труба L500 d115", "seo_title": "Труба L500 d115 — купить"}
 
     assert public_sku_media_attributes(
-        {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "internal": "hidden"}
-    ) == {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media}
+        {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "sku_seo": seo, "internal": "hidden"}
+    ) == {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "sku_seo": seo}
     assert public_sku_media_attributes({}) == {}
 
 
