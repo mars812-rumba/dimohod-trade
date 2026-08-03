@@ -1275,35 +1275,41 @@ export default function AdminCatalogManager() {
       window.alert(`Ошибка [CLIENT_VALIDATION]\nФото SKU «${oversizedSkuPhoto.hint}» больше 8 МБ`);
       return;
     }
-    if (selectedSku) {
-      const persistedVisualFields = JSON.stringify([
-        skuMaterialGroup(selectedSku.material),
-        selectedSku.length_mm,
-        selectedSku.diameter_mm,
-        selectedSku.outer_diameter_mm,
-      ]);
-      const formVisualFields = JSON.stringify([
-        skuMaterialGroup(skuForm.material),
-        numberOrNull(skuForm.length_mm),
-        numberOrNull(skuForm.diameter_mm),
-        numberOrNull(skuForm.outer_diameter_mm),
-      ]);
-      if (persistedVisualFields !== formVisualFields) {
-        const message =
-          "Материал, длина или диаметр изменены, но ещё не сохранены. " +
-          "Сначала нажмите «Сохранить SKU», затем загрузите фото в правильную группу исполнения.";
-        setStatus(message);
-        window.alert(`Фото не сохранено\n${message}`);
-        return;
-      }
-    }
-
     setIsBusy(true);
-    setStatus("Сохраняю фотографии...");
+    setStatus("Сохраняю параметры SKU и фотографии...");
     try {
       let savedPhotoCount = 0;
+      let photoTargetSku = selectedSku;
+      let skuSaveStatus: number | null = null;
       const photoStatuses: Array<{ uploadStatus: number; mediaStatus: number }> = [];
       const savedSkuPhotos: Array<Awaited<ReturnType<typeof persistSkuPhoto>>> = [];
+      if (photoTargetSku) {
+        const response = await apiRequestWithStatus<AdminSKU>(
+          `/api/v1/admin/skus/${photoTargetSku.id}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({
+              article: skuForm.article,
+              name: skuForm.name,
+              slug: textOrNull(skuForm.slug),
+              material: textOrNull(skuForm.material),
+              steel_grade: textOrNull(skuForm.steel_grade),
+              wall_thickness_mm: textOrNull(skuForm.wall_thickness_mm),
+              diameter_mm: numberOrNull(skuForm.diameter_mm),
+              outer_diameter_mm: numberOrNull(skuForm.outer_diameter_mm),
+              contour: textOrNull(skuForm.contour),
+              insulation_mm: numberOrNull(skuForm.insulation_mm),
+              length_mm: numberOrNull(skuForm.length_mm),
+              angle_deg: numberOrNull(skuForm.angle_deg),
+              price_rub: textOrNull(skuForm.price_rub),
+              stock_status: skuForm.stock_status || "unknown",
+              is_active: skuForm.is_active,
+            }),
+          },
+        );
+        photoTargetSku = response.data;
+        skuSaveStatus = response.status;
+      }
       for (const slot of photoSlots) {
         const draft = photoDrafts[slot.role];
         if (draft.file) {
@@ -1317,15 +1323,15 @@ export default function AdminCatalogManager() {
         if (!draft.file) {
           continue;
         }
-        if (!selectedSku) {
+        if (!photoTargetSku) {
           throw new Error("Выберите SKU перед загрузкой его фотографий");
         }
-        const result = await persistSkuPhoto(selectedSku, slot.role, draft);
+        const result = await persistSkuPhoto(photoTargetSku, slot.role, draft);
         photoStatuses.push(result);
         savedSkuPhotos.push(result);
         savedPhotoCount += 1;
       }
-      const refreshedProduct = await refreshCurrentProduct(selectedSku?.id);
+      const refreshedProduct = await refreshCurrentProduct(photoTargetSku?.id);
       for (const savedPhoto of savedSkuPhotos) {
         const refreshedSku = refreshedProduct?.skus.find((sku) => sku.id === savedPhoto.skuId);
         const persistedMedia = skuMediaByRole(refreshedSku?.attributes)[savedPhoto.role];
@@ -1337,14 +1343,15 @@ export default function AdminCatalogManager() {
       }
       resetPhotoDrafts();
       resetSkuPhotoDrafts();
-      const target = selectedSku
-        ? `SKU ${selectedSku.article} · ${selectedSku.material ?? "материал не задан"} · ` +
-          `L=${selectedSku.length_mm ?? "—"} · d/D=${selectedSku.diameter_mm ?? "—"}/${selectedSku.outer_diameter_mm ?? "—"}`
+      const target = photoTargetSku
+        ? `SKU ${photoTargetSku.article} · ${photoTargetSku.material ?? "материал не задан"} · ` +
+          `L=${photoTargetSku.length_mm ?? "—"} · d/D=${photoTargetSku.diameter_mm ?? "—"}/${photoTargetSku.outer_diameter_mm ?? "—"}`
         : `семейство ${selectedProduct.name}`;
       const uploadStatuses = photoStatuses.map((item) => item.uploadStatus).join("/");
       const mediaStatuses = photoStatuses.map((item) => item.mediaStatus).join("/");
       const successMessage =
         `Сохранено фотографий: ${savedPhotoCount}. ${target}. ` +
+        `${skuSaveStatus ? `SKU HTTP ${skuSaveStatus}; ` : ""}` +
         `UPLOAD HTTP ${uploadStatuses}; MEDIA HTTP ${mediaStatuses}`;
       setStatus(successMessage);
       window.alert(`Успешно\n${successMessage}\nЗапись повторно прочитана из базы.`);
