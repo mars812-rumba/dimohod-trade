@@ -460,6 +460,49 @@ function skuMediaByRole(
   return result;
 }
 
+function skuVisualMaterial(material: string | null) {
+  const normalized = material?.toLocaleLowerCase("ru-RU") ?? "";
+  if (normalized.includes("нерж") || normalized.includes("stainless")) {
+    return "stainless";
+  }
+  if (normalized.includes("оцинк") || normalized.includes("galvan")) {
+    return "galvanized";
+  }
+  return normalized.trim();
+}
+
+function hasSameVisualExecution(
+  left: Product["skus"][number],
+  right: Product["skus"][number],
+) {
+  return (
+    skuVisualMaterial(left.material) === skuVisualMaterial(right.material) &&
+    left.length_mm === right.length_mm &&
+    left.diameter_mm === right.diameter_mm &&
+    left.outer_diameter_mm === right.outer_diameter_mm
+  );
+}
+
+function visualSkuMediaByRole(
+  skus: Product["skus"],
+  activeSku: Product["skus"][number] | null,
+): Partial<Record<GalleryPhotoRole, ProductPhotoItem>> {
+  if (!activeSku) {
+    return {};
+  }
+  const result = skuMediaByRole(activeSku);
+  for (const sibling of skus) {
+    if (sibling.id === activeSku.id || !hasSameVisualExecution(sibling, activeSku)) {
+      continue;
+    }
+    const siblingMedia = skuMediaByRole(sibling);
+    for (const role of galleryPhotoRoles) {
+      result[role] ??= siblingMedia[role];
+    }
+  }
+  return result;
+}
+
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
 
@@ -718,7 +761,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     steelGrade ?? "не указана"
   }`;
   const sharedPhotos = sharedProductMediaByRole(product);
-  const skuPhotos = skuMediaByRole(activeSku);
+  const skuPhotos = visualSkuMediaByRole(product.skus, activeSku);
   const productPhotos = galleryPhotoRoles.flatMap((role) => {
     const photo = skuPhotos[role] ?? sharedPhotos[role];
     return photo ? [photo] : [];

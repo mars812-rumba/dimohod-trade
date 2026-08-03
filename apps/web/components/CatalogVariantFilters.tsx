@@ -87,25 +87,22 @@ export function CatalogVariantFilters({
         </div>
       </fieldset>
 
-      <label className="catalog-filter-field">
-        <span>Марка стали</span>
-        <select
-          disabled={!availableSteels.length}
-          name="steel"
-          onChange={(event) => setSteel(event.target.value)}
-          value={steel}
-        >
-          {availableSteels.length ? (
-            availableSteels.map((option) => (
+      {material === "stainless" && availableSteels.length ? (
+        <label className="catalog-filter-field">
+          <span>Марка нержавеющей стали</span>
+          <select
+            name="steel"
+            onChange={(event) => setSteel(event.target.value)}
+            value={steel}
+          >
+            {availableSteels.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label} · {option.count}
               </option>
-            ))
-          ) : (
-            <option value="">Нет вариантов</option>
-          )}
-        </select>
-      </label>
+            ))}
+          </select>
+        </label>
+      ) : null}
 
       {facets.filter((facet) => facet.options.length).map((facet) => (
         <label className="catalog-filter-field" key={facet.name}>

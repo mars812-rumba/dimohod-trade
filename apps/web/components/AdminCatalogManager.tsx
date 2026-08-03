@@ -229,6 +229,46 @@ function skuMediaByRole(attributes: Record<string, unknown> | undefined): Partia
   return result;
 }
 
+function skuMaterialGroup(material: string | null | undefined) {
+  const normalized = material?.toLocaleLowerCase("ru-RU") ?? "";
+  if (normalized.includes("нерж") || normalized.includes("stainless")) {
+    return "stainless";
+  }
+  if (normalized.includes("оцинк") || normalized.includes("galvan")) {
+    return "galvanized";
+  }
+  return normalized.trim();
+}
+
+function skuHasSameVisualExecution(left: AdminSKU, right: AdminSKU) {
+  return (
+    skuMaterialGroup(left.material) === skuMaterialGroup(right.material) &&
+    left.length_mm === right.length_mm &&
+    left.diameter_mm === right.diameter_mm &&
+    left.outer_diameter_mm === right.outer_diameter_mm
+  );
+}
+
+function visualSkuMediaByRole(
+  skus: AdminSKU[],
+  selectedSku: AdminSKU | null,
+): Partial<Record<PhotoRole, AdminMediaItem>> {
+  if (!selectedSku) {
+    return {};
+  }
+  const result = skuMediaByRole(selectedSku.attributes);
+  for (const sibling of skus) {
+    if (sibling.id === selectedSku.id || !skuHasSameVisualExecution(sibling, selectedSku)) {
+      continue;
+    }
+    const siblingMedia = skuMediaByRole(sibling.attributes);
+    for (const slot of photoSlots) {
+      result[slot.role] ??= siblingMedia[slot.role];
+    }
+  }
+  return result;
+}
+
 const emptySkuForm: SKUFormState = {
   id: null,
   article: "",
@@ -542,6 +582,10 @@ export default function AdminCatalogManager() {
     [selectedProduct, skuForm.id],
   );
   const selectedSkuMedia = useMemo(
+    () => visualSkuMediaByRole(selectedProduct?.skus ?? [], selectedSku),
+    [selectedProduct?.skus, selectedSku],
+  );
+  const selectedSkuOwnMedia = useMemo(
     () => skuMediaByRole(selectedSku?.attributes),
     [selectedSku],
   );
@@ -1571,13 +1615,39 @@ export default function AdminCatalogManager() {
                       <input inputMode="numeric" onChange={(event) => updateForm("outer_diameter_mm", event.target.value)} value={skuForm.outer_diameter_mm} />
                     </label>
                     <label className={styles.field}>
-                      Материал
-                      <input onChange={(event) => updateForm("material", event.target.value)} value={skuForm.material} />
+                      Материал стали
+                      <select
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          updateForm(
+                            "material",
+                            value === "stainless"
+                              ? "Нержавеющая сталь"
+                              : value === "galvanized"
+                                ? "Оцинкованная сталь"
+                                : "",
+                          );
+                          if (value === "galvanized") {
+                            updateForm("steel_grade", "");
+                          }
+                        }}
+                        value={skuMaterialGroup(skuForm.material)}
+                      >
+                        <option value="">Не указано</option>
+                        <option value="stainless">Нержавейка</option>
+                        <option value="galvanized">Оцинковка</option>
+                      </select>
                     </label>
-                    <label className={styles.field}>
-                      Марка стали
-                      <input onChange={(event) => updateForm("steel_grade", event.target.value)} value={skuForm.steel_grade} />
-                    </label>
+                    {skuMaterialGroup(skuForm.material) === "stainless" ? (
+                      <label className={styles.field}>
+                        Марка нержавеющей стали
+                        <input
+                          onChange={(event) => updateForm("steel_grade", event.target.value)}
+                          placeholder="Например, AISI 430"
+                          value={skuForm.steel_grade}
+                        />
+                      </label>
+                    ) : null}
                     <label className={styles.field}>
                       Толщина стали S, мм
                       <input inputMode="decimal" onChange={(event) => updateForm("wall_thickness_mm", event.target.value)} value={skuForm.wall_thickness_mm} />
@@ -1893,18 +1963,20 @@ export default function AdminCatalogManager() {
                 <div className={styles.mediaSectionHeader}>
                   <h3>Фотографии выбранного SKU</h3>
                   <p>
-                    Три необязательных ракурса конкретного исполнения. Для каждого незаданного слота
-                    карточка использует соответствующее фото семейства.
+                    Фото объединяются по материалу, длине и диаметру. Марки нержавеющей стали используют
+                    одну галерею; если фото исполнения нет, показывается фото семейства.
                   </p>
                 </div>
                 <div className={`${styles.photoSlots} ${styles.skuPhotoSlots}`}>
                   {photoSlots.map((slot) => {
                     const draft = skuPhotoDrafts[slot.role];
+                    const ownMedia = selectedSkuOwnMedia[slot.role] ?? null;
                     const existing = selectedSkuMedia[slot.role] ?? null;
                     const familyFallback = selectedFamilyMedia[slot.role] ?? null;
                     const visibleMedia = existing ?? familyFallback;
                     const previewSrc = draft.previewUrl ?? (visibleMedia ? buildBackendUrl(visibleMedia.url) : null);
                     const inputId = `sku-photo-${skuForm.id ?? "new"}-${slot.role}`;
+                    const usesSharedSkuMedia = !draft.file && !ownMedia && Boolean(existing);
                     const usesFamilyFallback = !draft.file && !existing && Boolean(familyFallback);
 
                     return (
@@ -1916,7 +1988,13 @@ export default function AdminCatalogManager() {
                             <small>{slot.hint}</small>
                           </span>
                           <span className={draft.file ? styles.pendingBadge : styles.savedBadge}>
-                            {draft.file ? "новый файл" : existing ? "сохранено" : "не задано"}
+                            {draft.file
+                              ? "новый файл"
+                              : ownMedia
+                                ? "сохранено"
+                                : usesSharedSkuMedia
+                                  ? "общее фото"
+                                  : "не задано"}
                           </span>
                         </div>
 
@@ -1938,6 +2016,8 @@ export default function AdminCatalogManager() {
                           )}
                           {usesFamilyFallback ? (
                             <span className={styles.fallbackLabel}>Показано фото семейства</span>
+                          ) : usesSharedSkuMedia ? (
+                            <span className={styles.fallbackLabel}>Общее фото исполнения</span>
                           ) : null}
                         </div>
 
@@ -1960,7 +2040,7 @@ export default function AdminCatalogManager() {
                             >
                               Отменить
                             </button>
-                          ) : existing ? (
+                          ) : ownMedia ? (
                             <button
                               className={styles.clearButton}
                               disabled={isBusy}
