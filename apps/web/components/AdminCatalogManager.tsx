@@ -714,6 +714,14 @@ export default function AdminCatalogManager() {
     setSkuForm((current) => ({ ...current, [field]: value }));
   }
 
+  function selectSkuMaterial(material: "stainless" | "galvanized") {
+    setSkuForm((current) => ({
+      ...current,
+      material: material === "stainless" ? "Нержавеющая сталь" : "Оцинкованная сталь",
+      steel_grade: material === "galvanized" ? "" : current.steel_grade,
+    }));
+  }
+
   function updateProductSeoForm(field: Exclude<keyof ProductSeoFormState, "knowledge">, value: string) {
     setProductSeoForm((current) => ({ ...current, [field]: value }));
   }
@@ -1588,6 +1596,38 @@ export default function AdminCatalogManager() {
                   </button>
                 </div>
 
+                <fieldset className={styles.materialSwitcher}>
+                  <legend>Материал стали</legend>
+                  <div className={styles.materialSwitcherOptions}>
+                    <button
+                      aria-pressed={skuMaterialGroup(skuForm.material) === "stainless"}
+                      className={
+                        skuMaterialGroup(skuForm.material) === "stainless"
+                          ? styles.materialSwitcherActive
+                          : undefined
+                      }
+                      onClick={() => selectSkuMaterial("stainless")}
+                      type="button"
+                    >
+                      <strong>Нержавейка</strong>
+                      <span>Общие фото для всех AISI</span>
+                    </button>
+                    <button
+                      aria-pressed={skuMaterialGroup(skuForm.material) === "galvanized"}
+                      className={
+                        skuMaterialGroup(skuForm.material) === "galvanized"
+                          ? styles.materialSwitcherActive
+                          : undefined
+                      }
+                      onClick={() => selectSkuMaterial("galvanized")}
+                      type="button"
+                    >
+                      <strong>Оцинковка</strong>
+                      <span>Отдельное исполнение</span>
+                    </button>
+                  </div>
+                </fieldset>
+
                 <form className={styles.skuForm} onSubmit={saveSku}>
                   <div className={styles.formGrid}>
                     <label className={styles.field}>
@@ -1613,30 +1653,6 @@ export default function AdminCatalogManager() {
                     <label className={styles.field}>
                       Наружный диаметр D, мм
                       <input inputMode="numeric" onChange={(event) => updateForm("outer_diameter_mm", event.target.value)} value={skuForm.outer_diameter_mm} />
-                    </label>
-                    <label className={styles.field}>
-                      Материал стали
-                      <select
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          updateForm(
-                            "material",
-                            value === "stainless"
-                              ? "Нержавеющая сталь"
-                              : value === "galvanized"
-                                ? "Оцинкованная сталь"
-                                : "",
-                          );
-                          if (value === "galvanized") {
-                            updateForm("steel_grade", "");
-                          }
-                        }}
-                        value={skuMaterialGroup(skuForm.material)}
-                      >
-                        <option value="">Не указано</option>
-                        <option value="stainless">Нержавейка</option>
-                        <option value="galvanized">Оцинковка</option>
-                      </select>
                     </label>
                     {skuMaterialGroup(skuForm.material) === "stainless" ? (
                       <label className={styles.field}>
