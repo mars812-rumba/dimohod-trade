@@ -40,6 +40,7 @@ from app.modules.products.service import (
     compatible_fastener_matches,
     compatible_tube_matches,
     get_product_sku_by_key,
+    manually_selected_product_matches,
     material_group,
     normalized_compatible_product_ids,
 )
@@ -352,7 +353,15 @@ def test_catalog_card_uses_photo_from_visually_equivalent_sku() -> None:
     representative = SimpleNamespace(
         **shared_fields,
         id="sku-07",
-        attributes={},
+        attributes={
+            "sku_media": [
+                {
+                    "url": "/media/catalog/skus/sku-07/sku-photo-1.jpg?v=1",
+                    "alt": "Старая фотография трубы",
+                    "role": "general",
+                }
+            ]
+        },
     )
     photographed = SimpleNamespace(
         **shared_fields,
@@ -478,6 +487,35 @@ def test_fastener_uses_source_outer_diameter_for_sandwich() -> None:
     assert not compatible_fastener_matches(
         source,
         SimpleNamespace(**{**fastener.__dict__, "material": "Оцинкованная сталь"}),
+    )
+
+
+def test_manually_selected_family_is_narrowed_to_matching_sku_fields() -> None:
+    source = SimpleNamespace(
+        diameter_mm=100,
+        outer_diameter_mm=None,
+        insulation_mm=None,
+        steel_grade="AISI 304",
+        material="Нержавеющая сталь",
+        contour="одноконтурный",
+    )
+    target = SimpleNamespace(
+        diameter_mm=100,
+        outer_diameter_mm=None,
+        insulation_mm=None,
+        steel_grade="AISI 304",
+        material="Нержавейка",
+        contour="одностенный",
+    )
+
+    assert manually_selected_product_matches(source, target)
+    assert not manually_selected_product_matches(
+        source,
+        SimpleNamespace(**{**target.__dict__, "diameter_mm": 115}),
+    )
+    assert not manually_selected_product_matches(
+        source,
+        SimpleNamespace(**{**target.__dict__, "material": "Оцинкованная сталь"}),
     )
 
 

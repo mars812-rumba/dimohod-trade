@@ -490,14 +490,26 @@ function visualSkuMediaByRole(
   if (!activeSku) {
     return {};
   }
-  const result = skuMediaByRole(activeSku);
+  const result: Partial<Record<GalleryPhotoRole, ProductPhotoItem>> = {};
+  const mediaVersion = (src: string) => {
+    try {
+      const value = new URL(src, "http://local.invalid").searchParams.get("v");
+      return value && /^\d+$/.test(value) ? Number(value) : 0;
+    } catch {
+      return 0;
+    }
+  };
   for (const sibling of skus) {
-    if (sibling.id === activeSku.id || !hasSameVisualExecution(sibling, activeSku)) {
+    if (!hasSameVisualExecution(sibling, activeSku)) {
       continue;
     }
     const siblingMedia = skuMediaByRole(sibling);
     for (const role of galleryPhotoRoles) {
-      result[role] ??= siblingMedia[role];
+      const candidate = siblingMedia[role];
+      const current = result[role];
+      if (candidate && (!current || mediaVersion(candidate.src) > mediaVersion(current.src))) {
+        result[role] = candidate;
+      }
     }
   }
   return result;
@@ -633,7 +645,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
       const skuKey = sku.slug ?? sku.article;
       const apiPath = `/api/v1/products/${encodeURIComponent(product.slug)}/compatible?sku=${encodeURIComponent(skuKey)}`;
       const requestUrl = publicApiBaseUrl ? `${publicApiBaseUrl}${apiPath}` : `${appBasePath}${apiPath}`;
-      const request = fetch(requestUrl)
+      const request = fetch(requestUrl, { cache: "no-store" })
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`Compatibility request failed: ${response.status}`);

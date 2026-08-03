@@ -54,6 +54,12 @@ def contour_group(value: str | None) -> str | None:
     normalized = value.lower().strip()
     if "сэндвич" in normalized or "сендвич" in normalized or "sandwich" in normalized:
         return "sandwich"
+    if (
+        "одностен" in normalized
+        or "одноконтур" in normalized
+        or "single" in normalized
+    ):
+        return "single"
     return normalized
 
 
@@ -108,12 +114,51 @@ def compatible_fastener_matches(source_sku: SKU, fastener_sku: SKU) -> bool:
     return True
 
 
+def manually_selected_product_matches(source_sku: SKU, target_sku: SKU) -> bool:
+    """Match a concrete SKU inside a family explicitly selected by an editor.
+
+    The family allowlist is an editorial decision. This matcher only narrows that
+    family to variants whose populated connection fields agree with the source;
+    it does not infer compatibility from a product name or an absent value.
+    """
+    source_diameter = source_sku.diameter_mm
+    target_diameter = target_sku.diameter_mm
+    if source_diameter is None or target_diameter is None or source_diameter != target_diameter:
+        return False
+
+    comparable_fields = (
+        (source_sku.outer_diameter_mm, target_sku.outer_diameter_mm),
+        (source_sku.insulation_mm, target_sku.insulation_mm),
+    )
+    if any(
+        left is not None and right is not None and left != right
+        for left, right in comparable_fields
+    ):
+        return False
+
+    source_material = material_group(source_sku.material)
+    target_material = material_group(target_sku.material)
+    if source_material and target_material and source_material != target_material:
+        return False
+
+    source_steel = source_sku.steel_grade.casefold().strip() if source_sku.steel_grade else None
+    target_steel = target_sku.steel_grade.casefold().strip() if target_sku.steel_grade else None
+    if source_steel and target_steel and source_steel != target_steel:
+        return False
+
+    source_contour = contour_group(source_sku.contour)
+    target_contour = contour_group(target_sku.contour)
+    if source_contour and target_contour and source_contour != target_contour:
+        return False
+    return True
+
+
 def compatible_product_matches(source_sku: SKU, target_product: Product, target_sku: SKU) -> bool:
     if target_product.product_kind == "труба":
         return compatible_tube_matches(source_sku, target_sku)
     if target_product.product_kind == "крепеж":
         return compatible_fastener_matches(source_sku, target_sku)
-    return False
+    return manually_selected_product_matches(source_sku, target_sku)
 
 
 def compatibility_filter_expression(source_sku: SKU):
@@ -180,6 +225,27 @@ async def list_compatible_product_skus(
     if allowed_product_ids == []:
         return []
 
+    if allowed_product_ids is not None:
+        result = await session.execute(
+            select(SKU, Product)
+            .join(Product, SKU.product_id == Product.id)
+            .where(
+                Product.is_active.is_(True),
+                Product.id.in_(allowed_product_ids),
+                Product.id != exclude_product_id,
+                SKU.is_active.is_(True),
+            )
+            .order_by(Product.name.asc(), SKU.length_mm.asc().nulls_last(), SKU.article.asc())
+        )
+        return [
+            (sku, product)
+            for sku, product in result.all()
+            if any(
+                compatible_product_matches(source_sku, product, sku)
+                for source_sku in active_source_skus
+            )
+        ]
+
     matching_expressions = [
         expression
         for sku in active_source_skus
@@ -188,18 +254,12 @@ async def list_compatible_product_skus(
     if not matching_expressions:
         return []
 
-    product_filters = (
-        [Product.id.in_(allowed_product_ids)]
-        if allowed_product_ids is not None
-        else [Product.product_kind == "труба"]
-    )
-
     result = await session.execute(
         select(SKU, Product)
         .join(Product, SKU.product_id == Product.id)
         .where(
             Product.is_active.is_(True),
-            *product_filters,
+            Product.product_kind == "труба",
             Product.id != exclude_product_id,
             SKU.is_active.is_(True),
             or_(*matching_expressions),

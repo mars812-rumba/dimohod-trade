@@ -267,7 +267,7 @@ export async function getProduct(slug: string, sku?: string): Promise<Product | 
   }
   const query = params.toString();
   const response = await fetch(`${apiBaseUrl}/api/v1/products/${slug}${query ? `?${query}` : ""}`, {
-    next: { revalidate: 60 },
+    cache: "no-store",
   });
 
   if (response.status === 404) {

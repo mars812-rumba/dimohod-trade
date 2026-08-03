@@ -1,5 +1,6 @@
 from decimal import Decimal
 from time import perf_counter
+from urllib.parse import parse_qs, urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -110,19 +111,27 @@ def primary_visual_sku_image(
 ) -> ProductMediaItem | None:
     if representative_sku is None:
         return None
-    own_image = primary_sku_image(representative_sku.attributes)
-    if own_image is not None:
-        return own_image
-    for sibling in product_skus:
-        if (
-            sibling.is_active
-            and sibling.id != representative_sku.id
-            and same_visual_sku(sibling, representative_sku)
-        ):
-            sibling_image = primary_sku_image(sibling.attributes)
-            if sibling_image is not None:
-                return sibling_image
-    return None
+    visual_skus = [
+        sku
+        for sku in product_skus
+        if sku.is_active and same_visual_sku(sku, representative_sku)
+    ]
+    images = [
+        image
+        for sku in visual_skus
+        if (image := primary_sku_image(sku.attributes)) is not None
+    ]
+    if not images:
+        return None
+
+    def version(image: ProductMediaItem) -> int:
+        raw_version = parse_qs(urlparse(image.url).query).get("v", ["0"])[0]
+        try:
+            return int(raw_version)
+        except (TypeError, ValueError):
+            return 0
+
+    return max(images, key=version)
 
 
 def public_sku_media_attributes(attributes: dict[str, object] | None) -> dict[str, object]:
@@ -486,5 +495,5 @@ async def read_compatible_products(
     if product_sku is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
     product, source_sku = product_sku
-    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+    response.headers["Cache-Control"] = "no-store"
     return await compatible_items_for_sku(session, product, source_sku)
