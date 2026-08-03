@@ -76,6 +76,29 @@ def public_sku_media_attributes(attributes: dict[str, object] | None) -> dict[st
     }
 
 
+def public_sku_display_attributes(attributes: dict[str, object] | None) -> dict[str, object]:
+    core_keys = {
+        "diameter_mm",
+        "outer_diameter_mm",
+        "length_mm",
+        "angle_deg",
+        "material",
+        "steel_grade",
+        "wall_thickness_mm",
+        "contour",
+        "insulation_mm",
+    }
+    hidden_prefixes = ("source_", "raw_", "sku_")
+    return {
+        key: value
+        for key, value in (attributes or {}).items()
+        if key not in core_keys
+        and not key.startswith(hidden_prefixes)
+        and isinstance(value, (str, int, float, bool))
+        and value not in (None, "")
+    }
+
+
 def parse_diameter_filter(value: str | None) -> tuple[int | None, int | None]:
     if not value:
         return None, None
@@ -241,6 +264,7 @@ async def read_products(
                 category=product.category,
                 name=product.name,
                 slug=product.slug,
+                article=representative_sku.article if representative_sku else None,
                 material=(representative_sku.material if representative_sku else None)
                 or product.material,
                 steel_grade=(representative_sku.steel_grade if representative_sku else None)
@@ -255,11 +279,17 @@ async def read_products(
                     representative_sku.outer_diameter_mm if representative_sku else None
                 )
                 or product_outer_diameter_mm,
-                contour=product.contour,
+                contour=(representative_sku.contour if representative_sku else None) or product.contour,
                 insulation_mm=(
                     representative_sku.insulation_mm
                     if representative_sku and representative_sku.insulation_mm is not None
                     else product.insulation_mm
+                ),
+                length_mm=representative_sku.length_mm if representative_sku else None,
+                angle_deg=representative_sku.angle_deg if representative_sku else None,
+                stock_status=representative_sku.stock_status if representative_sku else None,
+                attributes=public_sku_display_attributes(
+                    representative_sku.attributes if representative_sku else None
                 ),
                 product_kind=product.product_kind,
                 primary_image=primary_product_image(product.extra_attributes),

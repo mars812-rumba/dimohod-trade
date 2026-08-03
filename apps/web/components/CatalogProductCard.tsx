@@ -19,6 +19,37 @@ function formatPrice(value: string | null) {
   }).format(Number(value));
 }
 
+function stockLabel(value: string | null) {
+  if (!value || value === "unknown") {
+    return null;
+  }
+  return {
+    in_stock: "В наличии",
+    out_of_stock: "Нет в наличии",
+    on_order: "Под заказ",
+  }[value] ?? value;
+}
+
+const attributeLabels: Record<string, string> = {
+  outer_material: "Наружный материал",
+  outer_steel_grade: "Наружная сталь",
+  outer_wall_thickness_mm: "Наружная стенка",
+  insulation_material: "Материал утепления",
+  connection_type: "Соединение",
+};
+
+function attributeLabel(key: string) {
+  return attributeLabels[key] ?? key.replaceAll("_", " ");
+}
+
+function attributeValue(key: string, value: unknown) {
+  if (typeof value === "boolean") {
+    return value ? "Да" : "Нет";
+  }
+  const suffix = key.endsWith("_mm") ? " мм" : "";
+  return `${String(value)}${suffix}`;
+}
+
 export function CatalogProductCard({ product }: { product: ProductListItem }) {
   const diameterLabel = product.diameter_mm
     ? product.outer_diameter_mm
@@ -27,10 +58,19 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
     : null;
   const specs = [
     product.product_kind,
+    product.article ? `Арт. ${product.article}` : null,
     diameterLabel,
-    product.steel_grade ?? product.material,
-    product.wall_thickness_mm ? `${product.wall_thickness_mm} мм` : null,
-    product.insulation_mm ? `изоляция ${product.insulation_mm} мм` : null,
+    product.length_mm !== null ? `L ${product.length_mm} мм` : null,
+    product.angle_deg !== null ? `Угол ${product.angle_deg}°` : null,
+    product.wall_thickness_mm ? `S ${product.wall_thickness_mm} мм` : null,
+    product.insulation_mm !== null ? `Утепление ${product.insulation_mm} мм` : null,
+    product.contour ? `Контур ${product.contour}` : null,
+    product.material ? `Материал ${product.material}` : null,
+    product.steel_grade ? `Сталь ${product.steel_grade}` : null,
+    stockLabel(product.stock_status),
+    ...Object.entries(product.attributes).map(
+      ([key, value]) => `${attributeLabel(key)}: ${attributeValue(key, value)}`,
+    ),
   ].filter((value): value is string => Boolean(value));
   const href = product.selected_sku
     ? `/product/${product.slug}?sku=${encodeURIComponent(product.selected_sku)}`

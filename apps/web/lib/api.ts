@@ -53,6 +53,7 @@ export type ProductListItem = {
   };
   name: string;
   slug: string;
+  article: string | null;
   material: string | null;
   steel_grade: string | null;
   wall_thickness_mm: string | null;
@@ -60,6 +61,10 @@ export type ProductListItem = {
   outer_diameter_mm: number | null;
   contour: string | null;
   insulation_mm: number | null;
+  length_mm: number | null;
+  angle_deg: number | null;
+  stock_status: string | null;
+  attributes: Record<string, unknown>;
   product_kind: string | null;
   primary_image: MediaItem | null;
   price_rub: string | null;

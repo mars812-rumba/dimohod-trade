@@ -48,6 +48,7 @@ class ProductListItem(BaseModel):
     category: CategorySummary
     name: str
     slug: str
+    article: str | None
     material: str | None
     steel_grade: str | None
     wall_thickness_mm: Decimal | None
@@ -55,6 +56,10 @@ class ProductListItem(BaseModel):
     outer_diameter_mm: int | None
     contour: str | None
     insulation_mm: int | None
+    length_mm: int | None
+    angle_deg: int | None
+    stock_status: str | None
+    attributes: dict[str, Any] = Field(default_factory=dict)
     product_kind: str | None
     primary_image: ProductMediaItem | None = None
     price_rub: Decimal | None
