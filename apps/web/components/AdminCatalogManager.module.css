@@ -433,6 +433,7 @@
 }
 
 .photoPreview {
+  position: relative;
   min-height: 150px;
   background:
     linear-gradient(45deg, rgba(50, 98, 118, 0.04) 25%, transparent 25%),
@@ -478,8 +479,23 @@
   border-top: 1px solid var(--line);
 }
 
-.skuPhotoSlot {
-  width: min(100%, 360px);
+.skuPhotoSlots {
+  margin-bottom: 0;
+}
+
+.fallbackLabel {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 4px 7px;
+  border: 1px solid rgba(50, 98, 118, 0.18);
+  border-radius: 4px;
+  color: var(--steel);
+  background: rgba(248, 251, 251, 0.94);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .photoPlaceholder {

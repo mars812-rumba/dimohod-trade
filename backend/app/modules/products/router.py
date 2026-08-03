@@ -67,6 +67,15 @@ def primary_product_image(extra_attributes: dict[str, object] | None) -> Product
     )
 
 
+def public_sku_media_attributes(attributes: dict[str, object] | None) -> dict[str, object]:
+    values = attributes or {}
+    return {
+        key: value
+        for key in ("sku_photo", "sku_media")
+        if (value := values.get(key))
+    }
+
+
 def parse_diameter_filter(value: str | None) -> tuple[int | None, int | None]:
     if not value:
         return None, None
@@ -295,8 +304,7 @@ async def read_product(
         sku_model = sku_by_id.get(sku_read.id)
         if sku_model is None:
             continue
-        sku_photo = sku_model.attributes.get("sku_photo") if sku_model.attributes else None
-        sku_read.attributes = {"sku_photo": sku_photo} if sku_photo else {}
+        sku_read.attributes = public_sku_media_attributes(sku_model.attributes)
     product_built_at = perf_counter()
 
     product_read.compatible_products = (

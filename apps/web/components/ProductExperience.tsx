@@ -355,6 +355,15 @@ const mediaRoleLabels: Record<string, string> = {
   connect: "Соединение",
   detail: "Деталь",
 };
+type GalleryPhotoRole = "general" | "top" | "connection";
+const galleryPhotoRoles: GalleryPhotoRole[] = ["general", "top", "connection"];
+
+function normalizedGalleryRole(role: unknown): GalleryPhotoRole | null {
+  if (role === "general" || role === "top" || role === "connection") {
+    return role;
+  }
+  return role === "detail" || role === "connect" ? "connection" : null;
+}
 
 function mediaRoleLabel(role: string) {
   const normalizedRole = role.trim().toLowerCase();
@@ -368,44 +377,78 @@ function publicMediaUrl(url: string) {
   return url.startsWith("/media/") ? `${appBasePath}${url}` : url;
 }
 
-function sharedProductMedia(product: Product): ProductPhotoItem[] {
-  const rawMedia = product.extra_attributes.media;
-  if (!Array.isArray(rawMedia)) {
-    return [];
-  }
-
-  return rawMedia.flatMap((item) => {
-    if (!item || typeof item !== "object" || !("url" in item) || typeof item.url !== "string") {
-      return [];
-    }
-    const rawRole = "role" in item && typeof item.role === "string" ? item.role : "Фото";
-    const role = mediaRoleLabel(rawRole);
-    const alt = "alt" in item && typeof item.alt === "string" ? item.alt : `${product.name} — ${role}`;
-    return [
-      {
-        role,
-        src: publicMediaUrl(item.url),
-        alt,
-        fit: "contain" as const,
-      },
-    ];
-  });
-}
-
-function skuSpecificPhoto(sku: Product["skus"][number] | null): ProductPhotoItem | null {
-  const value = sku?.attributes.sku_photo;
+function photoFromValue(
+  value: unknown,
+  role: GalleryPhotoRole,
+  fallbackAlt: string,
+): ProductPhotoItem | null {
   if (!value || typeof value !== "object" || !("url" in value) || typeof value.url !== "string") {
     return null;
   }
   return {
-    role: "Фото SKU",
+    role: mediaRoleLabel(role),
     src: publicMediaUrl(value.url),
-    alt:
-      "alt" in value && typeof value.alt === "string"
-        ? value.alt
-        : `${sku.name} (${sku.article}) — общий вид`,
+    alt: "alt" in value && typeof value.alt === "string" ? value.alt : fallbackAlt,
     fit: "contain",
   };
+}
+
+function sharedProductMediaByRole(product: Product): Partial<Record<GalleryPhotoRole, ProductPhotoItem>> {
+  const rawMedia = product.extra_attributes.media;
+  if (!Array.isArray(rawMedia)) {
+    return {};
+  }
+
+  return rawMedia.reduce<Partial<Record<GalleryPhotoRole, ProductPhotoItem>>>((result, value, index) => {
+    const rawRole = value && typeof value === "object" && "role" in value ? value.role : null;
+    const role = normalizedGalleryRole(rawRole) ?? galleryPhotoRoles[index] ?? null;
+    if (!role) {
+      return result;
+    }
+    const photo = photoFromValue(value, role, `${product.name} — ${mediaRoleLabel(role).toLocaleLowerCase("ru-RU")}`);
+    if (photo) {
+      result[role] = photo;
+    }
+    return result;
+  }, {});
+}
+
+function skuMediaByRole(
+  sku: Product["skus"][number] | null,
+): Partial<Record<GalleryPhotoRole, ProductPhotoItem>> {
+  if (!sku) {
+    return {};
+  }
+  const result: Partial<Record<GalleryPhotoRole, ProductPhotoItem>> = {};
+  const rawMedia = sku.attributes.sku_media;
+  if (Array.isArray(rawMedia)) {
+    rawMedia.forEach((value) => {
+      const rawRole = value && typeof value === "object" && "role" in value ? value.role : null;
+      const role = normalizedGalleryRole(rawRole);
+      if (!role) {
+        return;
+      }
+      const photo = photoFromValue(
+        value,
+        role,
+        `${sku.name} (${sku.article}) — ${mediaRoleLabel(role).toLocaleLowerCase("ru-RU")}`,
+      );
+      if (photo) {
+        result[role] = photo;
+      }
+    });
+  }
+  if (!result.general) {
+    const legacy = photoFromValue(
+      sku.attributes.sku_photo,
+      "general",
+      `${sku.name} (${sku.article}) — общий вид`,
+    );
+    if (legacy) {
+      result.general = legacy;
+    }
+  }
+  return result;
 }
 
 function FaqItem({ q, a }: { q: string; a: string }) {
@@ -662,10 +705,12 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   } d=${diameterMm ?? "—"} S=${wallThicknessMm ?? "—"}, утепление=${insulationMm ?? "—"} мм, сталь ${
     steelGrade ?? "не указана"
   }`;
-  const storedMedia = sharedProductMedia(product);
-  const sharedPhotos = storedMedia;
-  const skuPhoto = skuSpecificPhoto(activeSku);
-  const productPhotos = skuPhoto ? [skuPhoto, ...sharedPhotos] : sharedPhotos;
+  const sharedPhotos = sharedProductMediaByRole(product);
+  const skuPhotos = skuMediaByRole(activeSku);
+  const productPhotos = galleryPhotoRoles.flatMap((role) => {
+    const photo = skuPhotos[role] ?? sharedPhotos[role];
+    return photo ? [photo] : [];
+  });
   const media: ProductMediaItem[] = isConeTermination
     ? [
         ...productPhotos.slice(0, 3),
@@ -731,7 +776,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   }
 
   return (
-    <main className="page">
+    <main className="page product-page">
       <nav className="breadcrumb" aria-label="Навигация">
         <Link href="/">Главная</Link>
         <span aria-hidden>/</span>

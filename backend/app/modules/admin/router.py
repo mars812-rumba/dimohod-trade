@@ -176,9 +176,10 @@ async def upload_admin_sku_photo(
 @router.delete("/skus/{sku_id}/photo", status_code=204)
 async def delete_admin_sku_photo(
     sku_id: UUID,
+    role: str | None = Query(default=None, pattern="^(general|top|connection)$"),
     session: AsyncSession = Depends(get_db),
 ) -> Response:
-    await delete_sku_photo(session, sku_id)
+    await delete_sku_photo(session, sku_id, role=role)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

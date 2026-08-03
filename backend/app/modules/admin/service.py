@@ -39,6 +39,7 @@ from app.modules.products.service import (
 MEDIA_KEY = "media"
 CATEGORY_COVER_KEY = "category_cover"
 SKU_PHOTO_KEY = "sku_photo"
+SKU_MEDIA_KEY = "sku_media"
 MAX_PHOTO_BYTES = 8 * 1024 * 1024
 ALLOWED_PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".svg"}
 PHOTO_ROLE_FILENAMES = {
@@ -46,6 +47,11 @@ PHOTO_ROLE_FILENAMES = {
     "top": "photo-2",
     "connection": "photo-3",
     "detail": "photo-3",
+}
+SKU_PHOTO_ROLE_FILENAMES = {
+    "general": "sku-photo-1",
+    "top": "sku-photo-2",
+    "connection": "sku-photo-3",
 }
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 SEO_KNOWLEDGE_KEY = "seo_knowledge"
@@ -457,6 +463,27 @@ def normalize_media_item(value: Any) -> AdminMediaItem | None:
     )
 
 
+def normalize_sku_media(attributes: dict[str, Any] | None) -> list[AdminMediaItem]:
+    """Return role-based SKU gallery and expose legacy sku_photo as the general slot."""
+    raw_media = (attributes or {}).get(SKU_MEDIA_KEY)
+    media: list[AdminMediaItem] = []
+    if isinstance(raw_media, list):
+        for value in raw_media:
+            item = normalize_media_item(value)
+            if item is None or item.role not in SKU_PHOTO_ROLE_FILENAMES:
+                continue
+            media = [existing for existing in media if existing.role != item.role]
+            media.append(item)
+
+    if not any(item.role == "general" for item in media):
+        legacy = normalize_media_item((attributes or {}).get(SKU_PHOTO_KEY))
+        if legacy is not None:
+            media.insert(0, legacy.model_copy(update={"role": "general"}))
+
+    role_order = {role: index for index, role in enumerate(SKU_PHOTO_ROLE_FILENAMES)}
+    return sorted(media, key=lambda item: role_order.get(item.role or "", len(role_order)))
+
+
 def safe_asset_name(file_name: str) -> str:
     path_name = Path(file_name).name.strip().lower()
     stem = Path(path_name).stem
@@ -475,6 +502,12 @@ def canonical_photo_name(file_name: str, role: str | None) -> str:
     safe_name = safe_asset_name(file_name)
     canonical_stem = PHOTO_ROLE_FILENAMES.get(role or "")
     return f"{canonical_stem}{Path(safe_name).suffix}" if canonical_stem else safe_name
+
+
+def canonical_sku_photo_name(file_name: str, role: str | None) -> tuple[str, str]:
+    normalized_role = role if role in SKU_PHOTO_ROLE_FILENAMES else "general"
+    safe_name = safe_asset_name(file_name)
+    return f"{SKU_PHOTO_ROLE_FILENAMES[normalized_role]}{Path(safe_name).suffix}", normalized_role
 
 
 def resolve_product_media(
@@ -913,8 +946,7 @@ async def attach_sku_photo(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
 
     content = decode_photo_payload(payload.content_base64)
-    safe_name = safe_asset_name(payload.file_name)
-    file_name = f"sku-photo{Path(safe_name).suffix}"
+    file_name, role = canonical_sku_photo_name(payload.file_name, payload.role)
     sku_dir = Path(settings.media_storage_dir) / "catalog" / "skus" / safe_storage_key(sku.article)
     sku_dir.mkdir(parents=True, exist_ok=True)
     target = sku_dir / file_name
@@ -924,23 +956,42 @@ async def attach_sku_photo(
     media_item = AdminMediaItem(
         url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
         alt=payload.alt,
-        role="sku",
+        role=role,
         file_name=file_name,
     )
-    sku.attributes = {
+    media = [item for item in normalize_sku_media(sku.attributes) if item.role != role]
+    media.append(media_item)
+    normalized_media = normalize_sku_media(
+        {SKU_MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media]}
+    )
+    attributes = {
         **(sku.attributes or {}),
-        SKU_PHOTO_KEY: media_item.model_dump(exclude_none=True),
+        SKU_MEDIA_KEY: [item.model_dump(exclude_none=True) for item in normalized_media],
     }
+    if role == "general":
+        attributes[SKU_PHOTO_KEY] = media_item.model_dump(exclude_none=True)
+    sku.attributes = attributes
     await session.commit()
     return media_item
 
 
-async def delete_sku_photo(session: AsyncSession, sku_id: UUID) -> None:
+async def delete_sku_photo(session: AsyncSession, sku_id: UUID, role: str | None = None) -> None:
     sku = await session.get(SKU, sku_id)
     if sku is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
     attributes = dict(sku.attributes or {})
-    attributes.pop(SKU_PHOTO_KEY, None)
+    if role is None:
+        attributes.pop(SKU_PHOTO_KEY, None)
+        attributes.pop(SKU_MEDIA_KEY, None)
+    else:
+        normalized_role = role if role in SKU_PHOTO_ROLE_FILENAMES else "general"
+        media = [item for item in normalize_sku_media(attributes) if item.role != normalized_role]
+        if media:
+            attributes[SKU_MEDIA_KEY] = [item.model_dump(exclude_none=True) for item in media]
+        else:
+            attributes.pop(SKU_MEDIA_KEY, None)
+        if normalized_role == "general":
+            attributes.pop(SKU_PHOTO_KEY, None)
     sku.attributes = attributes
     await session.commit()
 

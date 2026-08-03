@@ -12,11 +12,13 @@ from app.modules.catalog.service import category_cover
 from app.modules.admin.service import (
     build_product_seo_prompt,
     canonical_photo_name,
+    canonical_sku_photo_name,
     decode_photo_payload,
     extract_openai_output_text,
     inherit_legacy_product_content,
     normalize_media_item,
     normalize_media_list,
+    normalize_sku_media,
     resolve_product_media,
     normalize_seo_knowledge,
     parameterize_sku_meta,
@@ -28,6 +30,7 @@ from app.modules.admin.service import (
 from app.modules.products.router import (
     parse_diameter_filter,
     primary_product_image,
+    public_sku_media_attributes,
     select_active_sku,
 )
 from app.modules.products.service import (
@@ -106,6 +109,15 @@ def test_public_catalog_media_comes_from_stored_attributes() -> None:
     assert primary_product_image({"media": []}) is None
 
 
+def test_public_sku_attributes_expose_role_gallery_and_legacy_photo_only() -> None:
+    media = [{"url": "/media/catalog/skus/item/sku-photo-2.jpg", "role": "top"}]
+
+    assert public_sku_media_attributes(
+        {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "internal": "hidden"}
+    ) == {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media}
+    assert public_sku_media_attributes({}) == {}
+
+
 def test_safe_asset_name_keeps_allowed_extension_and_removes_path() -> None:
     assert safe_asset_name("../IMG 100.PNG") == "img-100.png"
     assert safe_asset_name("фото товара.exe") == "photo.jpg"
@@ -116,6 +128,42 @@ def test_form_factor_photo_names_are_canonical() -> None:
     assert canonical_photo_name("top.webp", "top") == "photo-2.webp"
     assert canonical_photo_name("detail.jpg", "connection") == "photo-3.jpg"
     assert safe_storage_key("Deflector Standard") == "deflector-standard"
+
+
+def test_sku_photo_names_are_canonical_for_all_gallery_roles() -> None:
+    assert canonical_sku_photo_name("front.PNG", "general") == ("sku-photo-1.png", "general")
+    assert canonical_sku_photo_name("top.webp", "top") == ("sku-photo-2.webp", "top")
+    assert canonical_sku_photo_name("ports.jpg", "connection") == ("sku-photo-3.jpg", "connection")
+    assert canonical_sku_photo_name("legacy.jpg", "sku") == ("sku-photo-1.jpg", "general")
+
+
+def test_sku_media_uses_legacy_photo_as_general_fallback() -> None:
+    media = normalize_sku_media(
+        {
+            "sku_photo": {"url": "/media/catalog/skus/legacy/sku-photo.jpg", "role": "sku"},
+            "sku_media": [
+                {"url": "/media/catalog/skus/item/sku-photo-3.jpg", "role": "connection"},
+                {"url": "/media/catalog/skus/item/sku-photo-2.jpg", "role": "top"},
+            ],
+        }
+    )
+
+    assert [item.role for item in media] == ["general", "top", "connection"]
+    assert media[0].url.endswith("sku-photo.jpg")
+
+
+def test_sku_media_prefers_role_based_general_over_legacy_photo() -> None:
+    media = normalize_sku_media(
+        {
+            "sku_photo": {"url": "/media/catalog/skus/legacy/sku-photo.jpg"},
+            "sku_media": [
+                {"url": "/media/catalog/skus/item/sku-photo-1.jpg", "role": "general"},
+            ],
+        }
+    )
+
+    assert len(media) == 1
+    assert media[0].url.endswith("sku-photo-1.jpg")
 
 
 def test_product_media_overrides_legacy_category_media() -> None:
