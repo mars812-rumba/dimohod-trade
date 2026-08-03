@@ -99,6 +99,11 @@ def sku_matches_filters(
     outer_diameter_mm: int | None,
     steel_grade: str | None,
     material: str | None,
+    length_mm: int | None,
+    wall_thickness_mm: Decimal | None,
+    angle_deg: int | None,
+    insulation_mm: int | None,
+    contour: str | None,
 ) -> bool:
     return (
         sku.is_active
@@ -106,6 +111,11 @@ def sku_matches_filters(
         and (outer_diameter_mm is None or sku.outer_diameter_mm == outer_diameter_mm)
         and (steel_grade is None or sku.steel_grade == steel_grade)
         and (material is None or material_group(sku.material) == material)
+        and (length_mm is None or sku.length_mm == length_mm)
+        and (wall_thickness_mm is None or sku.wall_thickness_mm == wall_thickness_mm)
+        and (angle_deg is None or sku.angle_deg == angle_deg)
+        and (insulation_mm is None or sku.insulation_mm == insulation_mm)
+        and (contour is None or (sku.contour or "").casefold().strip() == contour.casefold().strip())
     )
 
 
@@ -173,6 +183,11 @@ async def read_products(
     diameter: str | None = Query(default=None, pattern=r"^(?:\d+:\d*|\d*:\d+)$"),
     steel_grade: str | None = Query(default=None, min_length=1, max_length=32),
     material: str | None = Query(default=None, min_length=1, max_length=32),
+    length_mm: int | None = Query(default=None, ge=0, le=100000),
+    wall_thickness_mm: Decimal | None = Query(default=None, ge=0, le=100),
+    angle_deg: int | None = Query(default=None, ge=0, le=360),
+    insulation_mm: int | None = Query(default=None, ge=0, le=10000),
+    contour: str | None = Query(default=None, min_length=1, max_length=32),
     session: AsyncSession = Depends(get_db),
 ) -> ProductListResponse:
     diameter_mm, outer_diameter_mm = parse_diameter_filter(diameter)
@@ -187,6 +202,11 @@ async def read_products(
         outer_diameter_mm=outer_diameter_mm,
         steel_grade=steel_grade,
         material=material,
+        length_mm=length_mm,
+        wall_thickness_mm=wall_thickness_mm,
+        angle_deg=angle_deg,
+        insulation_mm=insulation_mm,
+        contour=contour,
     )
     items: list[ProductListItem] = []
 
@@ -200,6 +220,11 @@ async def read_products(
                 outer_diameter_mm=outer_diameter_mm,
                 steel_grade=steel_grade,
                 material=material,
+                length_mm=length_mm,
+                wall_thickness_mm=wall_thickness_mm,
+                angle_deg=angle_deg,
+                insulation_mm=insulation_mm,
+                contour=contour,
             )
         ]
         prices = [sku.price_rub for sku in active_skus if sku.price_rub is not None]
@@ -276,6 +301,26 @@ async def read_product_filters(
         materials=[
             ProductFilterOption(value=value, label=label, count=count)
             for value, label, count in variant_filters["materials"]
+        ],
+        lengths=[
+            ProductFilterOption(value=value, label=label, count=count)
+            for value, label, count in variant_filters["lengths"]
+        ],
+        wall_thicknesses=[
+            ProductFilterOption(value=value, label=label, count=count)
+            for value, label, count in variant_filters["wall_thicknesses"]
+        ],
+        angles=[
+            ProductFilterOption(value=value, label=label, count=count)
+            for value, label, count in variant_filters["angles"]
+        ],
+        insulations=[
+            ProductFilterOption(value=value, label=label, count=count)
+            for value, label, count in variant_filters["insulations"]
+        ],
+        contours=[
+            ProductFilterOption(value=value, label=label, count=count)
+            for value, label, count in variant_filters["contours"]
         ],
     )
 

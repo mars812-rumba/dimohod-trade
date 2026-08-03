@@ -88,6 +88,11 @@ class ProductFiltersResponse(BaseModel):
     diameters: list[ProductFilterOption] = Field(default_factory=list)
     steel_grades: list[ProductFilterOption] = Field(default_factory=list)
     materials: list[ProductFilterOption] = Field(default_factory=list)
+    lengths: list[ProductFilterOption] = Field(default_factory=list)
+    wall_thicknesses: list[ProductFilterOption] = Field(default_factory=list)
+    angles: list[ProductFilterOption] = Field(default_factory=list)
+    insulations: list[ProductFilterOption] = Field(default_factory=list)
+    contours: list[ProductFilterOption] = Field(default_factory=list)
 
 
 class CompatibleProductItem(BaseModel):

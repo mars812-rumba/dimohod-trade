@@ -91,6 +91,11 @@ export type ProductFiltersResponse = {
   diameters: ProductFilterOption[];
   steel_grades: ProductFilterOption[];
   materials: ProductFilterOption[];
+  lengths: ProductFilterOption[];
+  wall_thicknesses: ProductFilterOption[];
+  angles: ProductFilterOption[];
+  insulations: ProductFilterOption[];
+  contours: ProductFilterOption[];
 };
 
 export type CompatibleProduct = {
@@ -165,6 +170,11 @@ export async function getProducts({
   diameter,
   steelGrade,
   material,
+  length,
+  wallThickness,
+  angle,
+  insulation,
+  contour,
 }: {
   limit?: number;
   offset?: number;
@@ -174,6 +184,11 @@ export async function getProducts({
   diameter?: string;
   steelGrade?: string;
   material?: string;
+  length?: string;
+  wallThickness?: string;
+  angle?: string;
+  insulation?: string;
+  contour?: string;
 } = {}): Promise<ProductListResponse> {
   const params = new URLSearchParams({
     limit: String(limit),
@@ -196,6 +211,21 @@ export async function getProducts({
   }
   if (material) {
     params.set("material", material);
+  }
+  if (length) {
+    params.set("length_mm", length);
+  }
+  if (wallThickness) {
+    params.set("wall_thickness_mm", wallThickness);
+  }
+  if (angle) {
+    params.set("angle_deg", angle);
+  }
+  if (insulation) {
+    params.set("insulation_mm", insulation);
+  }
+  if (contour) {
+    params.set("contour", contour);
   }
   const response = await fetch(`${apiBaseUrl}/api/v1/products?${params.toString()}`, {
     next: { revalidate: 60 },

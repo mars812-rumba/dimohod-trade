@@ -11,6 +11,12 @@ type CatalogVariantFiltersProps = {
   diameter?: string;
   material: CatalogMaterial;
   steel?: string;
+  facets: Array<{
+    name: string;
+    label: string;
+    value?: string;
+    options: ProductFilterOption[];
+  }>;
 };
 
 export function CatalogVariantFilters({
@@ -20,6 +26,7 @@ export function CatalogVariantFilters({
   diameter,
   material: initialMaterial,
   steel: initialSteel,
+  facets,
 }: CatalogVariantFiltersProps) {
   const [material, setMaterial] = useState<CatalogMaterial>(initialMaterial);
   const initialSteels = steelGradesForMaterial(steelGrades, initialMaterial);
@@ -99,6 +106,20 @@ export function CatalogVariantFilters({
           )}
         </select>
       </label>
+
+      {facets.filter((facet) => facet.options.length).map((facet) => (
+        <label className="catalog-filter-field" key={facet.name}>
+          <span>{facet.label}</span>
+          <select defaultValue={facet.value ?? ""} name={facet.name}>
+            <option value="">Все варианты</option>
+            {facet.options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} · {option.count}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
 
       <button className="button catalog-filter-submit" type="submit">
         Показать

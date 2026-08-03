@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import and_, case, exists, func, or_, select
@@ -240,6 +241,11 @@ async def list_products(
     outer_diameter_mm: int | None = None,
     steel_grade: str | None = None,
     material: str | None = None,
+    length_mm: int | None = None,
+    wall_thickness_mm: Decimal | None = None,
+    angle_deg: int | None = None,
+    insulation_mm: int | None = None,
+    contour: str | None = None,
 ) -> tuple[list[Product], int]:
     kind_order = case(
         (Product.product_kind == "труба", 10),
@@ -272,6 +278,16 @@ async def list_products(
         sku_filters.append(SKU.steel_grade == steel_grade)
     if material:
         sku_filters.append(material_filter_expression(material))
+    if length_mm is not None:
+        sku_filters.append(SKU.length_mm == length_mm)
+    if wall_thickness_mm is not None:
+        sku_filters.append(SKU.wall_thickness_mm == wall_thickness_mm)
+    if angle_deg is not None:
+        sku_filters.append(SKU.angle_deg == angle_deg)
+    if insulation_mm is not None:
+        sku_filters.append(SKU.insulation_mm == insulation_mm)
+    if contour:
+        sku_filters.append(func.lower(func.trim(SKU.contour)) == contour.casefold().strip())
     if len(sku_filters) > 2:
         filters.append(exists(select(SKU.id).where(*sku_filters)))
 
@@ -316,6 +332,11 @@ async def list_variant_filter_options(
             SKU.outer_diameter_mm,
             SKU.steel_grade,
             SKU.material,
+            SKU.length_mm,
+            SKU.wall_thickness_mm,
+            SKU.angle_deg,
+            SKU.insulation_mm,
+            SKU.contour,
         )
         .join(Product, SKU.product_id == Product.id)
         .join(Category, Product.category_id == Category.id)
@@ -325,7 +346,23 @@ async def list_variant_filter_options(
     diameter_products: dict[str, set[object]] = {}
     steel_products: dict[str, set[object]] = {}
     material_products: dict[str, set[object]] = {}
-    for product_id, diameter, outer_diameter, steel, raw_material in result.all():
+    length_products: dict[str, set[object]] = {}
+    thickness_products: dict[str, set[object]] = {}
+    angle_products: dict[str, set[object]] = {}
+    insulation_products: dict[str, set[object]] = {}
+    contour_products: dict[str, set[object]] = {}
+    for (
+        product_id,
+        diameter,
+        outer_diameter,
+        steel,
+        raw_material,
+        length,
+        thickness,
+        angle,
+        insulation,
+        contour,
+    ) in result.all():
         if diameter is not None or outer_diameter is not None:
             value = f"{diameter or ''}:{outer_diameter or ''}"
             label = (
@@ -339,6 +376,16 @@ async def list_variant_filter_options(
         grouped_material = material_group(raw_material)
         if grouped_material:
             material_products.setdefault(grouped_material, set()).add(product_id)
+        if length is not None:
+            length_products.setdefault(str(length), set()).add(product_id)
+        if thickness is not None:
+            thickness_products.setdefault(format(thickness, "f"), set()).add(product_id)
+        if angle is not None:
+            angle_products.setdefault(str(angle), set()).add(product_id)
+        if insulation is not None:
+            insulation_products.setdefault(str(insulation), set()).add(product_id)
+        if contour:
+            contour_products.setdefault(str(contour).strip(), set()).add(product_id)
 
     diameters = sorted(
         [
@@ -359,7 +406,26 @@ async def list_variant_filter_options(
         ],
         key=lambda item: item[1],
     )
-    return {"diameters": diameters, "steel_grades": steels, "materials": materials}
+    def numeric_options(values: dict[str, set[object]], suffix: str) -> list[tuple[str, str, int]]:
+        return [
+            (value, f"{value}{suffix}", len(product_ids))
+            for value, product_ids in sorted(values.items(), key=lambda item: Decimal(item[0]))
+        ]
+
+    contours = sorted(
+        [(value, value.capitalize(), len(product_ids)) for value, product_ids in contour_products.items()],
+        key=lambda item: item[1],
+    )
+    return {
+        "diameters": diameters,
+        "steel_grades": steels,
+        "materials": materials,
+        "lengths": numeric_options(length_products, " мм"),
+        "wall_thicknesses": numeric_options(thickness_products, " мм"),
+        "angles": numeric_options(angle_products, "°"),
+        "insulations": numeric_options(insulation_products, " мм"),
+        "contours": contours,
+    }
 
 
 async def get_product_by_slug(session: AsyncSession, slug: str) -> Product | None:

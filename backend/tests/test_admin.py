@@ -1,4 +1,5 @@
 import base64
+from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from uuid import UUID
@@ -32,6 +33,7 @@ from app.modules.products.router import (
     primary_product_image,
     public_sku_media_attributes,
     select_active_sku,
+    sku_matches_filters,
 )
 from app.modules.products.service import (
     compatible_fastener_matches,
@@ -336,6 +338,36 @@ def test_catalog_filter_values_are_normalized() -> None:
     assert parse_diameter_filter("100:") == (100, None)
     assert material_group("Нержавеющая сталь") == "stainless"
     assert material_group("Оцинкованная сталь") == "galvanized"
+
+
+def test_catalog_sku_filters_apply_all_available_parameters_with_and_logic() -> None:
+    sku = SimpleNamespace(
+        is_active=True,
+        diameter_mm=115,
+        outer_diameter_mm=None,
+        steel_grade="AISI 304",
+        material="Нержавеющая сталь",
+        length_mm=500,
+        wall_thickness_mm=Decimal("0.50"),
+        angle_deg=45,
+        insulation_mm=None,
+        contour="одностенный",
+    )
+    filters = {
+        "diameter_mm": 115,
+        "outer_diameter_mm": None,
+        "steel_grade": "AISI 304",
+        "material": "stainless",
+        "length_mm": 500,
+        "wall_thickness_mm": Decimal("0.50"),
+        "angle_deg": 45,
+        "insulation_mm": None,
+        "contour": "одностенный",
+    }
+
+    assert sku_matches_filters(sku, **filters)
+    assert not sku_matches_filters(sku, **{**filters, "length_mm": 1000})
+    assert not sku_matches_filters(sku, **{**filters, "angle_deg": 90})
 
 
 def test_product_page_selects_only_requested_active_sku() -> None:
