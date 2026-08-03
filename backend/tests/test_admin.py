@@ -31,6 +31,7 @@ from app.modules.admin.service import (
 from app.modules.products.router import (
     parse_diameter_filter,
     primary_product_image,
+    primary_visual_sku_image,
     public_sku_media_attributes,
     select_active_sku,
     sku_matches_filters,
@@ -338,6 +339,40 @@ def test_catalog_filter_values_are_normalized() -> None:
     assert parse_diameter_filter("100:") == (100, None)
     assert material_group("Нержавеющая сталь") == "stainless"
     assert material_group("Оцинкованная сталь") == "galvanized"
+
+
+def test_catalog_card_uses_photo_from_visually_equivalent_sku() -> None:
+    shared_fields = {
+        "is_active": True,
+        "material": "Нержавеющая сталь",
+        "length_mm": 1000,
+        "diameter_mm": 100,
+        "outer_diameter_mm": None,
+    }
+    representative = SimpleNamespace(
+        **shared_fields,
+        id="sku-07",
+        attributes={},
+    )
+    photographed = SimpleNamespace(
+        **shared_fields,
+        id="sku-01",
+        attributes={
+            "sku_media": [
+                {
+                    "url": "/media/catalog/skus/sku-01/sku-photo-1.jpg?v=2",
+                    "alt": "Новая фотография трубы",
+                    "role": "general",
+                }
+            ]
+        },
+    )
+
+    image = primary_visual_sku_image(representative, [representative, photographed])
+
+    assert image is not None
+    assert image.url.endswith("sku-photo-1.jpg?v=2")
+    assert image.alt == "Новая фотография трубы"
 
 
 def test_catalog_sku_filters_apply_all_available_parameters_with_and_logic() -> None:

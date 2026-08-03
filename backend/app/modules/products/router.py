@@ -67,6 +67,64 @@ def primary_product_image(extra_attributes: dict[str, object] | None) -> Product
     )
 
 
+def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem | None:
+    values = attributes or {}
+    raw_media = values.get("sku_media")
+    if isinstance(raw_media, list):
+        valid_media = [
+            item for item in raw_media if isinstance(item, dict) and isinstance(item.get("url"), str)
+        ]
+        if valid_media:
+            value = next(
+                (item for item in valid_media if item.get("role") == "general"),
+                valid_media[0],
+            )
+            return ProductMediaItem(
+                url=value["url"],
+                alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
+                role=value.get("role") if isinstance(value.get("role"), str) else "general",
+            )
+
+    legacy = values.get("sku_photo")
+    if isinstance(legacy, dict) and isinstance(legacy.get("url"), str):
+        return ProductMediaItem(
+            url=legacy["url"],
+            alt=legacy.get("alt") if isinstance(legacy.get("alt"), str) else None,
+            role="general",
+        )
+    return None
+
+
+def same_visual_sku(left: SKU, right: SKU) -> bool:
+    return (
+        material_group(left.material) == material_group(right.material)
+        and left.length_mm == right.length_mm
+        and left.diameter_mm == right.diameter_mm
+        and left.outer_diameter_mm == right.outer_diameter_mm
+    )
+
+
+def primary_visual_sku_image(
+    representative_sku: SKU | None,
+    product_skus: list[SKU],
+) -> ProductMediaItem | None:
+    if representative_sku is None:
+        return None
+    own_image = primary_sku_image(representative_sku.attributes)
+    if own_image is not None:
+        return own_image
+    for sibling in product_skus:
+        if (
+            sibling.is_active
+            and sibling.id != representative_sku.id
+            and same_visual_sku(sibling, representative_sku)
+        ):
+            sibling_image = primary_sku_image(sibling.attributes)
+            if sibling_image is not None:
+                return sibling_image
+    return None
+
+
 def public_sku_media_attributes(attributes: dict[str, object] | None) -> dict[str, object]:
     values = attributes or {}
     return {
@@ -292,7 +350,8 @@ async def read_products(
                     representative_sku.attributes if representative_sku else None
                 ),
                 product_kind=product.product_kind,
-                primary_image=primary_product_image(product.extra_attributes),
+                primary_image=primary_visual_sku_image(representative_sku, product.skus)
+                or primary_product_image(product.extra_attributes),
                 price_rub=price_rub,
                 sku_count=len(active_skus),
                 selected_sku=(representative_sku.slug or representative_sku.article)

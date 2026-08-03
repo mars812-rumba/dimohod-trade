@@ -233,7 +233,7 @@ export async function getProducts({
     params.set("contour", contour);
   }
   const response = await fetch(`${apiBaseUrl}/api/v1/products?${params.toString()}`, {
-    next: { revalidate: 60 },
+    cache: "no-store",
   });
 
   if (!response.ok) {
