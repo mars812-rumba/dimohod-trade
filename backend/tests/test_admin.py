@@ -31,6 +31,7 @@ from app.modules.admin.service import (
 from app.modules.products.router import (
     parse_diameter_filter,
     primary_product_image,
+    primary_sku_image,
     primary_visual_sku_image,
     public_sku_media_attributes,
     select_active_sku,
@@ -122,6 +123,39 @@ def test_public_sku_attributes_expose_gallery_and_seo_only() -> None:
         {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "sku_seo": seo, "internal": "hidden"}
     ) == {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "sku_seo": seo}
     assert public_sku_media_attributes({}) == {}
+
+
+def test_catalog_primary_sku_image_never_uses_connection_photo() -> None:
+    attributes = {
+        "sku_photo": {
+            "url": "/media/catalog/skus/item/legacy-photo.jpg",
+            "role": "general",
+        },
+        "sku_media": [
+            {
+                "url": "/media/catalog/skus/item/sku-photo-3.jpg?v=3",
+                "role": "connection",
+            }
+        ],
+    }
+
+    assert primary_sku_image(attributes) is None
+
+
+def test_catalog_primary_sku_image_uses_general_gallery_role() -> None:
+    image = primary_sku_image(
+        {
+            "sku_media": [
+                {"url": "/media/item-top.jpg", "role": "top"},
+                {"url": "/media/item-main.jpg", "role": "general"},
+                {"url": "/media/item-connection.jpg", "role": "connection"},
+            ]
+        }
+    )
+
+    assert image is not None
+    assert image.url == "/media/item-main.jpg"
+    assert image.role == "general"
 
 
 def test_safe_asset_name_keeps_allowed_extension_and_removes_path() -> None:

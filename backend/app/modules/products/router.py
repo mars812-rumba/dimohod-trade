@@ -73,20 +73,25 @@ def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem 
     values = attributes or {}
     raw_media = values.get("sku_media")
     if isinstance(raw_media, list):
-        valid_media = [
-            item for item in raw_media if isinstance(item, dict) and isinstance(item.get("url"), str)
-        ]
-        if valid_media:
-            value = next(
-                (item for item in valid_media if item.get("role") == "general"),
-                valid_media[0],
-            )
+        value = next(
+            (
+                item
+                for item in raw_media
+                if isinstance(item, dict)
+                and isinstance(item.get("url"), str)
+                and item.get("role") == "general"
+            ),
+            None,
+        )
+        if value is not None:
             return ProductMediaItem(
                 url=value["url"],
                 alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
                 role=value.get("role") if isinstance(value.get("role"), str) else "general",
                 diameter_specific=value.get("diameter_specific") is True,
             )
+        if raw_media:
+            return None
 
     legacy = values.get("sku_photo")
     if isinstance(legacy, dict) and isinstance(legacy.get("url"), str):
