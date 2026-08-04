@@ -39,6 +39,7 @@ from app.modules.products.router import (
     sku_matches_filters,
 )
 from app.modules.products.service import (
+    compatible_console_matches,
     compatible_fastener_matches,
     compatible_product_matches,
     compatible_tube_matches,
@@ -599,6 +600,59 @@ def test_fastener_uses_source_outer_diameter_for_sandwich() -> None:
     assert not compatible_fastener_matches(
         source,
         SimpleNamespace(**{**fastener.__dict__, "material": "Оцинкованная сталь"}),
+    )
+
+
+def test_console_uses_confirmed_maximum_connection_diameter() -> None:
+    single_wall_source = SimpleNamespace(
+        diameter_mm=100,
+        outer_diameter_mm=None,
+        contour="одноконтурный",
+    )
+    sandwich_source = SimpleNamespace(
+        diameter_mm=200,
+        outer_diameter_mm=300,
+        contour="сэндвич",
+    )
+    console = SimpleNamespace(attributes={"diameter_max_mm": 350})
+
+    assert compatible_console_matches(single_wall_source, console)
+    assert compatible_console_matches(sandwich_source, console)
+    assert not compatible_console_matches(
+        SimpleNamespace(diameter_mm=400, outer_diameter_mm=None, contour="одноконтурный"),
+        console,
+    )
+    assert not compatible_console_matches(
+        single_wall_source,
+        SimpleNamespace(attributes={"size_range": "до 930 мм"}),
+    )
+
+
+def test_explicitly_selected_console_uses_range_instead_of_exact_sku_fields() -> None:
+    source = SimpleNamespace(
+        diameter_mm=100,
+        outer_diameter_mm=None,
+        insulation_mm=None,
+        steel_grade="AISI 321",
+        material="Нержавеющая сталь",
+        contour="одноконтурный",
+    )
+    target_product = SimpleNamespace(product_kind="консоль")
+    target_sku = SimpleNamespace(
+        diameter_mm=None,
+        outer_diameter_mm=None,
+        insulation_mm=None,
+        steel_grade=None,
+        material=None,
+        contour=None,
+        attributes={"diameter_max_mm": 350},
+    )
+
+    assert compatible_product_matches(
+        source,
+        target_product,
+        target_sku,
+        explicitly_selected=True,
     )
 
 

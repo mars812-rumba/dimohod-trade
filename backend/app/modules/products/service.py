@@ -114,6 +114,30 @@ def compatible_fastener_matches(source_sku: SKU, fastener_sku: SKU) -> bool:
     return True
 
 
+def compatible_console_matches(source_sku: SKU, console_sku: SKU) -> bool:
+    """Match a console using its confirmed maximum connection diameter.
+
+    Console variants do not have an exact SKU diameter or a steel grade. Their
+    confirmed catalog data only contains ``attributes.diameter_max_mm``, so
+    applying the generic exact-diameter matcher would reject every console.
+    """
+    source_contour = contour_group(getattr(source_sku, "contour", None))
+    connection_diameter = (
+        source_sku.outer_diameter_mm
+        if source_contour == "sandwich"
+        else source_sku.diameter_mm
+    )
+    attributes = getattr(console_sku, "attributes", None) or {}
+    diameter_max = attributes.get("diameter_max_mm")
+    if (
+        connection_diameter is None
+        or isinstance(diameter_max, bool)
+        or not isinstance(diameter_max, (int, float))
+    ):
+        return False
+    return connection_diameter <= diameter_max
+
+
 def manually_selected_product_matches(source_sku: SKU, target_sku: SKU) -> bool:
     """Match a concrete SKU inside a family explicitly selected by an editor.
 
@@ -160,6 +184,8 @@ def compatible_product_matches(
     *,
     explicitly_selected: bool = False,
 ) -> bool:
+    if target_product.product_kind == "консоль":
+        return compatible_console_matches(source_sku, target_sku)
     if explicitly_selected:
         return manually_selected_product_matches(source_sku, target_sku)
     if target_product.product_kind == "труба":
