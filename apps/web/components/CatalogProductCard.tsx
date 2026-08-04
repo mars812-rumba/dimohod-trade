@@ -30,54 +30,66 @@ function stockLabel(value: string | null) {
   }[value] ?? value;
 }
 
-const attributeLabels: Record<string, string> = {
-  outer_material: "Наружный материал",
-  outer_steel_grade: "Наружная сталь",
-  outer_wall_thickness_mm: "Наружная стенка",
-  insulation_material: "Материал утепления",
-  connection_type: "Соединение",
-  diameter_range: "Диапазон диаметра",
-  base_size: "Размер основания",
-  execution: "Исполнение",
-  size_range: "Размер",
-  max_roof_angle_deg: "Максимальный угол кровли",
-  model_number: "Номер модели",
-};
-
-function attributeLabel(key: string) {
-  return attributeLabels[key] ?? key.replaceAll("_", " ");
+function textAttribute(attributes: Record<string, unknown>, key: string) {
+  const value = attributes[key];
+  return typeof value === "string" || typeof value === "number" ? String(value) : null;
 }
 
-function attributeValue(key: string, value: unknown) {
-  if (typeof value === "boolean") {
-    return value ? "Да" : "Нет";
-  }
-  const suffix = key.endsWith("_mm") ? " мм" : key.endsWith("_deg") ? "°" : "";
-  return `${String(value)}${suffix}`;
+function decimalLabel(value: string | number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed)
+    ? new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 }).format(parsed)
+    : String(value).replace(".", ",");
 }
 
-export function CatalogProductCard({ product }: { product: ProductListItem }) {
-  const diameterLabel = product.diameter_mm
+function uniqueValues(values: Array<string | null>) {
+  return Array.from(new Set(values.filter((value): value is string => Boolean(value))));
+}
+
+function catalogSpecs(product: ProductListItem) {
+  const attributes = product.attributes;
+  const diameter = product.diameter_mm
     ? product.outer_diameter_mm
       ? `Ø ${product.diameter_mm}/${product.outer_diameter_mm} мм`
       : `Ø ${product.diameter_mm} мм`
     : null;
-  const specs = [
-    product.product_kind,
-    product.article ? `Арт. ${product.article}` : null,
-    diameterLabel,
-    product.length_mm !== null ? `L ${product.length_mm} мм` : null,
+  const diameterRange = diameter ? null : textAttribute(attributes, "diameter_range");
+  const baseSize = textAttribute(attributes, "base_size");
+  const sizeRange = baseSize ? null : textAttribute(attributes, "size_range");
+  const execution = textAttribute(attributes, "execution");
+  const maxRoofAngle = textAttribute(attributes, "max_roof_angle_deg");
+  const outerSteelGrade = textAttribute(attributes, "outer_steel_grade");
+  const steelGrades = uniqueValues([product.steel_grade, outerSteelGrade]);
+  const outerMaterial = textAttribute(attributes, "outer_material");
+  const materials = uniqueValues([product.material, outerMaterial]);
+  const outerWallThickness = textAttribute(attributes, "outer_wall_thickness_mm");
+  const wallThicknesses = uniqueValues([
+    product.wall_thickness_mm ? decimalLabel(product.wall_thickness_mm) : null,
+    outerWallThickness ? decimalLabel(outerWallThickness) : null,
+  ]);
+
+  return [
+    diameter,
+    diameterRange ? `Ø ${diameterRange}` : null,
+    product.length_mm !== null ? `Длина ${product.length_mm} мм` : null,
     product.angle_deg !== null ? `Угол ${product.angle_deg}°` : null,
-    product.wall_thickness_mm ? `S ${product.wall_thickness_mm} мм` : null,
+    baseSize ? `Основание ${baseSize}` : null,
+    sizeRange ? `Размер ${sizeRange}` : null,
+    execution ? `Исполнение ${execution}` : null,
+    maxRoofAngle ? `Угол кровли до ${maxRoofAngle}°` : null,
     product.insulation_mm !== null ? `Утепление ${product.insulation_mm} мм` : null,
-    product.contour ? `Контур ${product.contour}` : null,
-    product.material ? `Материал ${product.material}` : null,
-    product.steel_grade ? `Сталь ${product.steel_grade}` : null,
+    steelGrades.length > 0 ? `Сталь ${steelGrades.join(" / ")}` : null,
+    wallThicknesses.length > 0 ? `Толщина стали ${wallThicknesses.join(" / ")} мм` : null,
+    steelGrades.length === 0 && materials.length > 0 ? `Материал ${materials.join(" / ")}` : null,
     stockLabel(product.stock_status),
-    ...Object.entries(product.attributes).map(
-      ([key, value]) => `${attributeLabel(key)}: ${attributeValue(key, value)}`,
-    ),
-  ].filter((value): value is string => Boolean(value));
+  ]
+    .filter((value): value is string => Boolean(value))
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .slice(0, 5);
+}
+
+export function CatalogProductCard({ product }: { product: ProductListItem }) {
+  const specs = catalogSpecs(product);
   const href = product.selected_sku
     ? `/product/${product.slug}?sku=${encodeURIComponent(product.selected_sku)}`
     : `/product/${product.slug}`;
