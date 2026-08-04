@@ -1,11 +1,9 @@
 import asyncio
-from decimal import Decimal
 
 from sqlalchemy import select
 
 from app.db.session import AsyncSessionLocal
 from app.modules.catalog.models import Category
-from app.modules.products.models import Product, SKU
 
 
 async def seed() -> None:
@@ -35,48 +33,6 @@ async def seed() -> None:
         session.add_all([bath, sandwich, single_wall])
         await session.flush()
 
-        product = Product(
-            category_id=sandwich.id,
-            name="Сэндвич-труба 115/200, нержавеющая сталь 0.8 мм",
-            slug="sendvich-truba-115-200-nerzhaveyushchaya-stal-08",
-            short_description="Базовый модуль для банных печей с диаметром 115 мм.",
-            description=(
-                "Утепленная труба для прохода дымохода через холодные зоны, "
-                "чердак и кровлю. Подходит как основа для demo-карточки MVP."
-            ),
-            brand="Dimohod Trade",
-            material="AISI 430",
-            wall_thickness_mm=Decimal("0.80"),
-            diameter_mm=115,
-            application_tags=["banya", "pech", "sendvich"],
-            compatibility_notes=(
-                "Для стартового участка от печи обычно нужен одноконтурный элемент. "
-                "Финальную комплектацию проверит калькулятор."
-            ),
-        )
-        session.add(product)
-        await session.flush()
-
-        session.add_all(
-            [
-                SKU(
-                    product_id=product.id,
-                    article="DT-SW-115-200-500",
-                    name="Сэндвич-труба 115/200, 0.5 м",
-                    price_rub=Decimal("2790.00"),
-                    stock_status="in_stock",
-                    attributes={"length_mm": 500},
-                ),
-                SKU(
-                    product_id=product.id,
-                    article="DT-SW-115-200-1000",
-                    name="Сэндвич-труба 115/200, 1 м",
-                    price_rub=Decimal("4590.00"),
-                    stock_status="in_stock",
-                    attributes={"length_mm": 1000},
-                ),
-            ]
-        )
         await session.commit()
 
 

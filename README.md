@@ -27,17 +27,14 @@ docker compose up --build
 - backend docs: `http://localhost:8000/api/docs`
 - health: `http://localhost:8000/api/v1/health`
 
-Чтобы добавить demo-данные:
+Чтобы добавить базовые категории в пустую БД:
 
 ```bash
 docker compose exec backend python -m app.db.seed
 ```
 
-Demo product slug:
-
-```text
-sendvich-truba-115-200-nerzhaveyushchaya-stal-08
-```
+Товарные семейства и SKU загружаются из утверждённых прайсов отдельными импортерами. Команда
+не создаёт синтетические товары и цены.
 
 ## Локальный backend без Docker
 
