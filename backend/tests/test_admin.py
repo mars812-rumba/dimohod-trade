@@ -33,6 +33,7 @@ from app.modules.products.router import (
     primary_product_image,
     primary_sku_image,
     primary_visual_sku_image,
+    public_sku_display_attributes,
     public_sku_media_attributes,
     select_active_sku,
     sku_matches_filters,
@@ -123,6 +124,23 @@ def test_public_sku_attributes_expose_gallery_and_seo_only() -> None:
         {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "sku_seo": seo, "internal": "hidden"}
     ) == {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "sku_seo": seo}
     assert public_sku_media_attributes({}) == {}
+
+
+def test_public_sku_display_attributes_expose_variant_labels_not_range_helpers() -> None:
+    attributes = {
+        "diameter_range": "100–125 мм",
+        "diameter_min_mm": 100,
+        "diameter_max_mm": 125,
+        "base_size": "500×500 мм",
+        "max_roof_angle_deg": 45,
+        "source_sheet": "Фланцы",
+    }
+
+    assert public_sku_display_attributes(attributes) == {
+        "diameter_range": "100–125 мм",
+        "base_size": "500×500 мм",
+        "max_roof_angle_deg": 45,
+    }
 
 
 def test_catalog_primary_sku_image_never_uses_connection_photo() -> None:

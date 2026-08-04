@@ -48,6 +48,9 @@ PRODUCT_KIND_LABELS = {
     "крепеж": "Крепеж",
     "оголовок": "Оголовки",
     "проходной_узел": "Проходные узлы",
+    "фланец": "Фланцы",
+    "консоль": "Консоли",
+    "изоляция": "Изоляция",
 }
 
 
@@ -174,10 +177,12 @@ def public_sku_display_attributes(attributes: dict[str, object] | None) -> dict[
         "insulation_mm",
     }
     hidden_prefixes = ("source_", "raw_", "sku_")
+    hidden_keys = {"diameter_min_mm", "diameter_max_mm"}
     return {
         key: value
         for key, value in (attributes or {}).items()
         if key not in core_keys
+        and key not in hidden_keys
         and not key.startswith(hidden_prefixes)
         and isinstance(value, (str, int, float, bool))
         and value not in (None, "")
@@ -471,7 +476,10 @@ async def read_product(
         sku_model = sku_by_id.get(sku_read.id)
         if sku_model is None:
             continue
-        sku_read.attributes = public_sku_media_attributes(sku_model.attributes)
+        sku_read.attributes = {
+            **public_sku_display_attributes(sku_model.attributes),
+            **public_sku_media_attributes(sku_model.attributes),
+        }
     product_built_at = perf_counter()
 
     product_read.compatible_products = (

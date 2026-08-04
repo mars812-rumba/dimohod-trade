@@ -50,7 +50,7 @@ type ProductSchemeItem = {
 
 type ProductMediaItem = ProductPhotoItem | ProductSchemeItem;
 
-type VariantDimensionKey =
+type CoreVariantDimensionKey =
   | "diameter"
   | "length_mm"
   | "steel_grade"
@@ -59,6 +59,9 @@ type VariantDimensionKey =
   | "angle_deg"
   | "material"
   | "contour";
+
+type VariantAttributeKey = "diameter_range" | "base_size" | "execution" | "size_range";
+type VariantDimensionKey = CoreVariantDimensionKey | `attribute:${VariantAttributeKey}`;
 
 type VariantDimension = {
   key: VariantDimensionKey;
@@ -247,6 +250,10 @@ function materialLabel(value: string | null) {
 }
 
 function dimensionValue(sku: Product["skus"][number], key: VariantDimensionKey): string | null {
+  if (key.startsWith("attribute:")) {
+    const value = sku.attributes[key.slice("attribute:".length)];
+    return typeof value === "string" || typeof value === "number" ? String(value) : null;
+  }
   if (key === "diameter") {
     if (sku.diameter_mm === null && sku.outer_diameter_mm === null) {
       return null;
@@ -256,11 +263,15 @@ function dimensionValue(sku: Product["skus"][number], key: VariantDimensionKey):
   if (key === "material") {
     return materialKey(sku.material);
   }
-  const value = sku[key];
+  const value = sku[key as keyof typeof sku];
   return value === null || value === "" ? null : String(value);
 }
 
 function dimensionLabel(sku: Product["skus"][number], key: VariantDimensionKey): string | null {
+  if (key.startsWith("attribute:")) {
+    const value = sku.attributes[key.slice("attribute:".length)];
+    return typeof value === "string" || typeof value === "number" ? String(value) : null;
+  }
   if (key === "diameter") {
     if (sku.diameter_mm !== null && sku.outer_diameter_mm !== null && sku.diameter_mm !== sku.outer_diameter_mm) {
       return `${sku.diameter_mm}/${sku.outer_diameter_mm} мм`;
@@ -282,7 +293,8 @@ function dimensionLabel(sku: Product["skus"][number], key: VariantDimensionKey):
   if (key === "material") {
     return materialLabel(sku.material);
   }
-  return sku[key] || null;
+  const value = sku[key as keyof typeof sku];
+  return typeof value === "string" && value ? value : null;
 }
 
 const dimensionDefinitions: Array<{ key: VariantDimensionKey; label: string }> = [
@@ -294,7 +306,37 @@ const dimensionDefinitions: Array<{ key: VariantDimensionKey; label: string }> =
   { key: "insulation_mm", label: "Утепление" },
   { key: "angle_deg", label: "Угол" },
   { key: "contour", label: "Контур" },
+  { key: "attribute:diameter_range", label: "Диапазон диаметра" },
+  { key: "attribute:base_size", label: "Размер основания" },
+  { key: "attribute:execution", label: "Исполнение" },
+  { key: "attribute:size_range", label: "Размер" },
 ];
+
+const publicVariantAttributeLabels: Record<VariantAttributeKey | "max_roof_angle_deg" | "model_number", string> = {
+  diameter_range: "Диапазон диаметра",
+  base_size: "Размер основания",
+  execution: "Исполнение",
+  size_range: "Размер",
+  max_roof_angle_deg: "Максимальный угол кровли",
+  model_number: "Номер модели",
+};
+
+function publicVariantAttributes(sku: Product["skus"][number] | null) {
+  if (!sku) {
+    return [];
+  }
+  return Object.entries(publicVariantAttributeLabels).flatMap(([key, label]) => {
+    const value = sku.attributes[key];
+    if (typeof value !== "string" && typeof value !== "number") {
+      return [];
+    }
+    return [{
+      key,
+      label,
+      value: key === "max_roof_angle_deg" ? `${value}°` : String(value),
+    }];
+  });
+}
 
 function buildVariantDimensions(skus: Product["skus"]): VariantDimension[] {
   return dimensionDefinitions.flatMap((definition) => {
@@ -652,6 +694,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const skuShortDescription = skuSeoText(activeSku, "short_description") ?? product.short_description;
   const skuDescription = skuSeoText(activeSku, "description") ?? product.description;
   const variantDimensions = useMemo(() => buildVariantDimensions(product.skus), [product.skus]);
+  const variantAttributes = publicVariantAttributes(activeSku);
 
   const loadCompatibility = useCallback(
     (sku: Product["skus"][number]) => {
@@ -1005,6 +1048,12 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   <strong>{product.product_kind}</strong>
                 </div>
               ) : null}
+              {variantAttributes.map((attribute) => (
+                <div className="spec-row" key={attribute.key}>
+                  <span>{attribute.label}</span>
+                  <strong>{attribute.value}</strong>
+                </div>
+              ))}
             </div>
           </section>
 

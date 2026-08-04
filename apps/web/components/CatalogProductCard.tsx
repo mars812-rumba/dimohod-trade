@@ -36,6 +36,12 @@ const attributeLabels: Record<string, string> = {
   outer_wall_thickness_mm: "Наружная стенка",
   insulation_material: "Материал утепления",
   connection_type: "Соединение",
+  diameter_range: "Диапазон диаметра",
+  base_size: "Размер основания",
+  execution: "Исполнение",
+  size_range: "Размер",
+  max_roof_angle_deg: "Максимальный угол кровли",
+  model_number: "Номер модели",
 };
 
 function attributeLabel(key: string) {
@@ -46,7 +52,7 @@ function attributeValue(key: string, value: unknown) {
   if (typeof value === "boolean") {
     return value ? "Да" : "Нет";
   }
-  const suffix = key.endsWith("_mm") ? " мм" : "";
+  const suffix = key.endsWith("_mm") ? " мм" : key.endsWith("_deg") ? "°" : "";
   return `${String(value)}${suffix}`;
 }
 
