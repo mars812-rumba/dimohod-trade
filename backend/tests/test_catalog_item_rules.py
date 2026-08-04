@@ -1,4 +1,8 @@
-from app.db.catalog_item_rules import exclude_price_item, normalized_price_item_name
+from app.db.catalog_item_rules import (
+    confirmed_tee_angle,
+    exclude_price_item,
+    normalized_price_item_name,
+)
 
 
 def test_sandwich_plug_labels_are_one_support_cap_family() -> None:
@@ -10,3 +14,17 @@ def test_single_wall_plug_is_excluded_but_sandwich_support_cap_is_kept() -> None
     assert exclude_price_item("Заглушка", "одноконтурный")
     assert not exclude_price_item("Заглушка", "сэндвич")
     assert not exclude_price_item("Заглушка опорная", "сэндвич")
+
+
+def test_tee_angles_with_and_without_units_use_one_family_name() -> None:
+    for source in (
+        "Тройник с К/О 45",
+        "Тройник с К/О 45гр",
+        "Тройник с К/О 45°",
+    ):
+        assert confirmed_tee_angle(source) == 45
+        assert normalized_price_item_name(source, "сэндвич") == "Тройник с К/О 45гр"
+
+    assert normalized_price_item_name("Тройник с К/О  90гр", "одноконтурный") == (
+        "Тройник с К/О 90гр"
+    )

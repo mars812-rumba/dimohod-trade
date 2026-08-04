@@ -194,7 +194,7 @@ def parse_length_mm(name: str) -> int | None:
 
 
 def parse_angle_deg(name: str) -> int | None:
-    match = re.search(r"(\d+)\s*гр", name, re.IGNORECASE)
+    match = re.search(r"(\d+)\s*(?:гр|°)", name, re.IGNORECASE)
     return int(match.group(1)) if match else None
 
 

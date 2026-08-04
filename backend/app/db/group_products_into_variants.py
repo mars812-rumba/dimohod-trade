@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.db.catalog_item_rules import normalized_price_item_name
 from app.db.session import AsyncSessionLocal
 from app.modules.catalog.models import Category  # noqa: F401
 from app.modules.products.models import Product, SKU
@@ -68,7 +69,8 @@ def raw_item_name(product: Product) -> str:
     value = product.extra_attributes.get("raw_item_name") or product.extra_attributes.get(
         "logical_item_name"
     )
-    return str(value).strip() if value else product.name
+    source_name = str(value).strip() if value else product.name
+    return normalized_price_item_name(source_name, product.contour)
 
 
 def logical_item_name(value: str) -> str:
@@ -89,7 +91,7 @@ def angle_deg(value: str, attrs: dict[str, Any]) -> int | None:
     attr_value = attrs.get("angle_deg")
     if isinstance(attr_value, int):
         return attr_value
-    match = re.search(r"(\d+)\s*гр", value, re.IGNORECASE)
+    match = re.search(r"(\d+)\s*(?:гр|°)", value, re.IGNORECASE)
     return int(match.group(1)) if match else None
 
 
