@@ -153,7 +153,15 @@ def manually_selected_product_matches(source_sku: SKU, target_sku: SKU) -> bool:
     return True
 
 
-def compatible_product_matches(source_sku: SKU, target_product: Product, target_sku: SKU) -> bool:
+def compatible_product_matches(
+    source_sku: SKU,
+    target_product: Product,
+    target_sku: SKU,
+    *,
+    explicitly_selected: bool = False,
+) -> bool:
+    if explicitly_selected:
+        return manually_selected_product_matches(source_sku, target_sku)
     if target_product.product_kind == "труба":
         return compatible_tube_matches(source_sku, target_sku)
     if target_product.product_kind == "крепеж":
@@ -241,7 +249,12 @@ async def list_compatible_product_skus(
             (sku, product)
             for sku, product in result.all()
             if any(
-                compatible_product_matches(source_sku, product, sku)
+                compatible_product_matches(
+                    source_sku,
+                    product,
+                    sku,
+                    explicitly_selected=True,
+                )
                 for source_sku in active_source_skus
             )
         ]

@@ -38,6 +38,7 @@ from app.modules.products.router import (
 )
 from app.modules.products.service import (
     compatible_fastener_matches,
+    compatible_product_matches,
     compatible_tube_matches,
     get_product_sku_by_key,
     manually_selected_product_matches,
@@ -575,6 +576,34 @@ def test_manually_selected_family_is_narrowed_to_matching_sku_fields() -> None:
     assert not manually_selected_product_matches(
         source,
         SimpleNamespace(**{**target.__dict__, "material": "Оцинкованная сталь"}),
+    )
+
+
+def test_explicitly_selected_single_wall_pipe_uses_editorial_matching() -> None:
+    source = SimpleNamespace(
+        diameter_mm=100,
+        outer_diameter_mm=None,
+        insulation_mm=None,
+        steel_grade="AISI 304",
+        material="Нержавеющая сталь",
+        contour="одноконтурный",
+    )
+    target_product = SimpleNamespace(product_kind="труба")
+    target_sku = SimpleNamespace(
+        diameter_mm=100,
+        outer_diameter_mm=None,
+        insulation_mm=None,
+        steel_grade="AISI 304",
+        material="Нержавейка",
+        contour="одностенный",
+    )
+
+    assert not compatible_product_matches(source, target_product, target_sku)
+    assert compatible_product_matches(
+        source,
+        target_product,
+        target_sku,
+        explicitly_selected=True,
     )
 
 

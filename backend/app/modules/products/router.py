@@ -245,11 +245,12 @@ async def compatible_items_for_sku(
     product: Product,
     source_sku: SKU,
 ) -> list[CompatibleProductItem]:
+    allowed_product_ids = normalized_compatible_product_ids(product.extra_attributes)
     compatible_items = await list_compatible_product_skus(
         session,
         [source_sku],
         exclude_product_id=product.id,
-        allowed_product_ids=normalized_compatible_product_ids(product.extra_attributes),
+        allowed_product_ids=allowed_product_ids,
     )
     return [
         CompatibleProductItem(
@@ -272,7 +273,12 @@ async def compatible_items_for_sku(
             primary_image=primary_product_image(target_product.extra_attributes),
         )
         for target_sku, target_product in compatible_items
-        if compatible_product_matches(source_sku, target_product, target_sku)
+        if compatible_product_matches(
+            source_sku,
+            target_product,
+            target_sku,
+            explicitly_selected=allowed_product_ids is not None,
+        )
     ]
 
 
