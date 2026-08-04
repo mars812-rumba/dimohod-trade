@@ -60,7 +60,13 @@ type CoreVariantDimensionKey =
   | "material"
   | "contour";
 
-type VariantAttributeKey = "diameter_range" | "base_size" | "execution" | "size_range";
+type VariantAttributeKey =
+  | "diameter_range"
+  | "base_size"
+  | "execution"
+  | "size_range"
+  | "outer_steel_grade"
+  | "outer_wall_thickness_mm";
 type VariantDimensionKey = CoreVariantDimensionKey | `attribute:${VariantAttributeKey}`;
 
 type VariantDimension = {
@@ -317,6 +323,8 @@ const publicVariantAttributeLabels: Record<VariantAttributeKey | "max_roof_angle
   base_size: "Размер основания",
   execution: "Исполнение",
   size_range: "Размер",
+  outer_steel_grade: "Наружная сталь",
+  outer_wall_thickness_mm: "Толщина наружной стали",
   max_roof_angle_deg: "Максимальный угол кровли",
   model_number: "Номер модели",
 };
@@ -333,7 +341,12 @@ function publicVariantAttributes(sku: Product["skus"][number] | null) {
     return [{
       key,
       label,
-      value: key === "max_roof_angle_deg" ? `${value}°` : String(value),
+      value:
+        key === "max_roof_angle_deg"
+          ? `${value}°`
+          : key.endsWith("_mm")
+            ? `${value} мм`
+            : String(value),
     }];
   });
 }

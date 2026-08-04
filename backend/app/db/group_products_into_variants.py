@@ -65,7 +65,9 @@ def slugify(value: str, max_len: int = 180) -> str:
 
 
 def raw_item_name(product: Product) -> str:
-    value = product.extra_attributes.get("raw_item_name")
+    value = product.extra_attributes.get("raw_item_name") or product.extra_attributes.get(
+        "logical_item_name"
+    )
     return str(value).strip() if value else product.name
 
 

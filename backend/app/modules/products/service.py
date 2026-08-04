@@ -173,6 +173,20 @@ def manually_selected_product_matches(source_sku: SKU, target_sku: SKU) -> bool:
     return True
 
 
+def compatible_support_platform_matches(source_sku: SKU, platform_sku: SKU) -> bool:
+    """Match the platform to a console range or to populated sandwich fields."""
+    source_attributes = getattr(source_sku, "attributes", None) or {}
+    diameter_max = source_attributes.get("diameter_max_mm")
+    platform_diameter = platform_sku.outer_diameter_mm or platform_sku.diameter_mm
+    if source_sku.diameter_mm is None and isinstance(diameter_max, (int, float)):
+        return (
+            not isinstance(diameter_max, bool)
+            and platform_diameter is not None
+            and platform_diameter <= diameter_max
+        )
+    return manually_selected_product_matches(source_sku, platform_sku)
+
+
 def compatible_product_matches(
     source_sku: SKU,
     target_product: Product,
@@ -182,6 +196,8 @@ def compatible_product_matches(
 ) -> bool:
     if target_product.product_kind == "консоль":
         return compatible_console_matches(source_sku, target_sku)
+    if target_product.product_kind == "опорная_площадка":
+        return compatible_support_platform_matches(source_sku, target_sku)
     if explicitly_selected:
         return manually_selected_product_matches(source_sku, target_sku)
     if target_product.product_kind == "труба":
@@ -352,6 +368,7 @@ async def list_products(
         (Product.product_kind == "конденсатоотвод", 70),
         (Product.product_kind == "заглушка", 80),
         (Product.product_kind == "крепеж", 90),
+        (Product.product_kind == "опорная_площадка", 95),
         (Product.product_kind == "проходной_узел", 100),
         (Product.product_kind == "оголовок", 110),
         else_=999,

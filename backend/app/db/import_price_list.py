@@ -12,6 +12,7 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.catalog_item_rules import exclude_price_item, normalized_price_item_name
 from app.db.session import AsyncSessionLocal
 from app.modules.catalog.models import Category
 from app.modules.products.models import NeedsReview, Product, SKU
@@ -334,6 +335,8 @@ def logical_product_slug_source(
     item_name: str,
     section: SectionSpec,
 ) -> str:
+    if kind == "заглушка" and section.contour == "сэндвич":
+        return "sendvich-zaglushka-opornaya"
     parts = [section.contour, kind, logical_item_name(item_name)]
     angle_deg = parse_angle_deg(item_name)
     if kind == "отвод" and angle_deg is not None:
@@ -423,9 +426,13 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                     stats["categories_touched"] += 1
 
             for item_index, item in enumerate(block.get("items") or []):
-                item_name = str(item.get("name") or "").strip()
-                if not item_name:
+                source_item_name = str(item.get("name") or "").strip()
+                if not source_item_name:
                     continue
+                if exclude_price_item(source_item_name, section.contour):
+                    stats["items_excluded_by_catalog_rule"] += 1
+                    continue
+                item_name = normalized_price_item_name(source_item_name, section.contour)
 
                 kind = product_kind(item_name)
                 if kind is None:
@@ -564,7 +571,7 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                         "angle_deg": angle_deg,
                         "source_sheet": sheet_name,
                         "source_section": section.title,
-                        "raw_item_name": item_name,
+                        "raw_item_name": source_item_name,
                         "raw_diameter": raw_diameter,
                         "material": section.material,
                         "steel_grade": section.steel_grade,

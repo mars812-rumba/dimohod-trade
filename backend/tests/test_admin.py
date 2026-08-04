@@ -42,6 +42,7 @@ from app.modules.products.service import (
     compatible_console_matches,
     compatible_fastener_matches,
     compatible_product_matches,
+    compatible_support_platform_matches,
     compatible_tube_matches,
     get_product_sku_by_key,
     manually_selected_product_matches,
@@ -653,6 +654,28 @@ def test_explicitly_selected_console_uses_range_instead_of_exact_sku_fields() ->
         target_product,
         target_sku,
         explicitly_selected=True,
+    )
+
+
+def test_support_platform_uses_console_maximum_outer_diameter() -> None:
+    console = SimpleNamespace(
+        diameter_mm=None,
+        outer_diameter_mm=None,
+        attributes={"diameter_max_mm": 350},
+    )
+    platform = SimpleNamespace(
+        diameter_mm=250,
+        outer_diameter_mm=350,
+        insulation_mm=50,
+        steel_grade="AISI 304",
+        material="Нержавеющая сталь",
+        contour="сэндвич",
+    )
+
+    assert compatible_support_platform_matches(console, platform)
+    assert not compatible_support_platform_matches(
+        console,
+        SimpleNamespace(**{**platform.__dict__, "outer_diameter_mm": 380}),
     )
 
 
