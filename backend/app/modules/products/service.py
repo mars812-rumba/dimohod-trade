@@ -170,10 +170,6 @@ def manually_selected_product_matches(source_sku: SKU, target_sku: SKU) -> bool:
     if source_steel and target_steel and source_steel != target_steel:
         return False
 
-    source_contour = contour_group(source_sku.contour)
-    target_contour = contour_group(target_sku.contour)
-    if source_contour and target_contour and source_contour != target_contour:
-        return False
     return True
 
 

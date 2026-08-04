@@ -713,6 +713,33 @@ def test_explicitly_selected_single_wall_pipe_uses_editorial_matching() -> None:
     )
 
 
+def test_explicitly_selected_sandwich_pipe_may_follow_single_wall_fitting() -> None:
+    source = SimpleNamespace(
+        diameter_mm=100,
+        outer_diameter_mm=None,
+        insulation_mm=None,
+        steel_grade="AISI 321",
+        material="Нержавеющая сталь",
+        contour="одноконтурный",
+    )
+    target_product = SimpleNamespace(product_kind="труба")
+    target_sku = SimpleNamespace(
+        diameter_mm=100,
+        outer_diameter_mm=200,
+        insulation_mm=50,
+        steel_grade="AISI 321",
+        material="Нержавеющая сталь",
+        contour="сэндвич",
+    )
+
+    assert compatible_product_matches(
+        source,
+        target_product,
+        target_sku,
+        explicitly_selected=True,
+    )
+
+
 def test_explicit_compatible_product_ids_are_normalized_without_duplicates() -> None:
     first = UUID("11111111-1111-1111-1111-111111111111")
     second = UUID("22222222-2222-2222-2222-222222222222")
