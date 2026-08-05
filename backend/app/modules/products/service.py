@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from uuid import UUID
 
 from sqlalchemy import and_, case, exists, func, or_, select
@@ -7,6 +7,7 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from app.modules.catalog.models import Category
 from app.modules.products.models import Product, SKU
+from app.db.price_section_attributes import outer_pipe_attributes
 from app.db.steel_selection_profiles import steel_selection_label
 
 COMPATIBLE_PRODUCT_IDS_KEY = "compatible_product_ids"
@@ -47,6 +48,15 @@ def material_filter_expression(value: str):
     if value == "galvanized":
         return or_(SKU.material.ilike("%оцинк%"), SKU.material.ilike("%galvan%"))
     return func.lower(SKU.material) == value.lower()
+
+
+def outer_material_filter_expression(value: str):
+    outer_material = SKU.attributes["outer_material"].as_string()
+    if value == "stainless":
+        return or_(outer_material.ilike("%нерж%"), outer_material.ilike("%stainless%"))
+    if value == "galvanized":
+        return or_(outer_material.ilike("%оцинк%"), outer_material.ilike("%galvan%"))
+    return func.lower(outer_material) == value.lower()
 
 
 def contour_group(value: str | None) -> str | None:
@@ -353,8 +363,11 @@ async def list_products(
     outer_diameter_mm: int | None = None,
     steel_grade: str | None = None,
     material: str | None = None,
+    outer_steel_grade: str | None = None,
+    outer_material: str | None = None,
     length_mm: int | None = None,
     wall_thickness_mm: Decimal | None = None,
+    outer_wall_thickness_mm: Decimal | None = None,
     angle_deg: int | None = None,
     insulation_mm: int | None = None,
     contour: str | None = None,
@@ -391,10 +404,21 @@ async def list_products(
         sku_filters.append(SKU.steel_grade == steel_grade)
     if material:
         sku_filters.append(material_filter_expression(material))
+    if outer_steel_grade:
+        sku_filters.append(
+            SKU.attributes["outer_steel_grade"].as_string() == outer_steel_grade
+        )
+    if outer_material:
+        sku_filters.append(outer_material_filter_expression(outer_material))
     if length_mm is not None:
         sku_filters.append(SKU.length_mm == length_mm)
     if wall_thickness_mm is not None:
         sku_filters.append(SKU.wall_thickness_mm == wall_thickness_mm)
+    if outer_wall_thickness_mm is not None:
+        sku_filters.append(
+            SKU.attributes["outer_wall_thickness_mm"].as_string()
+            == format(outer_wall_thickness_mm, "f")
+        )
     if angle_deg is not None:
         sku_filters.append(SKU.angle_deg == angle_deg)
     if insulation_mm is not None:
@@ -445,6 +469,7 @@ async def list_variant_filter_options(
             SKU.outer_diameter_mm,
             SKU.steel_grade,
             SKU.material,
+            SKU.attributes,
             SKU.length_mm,
             SKU.wall_thickness_mm,
             SKU.angle_deg,
@@ -459,17 +484,32 @@ async def list_variant_filter_options(
     diameter_products: dict[str, set[object]] = {}
     steel_products: dict[str, set[object]] = {}
     material_products: dict[str, set[object]] = {}
+    outer_steel_products: dict[str, set[object]] = {}
+    outer_material_products: dict[str, set[object]] = {}
+    inner_pipe_products: dict[str, set[object]] = {}
+    outer_pipe_products: dict[str, set[object]] = {}
+    execution_products: dict[str, set[object]] = {}
     length_products: dict[str, set[object]] = {}
     thickness_products: dict[str, set[object]] = {}
+    outer_thickness_products: dict[str, set[object]] = {}
     angle_products: dict[str, set[object]] = {}
     insulation_products: dict[str, set[object]] = {}
     contour_products: dict[str, set[object]] = {}
+    material_labels = {"stainless": "Нержавейка", "galvanized": "Оцинковка"}
+
+    def decimal_option_value(value: object) -> str:
+        return format(Decimal(str(value)).normalize(), "f")
+
+    def decimal_option_label(value: str) -> str:
+        return value.replace(".", ",")
+
     for (
         product_id,
         diameter,
         outer_diameter,
         steel,
         raw_material,
+        attributes,
         length,
         thickness,
         angle,
@@ -489,10 +529,76 @@ async def list_variant_filter_options(
         grouped_material = material_group(raw_material)
         if grouped_material:
             material_products.setdefault(grouped_material, set()).add(product_id)
+        sku_attributes = attributes if isinstance(attributes, dict) else {}
+        recovered_outer_attributes = outer_pipe_attributes(sku_attributes)
+        outer_steel = recovered_outer_attributes.get("outer_steel_grade")
+        if outer_steel:
+            outer_steel_products.setdefault(str(outer_steel), set()).add(product_id)
+        grouped_outer_material = material_group(
+            recovered_outer_attributes.get("outer_material")
+        )
+        if grouped_outer_material:
+            outer_material_products.setdefault(grouped_outer_material, set()).add(product_id)
+        outer_thickness = recovered_outer_attributes.get("outer_wall_thickness_mm")
+        if outer_thickness is not None:
+            try:
+                normalized_outer_thickness = decimal_option_value(outer_thickness)
+            except (InvalidOperation, ValueError, TypeError):
+                pass
+            else:
+                outer_thickness_products.setdefault(normalized_outer_thickness, set()).add(product_id)
+        normalized_steel = " ".join(str(steel).split()) if steel else ""
+        if grouped_material or normalized_steel:
+            inner_value = "|".join((grouped_material or "", normalized_steel))
+            inner_label = str(
+                normalized_steel
+                or material_labels.get(grouped_material or "", grouped_material or "")
+            )
+            inner_pipe_products.setdefault(f"{inner_value}|{inner_label}", set()).add(product_id)
+
+        normalized_outer_thickness = ""
+        if outer_thickness is not None:
+            try:
+                normalized_outer_thickness = decimal_option_value(outer_thickness)
+            except (InvalidOperation, ValueError, TypeError):
+                normalized_outer_thickness = ""
+        if grouped_outer_material or outer_steel or normalized_outer_thickness:
+            outer_value = "|".join(
+                (
+                    grouped_outer_material or "",
+                    str(outer_steel or ""),
+                    normalized_outer_thickness,
+                )
+            )
+            outer_label = str(
+                outer_steel
+                or material_labels.get(
+                    grouped_outer_material or "",
+                    grouped_outer_material or "",
+                )
+            )
+            if normalized_outer_thickness:
+                outer_label = (
+                    f"{outer_label} · {decimal_option_label(normalized_outer_thickness)} мм"
+                )
+            outer_pipe_products.setdefault(f"{outer_value}|{outer_label}", set()).add(product_id)
+
+        if angle is not None or insulation is not None:
+            execution_value = f"{angle or ''}|{insulation or ''}"
+            execution_parts = []
+            if angle is not None:
+                execution_parts.append(f"угол {angle}°")
+            if insulation is not None:
+                execution_parts.append(f"утепление {insulation} мм")
+            execution_label = " · ".join(execution_parts)
+            execution_products.setdefault(
+                f"{execution_value}|{execution_label}",
+                set(),
+            ).add(product_id)
         if length is not None:
             length_products.setdefault(str(length), set()).add(product_id)
         if thickness is not None:
-            thickness_products.setdefault(format(thickness, "f"), set()).add(product_id)
+            thickness_products.setdefault(decimal_option_value(thickness), set()).add(product_id)
         if angle is not None:
             angle_products.setdefault(str(angle), set()).add(product_id)
         if insulation is not None:
@@ -519,7 +625,6 @@ async def list_variant_filter_options(
         ],
         key=lambda item: item[1],
     )
-    material_labels = {"stainless": "Нержавейка", "galvanized": "Оцинковка"}
     materials = sorted(
         [
             (value, material_labels.get(value, value), len(product_ids))
@@ -527,9 +632,37 @@ async def list_variant_filter_options(
         ],
         key=lambda item: item[1],
     )
+    outer_steels = sorted(
+        [
+            (value, value, len(product_ids))
+            for value, product_ids in outer_steel_products.items()
+        ],
+        key=lambda item: item[1],
+    )
+    outer_materials = sorted(
+        [
+            (value, material_labels.get(value, value), len(product_ids))
+            for value, product_ids in outer_material_products.items()
+        ],
+        key=lambda item: item[1],
+    )
+
+    def compound_options(values: dict[str, set[object]]) -> list[tuple[str, str, int]]:
+        return sorted(
+            [
+                (
+                    key.rsplit("|", 1)[0],
+                    key.rsplit("|", 1)[1],
+                    len(product_ids),
+                )
+                for key, product_ids in values.items()
+            ],
+            key=lambda item: item[1],
+        )
+
     def numeric_options(values: dict[str, set[object]], suffix: str) -> list[tuple[str, str, int]]:
         return [
-            (value, f"{value}{suffix}", len(product_ids))
+            (value, f"{decimal_option_label(value)}{suffix}", len(product_ids))
             for value, product_ids in sorted(values.items(), key=lambda item: Decimal(item[0]))
         ]
 
@@ -541,8 +674,14 @@ async def list_variant_filter_options(
         "diameters": diameters,
         "steel_grades": steels,
         "materials": materials,
+        "outer_steel_grades": outer_steels,
+        "outer_materials": outer_materials,
+        "inner_pipes": compound_options(inner_pipe_products),
+        "outer_pipes": compound_options(outer_pipe_products),
+        "executions": compound_options(execution_products),
         "lengths": numeric_options(length_products, " мм"),
         "wall_thicknesses": numeric_options(thickness_products, " мм"),
+        "outer_wall_thicknesses": numeric_options(outer_thickness_products, " мм"),
         "angles": numeric_options(angle_products, "°"),
         "insulations": numeric_options(insulation_products, " мм"),
         "contours": contours,

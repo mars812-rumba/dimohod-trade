@@ -43,10 +43,6 @@ function decimalLabel(value: string | number) {
     : String(value).replace(".", ",");
 }
 
-function uniqueValues(values: Array<string | null>) {
-  return Array.from(new Set(values.filter((value): value is string => Boolean(value))));
-}
-
 function catalogSpecs(product: ProductListItem) {
   const attributes = product.attributes;
   const diameter = product.diameter_mm
@@ -60,14 +56,8 @@ function catalogSpecs(product: ProductListItem) {
   const execution = textAttribute(attributes, "execution");
   const maxRoofAngle = textAttribute(attributes, "max_roof_angle_deg");
   const outerSteelGrade = textAttribute(attributes, "outer_steel_grade");
-  const steelGrades = uniqueValues([product.steel_grade, outerSteelGrade]);
   const outerMaterial = textAttribute(attributes, "outer_material");
-  const materials = uniqueValues([product.material, outerMaterial]);
   const outerWallThickness = textAttribute(attributes, "outer_wall_thickness_mm");
-  const wallThicknesses = uniqueValues([
-    product.wall_thickness_mm ? decimalLabel(product.wall_thickness_mm) : null,
-    outerWallThickness ? decimalLabel(outerWallThickness) : null,
-  ]);
 
   return [
     diameter,
@@ -79,9 +69,14 @@ function catalogSpecs(product: ProductListItem) {
     execution ? `Исполнение ${execution}` : null,
     maxRoofAngle ? `Угол кровли до ${maxRoofAngle}°` : null,
     product.insulation_mm !== null ? `Утепление ${product.insulation_mm} мм` : null,
-    steelGrades.length > 0 ? `Сталь ${steelGrades.join(" / ")}` : null,
-    wallThicknesses.length > 0 ? `Толщина стали ${wallThicknesses.join(" / ")} мм` : null,
-    steelGrades.length === 0 && materials.length > 0 ? `Материал ${materials.join(" / ")}` : null,
+    product.steel_grade ? `Внутренняя сталь ${product.steel_grade}` : null,
+    outerSteelGrade ? `Наружная сталь ${outerSteelGrade}` : null,
+    !product.steel_grade && product.material ? `Материал внутренней трубы ${product.material}` : null,
+    !outerSteelGrade && outerMaterial ? `Материал наружной трубы ${outerMaterial}` : null,
+    product.wall_thickness_mm
+      ? `Внутренняя труба ${decimalLabel(product.wall_thickness_mm)} мм`
+      : null,
+    outerWallThickness ? `Наружная труба ${decimalLabel(outerWallThickness)} мм` : null,
     stockLabel(product.stock_status),
   ]
     .filter((value): value is string => Boolean(value))
@@ -108,7 +103,10 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
           <span>{product.product_kind ?? "товар"}</span>
         )}
         {steelBadges.length > 0 ? (
-          <div className="product-image-badges catalog-product-image-badges" aria-label="Назначение варианта">
+          <div
+            className="product-image-badges catalog-product-image-badges"
+            aria-label="Назначение варианта"
+          >
             {steelBadges.map((badge) => (
               <span
                 className={`product-image-badge product-image-badge-${badge.tone}`}

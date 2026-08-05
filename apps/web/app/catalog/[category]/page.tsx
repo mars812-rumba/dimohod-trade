@@ -10,11 +10,6 @@ import {
   getProducts,
   type CategoryNode,
 } from "@/lib/api";
-import {
-  type CatalogMaterial,
-  defaultCatalogMaterial,
-  steelGradesForMaterial,
-} from "@/lib/catalogFilters";
 
 const PAGE_SIZE = 48;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -24,13 +19,11 @@ type CategoryPageProps = {
   params: Promise<{ category: string }>;
   searchParams: Promise<{
     diameter?: string;
-    steel?: string;
-    material?: string;
+    inner_pipe?: string;
+    inner_thickness?: string;
+    outer_pipe?: string;
+    execution?: string;
     length?: string;
-    thickness?: string;
-    angle?: string;
-    insulation?: string;
-    contour?: string;
     page?: string;
   }>;
 };
@@ -68,6 +61,15 @@ function selectedFilter(value: string | undefined, options: Array<{ value: strin
   return requested && options.some((option) => option.value === requested) ? requested : undefined;
 }
 
+function selectedOrFirst(value: string | undefined, options: Array<{ value: string }>) {
+  return selectedFilter(value, options) ?? options[0]?.value;
+}
+
+function compoundParts(value: string | undefined, size: number) {
+  const parts = value?.split("|") ?? [];
+  return Array.from({ length: size }, (_, index) => parts[index] || undefined);
+}
+
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { category: slug } = await params;
   const category = await categoryBySlug(slug);
@@ -97,32 +99,28 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const diameter = filters.diameters.some((option) => option.value === requestedDiameter)
     ? requestedDiameter
     : filters.diameters[0]?.value;
-  const requestedMaterial =
-    query.material === "stainless" || query.material === "galvanized"
-      ? query.material
-      : undefined;
-  const material = (requestedMaterial && filters.materials.some((option) => option.value === requestedMaterial)
-    ? requestedMaterial
-    : defaultCatalogMaterial(filters.materials)) as CatalogMaterial;
-  const materialSteels = steelGradesForMaterial(filters.steel_grades, material);
-  const requestedSteel = query.steel?.trim();
-  const steel = materialSteels.some((option) => option.value === requestedSteel)
-    ? requestedSteel
-    : materialSteels[0]?.value;
+  const innerPipe = selectedOrFirst(query.inner_pipe, filters.inner_pipes);
+  const outerPipe = filters.outer_pipes.length
+    ? selectedOrFirst(query.outer_pipe, filters.outer_pipes)
+    : undefined;
+  const execution = selectedFilter(query.execution, filters.executions);
   const length = selectedFilter(query.length, filters.lengths);
-  const thickness = selectedFilter(query.thickness, filters.wall_thicknesses);
-  const angle = selectedFilter(query.angle, filters.angles);
-  const insulation = selectedFilter(query.insulation, filters.insulations);
-  const contour = selectedFilter(query.contour, filters.contours);
+  const innerThickness = selectedFilter(query.inner_thickness, filters.wall_thicknesses);
+  const [material, steel] = compoundParts(innerPipe, 2);
+  const [outerMaterial, outerSteel, outerThickness] = compoundParts(outerPipe, 3);
+  const [angle, insulation] = compoundParts(execution, 2);
   const page = Math.max(1, Number(query.page ?? "1") || 1);
   const offset = (page - 1) * PAGE_SIZE;
-  const currentFilters = { diameter, steel, material, length, thickness, angle, insulation, contour };
+  const currentFilters = {
+    diameter,
+    inner_pipe: innerPipe,
+    inner_thickness: innerThickness,
+    outer_pipe: outerPipe,
+    execution,
+    length,
+  };
   const extraFacets = [
     { name: "length", label: "Длина L", value: length, options: filters.lengths },
-    { name: "thickness", label: "Толщина стали S", value: thickness, options: filters.wall_thicknesses },
-    { name: "angle", label: "Угол поворота", value: angle, options: filters.angles },
-    { name: "insulation", label: "Утепление", value: insulation, options: filters.insulations },
-    { name: "contour", label: "Контур", value: contour, options: filters.contours },
   ];
 
   const productResponse = await getProducts({
@@ -132,11 +130,13 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     diameter,
     steelGrade: steel,
     material,
+    outerSteelGrade: outerSteel,
+    outerMaterial,
     length,
-    wallThickness: thickness,
+    wallThickness: innerThickness,
+    outerWallThickness: outerThickness,
     angle,
     insulation,
-    contour,
   });
   const totalPages = Math.max(1, Math.ceil(productResponse.total / PAGE_SIZE));
 
@@ -175,11 +175,15 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             <CatalogVariantFilters
               diameter={diameter}
               diameters={filters.diameters}
-              material={material}
-              materials={filters.materials}
-              steel={steel}
-              steelGrades={filters.steel_grades}
+              execution={execution}
+              executions={filters.executions}
               facets={extraFacets}
+              innerPipe={innerPipe}
+              innerPipes={filters.inner_pipes}
+              innerThickness={innerThickness}
+              innerThicknesses={filters.wall_thicknesses}
+              outerPipe={outerPipe}
+              outerPipes={filters.outer_pipes}
             />
             {Object.values(query).some(Boolean) ? (
               <Link className="catalog-filter-reset" href={`/catalog/${category.slug}`}>
