@@ -70,6 +70,7 @@ type VariantAttributeKey =
   | "base_size"
   | "execution"
   | "size_range"
+  | "outer_material"
   | "outer_steel_grade"
   | "outer_wall_thickness_mm";
 type VariantDimensionKey = CoreVariantDimensionKey | `attribute:${VariantAttributeKey}`;
@@ -263,6 +264,9 @@ function materialLabel(value: string | null) {
 function dimensionValue(sku: Product["skus"][number], key: VariantDimensionKey): string | null {
   if (key.startsWith("attribute:")) {
     const value = sku.attributes[key.slice("attribute:".length)];
+    if (key === "attribute:outer_material" && typeof value === "string") {
+      return materialKey(value);
+    }
     return typeof value === "string" || typeof value === "number" ? String(value) : null;
   }
   if (key === "diameter") {
@@ -281,6 +285,12 @@ function dimensionValue(sku: Product["skus"][number], key: VariantDimensionKey):
 function dimensionLabel(sku: Product["skus"][number], key: VariantDimensionKey): string | null {
   if (key.startsWith("attribute:")) {
     const value = sku.attributes[key.slice("attribute:".length)];
+    if (key === "attribute:outer_material" && typeof value === "string") {
+      return materialLabel(value);
+    }
+    if (key === "attribute:outer_wall_thickness_mm" && (typeof value === "string" || typeof value === "number")) {
+      return `${value} мм`;
+    }
     return typeof value === "string" || typeof value === "number" ? String(value) : null;
   }
   if (key === "diameter") {
@@ -312,11 +322,14 @@ function dimensionLabel(sku: Product["skus"][number], key: VariantDimensionKey):
 }
 
 const dimensionDefinitions: Array<{ key: VariantDimensionKey; label: string }> = [
-  { key: "material", label: "Материал" },
-  { key: "steel_grade", label: "Марка стали" },
+  { key: "material", label: "Материал внутренней трубы" },
   { key: "diameter", label: "Диаметр d/D" },
+  { key: "steel_grade", label: "Марка стали внутренней трубы" },
+  { key: "wall_thickness_mm", label: "Толщина внутренней трубы" },
+  { key: "attribute:outer_material", label: "Материал наружной трубы" },
+  { key: "attribute:outer_steel_grade", label: "Марка стали наружной трубы" },
+  { key: "attribute:outer_wall_thickness_mm", label: "Толщина наружной трубы" },
   { key: "length_mm", label: "Длина" },
-  { key: "wall_thickness_mm", label: "Толщина стали" },
   { key: "insulation_mm", label: "Утепление" },
   { key: "angle_deg", label: "Угол" },
   { key: "contour", label: "Контур" },
@@ -331,8 +344,6 @@ const publicVariantAttributeLabels: Record<string, string> = {
   base_size: "Размер основания",
   execution: "Исполнение",
   size_range: "Размер",
-  outer_steel_grade: "Наружная сталь",
-  outer_wall_thickness_mm: "Толщина наружной стали",
   max_roof_angle_deg: "Максимальный угол кровли",
   model_number: "Номер модели",
 };
@@ -860,6 +871,19 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
       : null);
   const material = activeSku?.material ?? product.material;
   const steelGrade = activeSku?.steel_grade ?? product.steel_grade;
+  const outerMaterial =
+    typeof activeSku?.attributes.outer_material === "string"
+      ? activeSku.attributes.outer_material
+      : null;
+  const outerSteelGrade =
+    typeof activeSku?.attributes.outer_steel_grade === "string"
+      ? activeSku.attributes.outer_steel_grade
+      : null;
+  const outerWallThicknessMm =
+    typeof activeSku?.attributes.outer_wall_thickness_mm === "string" ||
+    typeof activeSku?.attributes.outer_wall_thickness_mm === "number"
+      ? String(activeSku.attributes.outer_wall_thickness_mm)
+      : null;
   const diameterMm = activeSku?.diameter_mm ?? product.diameter_mm;
   const wallThicknessMm = activeSku?.wall_thickness_mm ?? product.wall_thickness_mm;
   const contour = activeSku?.contour ?? product.contour;
@@ -905,10 +929,13 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
         { label: "Артикул", value: activeSku.article },
         { label: "Внутренний диаметр", value: diameterMm !== null ? `${diameterMm} мм` : null },
         { label: "Наружный диаметр", value: outerDiameter !== null ? `${outerDiameter} мм` : null },
-        { label: "Толщина стали", value: wallThicknessMm ? `${compactDecimal(wallThicknessMm)} мм` : null },
+        { label: "Толщина внутренней трубы", value: wallThicknessMm ? `${compactDecimal(wallThicknessMm)} мм` : null },
+        { label: "Толщина наружной трубы", value: outerWallThicknessMm ? `${compactDecimal(outerWallThicknessMm)} мм` : null },
         { label: "Утепление", value: insulationMm !== null ? `${insulationMm} мм` : null },
-        { label: "Материал", value: material },
-        { label: "Марка стали", value: steelGrade },
+        { label: "Материал внутренней трубы", value: material },
+        { label: "Марка стали внутренней трубы", value: steelGrade },
+        { label: "Материал наружной трубы", value: outerMaterial },
+        { label: "Марка стали наружной трубы", value: outerSteelGrade },
       ].filter((item): item is { label: string; value: string } => Boolean(item.value))
     : [];
 
@@ -959,38 +986,40 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
       <div className="product-layout">
         <div className="product-main">
           <div className="product-image-wrap">
-            {activeImage?.kind === "scheme" ? (
-              <div className="product-dimension-scheme">
-                <DimensionScheme
-                  title={product.name}
-                  dimensions={schemeDimensions}
-                  steelGrade={steelGrade}
-                  material={material}
+            <div className="product-focus-media">
+              {activeImage?.kind === "scheme" ? (
+                <div className="product-dimension-scheme">
+                  <DimensionScheme
+                    title={product.name}
+                    dimensions={schemeDimensions}
+                    steelGrade={steelGrade}
+                    material={material}
+                  />
+                </div>
+              ) : activeImage ? (
+                <img
+                  className={`product-image${activeImage.fit === "contain" ? " product-image-contain" : ""}`}
+                  src={activeImage.src}
+                  alt={activeImage.alt}
                 />
-              </div>
-            ) : activeImage ? (
-              <img
-                className={`product-image${activeImage.fit === "contain" ? " product-image-contain" : ""}`}
-                src={activeImage.src}
-                alt={activeImage.alt}
-              />
-            ) : (
-              <div className="product-image-placeholder">
-                <span>Фото товара</span>
-              </div>
-            )}
-            {steelBadges.length > 0 ? (
-              <div className="product-image-badges" aria-label="Назначение выбранного варианта">
-                {steelBadges.map((badge) => (
-                  <span
-                    className={`product-image-badge product-image-badge-${badge.tone}`}
-                    key={`${badge.tone}-${badge.label}`}
-                  >
-                    {badge.label}
-                  </span>
-                ))}
-              </div>
-            ) : null}
+              ) : (
+                <div className="product-image-placeholder">
+                  <span>Фото товара</span>
+                </div>
+              )}
+              {activeImage?.kind !== "scheme" && steelBadges.length > 0 ? (
+                <div className="product-image-badges" aria-label="Назначение выбранного варианта">
+                  {steelBadges.map((badge) => (
+                    <span
+                      className={`product-image-badge product-image-badge-${badge.tone}`}
+                      key={`${badge.tone}-${badge.label}`}
+                    >
+                      {badge.label}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
             {media.length > 1 ? (
               <div className="product-gallery-thumbs" aria-label="Галерея товара">
                 {media.map((item, index) => (
@@ -1027,14 +1056,26 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
             <div className="specs-table">
               {material ? (
                 <div className="spec-row">
-                  <span>Материал</span>
+                  <span>Материал внутренней трубы</span>
                   <strong>{material}</strong>
                 </div>
               ) : null}
               {steelGrade ? (
                 <div className="spec-row">
-                  <span>Марка стали</span>
+                  <span>Марка стали внутренней трубы</span>
                   <strong>{steelGrade}</strong>
+                </div>
+              ) : null}
+              {outerMaterial ? (
+                <div className="spec-row">
+                  <span>Материал наружной трубы</span>
+                  <strong>{materialLabel(outerMaterial)}</strong>
+                </div>
+              ) : null}
+              {outerSteelGrade ? (
+                <div className="spec-row">
+                  <span>Марка стали наружной трубы</span>
+                  <strong>{outerSteelGrade}</strong>
                 </div>
               ) : null}
               {diameterMm ? (
@@ -1051,8 +1092,14 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
               ) : null}
               {wallThicknessMm ? (
                 <div className="spec-row">
-                  <span>Толщина стенки</span>
+                  <span>Толщина внутренней трубы</span>
                   <strong>{wallThicknessMm} мм</strong>
+                </div>
+              ) : null}
+              {outerWallThicknessMm ? (
+                <div className="spec-row">
+                  <span>Толщина наружной трубы</span>
+                  <strong>{outerWallThicknessMm} мм</strong>
                 </div>
               ) : null}
               {contour ? (
@@ -1233,88 +1280,105 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
 
         <aside className="sku-panel">
           {activeSku ? (
-            <div className="variant-picker">
-              <div className="variant-picker-head">
-                <span>Выберите исполнение</span>
-                <strong>{product.skus.length} вариантов</strong>
-              </div>
-              {variantDimensions.map((dimension, dimensionIndex) => {
-                const prefix = variantDimensions.slice(0, dimensionIndex);
-                const selectedValue = dimensionValue(activeSku, dimension.key) ?? "";
-                const options = dimension.options.map((option) => ({
-                  ...option,
-                  disabled: !product.skus.some(
-                    (sku) =>
-                      dimensionValue(sku, dimension.key) === option.value &&
-                      prefix.every(
-                        (item) => dimensionValue(sku, item.key) === dimensionValue(activeSku, item.key),
-                      ),
-                  ),
-                }));
-                const usesMaterialButtons =
-                  dimension.key === "material" &&
-                  options.every((option) => option.value === "stainless" || option.value === "galvanized");
-                return (
-                  <fieldset
-                    className={`variant-group variant-group-${dimension.key}`}
-                    key={dimension.key}
-                  >
-                    <legend>{dimension.label}</legend>
-                    {usesMaterialButtons ? (
-                      <div className="variant-options variant-material-options">
-                        {options.map((option) => {
-                          const selected = selectedValue === option.value;
-                          return (
-                            <button
-                              aria-pressed={selected}
-                              className={`variant-option${selected ? " variant-option-active" : ""}`}
-                              disabled={option.disabled}
-                              key={option.value}
-                              onClick={() => selectVariant(dimensionIndex, option.value)}
-                              type="button"
-                            >
-                              {option.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="variant-select-wrap">
-                        <select
-                          aria-label={dimension.label}
-                          onChange={(event) => selectVariant(dimensionIndex, event.target.value)}
-                          value={selectedValue}
-                        >
-                          {options.map((option) => (
-                            <option disabled={option.disabled} key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown aria-hidden="true" size={16} />
-                      </div>
-                    )}
-                  </fieldset>
-                );
-              })}
-              {isConeTermination ? (
-                <div className="variant-scheme-preview">
-                  <div className="variant-scheme-graphic">
-                    <DimensionScheme
-                      title={product.name}
-                      dimensions={schemeDimensions}
-                      steelGrade={steelGrade}
-                      material={material}
-                      compact
-                    />
-                  </div>
-                </div>
-              ) : null}
+            <>
               <div className="sku-price-block sku-price-block-selection">
-                <div className="sku-price">{formatPrice(activeSku.price_rub)}</div>
                 <p className="sku-price-note">за штуку, включая НДС</p>
+                <div className="sku-price">{formatPrice(activeSku.price_rub)}</div>
               </div>
-            </div>
+              <details className="variant-picker-details" open>
+                <summary className="variant-picker-head">
+                  <span>Выберите исполнение</span>
+                  <strong>
+                    {product.skus.length} вариантов
+                    <ChevronDown aria-hidden="true" className="variant-picker-chevron" size={16} />
+                  </strong>
+                </summary>
+                <div className="variant-picker">
+                  {variantDimensions.map((dimension, dimensionIndex) => {
+                    const prefix = variantDimensions.slice(0, dimensionIndex);
+                    const selectedValue = dimensionValue(activeSku, dimension.key) ?? "";
+                    const options = dimension.options.map((option) => ({
+                      ...option,
+                      disabled:
+                        option.value !== selectedValue &&
+                        !product.skus.some(
+                          (sku) =>
+                            dimensionValue(sku, dimension.key) === option.value &&
+                            prefix.every(
+                              (item) => dimensionValue(sku, item.key) === dimensionValue(activeSku, item.key),
+                            ),
+                          ),
+                    }));
+                    const usesToggleButtons =
+                      (
+                        dimension.key === "material" ||
+                        dimension.key === "attribute:outer_material" ||
+                        dimension.key === "wall_thickness_mm"
+                      ) &&
+                      options.length <= 2 &&
+                      (
+                        dimension.key === "wall_thickness_mm" ||
+                        options.every((option) => option.value === "stainless" || option.value === "galvanized")
+                      );
+                    return (
+                      <fieldset
+                        className={`variant-group variant-group-${dimension.key}`}
+                        key={dimension.key}
+                      >
+                        <legend>{dimension.label}</legend>
+                        {usesToggleButtons ? (
+                          <div className="variant-options variant-toggle-options">
+                            {options.map((option) => {
+                              const selected = selectedValue === option.value;
+                              return (
+                                <button
+                                  aria-pressed={selected}
+                                  className={`variant-option${selected ? " variant-option-active" : ""}`}
+                                  disabled={option.disabled}
+                                  key={option.value}
+                                  onClick={() => selectVariant(dimensionIndex, option.value)}
+                                  type="button"
+                                >
+                                  {option.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="variant-select-wrap">
+                            <select
+                              aria-label={dimension.label}
+                              onChange={(event) => selectVariant(dimensionIndex, event.target.value)}
+                              value={selectedValue}
+                            >
+                              {options.map((option) => (
+                                <option disabled={option.disabled} key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown aria-hidden="true" size={16} />
+                          </div>
+                        )}
+                      </fieldset>
+                    );
+                  })}
+                  {isConeTermination ? (
+                    <div className="variant-scheme-preview">
+                      <div className="variant-scheme-graphic">
+                        <DimensionScheme
+                          title={product.name}
+                          dimensions={schemeDimensions}
+                          steelGrade={steelGrade}
+                          material={material}
+                          compact
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </details>
+            </>
           ) : (
             <div className="sku-price-block">
               <div className="sku-price-na">Цена по запросу</div>
