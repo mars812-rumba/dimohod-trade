@@ -105,6 +105,21 @@ function compatibilityCacheKey(sku: Product["skus"][number]) {
     sku.insulation_mm,
     normalizedCompatibilityValue(sku.steel_grade),
     normalizedCompatibilityValue(sku.material),
+    normalizedDecimalVariantValue(sku.wall_thickness_mm),
+    normalizedCompatibilityValue(
+      typeof sku.attributes.outer_material === "string" ? sku.attributes.outer_material : null,
+    ),
+    normalizedCompatibilityValue(
+      typeof sku.attributes.outer_steel_grade === "string"
+        ? sku.attributes.outer_steel_grade
+        : null,
+    ),
+    normalizedDecimalVariantValue(
+      typeof sku.attributes.outer_wall_thickness_mm === "string" ||
+        typeof sku.attributes.outer_wall_thickness_mm === "number"
+        ? sku.attributes.outer_wall_thickness_mm
+        : null,
+    ),
     normalizedCompatibilityValue(sku.contour),
   ]);
 }
@@ -172,22 +187,114 @@ function familyCountLabel(count: number) {
   return `${count} семейств`;
 }
 
-function CompatibleProductFamilyCard({ items }: { items: CompatibleProduct[] }) {
-  const [selectedSkuId, setSelectedSkuId] = useState(items[0]?.sku_id ?? "");
-  const selected = items.find((item) => item.sku_id === selectedSkuId) ?? items[0];
+function compatibilityFieldScore(left: unknown, right: unknown, weight: number) {
+  if (left === null || left === undefined || left === "" || right === null || right === undefined || right === "") {
+    return 0;
+  }
+  return String(left).trim().toLocaleLowerCase("ru-RU") ===
+    String(right).trim().toLocaleLowerCase("ru-RU")
+    ? weight
+    : -weight;
+}
+
+function compatibleProductScore(source: Product["skus"][number], item: CompatibleProduct) {
+  const sourceOuterMaterial =
+    typeof source.attributes.outer_material === "string" ? source.attributes.outer_material : null;
+  const sourceOuterSteel =
+    typeof source.attributes.outer_steel_grade === "string"
+      ? source.attributes.outer_steel_grade
+      : null;
+  const sourceOuterThickness =
+    typeof source.attributes.outer_wall_thickness_mm === "string" ||
+    typeof source.attributes.outer_wall_thickness_mm === "number"
+      ? normalizedDecimalVariantValue(source.attributes.outer_wall_thickness_mm)
+      : null;
+  return (
+    compatibilityFieldScore(source.diameter_mm, item.diameter_mm, 32) +
+    compatibilityFieldScore(source.outer_diameter_mm, item.outer_diameter_mm, 32) +
+    compatibilityFieldScore(source.insulation_mm, item.insulation_mm, 16) +
+    compatibilityFieldScore(materialKey(source.material), materialKey(item.material), 16) +
+    compatibilityFieldScore(source.steel_grade, item.steel_grade, 16) +
+    compatibilityFieldScore(
+      normalizedDecimalVariantValue(source.wall_thickness_mm),
+      normalizedDecimalVariantValue(item.wall_thickness_mm),
+      8,
+    ) +
+    compatibilityFieldScore(
+      materialKey(sourceOuterMaterial),
+      materialKey(item.outer_material),
+      4,
+    ) +
+    compatibilityFieldScore(sourceOuterSteel, item.outer_steel_grade, 2) +
+    compatibilityFieldScore(sourceOuterThickness, item.outer_wall_thickness_mm, 1)
+  );
+}
+
+function rankedCompatibleProducts(
+  items: CompatibleProduct[],
+  source: Product["skus"][number],
+) {
+  return items
+    .map((item, index) => ({ item, index, score: compatibleProductScore(source, item) }))
+    .sort((left, right) => right.score - left.score || left.index - right.index)
+    .map(({ item }) => item);
+}
+
+function defaultCompatibleProduct(
+  items: CompatibleProduct[],
+  source: Product["skus"][number],
+) {
+  const rankedItems = rankedCompatibleProducts(items, source);
+  if (rankedItems[0]?.product_kind === "труба") {
+    return rankedItems.find((item) => item.length_mm === 1000) ?? rankedItems[0];
+  }
+  return rankedItems[0];
+}
+
+function compatiblePipePriceUnit(item: CompatibleProduct) {
+  if (item.product_kind !== "труба" || item.length_mm === null) {
+    return null;
+  }
+  if (item.length_mm === 1000) {
+    return "за 1 м";
+  }
+  if (item.length_mm % 1000 === 0) {
+    return `за ${item.length_mm / 1000} м`;
+  }
+  return `за ${item.length_mm} мм`;
+}
+
+function CompatibleProductFamilyCard({
+  items,
+  source,
+}: {
+  items: CompatibleProduct[];
+  source: Product["skus"][number];
+}) {
+  const rankedItems = rankedCompatibleProducts(items, source);
+  const defaultItem = defaultCompatibleProduct(rankedItems, source);
+  const [selectedSkuId, setSelectedSkuId] = useState(defaultItem?.sku_id ?? "");
+  const selected = items.find((item) => item.sku_id === selectedSkuId) ?? defaultItem;
   if (!selected) {
     return null;
   }
   const lengthOptions = Array.from(
-    new Map(
-      items.flatMap((item) => item.length_mm === null ? [] : [[item.length_mm, item] as const]),
-    ).values(),
-  ).sort(
+    rankedItems.reduce((options, item) => {
+      if (item.length_mm !== null && !options.has(item.length_mm)) {
+        // Items keep the API compatibility ranking. Preserve the first SKU
+        // for each length so the active button and displayed price reference
+        // the same execution instead of the last duplicate length.
+        options.set(item.length_mm, item);
+      }
+      return options;
+    }, new Map<number, CompatibleProduct>()),
+  ).map(([, item]) => item).sort(
     (left, right) =>
       (left.length_mm ?? Number.MAX_SAFE_INTEGER) -
       (right.length_mm ?? Number.MAX_SAFE_INTEGER),
   );
   const diameter = compatibleDiameterLabel(selected);
+  const priceUnit = compatiblePipePriceUnit(selected);
 
   return (
     <article className="compatible-product-card">
@@ -212,9 +319,17 @@ function CompatibleProductFamilyCard({ items }: { items: CompatibleProduct[] }) 
           {selected.insulation_mm !== null ? (
             <span><Layers3 aria-hidden="true" size={13} /> утепление {selected.insulation_mm} мм</span>
           ) : null}
-          {selected.steel_grade ? <span><Cog aria-hidden="true" size={13} /> {selected.steel_grade}</span> : null}
+          {selected.steel_grade ? (
+            <span><Cog aria-hidden="true" size={13} /> внутри {selected.steel_grade}</span>
+          ) : null}
           {selected.material ? (
-            <span><PanelsTopLeft aria-hidden="true" size={13} /> {materialLabel(selected.material)}</span>
+            <span><PanelsTopLeft aria-hidden="true" size={13} /> внутри {materialLabel(selected.material)}</span>
+          ) : null}
+          {selected.outer_steel_grade ? (
+            <span><Cog aria-hidden="true" size={13} /> снаружи {selected.outer_steel_grade}</span>
+          ) : null}
+          {selected.outer_material ? (
+            <span><PanelsTopLeft aria-hidden="true" size={13} /> снаружи {materialLabel(selected.outer_material)}</span>
           ) : null}
         </div>
         {lengthOptions.length > 1 ? (
@@ -238,7 +353,10 @@ function CompatibleProductFamilyCard({ items }: { items: CompatibleProduct[] }) 
           <div className="compatible-single-length"><Ruler aria-hidden="true" size={13} /> L={selected.length_mm} мм</div>
         ) : null}
         <div className="compatible-product-footer">
-          <b>{formatPrice(selected.price_rub)}</b>
+          <div className="compatible-product-price">
+            <b>{formatPrice(selected.price_rub)}</b>
+            {priceUnit ? <small>{priceUnit}</small> : null}
+          </div>
           <Link href={`/product/${selected.product_slug}?sku=${encodeURIComponent(selected.sku_key)}`}>
             Открыть <ArrowRight size={14} />
           </Link>
@@ -765,7 +883,7 @@ function seoConfiguratorCta(product: Product): { text: string; href: string } | 
 export function ProductExperience({ product, initialSkuKey }: { product: Product; initialSkuKey?: string }) {
   const pathname = usePathname();
   const initialSku =
-    product.skus.find((sku) => sku.slug === initialSkuKey || sku.article === initialSkuKey || sku.id === initialSkuKey) ??
+    product.skus.find((sku) => sku.id === initialSkuKey || sku.article === initialSkuKey || sku.slug === initialSkuKey) ??
     product.skus[0] ??
     null;
   const initialCompatibleProducts = initialSku
@@ -801,7 +919,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
         return pending;
       }
 
-      const skuKey = sku.slug ?? sku.article;
+      const skuKey = sku.id;
       const apiPath = `/api/v1/products/${encodeURIComponent(product.slug)}/compatible?sku=${encodeURIComponent(skuKey)}`;
       const requestUrl = publicApiBaseUrl ? `${publicApiBaseUrl}${apiPath}` : `${appBasePath}${apiPath}`;
       const request = fetch(requestUrl, { cache: "no-store" })
@@ -1004,7 +1122,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     setSelectedSkuId(selected.id);
     setSelectedImage(0);
     const searchParams = new URLSearchParams(window.location.search);
-    searchParams.set("sku", selected.slug ?? selected.article);
+    searchParams.set("sku", selected.id);
     window.history.replaceState(null, "", `${pathname}?${searchParams.toString()}`);
   }
 
@@ -1241,6 +1359,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                     <CompatibleProductFamilyCard
                       items={items}
                       key={`${activeSku?.id}-${items[0]?.product_id}`}
+                      source={activeSku}
                     />
                   ))}
                 </div>

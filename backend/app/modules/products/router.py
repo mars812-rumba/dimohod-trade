@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
+from app.db.price_section_attributes import outer_pipe_attributes
+from app.db.steel_selection_profiles import with_steel_selection_profile
 from app.modules.compatibility.service import (
     context_from_product_sku,
     evaluate_rules,
@@ -237,6 +239,21 @@ def _decimal_attribute(value: object) -> Decimal | None:
         return None
 
 
+def _text_attribute(value: object) -> str | None:
+    return value if isinstance(value, str) and value.strip() else None
+
+
+def public_attributes_for_sku(product: Product, sku: SKU) -> dict[str, object]:
+    return public_sku_display_attributes(
+        with_steel_selection_profile(
+            sku.attributes,
+            steel_grade=sku.steel_grade,
+            product_kind=product.product_kind,
+            contour=sku.contour,
+        )
+    )
+
+
 def select_active_sku(product: Product, sku_key: str | None, *, strict: bool = False) -> SKU | None:
     active_skus = [sku for sku in product.skus if sku.is_active]
     if sku_key:
@@ -280,8 +297,9 @@ async def compatible_items_for_sku(
             product_id=target_product.id,
             product_name=target_product.name,
             product_slug=target_product.slug,
+            product_kind=target_product.product_kind,
             sku_id=target_sku.id,
-            sku_key=target_sku.slug or target_sku.article,
+            sku_key=str(target_sku.id),
             article=target_sku.article,
             name=target_sku.name,
             length_mm=target_sku.length_mm,
@@ -290,6 +308,16 @@ async def compatible_items_for_sku(
             insulation_mm=target_sku.insulation_mm,
             steel_grade=target_sku.steel_grade,
             material=target_sku.material,
+            wall_thickness_mm=target_sku.wall_thickness_mm,
+            outer_material=_text_attribute(
+                outer_pipe_attributes(target_sku.attributes).get("outer_material")
+            ),
+            outer_steel_grade=_text_attribute(
+                outer_pipe_attributes(target_sku.attributes).get("outer_steel_grade")
+            ),
+            outer_wall_thickness_mm=_decimal_attribute(
+                outer_pipe_attributes(target_sku.attributes).get("outer_wall_thickness_mm")
+            ),
             price_rub=target_sku.price_rub,
             stock_status=target_sku.stock_status,
             primary_image=primary_product_image(target_product.extra_attributes),
@@ -322,9 +350,15 @@ async def read_products(
     angle_deg: int | None = Query(default=None, ge=0, le=360),
     insulation_mm: int | None = Query(default=None, ge=0, le=10000),
     contour: str | None = Query(default=None, min_length=1, max_length=32),
+    preferred_diameter: str | None = Query(default=None, pattern=r"^(?:\d+:\d*|\d*:\d+)$"),
+    preferred_steel_grade: str | None = Query(default=None, min_length=1, max_length=32),
+    preferred_material: str | None = Query(default=None, min_length=1, max_length=32),
+    preferred_outer_steel_grade: str | None = Query(default=None, min_length=1, max_length=32),
+    preferred_outer_material: str | None = Query(default=None, min_length=1, max_length=32),
     session: AsyncSession = Depends(get_db),
 ) -> ProductListResponse:
     diameter_mm, outer_diameter_mm = parse_diameter_filter(diameter)
+    preferred_diameter_mm, preferred_outer_diameter_mm = parse_diameter_filter(preferred_diameter)
     products, total = await list_products(
         session,
         limit=limit,
@@ -367,11 +401,34 @@ async def read_products(
                 contour=contour,
             )
         ]
-        prices = [sku.price_rub for sku in active_skus if sku.price_rub is not None]
+        preferred_skus = [
+            sku
+            for sku in active_skus
+            if sku_matches_filters(
+                sku,
+                diameter_mm=preferred_diameter_mm,
+                outer_diameter_mm=preferred_outer_diameter_mm,
+                steel_grade=preferred_steel_grade,
+                material=preferred_material,
+                outer_steel_grade=preferred_outer_steel_grade,
+                outer_material=preferred_outer_material,
+                length_mm=None,
+                wall_thickness_mm=None,
+                outer_wall_thickness_mm=None,
+                angle_deg=None,
+                insulation_mm=None,
+                contour=None,
+            )
+        ]
+        representative_pool = preferred_skus or active_skus
+        prices = [sku.price_rub for sku in representative_pool if sku.price_rub is not None]
         price_rub: Decimal | None = min(prices) if prices else None
-        representative_sku = next((sku for sku in active_skus if sku.price_rub == price_rub), None)
+        representative_sku = next(
+            (sku for sku in representative_pool if sku.price_rub == price_rub),
+            None,
+        )
         if representative_sku is None and active_skus:
-            representative_sku = active_skus[0]
+            representative_sku = representative_pool[0]
         product_outer_diameter_mm = product.extra_attributes.get("outer_diameter_mm")
         if not isinstance(product_outer_diameter_mm, int):
             product_outer_diameter_mm = None
@@ -405,15 +462,15 @@ async def read_products(
                 length_mm=representative_sku.length_mm if representative_sku else None,
                 angle_deg=representative_sku.angle_deg if representative_sku else None,
                 stock_status=representative_sku.stock_status if representative_sku else None,
-                attributes=public_sku_display_attributes(
-                    representative_sku.attributes if representative_sku else None
-                ),
+                attributes=public_attributes_for_sku(product, representative_sku)
+                if representative_sku
+                else {},
                 product_kind=product.product_kind,
                 primary_image=primary_visual_sku_image(representative_sku, product.skus)
                 or primary_product_image(product.extra_attributes),
                 price_rub=price_rub,
                 sku_count=len(active_skus),
-                selected_sku=(representative_sku.slug or representative_sku.article)
+                selected_sku=str(representative_sku.id)
                 if representative_sku
                 else None,
             )
@@ -534,7 +591,7 @@ async def read_product(
         if sku_model is None:
             continue
         sku_read.attributes = {
-            **public_sku_display_attributes(sku_model.attributes),
+            **public_attributes_for_sku(product, sku_model),
             **public_sku_media_attributes(sku_model.attributes),
         }
     product_built_at = perf_counter()
