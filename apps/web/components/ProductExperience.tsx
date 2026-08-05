@@ -37,6 +37,7 @@ import {
   steelSelectionLabel,
   steelSelectionProfile,
 } from "@/lib/steelSelection";
+import { selectVariantCandidate, variantValueAvailable } from "@/lib/variantSelection";
 
 type ProductPhotoItem = {
   kind?: "photo";
@@ -338,6 +339,29 @@ const dimensionDefinitions: Array<{ key: VariantDimensionKey; label: string }> =
   { key: "attribute:execution", label: "Исполнение" },
   { key: "attribute:size_range", label: "Размер" },
 ];
+
+const variantSelectionPriority: VariantDimensionKey[] = [
+  "diameter",
+  "material",
+  "steel_grade",
+  "wall_thickness_mm",
+  "attribute:outer_material",
+  "attribute:outer_steel_grade",
+  "attribute:outer_wall_thickness_mm",
+  "length_mm",
+  "insulation_mm",
+  "angle_deg",
+  "contour",
+  "attribute:diameter_range",
+  "attribute:base_size",
+  "attribute:execution",
+  "attribute:size_range",
+];
+
+function requiredVariantKeys(key: VariantDimensionKey) {
+  const index = variantSelectionPriority.indexOf(key);
+  return index > 0 ? variantSelectionPriority.slice(0, index) : [];
+}
 
 const publicVariantAttributeLabels: Record<string, string> = {
   diameter_range: "Диапазон диаметра",
@@ -943,26 +967,17 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     if (!activeSku) {
       return;
     }
-    const prefix = variantDimensions.slice(0, dimensionIndex);
     const dimension = variantDimensions[dimensionIndex];
-    let candidates = product.skus.filter(
-      (sku) =>
-        dimensionValue(sku, dimension.key) === value &&
-        prefix.every((item) => dimensionValue(sku, item.key) === dimensionValue(activeSku, item.key)),
-    );
-    if (!candidates.length) {
-      candidates = product.skus.filter((sku) => dimensionValue(sku, dimension.key) === value);
-    }
-    const remaining = variantDimensions.slice(dimensionIndex + 1);
-    const selected = candidates.sort((left, right) => {
-      const leftScore = remaining.filter(
-        (item) => dimensionValue(left, item.key) === dimensionValue(activeSku, item.key),
-      ).length;
-      const rightScore = remaining.filter(
-        (item) => dimensionValue(right, item.key) === dimensionValue(activeSku, item.key),
-      ).length;
-      return rightScore - leftScore;
-    })[0];
+    const selected = selectVariantCandidate({
+      items: product.skus,
+      current: activeSku,
+      targetKey: dimension.key,
+      targetValue: value,
+      requiredKeys: requiredVariantKeys(dimension.key),
+      priorityKeys: variantSelectionPriority,
+      valueOf: dimensionValue,
+      stableKey: (sku) => sku.article,
+    });
     if (!selected) {
       return;
     }
@@ -1304,19 +1319,19 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                     if (hidesSteelForGalvanized) {
                       return null;
                     }
-                    const prefix = variantDimensions.slice(0, dimensionIndex);
                     const selectedValue = dimensionValue(activeSku, dimension.key) ?? "";
                     const options = dimension.options.map((option) => ({
                       ...option,
                       disabled:
                         option.value !== selectedValue &&
-                        !product.skus.some(
-                          (sku) =>
-                            dimensionValue(sku, dimension.key) === option.value &&
-                            prefix.every(
-                              (item) => dimensionValue(sku, item.key) === dimensionValue(activeSku, item.key),
-                            ),
-                          ),
+                        !variantValueAvailable(
+                          product.skus,
+                          activeSku,
+                          dimension.key,
+                          option.value,
+                          requiredVariantKeys(dimension.key),
+                          dimensionValue,
+                        ),
                     }));
                     const usesToggleButtons =
                       (

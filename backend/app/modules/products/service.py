@@ -1,4 +1,5 @@
 from decimal import Decimal, InvalidOperation
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import and_, case, exists, func, or_, select
@@ -458,7 +459,7 @@ async def list_variant_filter_options(
     session: AsyncSession,
     *,
     category_slug: str | None = None,
-) -> dict[str, list[tuple[str, str, int]]]:
+) -> dict[str, Any]:
     filters = [Product.is_active.is_(True), SKU.is_active.is_(True)]
     if category_slug:
         filters.append(Category.slug == category_slug)
@@ -488,6 +489,7 @@ async def list_variant_filter_options(
     outer_material_products: dict[str, set[object]] = {}
     inner_pipe_products: dict[str, set[object]] = {}
     outer_pipe_products: dict[str, set[object]] = {}
+    variant_combination_products: dict[tuple[str, str, str, str], set[object]] = {}
     execution_products: dict[str, set[object]] = {}
     length_products: dict[str, set[object]] = {}
     thickness_products: dict[str, set[object]] = {}
@@ -516,14 +518,15 @@ async def list_variant_filter_options(
         insulation,
         contour,
     ) in result.all():
+        diameter_value = ""
         if diameter is not None or outer_diameter is not None:
-            value = f"{diameter or ''}:{outer_diameter or ''}"
+            diameter_value = f"{diameter or ''}:{outer_diameter or ''}"
             label = (
                 f"{diameter}/{outer_diameter} мм"
                 if diameter is not None and outer_diameter is not None and diameter != outer_diameter
                 else f"{diameter if diameter is not None else outer_diameter} мм"
             )
-            diameter_products.setdefault(f"{value}|{label}", set()).add(product_id)
+            diameter_products.setdefault(f"{diameter_value}|{label}", set()).add(product_id)
         if steel:
             steel_products.setdefault(str(steel), set()).add(product_id)
         grouped_material = material_group(raw_material)
@@ -548,15 +551,17 @@ async def list_variant_filter_options(
             else:
                 outer_thickness_products.setdefault(normalized_outer_thickness, set()).add(product_id)
         normalized_steel = " ".join(str(steel).split()) if steel else ""
+        inner_value = ""
         if grouped_material or normalized_steel:
             inner_value = "|".join((grouped_material or "", normalized_steel))
             inner_label = str(
-                normalized_steel
+                steel_selection_label(normalized_steel)
                 or material_labels.get(grouped_material or "", grouped_material or "")
             )
             inner_pipe_products.setdefault(f"{inner_value}|{inner_label}", set()).add(product_id)
 
         normalized_outer_thickness = ""
+        outer_value = ""
         if outer_thickness is not None:
             try:
                 normalized_outer_thickness = decimal_option_value(outer_thickness)
@@ -582,6 +587,18 @@ async def list_variant_filter_options(
                     f"{outer_label} · {decimal_option_label(normalized_outer_thickness)} мм"
                 )
             outer_pipe_products.setdefault(f"{outer_value}|{outer_label}", set()).add(product_id)
+
+        normalized_inner_thickness = ""
+        if thickness is not None:
+            normalized_inner_thickness = decimal_option_value(thickness)
+        if inner_value and outer_value:
+            combination_key = (
+                diameter_value,
+                inner_value,
+                normalized_inner_thickness,
+                outer_value,
+            )
+            variant_combination_products.setdefault(combination_key, set()).add(product_id)
 
         if angle is not None or insulation is not None:
             execution_value = f"{angle or ''}|{insulation or ''}"
@@ -613,12 +630,11 @@ async def list_variant_filter_options(
         ],
         key=lambda item: tuple(int(value or 0) for value in item[0].split(":")),
     )
-    pipe_category_slugs = {"sendvich-truby", "odnokonturnye-truby"}
     steels = sorted(
         [
             (
                 value,
-                steel_selection_label(value) if category_slug in pipe_category_slugs else value,
+                steel_selection_label(value),
                 len(product_ids),
             )
             for value, product_ids in steel_products.items()
@@ -678,6 +694,13 @@ async def list_variant_filter_options(
         "outer_materials": outer_materials,
         "inner_pipes": compound_options(inner_pipe_products),
         "outer_pipes": compound_options(outer_pipe_products),
+        "variant_combinations": sorted(
+            [
+                (*combination, len(product_ids))
+                for combination, product_ids in variant_combination_products.items()
+            ],
+            key=lambda item: item[:4],
+        ),
         "executions": compound_options(execution_products),
         "lengths": numeric_options(length_products, " мм"),
         "wall_thicknesses": numeric_options(thickness_products, " мм"),

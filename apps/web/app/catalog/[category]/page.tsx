@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { notFound } from "next/navigation";
 import { CatalogProductCard } from "@/components/CatalogProductCard";
 import { CatalogVariantFilters } from "@/components/CatalogVariantFilters";
@@ -10,6 +10,7 @@ import {
   getProducts,
   type CategoryNode,
 } from "@/lib/api";
+import { filterVariantItems } from "@/lib/variantSelection";
 
 const PAGE_SIZE = 48;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -70,6 +71,14 @@ function compoundParts(value: string | undefined, size: number) {
   return Array.from({ length: size }, (_, index) => parts[index] || undefined);
 }
 
+function combinationValue(
+  combination: Awaited<ReturnType<typeof getProductFilters>>["variant_combinations"][number],
+  key: string,
+) {
+  const value = combination[key as keyof typeof combination];
+  return typeof value === "string" ? value : null;
+}
+
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { category: slug } = await params;
   const category = await categoryBySlug(slug);
@@ -99,13 +108,46 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const diameter = filters.diameters.some((option) => option.value === requestedDiameter)
     ? requestedDiameter
     : filters.diameters[0]?.value;
-  const innerPipe = selectedOrFirst(query.inner_pipe, filters.inner_pipes);
-  const outerPipe = filters.outer_pipes.length
+  let innerPipe = selectedOrFirst(query.inner_pipe, filters.inner_pipes);
+  let outerPipe = filters.outer_pipes.length
     ? selectedOrFirst(query.outer_pipe, filters.outer_pipes)
     : undefined;
   const execution = selectedFilter(query.execution, filters.executions);
   const length = selectedFilter(query.length, filters.lengths);
-  const innerThickness = selectedFilter(query.inner_thickness, filters.wall_thicknesses);
+  let innerThickness = selectedFilter(query.inner_thickness, filters.wall_thicknesses);
+  const diameterCombinations = filterVariantItems(
+    filters.variant_combinations,
+    { diameter },
+    combinationValue,
+  );
+  if (
+    diameterCombinations.length &&
+    !diameterCombinations.some((combination) => combination.inner_pipe === innerPipe)
+  ) {
+    innerPipe = diameterCombinations[0].inner_pipe;
+  }
+  const innerCombinations = filterVariantItems(
+    diameterCombinations,
+    { inner_pipe: innerPipe },
+    combinationValue,
+  );
+  if (
+    innerThickness &&
+    !innerCombinations.some((combination) => combination.inner_thickness === innerThickness)
+  ) {
+    innerThickness = undefined;
+  }
+  const matchingPipeCombinations = filterVariantItems(
+    innerCombinations,
+    { inner_thickness: innerThickness },
+    combinationValue,
+  );
+  if (
+    matchingPipeCombinations.length &&
+    !matchingPipeCombinations.some((combination) => combination.outer_pipe === outerPipe)
+  ) {
+    outerPipe = matchingPipeCombinations[0].outer_pipe;
+  }
   const [material, steel] = compoundParts(innerPipe, 2);
   const [outerMaterial, outerSteel, outerThickness] = compoundParts(outerPipe, 3);
   const [angle, insulation] = compoundParts(execution, 2);
@@ -165,7 +207,10 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
         <details className="catalog-mobile-filter" open>
           <summary>
-            <SlidersHorizontal size={17} /> Фильтры
+            <span>
+              <SlidersHorizontal size={17} /> Фильтры
+            </span>
+            <ChevronDown aria-hidden="true" className="catalog-filter-chevron" size={17} />
           </summary>
           <form
             className="catalog-variant-filters"
@@ -184,6 +229,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
               innerThicknesses={filters.wall_thicknesses}
               outerPipe={outerPipe}
               outerPipes={filters.outer_pipes}
+              variantCombinations={filters.variant_combinations}
             />
             {Object.values(query).some(Boolean) ? (
               <Link className="catalog-filter-reset" href={`/catalog/${category.slug}`}>

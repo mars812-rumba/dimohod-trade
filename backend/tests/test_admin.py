@@ -45,10 +45,77 @@ from app.modules.products.service import (
     compatible_support_platform_matches,
     compatible_tube_matches,
     get_product_sku_by_key,
+    list_variant_filter_options,
     manually_selected_product_matches,
     material_group,
     normalized_compatible_product_ids,
 )
+
+
+@pytest.mark.asyncio
+async def test_variant_filters_keep_only_real_inner_outer_pipe_combinations() -> None:
+    rows = [
+        (
+            "product-430",
+            100,
+            200,
+            "AISI 430",
+            "нержавеющая сталь",
+            {
+                "outer_material": "нержавеющая сталь",
+                "outer_steel_grade": "AISI 430",
+                "outer_wall_thickness_mm": "0.5",
+            },
+            500,
+            Decimal("0.5"),
+            None,
+            50,
+            "сэндвич",
+        ),
+        (
+            "product-304",
+            100,
+            200,
+            "AISI 304",
+            "нержавеющая сталь",
+            {
+                "outer_material": "нержавеющая сталь",
+                "outer_steel_grade": "AISI 304",
+                "outer_wall_thickness_mm": "0.5",
+            },
+            500,
+            Decimal("0.5"),
+            None,
+            50,
+            "сэндвич",
+        ),
+    ]
+    query_result = SimpleNamespace(all=lambda: rows)
+    session = SimpleNamespace(execute=AsyncMock(return_value=query_result))
+
+    filters = await list_variant_filter_options(session)
+
+    assert ("stainless|AISI 430", "AISI 430 · Эконом", 1) in filters["inner_pipes"]
+    assert ("stainless|AISI 304", "AISI 304 · Стандарт", 1) in filters["inner_pipes"]
+    combinations = filters["variant_combinations"]
+    assert (
+        "100:200",
+        "stainless|AISI 430",
+        "0.5",
+        "stainless|AISI 430|0.5",
+        1,
+    ) in combinations
+    assert (
+        "100:200",
+        "stainless|AISI 304",
+        "0.5",
+        "stainless|AISI 304|0.5",
+        1,
+    ) in combinations
+    assert not any(
+        inner_pipe == "stainless|AISI 430" and outer_pipe == "stainless|AISI 304|0.5"
+        for _, inner_pipe, _, outer_pipe, _ in combinations
+    )
 
 
 def test_admin_routes_are_registered() -> None:
@@ -305,6 +372,10 @@ def test_product_seo_facts_separate_selected_sku_from_family_ranges() -> None:
         insulation_mm=50,
         steel_grade="AISI 430",
         material="Нержавеющая сталь",
+        attributes={
+            "outer_material": "Оцинковка",
+            "outer_steel_grade": None,
+        },
         contour="сэндвич",
         angle_deg=None,
     )
@@ -510,14 +581,21 @@ def test_catalog_sku_filters_apply_all_available_parameters_with_and_logic() -> 
         angle_deg=45,
         insulation_mm=None,
         contour="одностенный",
+        attributes={
+            "outer_material": "Оцинковка",
+            "outer_wall_thickness_mm": "0.50",
+        },
     )
     filters = {
         "diameter_mm": 115,
         "outer_diameter_mm": None,
         "steel_grade": "AISI 304",
         "material": "stainless",
+        "outer_steel_grade": None,
+        "outer_material": "galvanized",
         "length_mm": 500,
         "wall_thickness_mm": Decimal("0.50"),
+        "outer_wall_thickness_mm": Decimal("0.50"),
         "angle_deg": 45,
         "insulation_mm": None,
         "contour": "одностенный",
@@ -526,6 +604,10 @@ def test_catalog_sku_filters_apply_all_available_parameters_with_and_logic() -> 
     assert sku_matches_filters(sku, **filters)
     assert not sku_matches_filters(sku, **{**filters, "length_mm": 1000})
     assert not sku_matches_filters(sku, **{**filters, "angle_deg": 90})
+    assert not sku_matches_filters(
+        sku,
+        **{**filters, "outer_wall_thickness_mm": Decimal("0.80")},
+    )
 
 
 def test_product_page_selects_only_requested_active_sku() -> None:

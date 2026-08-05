@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import type { ProductFilterOption } from "@/lib/api";
+import { useEffect, useState } from "react";
+import type { ProductFilterOption, ProductVariantCombination } from "@/lib/api";
+import { filterVariantItems } from "@/lib/variantSelection";
 
 type CatalogVariantFiltersProps = {
   diameters: ProductFilterOption[];
@@ -9,6 +10,7 @@ type CatalogVariantFiltersProps = {
   innerThicknesses: ProductFilterOption[];
   outerPipes: ProductFilterOption[];
   executions: ProductFilterOption[];
+  variantCombinations: ProductVariantCombination[];
   diameter?: string;
   innerPipe?: string;
   innerThickness?: string;
@@ -42,6 +44,15 @@ function uniqueValues(values: string[]) {
   return values.filter((value, index) => value && values.indexOf(value) === index);
 }
 
+function compactSteelProfileLabel(value: string) {
+  return value.replace(/^AISI\s+/i, "");
+}
+
+function combinationValue(combination: ProductVariantCombination, key: string) {
+  const value = combination[key as keyof ProductVariantCombination];
+  return typeof value === "string" ? value : null;
+}
+
 function CompactSelect({
   label,
   name,
@@ -49,6 +60,7 @@ function CompactSelect({
   value,
   includeAll = false,
   className = "",
+  onChange,
 }: {
   label: string;
   name: string;
@@ -56,6 +68,7 @@ function CompactSelect({
   value?: string;
   includeAll?: boolean;
   className?: string;
+  onChange?: (value: string) => void;
 }) {
   if (options.length <= 1) {
     return null;
@@ -64,7 +77,12 @@ function CompactSelect({
   return (
     <label className={`catalog-filter-field ${className}`.trim()}>
       <span>{label}</span>
-      <select defaultValue={value ?? (includeAll ? "" : options[0]?.value ?? "")} name={name}>
+      <select
+        defaultValue={onChange ? undefined : value ?? (includeAll ? "" : options[0]?.value ?? "")}
+        name={name}
+        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+        value={onChange ? value ?? "" : undefined}
+      >
         {includeAll ? <option value="">Все варианты</option> : null}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -81,11 +99,13 @@ function CompactButtons({
   name,
   options,
   value,
+  onChange,
 }: {
   label: string;
   name: string;
   options: ProductFilterOption[];
   value?: string;
+  onChange?: (value: string) => void;
 }) {
   if (options.length <= 1) {
     return null;
@@ -96,14 +116,23 @@ function CompactButtons({
       <span>{label}</span>
       <div className="catalog-segmented-control">
         <label className="filter-chip">
-          <input defaultChecked={!value} name={name} type="radio" value="" />
+          <input
+            checked={onChange ? !value : undefined}
+            defaultChecked={onChange ? undefined : !value}
+            name={name}
+            onChange={onChange ? () => onChange("") : undefined}
+            type="radio"
+            value=""
+          />
           Все
         </label>
         {options.map((option) => (
           <label className="filter-chip" key={option.value}>
             <input
-              defaultChecked={option.value === value}
+              checked={onChange ? option.value === value : undefined}
+              defaultChecked={onChange ? undefined : option.value === value}
               name={name}
+              onChange={onChange ? () => onChange(option.value) : undefined}
               type="radio"
               value={option.value}
             />
@@ -124,6 +153,7 @@ function PipeControls({
   showMaterial = true,
   showSteel = true,
   includeHidden = true,
+  showProfileLabel = false,
 }: {
   label: string;
   name: string;
@@ -133,6 +163,7 @@ function PipeControls({
   showMaterial?: boolean;
   showSteel?: boolean;
   includeHidden?: boolean;
+  showProfileLabel?: boolean;
 }) {
   const parsed = parsedPipeOptions(options);
   const selected = parsed.find((option) => option.value === selectedValue) ?? parsed[0];
@@ -142,6 +173,12 @@ function PipeControls({
   const materials = uniqueValues(parsed.map((option) => option.material));
   const steelOptions = parsed.filter((option) => option.material === selected.material);
   const steels = uniqueValues(steelOptions.map((option) => option.steel));
+  const steelLabels = new Map(
+    steelOptions.map((option) => [
+      option.steel,
+      showProfileLabel ? compactSteelProfileLabel(option.label) : option.steel,
+    ]),
+  );
 
   function selectMaterial(material: string) {
     const next =
@@ -191,7 +228,7 @@ function PipeControls({
           <select onChange={(event) => selectSteel(event.target.value)} value={selected.steel}>
             {steels.map((steel) => (
               <option key={steel} value={steel}>
-                {steel}
+                {steelLabels.get(steel) ?? steel}
               </option>
             ))}
           </select>
@@ -207,6 +244,7 @@ export function CatalogVariantFilters({
   innerThicknesses,
   outerPipes,
   executions,
+  variantCombinations,
   diameter,
   innerPipe,
   innerThickness,
@@ -214,8 +252,83 @@ export function CatalogVariantFilters({
   execution,
   facets,
 }: CatalogVariantFiltersProps) {
-  const [selectedInnerPipe, setSelectedInnerPipe] = useState(innerPipe ?? innerPipes[0]?.value ?? "");
-  const [selectedOuterPipe, setSelectedOuterPipe] = useState(outerPipe ?? outerPipes[0]?.value ?? "");
+  const [selectedInnerPipe, setSelectedInnerPipe] = useState(
+    innerPipe ?? innerPipes[0]?.value ?? "",
+  );
+  const [selectedOuterPipe, setSelectedOuterPipe] = useState(
+    outerPipe ?? outerPipes[0]?.value ?? "",
+  );
+  const [selectedDiameter, setSelectedDiameter] = useState(diameter ?? diameters[0]?.value ?? "");
+  const [selectedInnerThickness, setSelectedInnerThickness] = useState(innerThickness ?? "");
+
+  const diameterCombinations = filterVariantItems(
+    variantCombinations,
+    { diameter: selectedDiameter },
+    combinationValue,
+  );
+  const availableInnerValues = new Set(
+    diameterCombinations.map((combination) => combination.inner_pipe),
+  );
+  const availableInnerPipes = diameterCombinations.length
+    ? innerPipes.filter((option) => availableInnerValues.has(option.value))
+    : innerPipes;
+  const effectiveInnerPipe = availableInnerPipes.some(
+    (option) => option.value === selectedInnerPipe,
+  )
+    ? selectedInnerPipe
+    : availableInnerPipes[0]?.value ?? "";
+  const innerCombinations = filterVariantItems(
+    diameterCombinations,
+    { inner_pipe: effectiveInnerPipe },
+    combinationValue,
+  );
+  const availableThicknessValues = new Set(
+    innerCombinations.map((combination) => combination.inner_thickness).filter(Boolean),
+  );
+  const availableInnerThicknesses = innerCombinations.length
+    ? innerThicknesses.filter((option) => availableThicknessValues.has(option.value))
+    : innerThicknesses;
+  const effectiveInnerThickness =
+    selectedInnerThickness &&
+    availableInnerThicknesses.some((option) => option.value === selectedInnerThickness)
+      ? selectedInnerThickness
+      : "";
+  const matchingCombinations = filterVariantItems(
+    innerCombinations,
+    {
+      inner_thickness: effectiveInnerThickness,
+    },
+    combinationValue,
+  );
+  const availableOuterValues = new Set(
+    matchingCombinations.map((combination) => combination.outer_pipe),
+  );
+  const availableOuterPipes = matchingCombinations.length
+    ? outerPipes.filter((option) => availableOuterValues.has(option.value))
+    : outerPipes;
+  const effectiveOuterPipe = availableOuterPipes.some(
+    (option) => option.value === selectedOuterPipe,
+  )
+    ? selectedOuterPipe
+    : availableOuterPipes[0]?.value ?? "";
+
+  useEffect(() => {
+    if (effectiveInnerPipe !== selectedInnerPipe) {
+      setSelectedInnerPipe(effectiveInnerPipe);
+    }
+  }, [effectiveInnerPipe, selectedInnerPipe]);
+
+  useEffect(() => {
+    if (effectiveInnerThickness !== selectedInnerThickness) {
+      setSelectedInnerThickness(effectiveInnerThickness);
+    }
+  }, [effectiveInnerThickness, selectedInnerThickness]);
+
+  useEffect(() => {
+    if (effectiveOuterPipe !== selectedOuterPipe) {
+      setSelectedOuterPipe(effectiveOuterPipe);
+    }
+  }, [effectiveOuterPipe, selectedOuterPipe]);
 
   return (
     <>
@@ -224,8 +337,8 @@ export function CatalogVariantFilters({
           label="внутренней трубы"
           name="inner_pipe"
           onChange={setSelectedInnerPipe}
-          options={innerPipes}
-          selectedValue={selectedInnerPipe}
+          options={availableInnerPipes}
+          selectedValue={effectiveInnerPipe}
           showSteel={false}
         />
         <CompactSelect
@@ -233,7 +346,8 @@ export function CatalogVariantFilters({
           label="Диаметр d/D"
           name="diameter"
           options={diameters}
-          value={diameter}
+          onChange={setSelectedDiameter}
+          value={selectedDiameter}
         />
       </div>
 
@@ -242,16 +356,18 @@ export function CatalogVariantFilters({
           label="внутренней трубы"
           name="inner_pipe"
           onChange={setSelectedInnerPipe}
-          options={innerPipes}
-          selectedValue={selectedInnerPipe}
+          options={availableInnerPipes}
+          selectedValue={effectiveInnerPipe}
           includeHidden={false}
           showMaterial={false}
+          showProfileLabel
         />
         <CompactButtons
           label="Толщина внутренней трубы"
           name="inner_thickness"
-          options={innerThicknesses}
-          value={innerThickness}
+          options={availableInnerThicknesses}
+          onChange={setSelectedInnerThickness}
+          value={effectiveInnerThickness}
         />
       </div>
 
@@ -261,8 +377,8 @@ export function CatalogVariantFilters({
             label="наружной трубы"
             name="outer_pipe"
             onChange={setSelectedOuterPipe}
-            options={outerPipes}
-            selectedValue={selectedOuterPipe}
+            options={availableOuterPipes}
+            selectedValue={effectiveOuterPipe}
           />
         </div>
       ) : null}
