@@ -105,12 +105,15 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   const filters = await getProductFilters(category.slug);
   const requestedDiameter = query.diameter?.trim();
-  const diameter = filters.diameters.some((option) => option.value === requestedDiameter)
+  const appliedDiameter = filters.diameters.some((option) => option.value === requestedDiameter)
     ? requestedDiameter
-    : filters.diameters[0]?.value;
-  let innerPipe = selectedOrFirst(query.inner_pipe, filters.inner_pipes);
+    : undefined;
+  const appliedInnerPipe = selectedFilter(query.inner_pipe, filters.inner_pipes);
+  const appliedOuterPipe = selectedFilter(query.outer_pipe, filters.outer_pipes);
+  const diameter = appliedDiameter ?? filters.diameters[0]?.value;
+  let innerPipe = selectedOrFirst(appliedInnerPipe, filters.inner_pipes);
   let outerPipe = filters.outer_pipes.length
-    ? selectedOrFirst(query.outer_pipe, filters.outer_pipes)
+    ? selectedOrFirst(appliedOuterPipe, filters.outer_pipes)
     : undefined;
   const execution = selectedFilter(query.execution, filters.executions);
   const length = selectedFilter(query.length, filters.lengths);
@@ -148,16 +151,16 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   ) {
     outerPipe = matchingPipeCombinations[0].outer_pipe;
   }
-  const [material, steel] = compoundParts(innerPipe, 2);
-  const [outerMaterial, outerSteel, outerThickness] = compoundParts(outerPipe, 3);
+  const [material, steel] = compoundParts(appliedInnerPipe, 2);
+  const [outerMaterial, outerSteel, outerThickness] = compoundParts(appliedOuterPipe, 3);
   const [angle, insulation] = compoundParts(execution, 2);
   const page = Math.max(1, Number(query.page ?? "1") || 1);
   const offset = (page - 1) * PAGE_SIZE;
   const currentFilters = {
-    diameter,
-    inner_pipe: innerPipe,
+    diameter: appliedDiameter,
+    inner_pipe: appliedInnerPipe,
     inner_thickness: innerThickness,
-    outer_pipe: outerPipe,
+    outer_pipe: appliedOuterPipe,
     execution,
     length,
   };
@@ -169,7 +172,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     limit: PAGE_SIZE,
     offset,
     category: category.slug,
-    diameter,
+    diameter: appliedDiameter,
     steelGrade: steel,
     material,
     outerSteelGrade: outerSteel,
