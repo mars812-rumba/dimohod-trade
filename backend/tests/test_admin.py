@@ -122,6 +122,42 @@ async def test_variant_filters_keep_only_real_inner_outer_pipe_combinations() ->
             50,
             "сэндвич",
         ),
+        (
+            "product-galvanized",
+            100,
+            200,
+            None,
+            "оцинковка",
+            {
+                "source_section": (
+                    "Внутренняя труба — ОЦИНКОВКА / "
+                    "Наружный кожух — ОЦИНКОВКА / Изоляция — 50мм"
+                ),
+            },
+            1000,
+            None,
+            None,
+            50,
+            "сэндвич",
+        ),
+        (
+            "product-galvanized",
+            100,
+            200,
+            None,
+            "оцинковка",
+            {
+                "source_section": (
+                    "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — "
+                    "Нержавеющая сталь AISI 430 (толщина 0,5мм) / Изоляция — 50мм"
+                ),
+            },
+            1000,
+            None,
+            None,
+            50,
+            "сэндвич",
+        ),
     ]
     query_result = SimpleNamespace(all=lambda: rows)
     session = SimpleNamespace(execute=AsyncMock(return_value=query_result))
@@ -149,6 +185,15 @@ async def test_variant_filters_keep_only_real_inner_outer_pipe_combinations() ->
         inner_pipe == "stainless|AISI 430" and outer_pipe == "stainless|AISI 304|0.5"
         for _, inner_pipe, _, outer_pipe, _ in combinations
     )
+    galvanized_outer_pipes = {
+        outer_pipe
+        for diameter, inner_pipe, _, outer_pipe, _ in combinations
+        if diameter == "100:200" and inner_pipe == "galvanized|"
+    }
+    assert galvanized_outer_pipes == {
+        "galvanized||",
+        "stainless|AISI 430|0.5",
+    }
 
 
 def test_admin_routes_are_registered() -> None:
