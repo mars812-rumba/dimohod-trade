@@ -85,6 +85,24 @@ def test_compatible_family_prefers_the_same_pipe_execution() -> None:
     )
 
 
+def test_sku_id_selects_exact_variant_when_legacy_slugs_are_duplicated() -> None:
+    first = SimpleNamespace(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        slug="d100-200-aisi304-t05-ins50",
+        article="DT-OUTER-GALV",
+        is_active=True,
+    )
+    second = SimpleNamespace(
+        id=UUID("00000000-0000-0000-0000-000000000002"),
+        slug="d100-200-aisi304-t05-ins50",
+        article="DT-OUTER-430",
+        is_active=True,
+    )
+    product = SimpleNamespace(skus=[first, second])
+
+    assert select_active_sku(product, str(second.id), strict=True) is second
+
+
 @pytest.mark.asyncio
 async def test_variant_filters_keep_only_real_inner_outer_pipe_combinations() -> None:
     rows = [
