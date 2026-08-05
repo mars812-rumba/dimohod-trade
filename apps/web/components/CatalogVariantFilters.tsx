@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ProductFilterOption, ProductVariantCombination } from "@/lib/api";
+import { steelWithThicknessLabel } from "@/lib/productLabels";
 import { filterVariantItems } from "@/lib/variantSelection";
 
 type CatalogVariantFiltersProps = {
@@ -27,6 +28,7 @@ type CatalogVariantFiltersProps = {
 type ParsedPipeOption = ProductFilterOption & {
   material: string;
   steel: string;
+  thickness: string;
 };
 
 function materialLabel(value: string) {
@@ -35,8 +37,8 @@ function materialLabel(value: string) {
 
 function parsedPipeOptions(options: ProductFilterOption[]): ParsedPipeOption[] {
   return options.map((option) => {
-    const [material = "", steel = ""] = option.value.split("|");
-    return { ...option, material, steel };
+    const [material = "", steel = "", thickness = ""] = option.value.split("|");
+    return { ...option, material, steel, thickness };
   });
 }
 
@@ -176,16 +178,27 @@ function PipeControls({
   }
   const materials = uniqueValues(parsed.map((option) => option.material));
   const steelOptions = parsed.filter((option) => option.material === selected.material);
-  const steels = uniqueValues(steelOptions.map((option) => option.steel));
+  const steelKey = (option: ParsedPipeOption) =>
+    option.steel ? `${option.steel}|${option.thickness}` : "";
+  const steels = uniqueValues(steelOptions.map(steelKey));
   const steelLabels = new Map(
     steelOptions.map((option) => [
-      option.steel,
-      showProfileLabel ? compactSteelProfileLabel(option.label) : option.steel,
+      steelKey(option),
+      showProfileLabel
+        ? compactSteelProfileLabel(option.label)
+        : steelWithThicknessLabel(option.steel, option.thickness) ?? option.steel,
     ]),
   );
+  const selectedSteel = steelKey(selected);
 
   function selectMaterial(material: string) {
     const next =
+      parsed.find(
+        (option) =>
+          option.material === material &&
+          option.steel === selected.steel &&
+          option.thickness === selected.thickness,
+      ) ??
       parsed.find((option) => option.material === material && option.steel === selected.steel) ??
       parsed.find((option) => option.material === material);
     if (next) {
@@ -195,7 +208,7 @@ function PipeControls({
 
   function selectSteel(steel: string) {
     const next = parsed.find(
-      (option) => option.material === selected.material && option.steel === steel,
+      (option) => option.material === selected.material && steelKey(option) === steel,
     );
     if (next) {
       onChange(next.value);
@@ -229,7 +242,7 @@ function PipeControls({
       {showSteel && (steels.length > 1 || (showSingleSteel && steels.length === 1)) ? (
         <label className="catalog-filter-field catalog-pipe-steel-filter">
           <span>Марка стали {label}</span>
-          <select onChange={(event) => selectSteel(event.target.value)} value={selected.steel}>
+          <select onChange={(event) => selectSteel(event.target.value)} value={selectedSteel}>
             {steels.map((steel) => (
               <option key={steel} value={steel}>
                 {steelLabels.get(steel) ?? steel}

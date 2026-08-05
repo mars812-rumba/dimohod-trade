@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { DimensionScheme } from "@/components/DimensionScheme";
 import type { CompatibleProduct, Product } from "@/lib/api";
+import { steelWithThicknessLabel } from "@/lib/productLabels";
 import {
   steelSelectionBadges,
   steelSelectionLabel,
@@ -326,7 +327,12 @@ function CompatibleProductFamilyCard({
             <span><PanelsTopLeft aria-hidden="true" size={13} /> внутри {materialLabel(selected.material)}</span>
           ) : null}
           {selected.outer_steel_grade ? (
-            <span><Cog aria-hidden="true" size={13} /> снаружи {selected.outer_steel_grade}</span>
+            <span>
+              <Cog aria-hidden="true" size={13} /> снаружи {steelWithThicknessLabel(
+                selected.outer_steel_grade,
+                selected.outer_wall_thickness_mm,
+              )}
+            </span>
           ) : null}
           {selected.outer_material ? (
             <span><PanelsTopLeft aria-hidden="true" size={13} /> снаружи {materialLabel(selected.outer_material)}</span>
@@ -403,6 +409,14 @@ function dimensionValue(sku: Product["skus"][number], key: VariantDimensionKey):
     ) {
       return normalizedDecimalVariantValue(value);
     }
+    if (key === "attribute:outer_steel_grade" && typeof value === "string") {
+      const thickness = sku.attributes.outer_wall_thickness_mm;
+      const normalizedThickness =
+        typeof thickness === "string" || typeof thickness === "number"
+          ? normalizedDecimalVariantValue(thickness)
+          : "";
+      return `${value}|${normalizedThickness ?? ""}`;
+    }
     return typeof value === "string" || typeof value === "number" ? String(value) : null;
   }
   if (key === "diameter") {
@@ -429,6 +443,13 @@ function dimensionLabel(sku: Product["skus"][number], key: VariantDimensionKey):
     }
     if (key === "attribute:outer_wall_thickness_mm" && (typeof value === "string" || typeof value === "number")) {
       return `${value} мм`;
+    }
+    if (key === "attribute:outer_steel_grade" && typeof value === "string") {
+      const thickness = sku.attributes.outer_wall_thickness_mm;
+      return steelWithThicknessLabel(
+        value,
+        typeof thickness === "string" || typeof thickness === "number" ? thickness : null,
+      );
     }
     return typeof value === "string" || typeof value === "number" ? String(value) : null;
   }
@@ -467,7 +488,6 @@ const dimensionDefinitions: Array<{ key: VariantDimensionKey; label: string }> =
   { key: "wall_thickness_mm", label: "Толщина внутренней трубы" },
   { key: "attribute:outer_material", label: "Материал наружной трубы" },
   { key: "attribute:outer_steel_grade", label: "Марка стали наружной трубы" },
-  { key: "attribute:outer_wall_thickness_mm", label: "Толщина наружной трубы" },
   { key: "length_mm", label: "Длина" },
   { key: "insulation_mm", label: "Утепление" },
   { key: "angle_deg", label: "Угол" },
@@ -1046,6 +1066,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     typeof activeSku?.attributes.outer_wall_thickness_mm === "number"
       ? String(activeSku.attributes.outer_wall_thickness_mm)
       : null;
+  const outerSteelLabel = steelWithThicknessLabel(outerSteelGrade, outerWallThicknessMm);
   const diameterMm = activeSku?.diameter_mm ?? product.diameter_mm;
   const wallThicknessMm = activeSku?.wall_thickness_mm ?? product.wall_thickness_mm;
   const contour = activeSku?.contour ?? product.contour;
@@ -1092,12 +1113,17 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
         { label: "Внутренний диаметр", value: diameterMm !== null ? `${diameterMm} мм` : null },
         { label: "Наружный диаметр", value: outerDiameter !== null ? `${outerDiameter} мм` : null },
         { label: "Толщина внутренней трубы", value: wallThicknessMm ? `${compactDecimal(wallThicknessMm)} мм` : null },
-        { label: "Толщина наружной трубы", value: outerWallThicknessMm ? `${compactDecimal(outerWallThicknessMm)} мм` : null },
+        {
+          label: "Толщина наружной трубы",
+          value: !outerSteelLabel && outerWallThicknessMm
+            ? `${compactDecimal(outerWallThicknessMm)} мм`
+            : null,
+        },
         { label: "Утепление", value: insulationMm !== null ? `${insulationMm} мм` : null },
         { label: "Материал внутренней трубы", value: material },
         { label: "Марка стали внутренней трубы", value: steelGrade },
         { label: "Материал наружной трубы", value: outerMaterial },
-        { label: "Марка стали наружной трубы", value: outerSteelGrade },
+        { label: "Марка стали наружной трубы", value: outerSteelLabel },
       ].filter((item): item is { label: string; value: string } => Boolean(item.value))
     : [];
 
@@ -1228,7 +1254,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
               {outerSteelGrade ? (
                 <div className="spec-row">
                   <span>Марка стали наружной трубы</span>
-                  <strong>{outerSteelGrade}</strong>
+                  <strong>{outerSteelLabel}</strong>
                 </div>
               ) : null}
               {diameterMm ? (
@@ -1249,7 +1275,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   <strong>{wallThicknessMm} мм</strong>
                 </div>
               ) : null}
-              {outerWallThicknessMm ? (
+              {!outerSteelLabel && outerWallThicknessMm ? (
                 <div className="spec-row">
                   <span>Толщина наружной трубы</span>
                   <strong>{outerWallThicknessMm} мм</strong>

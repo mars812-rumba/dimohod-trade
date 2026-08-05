@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ProductListItem } from "@/lib/api";
+import { steelWithThicknessLabel } from "@/lib/productLabels";
 import { steelSelectionBadges } from "@/lib/steelSelection";
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -58,6 +59,7 @@ function catalogSpecs(product: ProductListItem) {
   const outerSteelGrade = textAttribute(attributes, "outer_steel_grade");
   const outerMaterial = textAttribute(attributes, "outer_material");
   const outerWallThickness = textAttribute(attributes, "outer_wall_thickness_mm");
+  const outerSteelLabel = steelWithThicknessLabel(outerSteelGrade, outerWallThickness);
 
   return [
     diameter,
@@ -70,13 +72,15 @@ function catalogSpecs(product: ProductListItem) {
     maxRoofAngle ? `Угол кровли до ${maxRoofAngle}°` : null,
     product.insulation_mm !== null ? `Утепление ${product.insulation_mm} мм` : null,
     product.steel_grade ? `Внутренняя сталь ${product.steel_grade}` : null,
-    outerSteelGrade ? `Наружная сталь ${outerSteelGrade}` : null,
+    outerSteelLabel ? `Наружная сталь ${outerSteelLabel}` : null,
     !product.steel_grade && product.material ? `Материал внутренней трубы ${product.material}` : null,
     !outerSteelGrade && outerMaterial ? `Материал наружной трубы ${outerMaterial}` : null,
     product.wall_thickness_mm
       ? `Внутренняя труба ${decimalLabel(product.wall_thickness_mm)} мм`
       : null,
-    outerWallThickness ? `Наружная труба ${decimalLabel(outerWallThickness)} мм` : null,
+    !outerSteelLabel && outerWallThickness
+      ? `Наружная труба ${decimalLabel(outerWallThickness)} мм`
+      : null,
     stockLabel(product.stock_status),
   ]
     .filter((value): value is string => Boolean(value))
