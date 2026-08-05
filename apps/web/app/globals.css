@@ -5064,7 +5064,7 @@ ul {
 }
 
 .catalog-filter-row-inner-steel:has(.catalog-pipe-steel-filter) {
-  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
 }
 
 .catalog-filter-row:empty {
@@ -5171,6 +5171,10 @@ ul {
 
 .catalog-segmented-control .filter-chip:last-child {
   border-radius: 0 3px 3px 0;
+}
+
+.catalog-segmented-control .filter-chip:only-child {
+  border-radius: 3px;
 }
 
 .catalog-segmented-control .filter-chip + .filter-chip {
@@ -5758,6 +5762,8 @@ ul {
   font-size: 11px;
   font-weight: 760;
   letter-spacing: 0;
+  line-height: 1.15;
+  white-space: normal;
 }
 
 .catalog-page .catalog-filter-field select,

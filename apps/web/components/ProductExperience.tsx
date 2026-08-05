@@ -128,6 +128,14 @@ function compactDecimal(value: string | null) {
   return value.replace(/([.,]\d*?[1-9])0+$|[.,]0+$/, "$1").replace(".", ",");
 }
 
+function normalizedDecimalVariantValue(value: string | number | null) {
+  if (value === null || value === "") {
+    return null;
+  }
+  const number = Number(String(value).replace(",", "."));
+  return Number.isFinite(number) ? String(number) : String(value);
+}
+
 function compatibleDiameterLabel(item: CompatibleProduct) {
   if (item.diameter_mm !== null && item.outer_diameter_mm !== null) {
     return `${item.diameter_mm}/${item.outer_diameter_mm} мм`;
@@ -143,11 +151,10 @@ function groupCompatibleProducts(items: CompatibleProduct[]) {
     group.push(item);
     groups.set(item.product_id, group);
   });
-  return Array.from(groups.values()).map((group) =>
-    group.sort((left, right) =>
-      (left.length_mm ?? Number.MAX_SAFE_INTEGER) - (right.length_mm ?? Number.MAX_SAFE_INTEGER),
-    ),
-  );
+  // The API ranks each family by how closely a target SKU preserves the
+  // source execution. Keep that order so the first link does not fall back
+  // to an unrelated outer shell merely because its length sorts first.
+  return Array.from(groups.values());
 }
 
 function familyCountLabel(count: number) {
@@ -175,6 +182,10 @@ function CompatibleProductFamilyCard({ items }: { items: CompatibleProduct[] }) 
     new Map(
       items.flatMap((item) => item.length_mm === null ? [] : [[item.length_mm, item] as const]),
     ).values(),
+  ).sort(
+    (left, right) =>
+      (left.length_mm ?? Number.MAX_SAFE_INTEGER) -
+      (right.length_mm ?? Number.MAX_SAFE_INTEGER),
   );
   const diameter = compatibleDiameterLabel(selected);
 
@@ -268,6 +279,12 @@ function dimensionValue(sku: Product["skus"][number], key: VariantDimensionKey):
     if (key === "attribute:outer_material" && typeof value === "string") {
       return materialKey(value);
     }
+    if (
+      key === "attribute:outer_wall_thickness_mm" &&
+      (typeof value === "string" || typeof value === "number")
+    ) {
+      return normalizedDecimalVariantValue(value);
+    }
     return typeof value === "string" || typeof value === "number" ? String(value) : null;
   }
   if (key === "diameter") {
@@ -278,6 +295,9 @@ function dimensionValue(sku: Product["skus"][number], key: VariantDimensionKey):
   }
   if (key === "material") {
     return materialKey(sku.material);
+  }
+  if (key === "wall_thickness_mm") {
+    return normalizedDecimalVariantValue(sku.wall_thickness_mm);
   }
   const value = sku[key as keyof typeof sku];
   return value === null || value === "" ? null : String(value);
@@ -1312,6 +1332,10 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   {variantDimensions.map((dimension, dimensionIndex) => {
                     const hidesSteelForGalvanized =
                       (dimension.key === "steel_grade" && materialKey(material) === "galvanized") ||
+                      (
+                        dimension.key === "wall_thickness_mm" &&
+                        materialKey(material) === "galvanized"
+                      ) ||
                       (
                         dimension.key === "attribute:outer_steel_grade" &&
                         materialKey(outerMaterial) === "galvanized"

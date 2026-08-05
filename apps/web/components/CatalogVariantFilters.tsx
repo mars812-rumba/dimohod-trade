@@ -154,6 +154,8 @@ function PipeControls({
   showSteel = true,
   includeHidden = true,
   showProfileLabel = false,
+  showSingleMaterial = false,
+  showSingleSteel = false,
 }: {
   label: string;
   name: string;
@@ -164,6 +166,8 @@ function PipeControls({
   showSteel?: boolean;
   includeHidden?: boolean;
   showProfileLabel?: boolean;
+  showSingleMaterial?: boolean;
+  showSingleSteel?: boolean;
 }) {
   const parsed = parsedPipeOptions(options);
   const selected = parsed.find((option) => option.value === selectedValue) ?? parsed[0];
@@ -201,7 +205,7 @@ function PipeControls({
   return (
     <>
       {includeHidden ? <input name={name} type="hidden" value={selected.value} /> : null}
-      {showMaterial && materials.length > 1 ? (
+      {showMaterial && (materials.length > 1 || (showSingleMaterial && materials.length === 1)) ? (
         <div
           aria-label={`Материал ${label}`}
           className="catalog-material-filter catalog-pipe-material-filter"
@@ -222,7 +226,7 @@ function PipeControls({
           </div>
         </div>
       ) : null}
-      {showSteel && steels.length > 1 ? (
+      {showSteel && (steels.length > 1 || (showSingleSteel && steels.length === 1)) ? (
         <label className="catalog-filter-field catalog-pipe-steel-filter">
           <span>Марка стали {label}</span>
           <select onChange={(event) => selectSteel(event.target.value)} value={selected.steel}>
@@ -379,6 +383,8 @@ export function CatalogVariantFilters({
             onChange={setSelectedOuterPipe}
             options={availableOuterPipes}
             selectedValue={effectiveOuterPipe}
+            showSingleMaterial
+            showSingleSteel
           />
         </div>
       ) : null}

@@ -185,6 +185,41 @@ def manually_selected_product_matches(source_sku: SKU, target_sku: SKU) -> bool:
     return True
 
 
+def variant_preservation_score(source_sku: SKU, target_sku: SKU) -> int:
+    """Rank a target SKU by how much of the source execution it preserves."""
+
+    def field_score(left: object, right: object, weight: int) -> int:
+        if left is None or left == "" or right is None or right == "":
+            return 0
+        try:
+            left_value: object = Decimal(str(left).replace(",", "."))
+            right_value: object = Decimal(str(right).replace(",", "."))
+        except (InvalidOperation, ValueError):
+            left_value = str(left).casefold().strip()
+            right_value = str(right).casefold().strip()
+        return weight if left_value == right_value else -weight
+
+    source_outer = outer_pipe_attributes(getattr(source_sku, "attributes", None))
+    target_outer = outer_pipe_attributes(getattr(target_sku, "attributes", None))
+    score = field_score(source_sku.wall_thickness_mm, target_sku.wall_thickness_mm, 8)
+    score += field_score(
+        material_group(source_outer.get("outer_material")),
+        material_group(target_outer.get("outer_material")),
+        4,
+    )
+    score += field_score(
+        source_outer.get("outer_steel_grade"),
+        target_outer.get("outer_steel_grade"),
+        2,
+    )
+    score += field_score(
+        source_outer.get("outer_wall_thickness_mm"),
+        target_outer.get("outer_wall_thickness_mm"),
+        1,
+    )
+    return score
+
+
 def compatible_support_platform_matches(source_sku: SKU, platform_sku: SKU) -> bool:
     """Match the platform to a console range or to populated sandwich fields."""
     source_attributes = getattr(source_sku, "attributes", None) or {}

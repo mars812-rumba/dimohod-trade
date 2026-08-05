@@ -49,7 +49,40 @@ from app.modules.products.service import (
     manually_selected_product_matches,
     material_group,
     normalized_compatible_product_ids,
+    variant_preservation_score,
 )
+
+
+def test_compatible_family_prefers_the_same_pipe_execution() -> None:
+    source = SimpleNamespace(
+        wall_thickness_mm=Decimal("0.50"),
+        attributes={
+            "outer_material": "нержавеющая сталь",
+            "outer_steel_grade": "AISI 304",
+            "outer_wall_thickness_mm": "0.5",
+        },
+    )
+    exact = SimpleNamespace(
+        wall_thickness_mm=Decimal("0.5"),
+        attributes={
+            "outer_material": "нержавеющая сталь",
+            "outer_steel_grade": "AISI 304",
+            "outer_wall_thickness_mm": "0.50",
+        },
+    )
+    galvanized = SimpleNamespace(
+        wall_thickness_mm=Decimal("0.5"),
+        attributes={
+            "outer_material": "оцинковка",
+            "outer_steel_grade": None,
+            "outer_wall_thickness_mm": None,
+        },
+    )
+
+    assert variant_preservation_score(source, exact) > variant_preservation_score(
+        source,
+        galvanized,
+    )
 
 
 @pytest.mark.asyncio
