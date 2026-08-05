@@ -4702,6 +4702,14 @@ ul {
   box-shadow: inset 0 -3px 0 rgba(70, 25, 8, 0.22);
 }
 
+.product-page .variant-toggle-options .variant-option[aria-pressed="true"] {
+  border-color: var(--product-signal);
+  background: var(--product-signal);
+  color: #fff;
+  opacity: 1;
+  text-decoration: none;
+}
+
 .product-page .variant-scheme-preview {
   padding: 10px;
   background: #f1f2ef;
