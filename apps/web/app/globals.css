@@ -4927,6 +4927,7 @@ ul {
 }
 
 .catalog-product-media {
+  position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -4947,6 +4948,18 @@ ul {
   font-weight: 760;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.catalog-product-image-badges {
+  top: 12px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+}
+
+.catalog-product-image-badges .product-image-badge {
+  min-height: 25px;
+  padding: 5px 8px;
+  font-size: 9px;
 }
 
 .catalog-product-media img {

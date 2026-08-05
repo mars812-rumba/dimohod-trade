@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ProductListItem } from "@/lib/api";
+import { steelSelectionBadges } from "@/lib/steelSelection";
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -90,6 +91,7 @@ function catalogSpecs(product: ProductListItem) {
 
 export function CatalogProductCard({ product }: { product: ProductListItem }) {
   const specs = catalogSpecs(product);
+  const steelBadges = steelSelectionBadges(product);
   const href = product.selected_sku
     ? `/product/${product.slug}?sku=${encodeURIComponent(product.selected_sku)}`
     : `/product/${product.slug}`;
@@ -105,6 +107,18 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
         ) : (
           <span>{product.product_kind ?? "товар"}</span>
         )}
+        {steelBadges.length > 0 ? (
+          <div className="product-image-badges catalog-product-image-badges" aria-label="Назначение варианта">
+            {steelBadges.map((badge) => (
+              <span
+                className={`product-image-badge product-image-badge-${badge.tone}`}
+                key={`${badge.tone}-${badge.label}`}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
       <div className="catalog-product-body">
         <p className="meta">{product.category.name}</p>

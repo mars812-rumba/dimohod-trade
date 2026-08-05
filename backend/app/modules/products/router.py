@@ -22,6 +22,7 @@ from app.modules.products.schemas import (
     ProductRead,
 )
 from app.modules.products.models import Product, SKU
+from app.modules.products.display_attributes import public_sku_display_attributes
 from app.modules.products.service import (
     compatible_product_matches,
     get_product_by_slug,
@@ -162,31 +163,6 @@ def public_sku_media_attributes(attributes: dict[str, object] | None) -> dict[st
         key: value
         for key in ("sku_photo", "sku_media", "sku_seo")
         if (value := values.get(key))
-    }
-
-
-def public_sku_display_attributes(attributes: dict[str, object] | None) -> dict[str, object]:
-    core_keys = {
-        "diameter_mm",
-        "outer_diameter_mm",
-        "length_mm",
-        "angle_deg",
-        "material",
-        "steel_grade",
-        "wall_thickness_mm",
-        "contour",
-        "insulation_mm",
-    }
-    hidden_prefixes = ("source_", "raw_", "sku_")
-    hidden_keys = {"diameter_min_mm", "diameter_max_mm"}
-    return {
-        key: value
-        for key, value in (attributes or {}).items()
-        if key not in core_keys
-        and key not in hidden_keys
-        and not key.startswith(hidden_prefixes)
-        and isinstance(value, (str, int, float, bool))
-        and value not in (None, "")
     }
 
 
