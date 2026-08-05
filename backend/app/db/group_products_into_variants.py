@@ -12,6 +12,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db.catalog_item_rules import normalized_price_item_name
 from app.db.session import AsyncSessionLocal
+from app.db.steel_selection_profiles import with_steel_selection_profile
 from app.modules.catalog.models import Category  # noqa: F401
 from app.modules.products.models import Product, SKU
 
@@ -277,7 +278,7 @@ def populate_sku_variant_fields(product: Product, sku: SKU, used_slugs: set[str]
     if sku.wall_thickness_mm is None:
         sku.wall_thickness_mm = wall_thickness_from_attrs(attrs, product_attrs)
 
-    sku.attributes = {
+    sku.attributes = with_steel_selection_profile({
         **attrs,
         "diameter_mm": sku.diameter_mm,
         "outer_diameter_mm": sku.outer_diameter_mm,
@@ -288,7 +289,7 @@ def populate_sku_variant_fields(product: Product, sku: SKU, used_slugs: set[str]
         "wall_thickness_mm": str(sku.wall_thickness_mm) if sku.wall_thickness_mm is not None else None,
         "contour": sku.contour,
         "insulation_mm": sku.insulation_mm,
-    }
+    }, steel_grade=sku.steel_grade, product_kind=normalized_product_kind(product))
 
 
 async def unique_product_slug(session: AsyncSession, base_slug: str, product: Product) -> str:

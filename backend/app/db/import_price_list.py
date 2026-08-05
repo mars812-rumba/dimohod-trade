@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.catalog_item_rules import exclude_price_item, normalized_price_item_name
 from app.db.session import AsyncSessionLocal
+from app.db.steel_selection_profiles import with_steel_selection_profile
 from app.modules.catalog.models import Category
 from app.modules.products.models import NeedsReview, Product, SKU
 
@@ -589,6 +590,11 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                         ),
                         "insulation_material": section.insulation_material,
                     }
+                    sku_attributes = with_steel_selection_profile(
+                        sku_attributes,
+                        steel_grade=section.steel_grade,
+                        product_kind=kind,
+                    )
                     if sku is None:
                         sku = SKU(
                             product_id=product.id,

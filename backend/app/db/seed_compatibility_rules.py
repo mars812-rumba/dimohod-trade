@@ -134,11 +134,29 @@ DEFAULT_RULES: list[dict[str, Any]] = [
         "applies_to_product_kind": None,
         "conditions": {
             "source_type": "gas_boiler",
-            "steel_grade": {"not_in": ["AISI 304", "AISI 316", "AISI 316L"]},
+            "steel_grade": {"not_in": ["AISI 304", "AISI 316", "AISI 316L", "AISI 321"]},
         },
         "result": {"needs_review": True},
         "severity": "warning",
         "message": "Для газового котла проверь кислотостойкость стали. Не подставляй вариант без инженерной проверки.",
+    },
+    {
+        "code": "aisi_430_inner_pipe_limited",
+        "name": "AISI 430 имеет ограниченное применение во внутренней трубе",
+        "description": (
+            "Подтвержденный владельцем эконом-вариант без конденсата, который не следует "
+            "выбирать автоматически для внутреннего дымового канала."
+        ),
+        "rule_type": "variant",
+        "applies_to_product_kind": "труба",
+        "conditions": {"steel_grade": "AISI 430"},
+        "result": {"autoselect_allowed": False, "needs_review": True},
+        "severity": "warning",
+        "message": (
+            "AISI 430 — эконом-вариант для внутреннего канала без конденсата. "
+            "Для основного подбора рекомендуются другие марки стали; вариант требует "
+            "подтверждения специалистом."
+        ),
     },
 ]
 

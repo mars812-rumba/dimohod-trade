@@ -75,6 +75,20 @@ type VariantDimension = {
   options: Array<{ value: string; label: string }>;
 };
 
+type SteelSelectionProfile = {
+  selectionTier: "economy" | "standard" | "premium" | null;
+  fuelTypes: string[];
+  condensateMode: "with" | "without" | null;
+  operatingTemperatureC: number | null;
+  maxTemperatureC: number | null;
+  innerUseStatus: "limited" | "allowed" | null;
+};
+
+type SteelBadge = {
+  label: string;
+  tone: "economy" | "standard" | "premium" | "purpose" | "warning";
+};
+
 const COMPATIBILITY_PREFETCH_LIMIT = 6;
 
 function normalizedCompatibilityValue(value: string | null) {
@@ -255,6 +269,88 @@ function materialLabel(value: string | null) {
   return value;
 }
 
+function steelSelectionProfile(sku: Product["skus"][number] | null): SteelSelectionProfile | null {
+  const raw = sku?.attributes.steel_selection_profile;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return null;
+  }
+  const profile = raw as Record<string, unknown>;
+  const selectionTier = profile.selection_tier;
+  const condensateMode = profile.condensate_mode;
+  const innerUseStatus = profile.inner_use_status;
+  return {
+    selectionTier:
+      selectionTier === "economy" || selectionTier === "standard" || selectionTier === "premium"
+        ? selectionTier
+        : null,
+    fuelTypes: Array.isArray(profile.fuel_types)
+      ? profile.fuel_types.filter((value): value is string => typeof value === "string")
+      : [],
+    condensateMode: condensateMode === "with" || condensateMode === "without" ? condensateMode : null,
+    operatingTemperatureC:
+      typeof profile.operating_temperature_c === "number" ? profile.operating_temperature_c : null,
+    maxTemperatureC: typeof profile.max_temperature_c === "number" ? profile.max_temperature_c : null,
+    innerUseStatus: innerUseStatus === "limited" || innerUseStatus === "allowed" ? innerUseStatus : null,
+  };
+}
+
+const tierLabels = {
+  economy: "Эконом",
+  standard: "Стандарт",
+  premium: "Премиум",
+} as const;
+
+const fuelLabels: Record<string, string> = {
+  wood: "Дрова",
+  coal: "Уголь",
+  gas: "Газ",
+  diesel: "Дизель",
+};
+
+function steelSelectionLabel(sku: Product["skus"][number]) {
+  const profile = steelSelectionProfile(sku);
+  if (!sku.steel_grade || !profile) {
+    return sku.steel_grade;
+  }
+  if (profile.selectionTier) {
+    return `${sku.steel_grade} · ${tierLabels[profile.selectionTier]}`;
+  }
+  const fuels = profile.fuelTypes.map((fuel) => fuelLabels[fuel]).filter(Boolean);
+  return fuels.length > 0 ? `${sku.steel_grade} · ${fuels.join(" / ")}` : sku.steel_grade;
+}
+
+function steelSelectionBadges(sku: Product["skus"][number] | null): SteelBadge[] {
+  const profile = steelSelectionProfile(sku);
+  if (!profile) {
+    return [];
+  }
+  const tierBadge: SteelBadge | null = profile.selectionTier
+    ? { label: tierLabels[profile.selectionTier], tone: profile.selectionTier }
+    : null;
+  const condensateBadge: SteelBadge | null = profile.condensateMode
+    ? {
+        label: profile.condensateMode === "with" ? "С конденсатом" : "Без конденсата",
+        tone: "purpose" as const,
+      }
+    : null;
+  if (profile.innerUseStatus === "limited") {
+    const badges: SteelBadge[] = [];
+    if (tierBadge) badges.push(tierBadge);
+    if (condensateBadge) badges.push(condensateBadge);
+    badges.push({ label: "Ограниченное применение", tone: "warning" });
+    return badges;
+  }
+  const fuels = profile.fuelTypes.map((fuel) => fuelLabels[fuel]).filter(Boolean);
+  const purposeBadge: SteelBadge | null = fuels.length > 0
+    ? { label: fuels.join(" / "), tone: "purpose" as const }
+    : null;
+  const badges: SteelBadge[] = [];
+  if (tierBadge) badges.push(tierBadge);
+  if (purposeBadge) badges.push(purposeBadge);
+  if (condensateBadge) badges.push(condensateBadge);
+  return badges.slice(0, 3);
+}
+
 function dimensionValue(sku: Product["skus"][number], key: VariantDimensionKey): string | null {
   if (key.startsWith("attribute:")) {
     const value = sku.attributes[key.slice("attribute:".length)];
@@ -299,6 +395,9 @@ function dimensionLabel(sku: Product["skus"][number], key: VariantDimensionKey):
   if (key === "material") {
     return materialLabel(sku.material);
   }
+  if (key === "steel_grade") {
+    return steelSelectionLabel(sku);
+  }
   const value = sku[key as keyof typeof sku];
   return typeof value === "string" && value ? value : null;
 }
@@ -318,7 +417,7 @@ const dimensionDefinitions: Array<{ key: VariantDimensionKey; label: string }> =
   { key: "attribute:size_range", label: "Размер" },
 ];
 
-const publicVariantAttributeLabels: Record<VariantAttributeKey | "max_roof_angle_deg" | "model_number", string> = {
+const publicVariantAttributeLabels: Record<string, string> = {
   diameter_range: "Диапазон диаметра",
   base_size: "Размер основания",
   execution: "Исполнение",
@@ -333,7 +432,7 @@ function publicVariantAttributes(sku: Product["skus"][number] | null) {
   if (!sku) {
     return [];
   }
-  return Object.entries(publicVariantAttributeLabels).flatMap(([key, label]) => {
+  const attributes = Object.entries(publicVariantAttributeLabels).flatMap(([key, label]) => {
     const value = sku.attributes[key];
     if (typeof value !== "string" && typeof value !== "number") {
       return [];
@@ -349,6 +448,22 @@ function publicVariantAttributes(sku: Product["skus"][number] | null) {
             : String(value),
     }];
   });
+  const profile = steelSelectionProfile(sku);
+  if (profile?.operatingTemperatureC !== null && profile?.operatingTemperatureC !== undefined) {
+    attributes.push({
+      key: "operating_temperature_c",
+      label: "Рабочая температура",
+      value: `${profile.operatingTemperatureC} °C`,
+    });
+  }
+  if (profile?.maxTemperatureC !== null && profile?.maxTemperatureC !== undefined) {
+    attributes.push({
+      key: "max_temperature_c",
+      label: "Максимальная кратковременная температура",
+      value: `${profile.maxTemperatureC} °C`,
+    });
+  }
+  return attributes;
 }
 
 function buildVariantDimensions(skus: Product["skus"]): VariantDimension[] {
@@ -708,6 +823,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const skuDescription = skuSeoText(activeSku, "description") ?? product.description;
   const variantDimensions = useMemo(() => buildVariantDimensions(product.skus), [product.skus]);
   const variantAttributes = publicVariantAttributes(activeSku);
+  const steelBadges = steelSelectionBadges(activeSku);
 
   const loadCompatibility = useCallback(
     (sku: Product["skus"][number]) => {
@@ -954,13 +1070,18 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                 <span>Фото товара</span>
               </div>
             )}
-            <div className="product-image-badges">
-              {product.application_tags.map((tag) => (
-                <span className="chip" key={tag}>
-                  {tag}
-                </span>
-              ))}
-            </div>
+            {steelBadges.length > 0 ? (
+              <div className="product-image-badges" aria-label="Назначение выбранного варианта">
+                {steelBadges.map((badge) => (
+                  <span
+                    className={`product-image-badge product-image-badge-${badge.tone}`}
+                    key={`${badge.tone}-${badge.label}`}
+                  >
+                    {badge.label}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             {media.length > 1 ? (
               <div className="product-gallery-thumbs" aria-label="Галерея товара">
                 {media.map((item, index) => (

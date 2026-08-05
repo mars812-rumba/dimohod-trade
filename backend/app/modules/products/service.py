@@ -7,6 +7,7 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from app.modules.catalog.models import Category
 from app.modules.products.models import Product, SKU
+from app.db.steel_selection_profiles import steel_selection_label
 
 COMPATIBLE_PRODUCT_IDS_KEY = "compatible_product_ids"
 
@@ -506,8 +507,16 @@ async def list_variant_filter_options(
         ],
         key=lambda item: tuple(int(value or 0) for value in item[0].split(":")),
     )
+    pipe_category_slugs = {"sendvich-truby", "odnokonturnye-truby"}
     steels = sorted(
-        [(value, value, len(product_ids)) for value, product_ids in steel_products.items()],
+        [
+            (
+                value,
+                steel_selection_label(value) if category_slug in pipe_category_slugs else value,
+                len(product_ids),
+            )
+            for value, product_ids in steel_products.items()
+        ],
         key=lambda item: item[1],
     )
     material_labels = {"stainless": "Нержавейка", "galvanized": "Оцинковка"}
