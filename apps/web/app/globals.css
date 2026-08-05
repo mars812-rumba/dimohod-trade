@@ -4693,6 +4693,7 @@ ul {
 .product-page .variant-group legend {
   color: #66777c;
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
 }
 
 .product-page .variant-option,
@@ -4850,20 +4851,20 @@ ul {
   }
 
   .product-page .variant-group {
-    margin-bottom: 9px;
+    margin-bottom: 12px;
   }
 
   .product-page .variant-group legend {
-    margin-bottom: 4px;
-    font-size: clamp(8px, 1.85vw, 9px);
+    margin-bottom: 5px;
+    font-size: clamp(9px, 2.2vw, 11px);
     letter-spacing: 0;
     white-space: nowrap;
   }
 
   .product-page .variant-select-wrap select {
-    min-height: 38px;
+    min-height: 40px;
     padding: 7px 32px 7px 9px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .product-page .variant-select-wrap svg {
@@ -4871,9 +4872,9 @@ ul {
   }
 
   .product-page .variant-toggle-options .variant-option {
-    min-height: 38px;
+    min-height: 40px;
     padding: 6px 5px;
-    font-size: 10px;
+    font-size: clamp(11px, 2.5vw, 13px);
   }
 
   .product-page .sku-price-block-selection {
@@ -5730,8 +5731,13 @@ ul {
 }
 
 .catalog-page .catalog-variant-filters {
-  gap: 16px;
+  gap: 12px;
   padding: 24px;
+}
+
+.catalog-page .catalog-filter-field,
+.catalog-page .catalog-material-filter {
+  gap: 5px;
 }
 
 .catalog-page .catalog-filter-field > span,
@@ -5740,6 +5746,7 @@ ul {
 .catalog-page .catalog-material-filter > legend {
   color: var(--catalog-steel);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
 }
@@ -5753,7 +5760,8 @@ ul {
 
 .catalog-page .catalog-filter-field select,
 .catalog-page .catalog-search-field input {
-  min-height: 46px;
+  min-height: 40px;
+  font-size: 13px;
 }
 
 .catalog-page .catalog-filter-submit {
@@ -5766,15 +5774,15 @@ ul {
 }
 
 .catalog-page .filter-chip {
-  min-height: 38px;
+  min-height: 40px;
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.025em;
   text-transform: uppercase;
 }
 
 .catalog-page .catalog-segmented-control .filter-chip {
-  min-height: 46px;
+  min-height: 40px;
 }
 
 .catalog-page .filter-chip.active,
@@ -5984,7 +5992,7 @@ ul {
 
   .catalog-page .catalog-filter-field > span,
   .catalog-page .catalog-material-filter > span {
-    font-size: clamp(7px, 1.9vw, 9px);
+    font-size: clamp(9px, 2.2vw, 11px);
     letter-spacing: 0;
   }
 
