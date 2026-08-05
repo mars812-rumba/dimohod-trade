@@ -3345,6 +3345,10 @@ ul {
   grid-column: 1 / -1;
 }
 
+.variant-group-wall_thickness_mm {
+  grid-column: 2;
+}
+
 .variant-group legend {
   margin-bottom: 8px;
   color: var(--muted);

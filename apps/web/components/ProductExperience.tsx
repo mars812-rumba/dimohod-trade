@@ -1295,6 +1295,15 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                 </summary>
                 <div className="variant-picker">
                   {variantDimensions.map((dimension, dimensionIndex) => {
+                    const hidesSteelForGalvanized =
+                      (dimension.key === "steel_grade" && materialKey(material) === "galvanized") ||
+                      (
+                        dimension.key === "attribute:outer_steel_grade" &&
+                        materialKey(outerMaterial) === "galvanized"
+                      );
+                    if (hidesSteelForGalvanized) {
+                      return null;
+                    }
                     const prefix = variantDimensions.slice(0, dimensionIndex);
                     const selectedValue = dimensionValue(activeSku, dimension.key) ?? "";
                     const options = dimension.options.map((option) => ({
