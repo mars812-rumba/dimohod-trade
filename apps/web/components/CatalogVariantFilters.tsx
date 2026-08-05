@@ -308,8 +308,21 @@ export function CatalogVariantFilters({
     matchingCombinations.map((combination) => combination.outer_pipe),
   );
   const selectedInnerMaterial = effectiveInnerPipe.split("|", 1)[0];
+  const outerPipeOptions =
+    selectedInnerMaterial === "galvanized" &&
+    matchingCombinations.length > 0 &&
+    !outerPipes.some((option) => option.value.startsWith("galvanized|"))
+      ? [
+          ...outerPipes,
+          {
+            value: "galvanized||",
+            label: "Оцинковка",
+            count: 0,
+          },
+        ]
+      : outerPipes;
   const availableOuterPipes = matchingCombinations.length
-    ? outerPipes.filter(
+    ? outerPipeOptions.filter(
         (option) =>
           availableOuterValues.has(option.value) ||
           // Every price section with a galvanized inner pipe has a confirmed
@@ -318,7 +331,7 @@ export function CatalogVariantFilters({
           // still select only a real SKU from the category.
           (selectedInnerMaterial === "galvanized" && option.value.startsWith("galvanized|")),
       )
-    : outerPipes;
+    : outerPipeOptions;
   const effectiveOuterPipe = availableOuterPipes.some(
     (option) => option.value === selectedOuterPipe,
   )
@@ -384,7 +397,7 @@ export function CatalogVariantFilters({
         />
       </div>
 
-      {outerPipes.length ? (
+      {availableOuterPipes.length ? (
         <div className="catalog-filter-row catalog-filter-row-outer">
           <PipeControls
             label="наружной трубы"

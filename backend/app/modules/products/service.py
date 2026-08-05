@@ -53,10 +53,21 @@ def material_filter_expression(value: str):
 
 def outer_material_filter_expression(value: str):
     outer_material = SKU.attributes["outer_material"].as_string()
+    source_section = SKU.attributes["source_section"].as_string()
     if value == "stainless":
-        return or_(outer_material.ilike("%нерж%"), outer_material.ilike("%stainless%"))
+        return or_(
+            outer_material.ilike("%нерж%"),
+            outer_material.ilike("%stainless%"),
+            source_section.ilike("%наружн%кожух%нерж%"),
+            source_section.ilike("%наружн%труб%нерж%"),
+        )
     if value == "galvanized":
-        return or_(outer_material.ilike("%оцинк%"), outer_material.ilike("%galvan%"))
+        return or_(
+            outer_material.ilike("%оцинк%"),
+            outer_material.ilike("%galvan%"),
+            source_section.ilike("%наружн%кожух%оцинк%"),
+            source_section.ilike("%наружн%труб%оцинк%"),
+        )
     return func.lower(outer_material) == value.lower()
 
 
