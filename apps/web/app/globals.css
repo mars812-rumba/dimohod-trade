@@ -5053,9 +5053,18 @@ ul {
 .catalog-filter-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 12px;
   align-items: end;
   min-width: 0;
+}
+
+.catalog-filter-row-primary,
+.catalog-filter-row-outer {
+  grid-template-columns: minmax(0, 1.14fr) minmax(0, 0.86fr);
+}
+
+.catalog-filter-row-inner-steel:has(.catalog-pipe-steel-filter) {
+  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
 }
 
 .catalog-filter-row:empty {
