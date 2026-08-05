@@ -307,8 +307,17 @@ export function CatalogVariantFilters({
   const availableOuterValues = new Set(
     matchingCombinations.map((combination) => combination.outer_pipe),
   );
+  const selectedInnerMaterial = effectiveInnerPipe.split("|", 1)[0];
   const availableOuterPipes = matchingCombinations.length
-    ? outerPipes.filter((option) => availableOuterValues.has(option.value))
+    ? outerPipes.filter(
+        (option) =>
+          availableOuterValues.has(option.value) ||
+          // Every price section with a galvanized inner pipe has a confirmed
+          // galvanized outer-shell execution. Keep it visible if legacy data
+          // made the combination matrix incomplete; the submitted filters
+          // still select only a real SKU from the category.
+          (selectedInnerMaterial === "galvanized" && option.value.startsWith("galvanized|")),
+      )
     : outerPipes;
   const effectiveOuterPipe = availableOuterPipes.some(
     (option) => option.value === selectedOuterPipe,
