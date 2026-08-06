@@ -501,6 +501,23 @@ async def list_product_kind_filters(session: AsyncSession) -> list[tuple[str, in
     return [(str(kind), int(count)) for kind, count in result.all() if kind]
 
 
+async def list_product_seo_pages(
+    session: AsyncSession,
+) -> list[tuple[str, int | None, int | None]]:
+    """Return one indexable page key per active product-family diameter."""
+    result = await session.execute(
+        select(Product.slug, SKU.diameter_mm, SKU.outer_diameter_mm)
+        .join(SKU, SKU.product_id == Product.id)
+        .where(Product.is_active.is_(True), SKU.is_active.is_(True))
+        .distinct()
+        .order_by(Product.slug, SKU.diameter_mm, SKU.outer_diameter_mm)
+    )
+    return [
+        (str(slug), diameter_mm, outer_diameter_mm)
+        for slug, diameter_mm, outer_diameter_mm in result.all()
+    ]
+
+
 async def list_variant_filter_options(
     session: AsyncSession,
     *,
@@ -760,7 +777,13 @@ async def list_variant_filter_options(
 async def get_product_by_slug(session: AsyncSession, slug: str) -> Product | None:
     result = await session.execute(
         select(Product)
-        .where(Product.slug == slug, Product.is_active.is_(True))
+        .where(
+            or_(
+                Product.slug == slug,
+                Product.extra_attributes["_seo_public_slug_previous"].as_string() == slug,
+            ),
+            Product.is_active.is_(True),
+        )
         .options(joinedload(Product.category), selectinload(Product.skus))
     )
     return result.scalar_one_or_none()

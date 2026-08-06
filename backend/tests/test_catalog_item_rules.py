@@ -10,7 +10,25 @@ from app.db.catalog_item_rules import (
     expanded_price_item_names,
     is_withdrawable_damper,
     normalized_price_item_name,
+    product_family_slug_parts,
 )
+
+
+def test_public_family_slug_parts_do_not_repeat_product_kind() -> None:
+    assert product_family_slug_parts("сэндвич", "труба", "Труба") == [
+        "сэндвич",
+        "труба",
+    ]
+    assert product_family_slug_parts("сэндвич", "отвод", "Отвод 90 гр") == [
+        "сэндвич",
+        "отвод",
+        "90 гр",
+    ]
+    assert product_family_slug_parts("сэндвич", "оголовок", "Дефлектор-конус") == [
+        "сэндвич",
+        "оголовок",
+        "Дефлектор-конус",
+    ]
 
 
 def test_sandwich_plug_labels_are_one_support_cap_family() -> None:

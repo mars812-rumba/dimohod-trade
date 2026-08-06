@@ -4,6 +4,7 @@ import { Flame, Phone, Search, ShoppingCart } from "lucide-react";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro"),
   title: "Dimohod Trade",
   description: "Каталог и калькулятор дымоходных систем.",
 };

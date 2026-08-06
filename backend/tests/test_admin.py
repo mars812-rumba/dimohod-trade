@@ -103,6 +103,33 @@ def test_sku_id_selects_exact_variant_when_legacy_slugs_are_duplicated() -> None
     assert select_active_sku(product, str(second.id), strict=True) is second
 
 
+def test_product_diameter_url_selects_a_variant_without_sku_identifier() -> None:
+    first = SimpleNamespace(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        slug="first",
+        article="DT-D100-200",
+        is_active=True,
+        diameter_mm=100,
+        outer_diameter_mm=200,
+    )
+    second = SimpleNamespace(
+        id=UUID("00000000-0000-0000-0000-000000000002"),
+        slug="second",
+        article="DT-D150-250",
+        is_active=True,
+        diameter_mm=150,
+        outer_diameter_mm=250,
+    )
+    product = SimpleNamespace(skus=[first, second])
+
+    assert select_active_sku(
+        product,
+        None,
+        diameter_mm=150,
+        outer_diameter_mm=250,
+    ) is second
+
+
 @pytest.mark.asyncio
 async def test_variant_filters_keep_only_real_inner_outer_pipe_combinations() -> None:
     rows = [
@@ -232,6 +259,7 @@ def test_admin_routes_are_registered() -> None:
     assert "/api/v1/admin/categories/{category_id}/cover" in paths
     assert "/api/v1/admin/skus/{sku_id}/photo" in paths
     assert "/api/v1/products/{slug}/compatible" in paths
+    assert "/api/v1/products/seo-pages" in paths
 
 
 def test_normalize_media_list_skips_invalid_items() -> None:

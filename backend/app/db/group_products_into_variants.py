@@ -10,7 +10,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.catalog_item_rules import normalized_price_item_name
+from app.db.catalog_item_rules import normalized_price_item_name, product_family_slug_parts
+from app.db.price_section_attributes import outer_pipe_attributes
 from app.db.session import AsyncSessionLocal
 from app.db.steel_selection_profiles import with_steel_selection_profile
 from app.modules.catalog.models import Category  # noqa: F401
@@ -83,6 +84,8 @@ def logical_item_name(value: str) -> str:
 
 def normalized_product_kind(product: Product) -> str:
     text = raw_item_name(product).lower().replace("ё", "е")
+    if "юбк" in text or product.product_kind == "декоративная_юбка":
+        return "декоративная_юбка"
     if "конденсат" in text:
         return "конденсатоотвод"
     return product.product_kind or "unknown_kind"
@@ -179,6 +182,8 @@ def logical_name(product: Product) -> str:
         flags=re.IGNORECASE,
     )
     base_lower = base_name[:1].lower() + base_name[1:]
+    if base_name.casefold() in {"прочистка", "декоративная юбка"}:
+        return base_name
     if product.contour == "сэндвич":
         return f"Сэндвич-{base_lower}".strip()[:220]
 
@@ -188,12 +193,18 @@ def logical_name(product: Product) -> str:
 
 
 def logical_slug(product: Product) -> str:
+    item_name = logical_item_name(raw_item_name(product)).casefold()
+    if item_name == "декоративная юбка":
+        return "dekorativnaya-yubka"
+    if item_name == "прочистка":
+        return "odnostennyy-reviziya-prochistka"
     contour = product.contour or "catalog"
     kind = normalized_product_kind(product)
-    parts = [contour, kind, logical_item_name(raw_item_name(product))]
-    angle = angle_deg(raw_item_name(product), product.extra_attributes)
-    if kind == "отвод" and angle is not None:
-        parts.append(f"{angle}gr")
+    parts = product_family_slug_parts(
+        contour,
+        kind,
+        logical_item_name(raw_item_name(product)),
+    )
     return slugify("-".join(parts), max_len=220)
 
 
@@ -240,6 +251,16 @@ def variant_slug(product: Product, sku: SKU, used_slugs: set[str]) -> str:
         parts.append(f"t{str(wall_thickness_mm).replace('.', '')}")
     if insulation_mm is not None:
         parts.append(f"ins{insulation_mm}")
+    outer = outer_pipe_attributes(attrs)
+    outer_steel_grade = outer.get("outer_steel_grade")
+    outer_material = outer.get("outer_material")
+    outer_wall_thickness_mm = decimal_attr(outer.get("outer_wall_thickness_mm"))
+    if outer_steel_grade:
+        parts.append(f"outer-{str(outer_steel_grade).replace(' ', '').lower()}")
+    elif outer_material:
+        parts.append(f"outer-{slugify(str(outer_material), max_len=32)}")
+    if outer_wall_thickness_mm is not None:
+        parts.append(f"outer-t{str(outer_wall_thickness_mm).replace('.', '')}")
 
     base_slug = slugify("-".join(parts) or sku.article, max_len=220)
     candidate = base_slug
@@ -278,18 +299,25 @@ def populate_sku_variant_fields(product: Product, sku: SKU, used_slugs: set[str]
     if sku.wall_thickness_mm is None:
         sku.wall_thickness_mm = wall_thickness_from_attrs(attrs, product_attrs)
 
-    sku.attributes = with_steel_selection_profile({
-        **attrs,
-        "diameter_mm": sku.diameter_mm,
-        "outer_diameter_mm": sku.outer_diameter_mm,
-        "length_mm": sku.length_mm,
-        "angle_deg": sku.angle_deg,
-        "material": sku.material,
-        "steel_grade": sku.steel_grade,
-        "wall_thickness_mm": str(sku.wall_thickness_mm) if sku.wall_thickness_mm is not None else None,
-        "contour": sku.contour,
-        "insulation_mm": sku.insulation_mm,
-    }, steel_grade=sku.steel_grade, product_kind=normalized_product_kind(product))
+    sku.attributes = with_steel_selection_profile(
+        {
+            **attrs,
+            "diameter_mm": sku.diameter_mm,
+            "outer_diameter_mm": sku.outer_diameter_mm,
+            "length_mm": sku.length_mm,
+            "angle_deg": sku.angle_deg,
+            "material": sku.material,
+            "steel_grade": sku.steel_grade,
+            "wall_thickness_mm": (
+                str(sku.wall_thickness_mm) if sku.wall_thickness_mm is not None else None
+            ),
+            "contour": sku.contour,
+            "insulation_mm": sku.insulation_mm,
+        },
+        steel_grade=sku.steel_grade,
+        product_kind=normalized_product_kind(product),
+        contour=sku.contour,
+    )
 
 
 async def unique_product_slug(session: AsyncSession, base_slug: str, product: Product) -> str:

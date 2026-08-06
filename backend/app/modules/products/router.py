@@ -22,6 +22,7 @@ from app.modules.products.schemas import (
     ProductListResponse,
     ProductMediaItem,
     ProductRead,
+    ProductSeoPage,
     ProductVariantCombination,
 )
 from app.modules.products.models import Product, SKU
@@ -32,6 +33,7 @@ from app.modules.products.service import (
     get_product_sku_by_key,
     list_compatible_product_skus,
     list_product_kind_filters,
+    list_product_seo_pages,
     list_products,
     list_variant_filter_options,
     material_group,
@@ -254,7 +256,14 @@ def public_attributes_for_sku(product: Product, sku: SKU) -> dict[str, object]:
     )
 
 
-def select_active_sku(product: Product, sku_key: str | None, *, strict: bool = False) -> SKU | None:
+def select_active_sku(
+    product: Product,
+    sku_key: str | None,
+    *,
+    strict: bool = False,
+    diameter_mm: int | None = None,
+    outer_diameter_mm: int | None = None,
+) -> SKU | None:
     active_skus = [sku for sku in product.skus if sku.is_active]
     if sku_key:
         selected = next(
@@ -269,6 +278,25 @@ def select_active_sku(product: Product, sku_key: str | None, *, strict: bool = F
             return selected
         if strict:
             return None
+    if diameter_mm is not None:
+        selected = next(
+            (
+                sku
+                for sku in active_skus
+                if (
+                    sku.diameter_mm == diameter_mm
+                    or (
+                        outer_diameter_mm is None
+                        and sku.diameter_mm is None
+                        and sku.outer_diameter_mm == diameter_mm
+                    )
+                )
+                and (outer_diameter_mm is None or sku.outer_diameter_mm == outer_diameter_mm)
+            ),
+            None,
+        )
+        if selected is not None:
+            return selected
     return active_skus[0] if active_skus else None
 
 
@@ -299,7 +327,7 @@ async def compatible_items_for_sku(
             product_slug=target_product.slug,
             product_kind=target_product.product_kind,
             sku_id=target_sku.id,
-            sku_key=str(target_sku.id),
+            sku_key=target_sku.article,
             article=target_sku.article,
             name=target_sku.name,
             length_mm=target_sku.length_mm,
@@ -470,7 +498,7 @@ async def read_products(
                 or primary_product_image(product.extra_attributes),
                 price_rub=price_rub,
                 sku_count=len(active_skus),
-                selected_sku=str(representative_sku.id)
+                selected_sku=representative_sku.article
                 if representative_sku
                 else None,
             )
@@ -566,11 +594,27 @@ async def read_product_filters(
     )
 
 
+@router.get("/seo-pages", response_model=list[ProductSeoPage])
+async def read_product_seo_pages(
+    session: AsyncSession = Depends(get_db),
+) -> list[ProductSeoPage]:
+    pages = await list_product_seo_pages(session)
+    return [
+        ProductSeoPage(
+            product_slug=slug,
+            diameter_mm=diameter_mm,
+            outer_diameter_mm=outer_diameter_mm,
+        )
+        for slug, diameter_mm, outer_diameter_mm in pages
+    ]
+
+
 @router.get("/{slug}", response_model=ProductRead)
 async def read_product(
     slug: str,
     response: Response,
     sku: str | None = Query(default=None, min_length=1, max_length=240),
+    diameter: str | None = Query(default=None, pattern=r"^(?:\d+:\d*|\d*:\d+)$"),
     session: AsyncSession = Depends(get_db),
 ) -> ProductRead:
     started_at = perf_counter()
@@ -579,7 +623,13 @@ async def read_product(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     product_loaded_at = perf_counter()
 
-    source_sku = select_active_sku(product, sku)
+    diameter_mm, outer_diameter_mm = parse_diameter_filter(diameter)
+    source_sku = select_active_sku(
+        product,
+        sku,
+        diameter_mm=diameter_mm,
+        outer_diameter_mm=outer_diameter_mm,
+    )
     product_read = ProductRead.model_validate(product)
     sku_by_id = {sku.id: sku for sku in product.skus}
     product_read.skus = [

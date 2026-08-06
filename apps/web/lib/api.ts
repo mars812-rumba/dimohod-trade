@@ -80,6 +80,12 @@ export type ProductListResponse = {
   offset: number;
 };
 
+export type ProductSeoPage = {
+  product_slug: string;
+  diameter_mm: number | null;
+  outer_diameter_mm: number | null;
+};
+
 export type ProductKindFilter = {
   value: string;
   label: string;
@@ -92,13 +98,28 @@ export type ProductFilterOption = {
   count: number;
 };
 
+export type ProductVariantCombination = {
+  diameter: string | null;
+  inner_pipe: string;
+  inner_thickness: string | null;
+  outer_pipe: string;
+  count: number;
+};
+
 export type ProductFiltersResponse = {
   product_kinds: ProductKindFilter[];
   diameters: ProductFilterOption[];
   steel_grades: ProductFilterOption[];
   materials: ProductFilterOption[];
+  outer_steel_grades: ProductFilterOption[];
+  outer_materials: ProductFilterOption[];
+  inner_pipes: ProductFilterOption[];
+  outer_pipes: ProductFilterOption[];
+  variant_combinations: ProductVariantCombination[];
+  executions: ProductFilterOption[];
   lengths: ProductFilterOption[];
   wall_thicknesses: ProductFilterOption[];
+  outer_wall_thicknesses: ProductFilterOption[];
   angles: ProductFilterOption[];
   insulations: ProductFilterOption[];
   contours: ProductFilterOption[];
@@ -109,6 +130,7 @@ export type CompatibleProduct = {
   product_id: string;
   product_name: string;
   product_slug: string;
+  product_kind: string | null;
   sku_id: string;
   sku_key: string;
   article: string;
@@ -119,6 +141,10 @@ export type CompatibleProduct = {
   insulation_mm: number | null;
   steel_grade: string | null;
   material: string | null;
+  wall_thickness_mm: string | null;
+  outer_material: string | null;
+  outer_steel_grade: string | null;
+  outer_wall_thickness_mm: string | null;
   price_rub: string | null;
   stock_status: string;
   primary_image: MediaItem | null;
@@ -176,11 +202,19 @@ export async function getProducts({
   diameter,
   steelGrade,
   material,
+  outerSteelGrade,
+  outerMaterial,
   length,
   wallThickness,
+  outerWallThickness,
   angle,
   insulation,
   contour,
+  preferredDiameter,
+  preferredSteelGrade,
+  preferredMaterial,
+  preferredOuterSteelGrade,
+  preferredOuterMaterial,
 }: {
   limit?: number;
   offset?: number;
@@ -190,11 +224,19 @@ export async function getProducts({
   diameter?: string;
   steelGrade?: string;
   material?: string;
+  outerSteelGrade?: string;
+  outerMaterial?: string;
   length?: string;
   wallThickness?: string;
+  outerWallThickness?: string;
   angle?: string;
   insulation?: string;
   contour?: string;
+  preferredDiameter?: string;
+  preferredSteelGrade?: string;
+  preferredMaterial?: string;
+  preferredOuterSteelGrade?: string;
+  preferredOuterMaterial?: string;
 } = {}): Promise<ProductListResponse> {
   const params = new URLSearchParams({
     limit: String(limit),
@@ -218,11 +260,20 @@ export async function getProducts({
   if (material) {
     params.set("material", material);
   }
+  if (outerSteelGrade) {
+    params.set("outer_steel_grade", outerSteelGrade);
+  }
+  if (outerMaterial) {
+    params.set("outer_material", outerMaterial);
+  }
   if (length) {
     params.set("length_mm", length);
   }
   if (wallThickness) {
     params.set("wall_thickness_mm", wallThickness);
+  }
+  if (outerWallThickness) {
+    params.set("outer_wall_thickness_mm", outerWallThickness);
   }
   if (angle) {
     params.set("angle_deg", angle);
@@ -232,6 +283,21 @@ export async function getProducts({
   }
   if (contour) {
     params.set("contour", contour);
+  }
+  if (preferredDiameter) {
+    params.set("preferred_diameter", preferredDiameter);
+  }
+  if (preferredSteelGrade) {
+    params.set("preferred_steel_grade", preferredSteelGrade);
+  }
+  if (preferredMaterial) {
+    params.set("preferred_material", preferredMaterial);
+  }
+  if (preferredOuterSteelGrade) {
+    params.set("preferred_outer_steel_grade", preferredOuterSteelGrade);
+  }
+  if (preferredOuterMaterial) {
+    params.set("preferred_outer_material", preferredOuterMaterial);
   }
   const response = await fetch(`${apiBaseUrl}/api/v1/products?${params.toString()}`, {
     cache: "no-store",
@@ -261,10 +327,17 @@ export async function getProductFilters(category?: string): Promise<ProductFilte
   return (await response.json()) as ProductFiltersResponse;
 }
 
-export async function getProduct(slug: string, sku?: string): Promise<Product | null> {
+export async function getProduct(
+  slug: string,
+  sku?: string,
+  diameter?: string | null,
+): Promise<Product | null> {
   const params = new URLSearchParams();
   if (sku) {
     params.set("sku", sku);
+  }
+  if (diameter) {
+    params.set("diameter", diameter);
   }
   const query = params.toString();
   const response = await fetch(`${apiBaseUrl}/api/v1/products/${slug}${query ? `?${query}` : ""}`, {
@@ -280,4 +353,14 @@ export async function getProduct(slug: string, sku?: string): Promise<Product | 
   }
 
   return (await response.json()) as Product;
+}
+
+export async function getProductSeoPages(): Promise<ProductSeoPage[]> {
+  const response = await fetch(`${apiBaseUrl}/api/v1/products/seo-pages`, {
+    next: { revalidate: 3600 },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to load product SEO pages");
+  }
+  return (await response.json()) as ProductSeoPage[];
 }

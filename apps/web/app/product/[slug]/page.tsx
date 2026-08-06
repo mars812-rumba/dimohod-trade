@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getProduct, type Product, type SKU } from "@/lib/api";
 import { ProductExperience } from "@/components/ProductExperience";
+import {
+  isUuidReference,
+  parseProductRoute,
+  productDiameterValue,
+  productPublicPath,
+  productSelectionPath,
+} from "@/lib/productUrls";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -32,17 +39,14 @@ function skuSeoAttribute(sku: SKU | null, key: string): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
-function hasSkuSeo(sku: SKU | null) {
-  return Boolean(sku && sku.attributes.sku_seo && typeof sku.attributes.sku_seo === "object");
-}
-
 function requestedSkuKey(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function selectSku(product: Product, key?: string): SKU | null {
+function selectSku(product: Product, key?: string, diameter?: string | null): SKU | null {
   return (
-    product.skus.find((sku) => sku.slug === key || sku.article === key || sku.id === key) ??
+    product.skus.find((sku) => sku.id === key || sku.article === key || sku.slug === key) ??
+    product.skus.find((sku) => productDiameterValue(sku) === diameter) ??
     product.skus[0] ??
     null
   );
@@ -167,7 +171,8 @@ function productImage(product: Product, sku: SKU | null) {
 }
 
 function productJsonLd(product: Product, sku: SKU | null) {
-  const canonicalUrl = absoluteUrl(`/product/${product.slug}`);
+  const familyUrl = absoluteUrl(`/product/${product.slug}`);
+  const canonicalUrl = absoluteUrl(productPublicPath(product.slug, sku));
   const additionalProperty = sku
     ? [
         ["L", sku.length_mm],
@@ -182,11 +187,10 @@ function productJsonLd(product: Product, sku: SKU | null) {
       )
     : [];
   const image = productImage(product, sku);
-  const variantUrl = sku ? `${canonicalUrl}?sku=${encodeURIComponent(sku.slug ?? sku.article)}` : canonicalUrl;
   const offer = sku?.price_rub && Number(sku.price_rub) > 0
     ? {
         "@type": "Offer",
-        url: variantUrl,
+        url: canonicalUrl,
         priceCurrency: "RUB",
         price: sku.price_rub,
       }
@@ -196,13 +200,13 @@ function productJsonLd(product: Product, sku: SKU | null) {
         "@type": "Product",
         name: skuSeoAttribute(sku, "h1") ?? sku.name,
         sku: sku.article,
-        url: variantUrl,
+        url: canonicalUrl,
         description: metadataDescription(product, sku),
         material: sku.steel_grade ?? sku.material ?? undefined,
         image: image ?? undefined,
         additionalProperty,
         offers: offer,
-        isVariantOf: { "@id": `${canonicalUrl}#group` },
+        isVariantOf: { "@id": `${familyUrl}#group` },
       }
     : undefined;
 
@@ -211,7 +215,7 @@ function productJsonLd(product: Product, sku: SKU | null) {
     "@graph": [
       {
         "@type": "ProductGroup",
-        "@id": `${canonicalUrl}#group`,
+        "@id": `${familyUrl}#group`,
         productGroupID: product.id,
         name: product.name,
         description: product.description ?? product.short_description ?? product.name,
@@ -226,24 +230,25 @@ function productJsonLd(product: Product, sku: SKU | null) {
 
 export async function generateMetadata({ params, searchParams }: ProductPageProps): Promise<Metadata> {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
-  const initialSkuKey = requestedSkuKey(query.sku);
-  const product = await getProduct(slug, initialSkuKey);
+  const route = parseProductRoute(slug);
+  const initialSkuKey = requestedSkuKey(query.sku) ?? route.legacySku ?? undefined;
+  const product = await getProduct(route.familySlug, initialSkuKey, route.diameter);
   if (!product) {
     return { title: "Товар не найден | Дымоход Трейд" };
   }
-  const sku = selectSku(product, initialSkuKey);
+  const sku = selectSku(product, initialSkuKey, route.diameter);
   const title = metadataTitle(product, sku);
   const description = metadataDescription(product, sku);
   const image = productImage(product, sku);
-  const familyPath = `/product/${product.slug}`;
-  const canonicalPath = initialSkuKey && hasSkuSeo(sku)
-    ? `${familyPath}?sku=${encodeURIComponent(sku?.slug ?? sku?.article ?? initialSkuKey)}`
-    : familyPath;
+  const canonicalPath = productPublicPath(product.slug, sku);
 
   return {
     title,
     description,
     alternates: { canonical: absoluteUrl(canonicalPath) },
+    robots: initialSkuKey || route.legacySku
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
     openGraph: {
       type: "website",
       title,
@@ -256,14 +261,25 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
 
 export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
-  const initialSkuKey = requestedSkuKey(query.sku);
-  const product = await getProduct(slug, initialSkuKey);
+  const route = parseProductRoute(slug);
+  const initialSkuKey = requestedSkuKey(query.sku) ?? route.legacySku ?? undefined;
+  const product = await getProduct(route.familySlug, initialSkuKey, route.diameter);
 
   if (!product) {
     notFound();
   }
 
-  const initialSku = selectSku(product, initialSkuKey);
+  const initialSku = selectSku(product, initialSkuKey, route.diameter);
+  if (!initialSku) {
+    notFound();
+  }
+
+  const canonicalPath = productPublicPath(product.slug, initialSku);
+  const currentPath = `/product/${slug}`;
+  if (currentPath !== canonicalPath || isUuidReference(initialSkuKey)) {
+    const article = initialSkuKey && !isUuidReference(initialSkuKey) ? initialSku.article : null;
+    redirect(productSelectionPath(product.slug, initialSku, article));
+  }
   const jsonLd = productJsonLd(product, initialSku);
 
   return (
@@ -272,7 +288,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         type="application/ld+json"
       />
-      <ProductExperience product={product} initialSkuKey={initialSkuKey} />
+      <ProductExperience product={product} initialSkuKey={initialSku.id} />
     </>
   );
 }

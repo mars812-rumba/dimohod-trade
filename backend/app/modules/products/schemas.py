@@ -77,6 +77,12 @@ class ProductListResponse(BaseModel):
     offset: int
 
 
+class ProductSeoPage(BaseModel):
+    product_slug: str
+    diameter_mm: int | None
+    outer_diameter_mm: int | None
+
+
 class ProductKindFilter(BaseModel):
     value: str
     label: str
@@ -89,13 +95,28 @@ class ProductFilterOption(BaseModel):
     count: int
 
 
+class ProductVariantCombination(BaseModel):
+    diameter: str | None = None
+    inner_pipe: str
+    inner_thickness: str | None = None
+    outer_pipe: str
+    count: int
+
+
 class ProductFiltersResponse(BaseModel):
     product_kinds: list[ProductKindFilter]
     diameters: list[ProductFilterOption] = Field(default_factory=list)
     steel_grades: list[ProductFilterOption] = Field(default_factory=list)
     materials: list[ProductFilterOption] = Field(default_factory=list)
+    outer_steel_grades: list[ProductFilterOption] = Field(default_factory=list)
+    outer_materials: list[ProductFilterOption] = Field(default_factory=list)
+    inner_pipes: list[ProductFilterOption] = Field(default_factory=list)
+    outer_pipes: list[ProductFilterOption] = Field(default_factory=list)
+    variant_combinations: list[ProductVariantCombination] = Field(default_factory=list)
+    executions: list[ProductFilterOption] = Field(default_factory=list)
     lengths: list[ProductFilterOption] = Field(default_factory=list)
     wall_thicknesses: list[ProductFilterOption] = Field(default_factory=list)
+    outer_wall_thicknesses: list[ProductFilterOption] = Field(default_factory=list)
     angles: list[ProductFilterOption] = Field(default_factory=list)
     insulations: list[ProductFilterOption] = Field(default_factory=list)
     contours: list[ProductFilterOption] = Field(default_factory=list)
@@ -106,6 +127,7 @@ class CompatibleProductItem(BaseModel):
     product_id: UUID
     product_name: str
     product_slug: str
+    product_kind: str | None
     sku_id: UUID
     sku_key: str
     article: str
@@ -116,6 +138,10 @@ class CompatibleProductItem(BaseModel):
     insulation_mm: int | None
     steel_grade: str | None
     material: str | None
+    wall_thickness_mm: Decimal | None
+    outer_material: str | None
+    outer_steel_grade: str | None
+    outer_wall_thickness_mm: Decimal | None
     price_rub: Decimal | None
     stock_status: str
     primary_image: ProductMediaItem | None = None

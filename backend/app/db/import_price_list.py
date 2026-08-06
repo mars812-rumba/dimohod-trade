@@ -12,7 +12,11 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.catalog_item_rules import exclude_price_item, normalized_price_item_name
+from app.db.catalog_item_rules import (
+    exclude_price_item,
+    expanded_price_item_names,
+    product_family_slug_parts,
+)
 from app.db.session import AsyncSessionLocal
 from app.db.steel_selection_profiles import with_steel_selection_profile
 from app.modules.catalog.models import Category
@@ -164,6 +168,8 @@ def parse_section(titles: list[str]) -> SectionSpec:
 
 def product_kind(name: str) -> str | None:
     text = name.lower().replace("ё", "е")
+    if "юбк" in text:
+        return "декоративная_юбка"
     if "труба" in text:
         return "труба"
     if "конденсат" in text:
@@ -288,6 +294,8 @@ def logical_item_name(item_name: str) -> str:
 def logical_product_name(item_name: str, section: SectionSpec) -> str:
     base_name = re.sub(r"(\d+)\s*гр(?:адусов)?", r"\1°", logical_item_name(item_name), flags=re.IGNORECASE)
     base_lower = base_name[:1].lower() + base_name[1:]
+    if base_name.casefold() in {"прочистка", "декоративная юбка"}:
+        return base_name
     if section.contour == "сэндвич":
         return f"Сэндвич-{base_lower}".strip()[:220]
 
@@ -304,6 +312,30 @@ def root_category_meta(section: SectionSpec) -> tuple[str, str, int]:
     if section.contour == "сэндвич":
         return "sendvich-elementy", "Сэндвич-элементы", 40
     return "odnokonturnye-elementy", "Одноконтурные элементы", 30
+
+
+async def decorative_skirt_category(session: AsyncSession) -> tuple[Category, bool]:
+    passage_root, root_touched = await get_or_create_category(
+        session,
+        "uzly-prohoda",
+        "Узлы прохода",
+        sort_order=50,
+    )
+    category, category_touched = await get_or_create_category(
+        session,
+        "uzly-prohoda-sten-i-perekrytiy",
+        "Узлы прохода стен и перекрытий",
+        parent_id=passage_root.id,
+        sort_order=20,
+    )
+    return category, root_touched or category_touched
+
+
+def split_article_code(source_item_name: str, item_name: str, contour: str) -> str | None:
+    expanded = expanded_price_item_names(source_item_name, contour)
+    if len(expanded) == 1:
+        return None
+    return "CLEANOUT" if item_name == "Прочистка" else "SKIRT"
 
 
 def category_meta(section: SectionSpec) -> dict[str, tuple[str, str]]:
@@ -336,13 +368,13 @@ def logical_product_slug_source(
     item_name: str,
     section: SectionSpec,
 ) -> str:
+    if kind == "декоративная_юбка":
+        return "dekorativnaya-yubka"
     if kind == "заглушка" and section.contour == "сэндвич":
         return "sendvich-zaglushka-opornaya"
-    parts = [section.contour, kind, logical_item_name(item_name)]
-    angle_deg = parse_angle_deg(item_name)
-    if kind == "отвод" and angle_deg is not None:
-        parts.append(f"{angle_deg}gr")
-    return "-".join(parts)
+    return "-".join(
+        product_family_slug_parts(section.contour, kind, logical_item_name(item_name))
+    )
 
 
 def variant_slug_source(
@@ -368,6 +400,14 @@ def variant_slug_source(
         parts.append(f"t{str(section.wall_thickness_mm).replace('.', '')}")
     if section.contour == "сэндвич":
         parts.append(f"ins{section.insulation_mm or 0}")
+        if section.outer_steel_grade:
+            parts.append(f"outer-{section.outer_steel_grade.replace(' ', '').lower()}")
+        elif section.outer_material:
+            parts.append(f"outer-{slugify(section.outer_material, max_len=32)}")
+        if section.outer_wall_thickness_mm is not None:
+            parts.append(
+                f"outer-t{str(section.outer_wall_thickness_mm).replace('.', '')}"
+            )
     return "-".join(parts)
 
 
@@ -433,205 +473,228 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                 if exclude_price_item(source_item_name, section.contour):
                     stats["items_excluded_by_catalog_rule"] += 1
                     continue
-                item_name = normalized_price_item_name(source_item_name, section.contour)
-
-                kind = product_kind(item_name)
-                if kind is None:
-                    review_stats["category"] += 1
-                    await log_review(
-                        session,
-                        source_file=source_file,
-                        source_sheet=sheet_name,
-                        source_section=section.title,
-                        source_row_key=f"block:{block_index}:item:{item_index}",
-                        field_name="product_kind",
-                        raw_value=item_name,
-                        reason="Не удалось однозначно определить категорию товара по названию",
-                    )
-                    continue
-
-                meta = category_meta(section).get(kind)
-                category = categories.get(meta[0]) if meta else None
-                if category is None:
-                    review_stats["category"] += 1
-                    await log_review(
-                        session,
-                        source_file=source_file,
-                        source_sheet=sheet_name,
-                        source_section=section.title,
-                        source_row_key=f"block:{block_index}:item:{item_index}",
-                        field_name="product_kind",
-                        raw_value=item_name,
-                        reason=f"Нет категории назначения для product_kind={kind}",
-                    )
-                    continue
-
-                kind_stats[kind] += 1
-                length_mm = parse_length_mm(item_name)
-                angle_deg = parse_angle_deg(item_name)
-
-                for raw_diameter, raw_price in (item.get("prices") or {}).items():
-                    price = price_to_decimal(raw_price)
-                    if price is None:
-                        continue
-
-                    diameter_mm, outer_diameter_mm = parse_diameter(raw_diameter)
-                    row_key = f"block:{block_index}:item:{item_index}:diameter:{raw_diameter}"
-                    if diameter_mm is None:
-                        review_stats["diameter"] += 1
+                expanded_item_names = expanded_price_item_names(source_item_name, section.contour)
+                for item_name in expanded_item_names:
+                    kind = product_kind(item_name)
+                    if kind is None:
+                        review_stats["category"] += 1
                         await log_review(
                             session,
                             source_file=source_file,
                             source_sheet=sheet_name,
                             source_section=section.title,
-                            source_row_key=row_key,
-                            field_name="diameter_mm",
-                            raw_value=str(raw_diameter),
-                            reason="Не удалось распарсить диаметр в миллиметрах",
+                            source_row_key=f"block:{block_index}:item:{item_index}",
+                            field_name="product_kind",
+                            raw_value=item_name,
+                            reason="Не удалось однозначно определить категорию товара по названию",
                         )
                         continue
 
-                    diameter_stats[diameter_mm] += 1
-                    stats["price_rows_seen"] += 1
-
-                    code = import_code(sheet_name, section)
-                    article_suffix = f"D{diameter_mm}-{outer_diameter_mm}" if outer_diameter_mm else f"D{diameter_mm}"
-                    article = f"DT-{code}-{block_index:02d}-{item_index:02d}-{article_suffix}"
-                    product_slug = slugify(logical_product_slug_source(kind, item_name, section), max_len=220)
-                    variant_slug = slugify(
-                        variant_slug_source(item_name, diameter_mm, outer_diameter_mm, section),
-                        max_len=220,
-                    )
-                    variant_name = product_name(item_name, diameter_mm, outer_diameter_mm, section)
-                    logical_name = logical_product_name(item_name, section)
-                    extra_attributes = {
-                        "source_file": source_file,
-                        "source_sheet": sheet_name,
-                        "logical_item_name": logical_item_name(item_name),
-                        "variant_level_fields": [
-                            "diameter_mm",
-                            "outer_diameter_mm",
-                            "length_mm",
-                            "angle_deg",
-                            "steel_grade",
-                            "wall_thickness_mm",
-                            "insulation_mm",
-                            "price_rub",
-                            "article",
-                        ],
-                    }
-
-                    product = await session.scalar(select(Product).where(Product.slug == product_slug))
-                    if product is None:
-                        product = Product(
-                            category_id=category.id,
-                            name=logical_name,
-                            slug=product_slug,
-                            short_description=f"{logical_name}. Варианты по диаметру, стали и длине.",
-                            description=None,
-                            brand=BRAND,
-                            material=None,
-                            wall_thickness_mm=None,
-                            diameter_mm=None,
-                            steel_grade=None,
-                            contour=section.contour,
-                            insulation_mm=None,
-                            max_temperature_c=None,
-                            product_kind=kind,
-                            purpose=[],
-                            extra_attributes=extra_attributes,
-                            source_name=source_name,
-                            application_tags=[],
-                            compatibility_notes=None,
-                        )
-                        session.add(product)
-                        await session.flush()
-                        stats["products_created"] += 1
+                    if kind == "декоративная_юбка":
+                        category, touched = await decorative_skirt_category(session)
+                        if touched:
+                            stats["categories_touched"] += 1
                     else:
-                        product.category_id = category.id
-                        product.name = logical_name
-                        product.short_description = f"{logical_name}. Варианты по диаметру, стали и длине."
-                        product.brand = BRAND
-                        product.material = None
-                        product.wall_thickness_mm = None
-                        product.diameter_mm = None
-                        product.steel_grade = None
-                        product.contour = section.contour
-                        product.insulation_mm = None
-                        product.product_kind = kind
-                        product.purpose = []
-                        product.extra_attributes = extra_attributes
-                        product.source_name = source_name
-                        stats["products_updated"] += 1
+                        meta = category_meta(section).get(kind)
+                        category = categories.get(meta[0]) if meta else None
+                    if category is None:
+                        review_stats["category"] += 1
+                        await log_review(
+                            session,
+                            source_file=source_file,
+                            source_sheet=sheet_name,
+                            source_section=section.title,
+                            source_row_key=f"block:{block_index}:item:{item_index}",
+                            field_name="product_kind",
+                            raw_value=item_name,
+                            reason=f"Нет категории назначения для product_kind={kind}",
+                        )
+                        continue
 
-                    sku = await session.scalar(select(SKU).where(SKU.article == article))
-                    sku_attributes = {
-                        "diameter_mm": diameter_mm,
-                        "outer_diameter_mm": outer_diameter_mm,
-                        "length_mm": length_mm,
-                        "angle_deg": angle_deg,
-                        "source_sheet": sheet_name,
-                        "source_section": section.title,
-                        "raw_item_name": source_item_name,
-                        "raw_diameter": raw_diameter,
-                        "material": section.material,
-                        "steel_grade": section.steel_grade,
-                        "wall_thickness_mm": (
-                            str(section.wall_thickness_mm) if section.wall_thickness_mm is not None else None
-                        ),
-                        "contour": section.contour,
-                        "insulation_mm": section.insulation_mm,
-                        "outer_material": section.outer_material,
-                        "outer_steel_grade": section.outer_steel_grade,
-                        "outer_wall_thickness_mm": (
-                            str(section.outer_wall_thickness_mm)
-                            if section.outer_wall_thickness_mm is not None
-                            else None
-                        ),
-                        "insulation_material": section.insulation_material,
-                    }
-                    sku_attributes = with_steel_selection_profile(
-                        sku_attributes,
-                        steel_grade=section.steel_grade,
-                        product_kind=kind,
-                    )
-                    if sku is None:
-                        sku = SKU(
-                            product_id=product.id,
-                            article=article,
-                            name=variant_name,
-                            slug=variant_slug,
-                            material=section.material,
+                    kind_stats[kind] += 1
+                    length_mm = parse_length_mm(item_name)
+                    angle_deg = parse_angle_deg(item_name)
+                    article_code = split_article_code(source_item_name, item_name, section.contour)
+
+                    for raw_diameter, raw_price in (item.get("prices") or {}).items():
+                        price = price_to_decimal(raw_price)
+                        if price is None:
+                            continue
+
+                        diameter_mm, outer_diameter_mm = parse_diameter(raw_diameter)
+                        row_key = f"block:{block_index}:item:{item_index}:diameter:{raw_diameter}"
+                        if diameter_mm is None:
+                            review_stats["diameter"] += 1
+                            await log_review(
+                                session,
+                                source_file=source_file,
+                                source_sheet=sheet_name,
+                                source_section=section.title,
+                                source_row_key=row_key,
+                                field_name="diameter_mm",
+                                raw_value=str(raw_diameter),
+                                reason="Не удалось распарсить диаметр в миллиметрах",
+                            )
+                            continue
+
+                        diameter_stats[diameter_mm] += 1
+                        stats["price_rows_seen"] += 1
+
+                        code = import_code(sheet_name, section)
+                        article_suffix = (
+                            f"D{diameter_mm}-{outer_diameter_mm}"
+                            if outer_diameter_mm
+                            else f"D{diameter_mm}"
+                        )
+                        split_suffix = f"-{article_code}" if article_code else ""
+                        article = (
+                            f"DT-{code}-{block_index:02d}-{item_index:02d}"
+                            f"{split_suffix}-{article_suffix}"
+                        )
+                        product_slug = slugify(
+                            logical_product_slug_source(kind, item_name, section),
+                            max_len=220,
+                        )
+                        variant_slug = slugify(
+                            variant_slug_source(item_name, diameter_mm, outer_diameter_mm, section),
+                            max_len=220,
+                        )
+                        variant_name = product_name(item_name, diameter_mm, outer_diameter_mm, section)
+                        logical_name = logical_product_name(item_name, section)
+                        extra_attributes = {
+                            "source_file": source_file,
+                            "source_sheet": sheet_name,
+                            "source_price_item_name": source_item_name,
+                            "logical_item_name": logical_item_name(item_name),
+                            "owner_confirmed_price_row_split": len(expanded_item_names) > 1,
+                            "variant_level_fields": [
+                                "diameter_mm",
+                                "outer_diameter_mm",
+                                "length_mm",
+                                "angle_deg",
+                                "steel_grade",
+                                "wall_thickness_mm",
+                                "insulation_mm",
+                                "price_rub",
+                                "article",
+                            ],
+                        }
+
+                        product = await session.scalar(select(Product).where(Product.slug == product_slug))
+                        if product is None:
+                            product = Product(
+                                category_id=category.id,
+                                name=logical_name,
+                                slug=product_slug,
+                                short_description=None,
+                                description=None,
+                                brand=BRAND,
+                                material=None,
+                                wall_thickness_mm=None,
+                                diameter_mm=None,
+                                steel_grade=None,
+                                contour=section.contour,
+                                insulation_mm=None,
+                                max_temperature_c=None,
+                                product_kind=kind,
+                                purpose=[],
+                                extra_attributes=extra_attributes,
+                                source_name=source_name,
+                                application_tags=[],
+                                compatibility_notes=None,
+                            )
+                            session.add(product)
+                            await session.flush()
+                            stats["products_created"] += 1
+                        else:
+                            product.category_id = category.id
+                            product.name = logical_name
+                            product.brand = BRAND
+                            product.material = None
+                            product.wall_thickness_mm = None
+                            product.diameter_mm = None
+                            product.steel_grade = None
+                            product.contour = section.contour
+                            product.insulation_mm = None
+                            product.product_kind = kind
+                            product.purpose = []
+                            product.extra_attributes = extra_attributes
+                            product.source_name = source_name
+                            stats["products_updated"] += 1
+
+                        sku = await session.scalar(select(SKU).where(SKU.article == article))
+                        sku_attributes = {
+                            "diameter_mm": diameter_mm,
+                            "outer_diameter_mm": outer_diameter_mm,
+                            "length_mm": length_mm,
+                            "angle_deg": angle_deg,
+                            "source_sheet": sheet_name,
+                            "source_section": section.title,
+                            "raw_item_name": source_item_name,
+                            "catalog_item_name": item_name,
+                            "owner_confirmed_price_row_split": len(expanded_item_names) > 1,
+                            "raw_diameter": raw_diameter,
+                            "material": section.material,
+                            "steel_grade": section.steel_grade,
+                            "wall_thickness_mm": (
+                                str(section.wall_thickness_mm)
+                                if section.wall_thickness_mm is not None
+                                else None
+                            ),
+                            "contour": section.contour,
+                            "insulation_mm": section.insulation_mm,
+                            "outer_material": section.outer_material,
+                            "outer_steel_grade": section.outer_steel_grade,
+                            "outer_wall_thickness_mm": (
+                                str(section.outer_wall_thickness_mm)
+                                if section.outer_wall_thickness_mm is not None
+                                else None
+                            ),
+                            "insulation_material": section.insulation_material,
+                        }
+                        sku_attributes = with_steel_selection_profile(
+                            sku_attributes,
                             steel_grade=section.steel_grade,
-                            wall_thickness_mm=section.wall_thickness_mm,
-                            diameter_mm=diameter_mm,
-                            outer_diameter_mm=outer_diameter_mm,
+                            product_kind=kind,
                             contour=section.contour,
-                            insulation_mm=section.insulation_mm,
-                            length_mm=length_mm,
-                            angle_deg=angle_deg,
-                            price_rub=price,
-                            stock_status="unknown",
-                            attributes=sku_attributes,
                         )
-                        session.add(sku)
-                        stats["skus_created"] += 1
-                    else:
-                        sku.product_id = product.id
-                        sku.name = variant_name
-                        sku.slug = variant_slug
-                        sku.material = section.material
-                        sku.steel_grade = section.steel_grade
-                        sku.wall_thickness_mm = section.wall_thickness_mm
-                        sku.diameter_mm = diameter_mm
-                        sku.outer_diameter_mm = outer_diameter_mm
-                        sku.contour = section.contour
-                        sku.insulation_mm = section.insulation_mm
-                        sku.length_mm = length_mm
-                        sku.angle_deg = angle_deg
-                        sku.price_rub = price
-                        sku.attributes = sku_attributes
-                        stats["skus_updated"] += 1
+                        if sku is None:
+                            sku = SKU(
+                                product_id=product.id,
+                                article=article,
+                                name=variant_name,
+                                slug=variant_slug,
+                                material=section.material,
+                                steel_grade=section.steel_grade,
+                                wall_thickness_mm=section.wall_thickness_mm,
+                                diameter_mm=diameter_mm,
+                                outer_diameter_mm=outer_diameter_mm,
+                                contour=section.contour,
+                                insulation_mm=section.insulation_mm,
+                                length_mm=length_mm,
+                                angle_deg=angle_deg,
+                                price_rub=price,
+                                stock_status="unknown",
+                                attributes=sku_attributes,
+                            )
+                            session.add(sku)
+                            stats["skus_created"] += 1
+                        else:
+                            sku.product_id = product.id
+                            sku.name = variant_name
+                            sku.slug = variant_slug
+                            sku.material = section.material
+                            sku.steel_grade = section.steel_grade
+                            sku.wall_thickness_mm = section.wall_thickness_mm
+                            sku.diameter_mm = diameter_mm
+                            sku.outer_diameter_mm = outer_diameter_mm
+                            sku.contour = section.contour
+                            sku.insulation_mm = section.insulation_mm
+                            sku.length_mm = length_mm
+                            sku.angle_deg = angle_deg
+                            sku.price_rub = price
+                            sku.attributes = sku_attributes
+                            stats["skus_updated"] += 1
 
         await session.commit()
 

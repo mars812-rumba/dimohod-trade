@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ProductListItem } from "@/lib/api";
 import { steelWithThicknessLabel } from "@/lib/productLabels";
+import { productSelectionPath } from "@/lib/productUrls";
 import { steelSelectionBadges } from "@/lib/steelSelection";
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -91,9 +92,7 @@ function catalogSpecs(product: ProductListItem) {
 export function CatalogProductCard({ product }: { product: ProductListItem }) {
   const specs = catalogSpecs(product);
   const steelBadges = steelSelectionBadges(product);
-  const href = product.selected_sku
-    ? `/product/${product.slug}?sku=${encodeURIComponent(product.selected_sku)}`
-    : `/product/${product.slug}`;
+  const href = productSelectionPath(product.slug, product, product.selected_sku);
 
   return (
     <Link className="catalog-product-card" href={href}>

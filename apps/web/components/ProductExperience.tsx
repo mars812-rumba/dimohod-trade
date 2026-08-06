@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -33,6 +32,7 @@ import {
 import { DimensionScheme } from "@/components/DimensionScheme";
 import type { CompatibleProduct, Product } from "@/lib/api";
 import { steelWithThicknessLabel } from "@/lib/productLabels";
+import { productPublicPath, productSelectionPath } from "@/lib/productUrls";
 import {
   steelSelectionBadges,
   steelSelectionLabel,
@@ -363,7 +363,7 @@ function CompatibleProductFamilyCard({
             <b>{formatPrice(selected.price_rub)}</b>
             {priceUnit ? <small>{priceUnit}</small> : null}
           </div>
-          <Link href={`/product/${selected.product_slug}?sku=${encodeURIComponent(selected.sku_key)}`}>
+          <Link href={productSelectionPath(selected.product_slug, selected, selected.article)}>
             Открыть <ArrowRight size={14} />
           </Link>
         </div>
@@ -901,7 +901,6 @@ function seoConfiguratorCta(product: Product): { text: string; href: string } | 
 }
 
 export function ProductExperience({ product, initialSkuKey }: { product: Product; initialSkuKey?: string }) {
-  const pathname = usePathname();
   const initialSku =
     product.skus.find((sku) => sku.id === initialSkuKey || sku.article === initialSkuKey || sku.slug === initialSkuKey) ??
     product.skus[0] ??
@@ -1147,9 +1146,8 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     }
     setSelectedSkuId(selected.id);
     setSelectedImage(0);
-    const searchParams = new URLSearchParams(window.location.search);
-    searchParams.set("sku", selected.id);
-    window.history.replaceState(null, "", `${pathname}?${searchParams.toString()}`);
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+    window.history.replaceState(null, "", `${basePath}${productPublicPath(product.slug, selected)}`);
   }
 
   return (
