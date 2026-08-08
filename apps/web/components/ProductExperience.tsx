@@ -354,7 +354,7 @@ function CompatibleProductFamilyCard({
       </div>
       <div className="compatible-product-body">
         <strong>{selected.product_name}</strong>
-        {purpose ? <small><Target aria-hidden="true" size={12} /> {purpose}</small> : null}
+        {purpose ? <small className="compatible-product-purpose">{purpose}</small> : null}
         <div className="compatible-product-specs">
           {diameter ? <span><CircleDot aria-hidden="true" size={13} /> {diameter}</span> : null}
           {selected.insulation_mm !== null ? (

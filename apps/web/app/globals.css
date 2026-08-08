@@ -3067,6 +3067,11 @@ ul {
   color: var(--steel);
 }
 
+.compatible-product-body > .compatible-product-purpose {
+  display: block;
+  line-height: 1.4;
+}
+
 .compatible-product-specs {
   display: flex;
   flex-wrap: wrap;
@@ -3154,6 +3159,18 @@ ul {
 
 .compatible-product-footer b {
   font-size: 14px;
+}
+
+.compatible-product-price {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.compatible-product-price small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.15;
 }
 
 .compatible-product-footer a {
