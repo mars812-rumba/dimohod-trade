@@ -284,14 +284,18 @@ def test_normalize_media_item_reads_category_or_sku_photo() -> None:
         {
             "url": "/media/catalog/category-covers/deflectors/category-cover.jpg",
             "role": "category-cover",
+            "diameter_keys": ["200/300", "100/200", "200/300", ""],
             "lengths_mm": [1000, 500, 1000, -1, "250"],
+            "sku_specific": True,
         }
     )
 
     assert media is not None
     assert media.url.endswith("category-cover.jpg")
     assert media.role == "category-cover"
+    assert media.diameter_keys == ["100/200", "200/300"]
     assert media.lengths_mm == [500, 1000]
+    assert media.sku_specific is True
     assert normalize_media_item({"alt": "broken"}) is None
 
 
@@ -312,6 +316,29 @@ def test_public_catalog_media_comes_from_stored_attributes() -> None:
     assert image is not None and image.url.endswith("photo-1.jpg")
     assert category_cover({}) is None
     assert primary_product_image({"media": []}) is None
+    assert primary_product_image(
+        {"media": [{"url": "/media/top-only.jpg", "role": "top"}]}
+    ) is None
+
+
+def test_family_photo_scope_filters_by_diameter_and_length() -> None:
+    attributes = {
+        "media": [
+            {
+                "url": "/media/catalog/categories/tube/photo-1.jpg",
+                "role": "general",
+                "diameter_keys": ["200/300"],
+                "lengths_mm": [500, 1000],
+            }
+        ]
+    }
+    matching = SimpleNamespace(diameter_mm=200, outer_diameter_mm=300, length_mm=1000)
+    wrong_diameter = SimpleNamespace(diameter_mm=150, outer_diameter_mm=250, length_mm=1000)
+    wrong_length = SimpleNamespace(diameter_mm=200, outer_diameter_mm=300, length_mm=250)
+
+    assert primary_product_image(attributes, matching) is not None
+    assert primary_product_image(attributes, wrong_diameter) is None
+    assert primary_product_image(attributes, wrong_length) is None
 
 
 def test_public_sku_attributes_expose_gallery_and_seo_only() -> None:
@@ -597,7 +624,7 @@ def test_catalog_filter_values_are_normalized() -> None:
     assert material_group("Оцинкованная сталь") == "galvanized"
 
 
-def test_catalog_card_uses_photo_from_visually_equivalent_sku() -> None:
+def test_catalog_card_uses_only_representative_sku_photo() -> None:
     shared_fields = {
         "is_active": True,
         "material": "Нержавеющая сталь",
@@ -635,11 +662,11 @@ def test_catalog_card_uses_photo_from_visually_equivalent_sku() -> None:
     image = primary_visual_sku_image(representative, [representative, photographed])
 
     assert image is not None
-    assert image.url.endswith("sku-photo-1.jpg?v=2")
-    assert image.alt == "Новая фотография трубы"
+    assert image.url.endswith("sku-photo-1.jpg?v=1")
+    assert image.alt == "Старая фотография трубы"
 
 
-def test_diameter_specific_photo_overrides_generic_only_for_matching_diameter() -> None:
+def test_sibling_photo_never_overrides_selected_sku_role() -> None:
     shared_fields = {
         "is_active": True,
         "material": "Нержавеющая сталь",
@@ -694,11 +721,11 @@ def test_diameter_specific_photo_overrides_generic_only_for_matching_diameter() 
     )
 
     assert image is not None
-    assert image.url.endswith("specific-100.jpg?v=2")
-    assert image.diameter_specific is True
+    assert image.url.endswith("generic.jpg?v=5")
+    assert image.diameter_specific is False
 
 
-def test_photo_scope_intersects_selected_diameter_and_multiple_lengths() -> None:
+def test_legacy_scoped_photo_does_not_leak_to_sibling_sku() -> None:
     shared_fields = {
         "is_active": True,
         "material": "Нержавеющая сталь",
@@ -763,13 +790,51 @@ def test_photo_scope_intersects_selected_diameter_and_multiple_lengths() -> None
         [scoped_owner, wrong_diameter],
     )
 
-    assert matching is not None and matching.url.endswith("scoped.jpg?v=20")
+    assert matching is None
     assert length_fallback is not None and length_fallback.url.endswith(
         "fallback-length.jpg?v=1"
     )
     assert diameter_fallback is not None and diameter_fallback.url.endswith(
         "fallback-diameter.jpg?v=1"
     )
+
+
+def test_sku_specific_photo_does_not_leak_to_sibling_variant() -> None:
+    shared_fields = {
+        "is_active": True,
+        "material": "Нержавеющая сталь",
+        "diameter_mm": 200,
+        "outer_diameter_mm": 300,
+        "length_mm": 1000,
+    }
+    owner = SimpleNamespace(
+        **shared_fields,
+        id="exact-owner",
+        attributes={
+            "sku_media": [
+                {
+                    "url": "/media/exact.jpg?v=20",
+                    "role": "general",
+                    "sku_specific": True,
+                }
+            ]
+        },
+    )
+    sibling = SimpleNamespace(
+        **shared_fields,
+        id="sibling",
+        attributes={
+            "sku_media": [
+                {"url": "/media/sibling.jpg?v=1", "role": "general"}
+            ]
+        },
+    )
+
+    owner_image = primary_visual_sku_image(owner, [owner, sibling])
+    sibling_image = primary_visual_sku_image(sibling, [owner, sibling])
+
+    assert owner_image is not None and owner_image.url.endswith("exact.jpg?v=20")
+    assert sibling_image is not None and sibling_image.url.endswith("sibling.jpg?v=1")
 
 
 def test_catalog_sku_filters_apply_all_available_parameters_with_and_logic() -> None:

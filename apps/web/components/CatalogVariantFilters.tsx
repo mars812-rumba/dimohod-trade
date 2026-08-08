@@ -22,6 +22,7 @@ type CatalogVariantFiltersProps = {
     label: string;
     value?: string;
     options: ProductFilterOption[];
+    allValue?: string;
   }>;
 };
 
@@ -61,6 +62,7 @@ function CompactSelect({
   options,
   value,
   includeAll = false,
+  allValue = "",
   className = "",
   onChange,
 }: {
@@ -69,6 +71,7 @@ function CompactSelect({
   options: ProductFilterOption[];
   value?: string;
   includeAll?: boolean;
+  allValue?: string;
   className?: string;
   onChange?: (value: string) => void;
 }) {
@@ -80,12 +83,12 @@ function CompactSelect({
     <label className={`catalog-filter-field ${className}`.trim()}>
       <span>{label}</span>
       <select
-        defaultValue={onChange ? undefined : value ?? (includeAll ? "" : options[0]?.value ?? "")}
+        defaultValue={onChange ? undefined : value ?? (includeAll ? allValue : options[0]?.value ?? "")}
         name={name}
         onChange={onChange ? (event) => onChange(event.target.value) : undefined}
         value={onChange ? value ?? "" : undefined}
       >
-        {includeAll ? <option value="">Все варианты</option> : null}
+        {includeAll ? <option value={allValue}>Все варианты</option> : null}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
@@ -435,6 +438,7 @@ export function CatalogVariantFilters({
         {facets.map((facet) => (
           <CompactSelect
             includeAll
+            allValue={facet.allValue}
             key={facet.name}
             label={facet.label}
             name={facet.name}

@@ -47,7 +47,9 @@ type ProductPhotoItem = {
   alt: string;
   fit?: "cover" | "contain";
   diameterSpecific?: boolean;
+  diameterKeys: string[];
   lengthsMm: number[];
+  skuSpecific?: boolean;
 };
 
 type ProductSchemeItem = {
@@ -675,29 +677,61 @@ function photoFromValue(
     fit: "contain",
     diameterSpecific:
       "diameter_specific" in value && value.diameter_specific === true,
+    diameterKeys:
+      "diameter_keys" in value && Array.isArray(value.diameter_keys)
+        ? value.diameter_keys.filter(
+            (diameter): diameter is string => typeof diameter === "string" && Boolean(diameter.trim()),
+          )
+        : [],
     lengthsMm:
       "lengths_mm" in value && Array.isArray(value.lengths_mm)
         ? value.lengths_mm.filter(
             (length): length is number => Number.isInteger(length) && length >= 0,
           )
         : [],
+    skuSpecific: "sku_specific" in value && value.sku_specific === true,
   };
 }
 
-function sharedProductMediaByRole(product: Product): Partial<Record<GalleryPhotoRole, ProductPhotoItem>> {
+function skuPhotoDiameterKey(sku: Product["skus"][number]) {
+  if (sku.diameter_mm === null) {
+    return null;
+  }
+  return sku.outer_diameter_mm === null
+    ? String(sku.diameter_mm)
+    : `${sku.diameter_mm}/${sku.outer_diameter_mm}`;
+}
+
+function familyPhotoAppliesToSku(
+  photo: ProductPhotoItem,
+  sku: Product["skus"][number] | null,
+) {
+  if (!sku) {
+    return true;
+  }
+  return (
+    (!photo.diameterKeys.length || photo.diameterKeys.includes(skuPhotoDiameterKey(sku) ?? "")) &&
+    (!photo.lengthsMm.length || (sku.length_mm !== null && photo.lengthsMm.includes(sku.length_mm)))
+  );
+}
+
+function sharedProductMediaByRole(
+  product: Product,
+  activeSku: Product["skus"][number] | null,
+): Partial<Record<GalleryPhotoRole, ProductPhotoItem>> {
   const rawMedia = product.extra_attributes.media;
   if (!Array.isArray(rawMedia)) {
     return {};
   }
 
-  return rawMedia.reduce<Partial<Record<GalleryPhotoRole, ProductPhotoItem>>>((result, value, index) => {
+  return rawMedia.reduce<Partial<Record<GalleryPhotoRole, ProductPhotoItem>>>((result, value) => {
     const rawRole = value && typeof value === "object" && "role" in value ? value.role : null;
-    const role = normalizedGalleryRole(rawRole) ?? galleryPhotoRoles[index] ?? null;
+    const role = normalizedGalleryRole(rawRole);
     if (!role) {
       return result;
     }
     const photo = photoFromValue(value, role, `${product.name} — ${mediaRoleLabel(role).toLocaleLowerCase("ru-RU")}`);
-    if (photo) {
+    if (photo && familyPhotoAppliesToSku(photo, activeSku)) {
       result[role] = photo;
     }
     return result;
@@ -765,19 +799,7 @@ function skuPhotoAppliesToExecution(
   owner: Product["skus"][number],
   target: Product["skus"][number],
 ) {
-  const lengths = photo.lengthsMm.length
-    ? photo.lengthsMm
-    : owner.length_mm === null
-      ? []
-      : [owner.length_mm];
-  const lengthMatches = !lengths.length || (
-    target.length_mm !== null && lengths.includes(target.length_mm)
-  );
-  const diameterMatches = !photo.diameterSpecific || (
-    owner.diameter_mm === target.diameter_mm &&
-    owner.outer_diameter_mm === target.outer_diameter_mm
-  );
-  return lengthMatches && diameterMatches;
+  return owner.id === target.id;
 }
 
 function visualSkuMediaByRole(
@@ -809,10 +831,16 @@ function visualSkuMediaByRole(
         skuPhotoAppliesToExecution(candidate, sibling, activeSku) &&
         (
           !current ||
-          Number(candidate.diameterSpecific) > Number(current.diameterSpecific) ||
+          Number(candidate.skuSpecific) > Number(current.skuSpecific) ||
           (
-            candidate.diameterSpecific === current.diameterSpecific &&
-            mediaVersion(candidate.src) > mediaVersion(current.src)
+            candidate.skuSpecific === current.skuSpecific &&
+            (
+              Number(candidate.diameterSpecific) > Number(current.diameterSpecific) ||
+              (
+                candidate.diameterSpecific === current.diameterSpecific &&
+                mediaVersion(candidate.src) > mediaVersion(current.src)
+              )
+            )
           )
         )
       ) {
@@ -1095,7 +1123,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   } d=${diameterMm ?? "—"} S=${wallThicknessMm ?? "—"}, утепление=${insulationMm ?? "—"} мм, сталь ${
     steelGrade ?? "не указана"
   }`;
-  const sharedPhotos = sharedProductMediaByRole(product);
+  const sharedPhotos = sharedProductMediaByRole(product, activeSku);
   const skuPhotos = visualSkuMediaByRole(product.skus, activeSku);
   const productPhotos = galleryPhotoRoles.flatMap((role) => {
     const photo = skuPhotos[role] ?? sharedPhotos[role];

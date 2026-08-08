@@ -33,7 +33,9 @@ type AdminMediaItem = {
   role: string | null;
   file_name: string | null;
   diameter_specific: boolean;
+  diameter_keys: string[];
   lengths_mm: number[];
+  sku_specific: boolean;
 };
 
 type AdminSKU = {
@@ -145,7 +147,9 @@ type PhotoDraft = {
   previewUrl: string | null;
   alt: string;
   diameterSpecific: boolean;
+  diameterKeys: string[];
   lengthsMm: number[];
+  scopeTouched: boolean;
 };
 
 class ApiRequestError extends Error {
@@ -173,14 +177,14 @@ const photoSlots: Array<{ role: PhotoRole; number: string; title: string; hint: 
 
 function createEmptyPhotoDrafts(): Record<PhotoRole, PhotoDraft> {
   return {
-    general: { file: null, previewUrl: null, alt: "", diameterSpecific: false, lengthsMm: [] },
-    top: { file: null, previewUrl: null, alt: "", diameterSpecific: false, lengthsMm: [] },
-    connection: { file: null, previewUrl: null, alt: "", diameterSpecific: false, lengthsMm: [] },
+    general: { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false },
+    top: { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false },
+    connection: { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false },
   };
 }
 
 function createEmptyPhotoDraft(): PhotoDraft {
-  return { file: null, previewUrl: null, alt: "", diameterSpecific: false, lengthsMm: [] };
+  return { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false };
 }
 
 function mediaItemFromValue(value: unknown): AdminMediaItem | null {
@@ -193,25 +197,41 @@ function mediaItemFromValue(value: unknown): AdminMediaItem | null {
     role: "role" in value && typeof value.role === "string" ? value.role : null,
     file_name: "file_name" in value && typeof value.file_name === "string" ? value.file_name : null,
     diameter_specific: "diameter_specific" in value && value.diameter_specific === true,
+    diameter_keys:
+      "diameter_keys" in value && Array.isArray(value.diameter_keys)
+        ? value.diameter_keys.filter(
+            (diameter): diameter is string => typeof diameter === "string" && Boolean(diameter.trim()),
+          )
+        : [],
     lengths_mm:
       "lengths_mm" in value && Array.isArray(value.lengths_mm)
         ? value.lengths_mm.filter(
             (length): length is number => Number.isInteger(length) && length >= 0,
           )
         : [],
+    sku_specific: "sku_specific" in value && value.sku_specific === true,
   };
+}
+
+function skuDiameterKey(sku: Pick<AdminSKU, "diameter_mm" | "outer_diameter_mm">) {
+  if (sku.diameter_mm === null) {
+    return null;
+  }
+  return sku.outer_diameter_mm === null
+    ? String(sku.diameter_mm)
+    : `${sku.diameter_mm}/${sku.outer_diameter_mm}`;
 }
 
 function mediaRole(value: string | null): PhotoRole | null {
   if (value === "general" || value === "top" || value === "connection") {
     return value;
   }
-  return value === "detail" ? "connection" : null;
+  return value === "detail" || value === "connect" ? "connection" : null;
 }
 
 function mediaByRole(values: AdminMediaItem[]): Partial<Record<PhotoRole, AdminMediaItem>> {
-  return values.reduce<Partial<Record<PhotoRole, AdminMediaItem>>>((result, item, index) => {
-    const role = mediaRole(item.role) ?? photoSlots[index]?.role ?? null;
+  return values.reduce<Partial<Record<PhotoRole, AdminMediaItem>>>((result, item) => {
+    const role = mediaRole(item.role);
     if (role) {
       result[role] = item;
     }
@@ -256,19 +276,18 @@ function skuHasSameVisualExecution(left: AdminSKU, right: AdminSKU) {
 }
 
 function skuMediaAppliesToExecution(media: AdminMediaItem, owner: AdminSKU, target: AdminSKU) {
-  const lengths = media.lengths_mm.length
-    ? media.lengths_mm
-    : owner.length_mm === null
-      ? []
-      : [owner.length_mm];
-  const lengthMatches = !lengths.length || (
-    target.length_mm !== null && lengths.includes(target.length_mm)
+  return owner.id === target.id;
+}
+
+function familyMediaAppliesToSku(media: AdminMediaItem, sku: AdminSKU | null) {
+  if (!sku) {
+    return true;
+  }
+  const diameterKey = skuDiameterKey(sku);
+  return (
+    (!media.diameter_keys.length || (diameterKey !== null && media.diameter_keys.includes(diameterKey))) &&
+    (!media.lengths_mm.length || (sku.length_mm !== null && media.lengths_mm.includes(sku.length_mm)))
   );
-  const diameterMatches = !media.diameter_specific || (
-    owner.diameter_mm === target.diameter_mm &&
-    owner.outer_diameter_mm === target.outer_diameter_mm
-  );
-  return lengthMatches && diameterMatches;
 }
 
 function visualSkuMediaByRole(
@@ -300,10 +319,16 @@ function visualSkuMediaByRole(
         skuMediaAppliesToExecution(candidate, sibling, selectedSku) &&
         (
           !current ||
-          Number(candidate.diameter_specific) > Number(current.diameter_specific) ||
+          Number(candidate.sku_specific) > Number(current.sku_specific) ||
           (
-            candidate.diameter_specific === current.diameter_specific &&
-            mediaVersion(candidate.url) > mediaVersion(current.url)
+            candidate.sku_specific === current.sku_specific &&
+            (
+              Number(candidate.diameter_specific) > Number(current.diameter_specific) ||
+              (
+                candidate.diameter_specific === current.diameter_specific &&
+                mediaVersion(candidate.url) > mediaVersion(current.url)
+              )
+            )
           )
         )
       ) {
@@ -635,27 +660,37 @@ export default function AdminCatalogManager() {
     () => skuMediaByRole(selectedSku?.attributes),
     [selectedSku],
   );
-  const selectedSkuLengthOptions = useMemo(() => {
-    if (!selectedSku) {
-      return [];
-    }
-    const material = skuMaterialGroup(selectedSku.material);
-    return Array.from(
-      new Set(
-        (selectedProduct?.skus ?? [])
-          .filter(
-            (sku) =>
-              sku.is_active &&
-              skuMaterialGroup(sku.material) === material &&
-              sku.length_mm !== null,
-          )
-          .map((sku) => sku.length_mm as number),
-      ),
-    ).sort((left, right) => left - right);
-  }, [selectedProduct?.skus, selectedSku]);
-  const selectedFamilyMedia = useMemo(
+  const familyMediaByRoleAll = useMemo(
     () => mediaByRole(selectedProduct?.media ?? []),
     [selectedProduct?.media],
+  );
+  const selectedFamilyMedia = useMemo(
+    () => mediaByRole(
+      (selectedProduct?.media ?? []).filter((media) => familyMediaAppliesToSku(media, selectedSku)),
+    ),
+    [selectedProduct?.media, selectedSku],
+  );
+  const familyDiameterOptions = useMemo(() => {
+    const options = new Map<string, string>();
+    (selectedProduct?.skus ?? []).filter((sku) => sku.is_active).forEach((sku) => {
+      const key = skuDiameterKey(sku);
+      if (key) {
+        options.set(key, `d/D=${key} мм`);
+      }
+    });
+    return Array.from(options, ([key, label]) => ({ key, label })).sort((left, right) =>
+      left.key.localeCompare(right.key, "ru", { numeric: true }),
+    );
+  }, [selectedProduct?.skus]);
+  const familyLengthOptions = useMemo(
+    () => Array.from(
+      new Set(
+        (selectedProduct?.skus ?? [])
+          .filter((sku) => sku.is_active && sku.length_mm !== null)
+          .map((sku) => sku.length_mm as number),
+      ),
+    ).sort((left, right) => left - right),
+    [selectedProduct?.skus],
   );
   const totalProductCount = useMemo(
     () => categories.reduce((sum, category) => sum + category.product_count, 0),
@@ -678,7 +713,9 @@ export default function AdminCatalogManager() {
     }),
     [compatibilityCatalog, compatibleProductIds],
   );
-  const pendingFamilyPhotoCount = photoSlots.filter(({ role }) => photoDrafts[role].file).length;
+  const pendingFamilyPhotoCount = photoSlots.filter(
+    ({ role }) => photoDrafts[role].file || photoDrafts[role].scopeTouched,
+  ).length;
   const pendingSkuPhotoCount = photoSlots.filter(({ role }) => skuPhotoDrafts[role].file).length;
   const pendingPhotoCount = pendingFamilyPhotoCount + pendingSkuPhotoCount;
   const normalizedProductName = selectedProduct?.name.toLocaleLowerCase("ru-RU") ?? "";
@@ -932,6 +969,9 @@ export default function AdminCatalogManager() {
     updatePhotoDraft(role, {
       file,
       previewUrl: file ? URL.createObjectURL(file) : null,
+      diameterKeys: file ? familyMediaByRoleAll[role]?.diameter_keys ?? [] : [],
+      lengthsMm: file ? familyMediaByRoleAll[role]?.lengths_mm ?? [] : [],
+      scopeTouched: false,
     });
     event.target.value = "";
   }
@@ -941,7 +981,13 @@ export default function AdminCatalogManager() {
     if (currentPreview) {
       URL.revokeObjectURL(currentPreview);
     }
-    updatePhotoDraft(role, { file: null, previewUrl: null });
+    updatePhotoDraft(role, {
+      file: null,
+      previewUrl: null,
+      diameterKeys: [],
+      lengthsMm: [],
+      scopeTouched: false,
+    });
   }
 
   function selectCategoryCover(event: ChangeEvent<HTMLInputElement>) {
@@ -991,14 +1037,10 @@ export default function AdminCatalogManager() {
     updateSkuPhotoDraft(role, {
       file,
       previewUrl: file ? URL.createObjectURL(file) : null,
-      diameterSpecific: file ? Boolean(selectedSkuOwnMedia[role]?.diameter_specific) : false,
-      lengthsMm: file
-        ? selectedSkuOwnMedia[role]?.lengths_mm.length
-          ? selectedSkuOwnMedia[role].lengths_mm
-          : selectedSku?.length_mm === null || selectedSku?.length_mm === undefined
-            ? []
-            : [selectedSku.length_mm]
-        : [],
+      diameterSpecific: false,
+      diameterKeys: [],
+      lengthsMm: [],
+      scopeTouched: false,
     });
     event.target.value = "";
   }
@@ -1012,6 +1054,7 @@ export default function AdminCatalogManager() {
       file: null,
       previewUrl: null,
       diameterSpecific: false,
+      diameterKeys: [],
       lengthsMm: [],
     });
   }
@@ -1030,6 +1073,8 @@ export default function AdminCatalogManager() {
           file_name: draft.file.name,
           content_base64: contentBase64,
           role,
+          diameter_keys: draft.diameterKeys,
+          lengths_mm: draft.lengthsMm,
           alt:
             textOrNull(draft.alt) ??
             `${selectedProduct.name} — ${photoSlots
@@ -1058,12 +1103,38 @@ export default function AdminCatalogManager() {
     };
   }
 
+  async function persistFamilyPhotoScope(photoIndex: number, draft: PhotoDraft) {
+    if (!selectedProduct) {
+      throw new Error("Семейство не выбрано");
+    }
+    const response = await apiRequestWithStatus<AdminProduct>(
+      `/api/v1/admin/products/${selectedProduct.id}/photos/${photoIndex}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          diameter_keys: draft.diameterKeys,
+          lengths_mm: draft.lengthsMm,
+        }),
+      },
+    );
+    const media = response.data.media[photoIndex];
+    if (!media) {
+      throw new Error("Область фото сохранена, но фотография отсутствует в ответе backend");
+    }
+    const mediaUrl = buildBackendUrl(media.url);
+    const mediaResponse = await fetch(mediaUrl, { cache: "no-store" });
+    if (!mediaResponse.ok) {
+      throw new ApiRequestError(mediaResponse.status, mediaUrl, "Область фото сохранена, но URL изображения недоступен");
+    }
+    return {
+      uploadStatus: response.status,
+      mediaStatus: mediaResponse.status,
+    };
+  }
+
   async function persistSkuPhoto(sku: AdminSKU, role: PhotoRole, draft: PhotoDraft) {
     if (!draft.file) {
       throw new Error("Фото SKU не выбрано");
-    }
-    if (sku.length_mm !== null && draft.lengthsMm.length === 0) {
-      throw new Error("Выберите хотя бы одну длину для фотографии SKU");
     }
     const contentBase64 = await fileToBase64(draft.file);
     const uploadResponse = await apiRequestWithStatus<AdminMediaItem>(`/api/v1/admin/skus/${sku.id}/photo`, {
@@ -1072,8 +1143,7 @@ export default function AdminCatalogManager() {
         file_name: draft.file.name,
         content_base64: contentBase64,
         role,
-        diameter_specific: draft.diameterSpecific,
-        lengths_mm: draft.lengthsMm,
+        sku_specific: true,
         alt:
           textOrNull(draft.alt) ??
           `${sku.name} (${sku.article}) — ${photoSlots
@@ -1266,6 +1336,16 @@ export default function AdminCatalogManager() {
           const result = await persistPhotoDraft(slot.role, draft);
           photoResults.push(result);
           savedPhotos.push(slot.title);
+        } else if (draft.scopeTouched) {
+          const photoIndex = selectedProduct.media.findIndex(
+            (item) => item.role === slot.role || (slot.role === "connection" && item.role === "detail"),
+          );
+          if (photoIndex < 0) {
+            throw new Error(`Нельзя сохранить область: фото «${slot.title}» отсутствует`);
+          }
+          const result = await persistFamilyPhotoScope(photoIndex, draft);
+          photoResults.push(result);
+          savedPhotos.push(`${slot.title} · область применения`);
         }
       }
       for (const slot of photoSlots) {
@@ -1362,6 +1442,16 @@ export default function AdminCatalogManager() {
         const draft = photoDrafts[slot.role];
         if (draft.file) {
           const result = await persistPhotoDraft(slot.role, draft);
+          photoStatuses.push(result);
+          savedPhotoCount += 1;
+        } else if (draft.scopeTouched) {
+          const photoIndex = selectedProduct.media.findIndex(
+            (item) => item.role === slot.role || (slot.role === "connection" && item.role === "detail"),
+          );
+          if (photoIndex < 0) {
+            throw new Error(`Нельзя сохранить область: фото «${slot.title}» отсутствует`);
+          }
+          const result = await persistFamilyPhotoScope(photoIndex, draft);
           photoStatuses.push(result);
           savedPhotoCount += 1;
         }
@@ -2011,7 +2101,7 @@ export default function AdminCatalogManager() {
 
               <div className={styles.mediaSectionHeader}>
                 <h3>Фотографии семейства</h3>
-                <p>Общие для всех размеров, толщин и марок стали этого форм-фактора.</p>
+                <p>Общие для семейства или ограниченные выбранными диаметрами и длинами.</p>
               </div>
               <div className={styles.photoSlots}>
                 {photoSlots.map((slot) => {
@@ -2022,6 +2112,12 @@ export default function AdminCatalogManager() {
                   const existing = existingIndex >= 0 ? selectedProduct.media[existingIndex] : null;
                   const previewSrc = draft.previewUrl ?? (existing ? buildBackendUrl(existing.url) : null);
                   const inputId = `photo-${selectedProduct.id}-${slot.role}`;
+                  const effectiveDiameterKeys = draft.file || draft.scopeTouched
+                    ? draft.diameterKeys
+                    : existing?.diameter_keys ?? [];
+                  const effectiveLengthsMm = draft.file || draft.scopeTouched
+                    ? draft.lengthsMm
+                    : existing?.lengths_mm ?? [];
 
                   return (
                     <article className={styles.photoSlot} key={slot.role}>
@@ -2031,8 +2127,8 @@ export default function AdminCatalogManager() {
                           <strong>{slot.title}</strong>
                           <small>{slot.hint}</small>
                         </span>
-                        <span className={draft.file ? styles.pendingBadge : styles.savedBadge}>
-                          {draft.file ? "выбрано" : existing ? "сохранено" : "пусто"}
+                        <span className={draft.file || draft.scopeTouched ? styles.pendingBadge : styles.savedBadge}>
+                          {draft.file ? "выбрано" : draft.scopeTouched ? "изменено" : existing ? "сохранено" : "пусто"}
                         </span>
                       </div>
 
@@ -2082,6 +2178,62 @@ export default function AdminCatalogManager() {
                           value={draft.alt}
                         />
                       </label>
+                      {familyDiameterOptions.length > 0 ? (
+                        <fieldset className={styles.photoLengthScope} disabled={!draft.file && !existing}>
+                          <legend>Диаметры · ничего не выбрано = все</legend>
+                          <div className={styles.photoLengthOptions}>
+                            {familyDiameterOptions.map(({ key, label }) => (
+                              <label className={styles.photoLengthOption} key={key}>
+                                <input
+                                  checked={effectiveDiameterKeys.includes(key)}
+                                  onChange={(event) => updatePhotoDraft(slot.role, {
+                                    diameterKeys: event.target.checked
+                                      ? Array.from(new Set([...effectiveDiameterKeys, key])).sort((left, right) =>
+                                          left.localeCompare(right, "ru", { numeric: true }),
+                                        )
+                                      : effectiveDiameterKeys.filter((value) => value !== key),
+                                    lengthsMm: effectiveLengthsMm,
+                                    scopeTouched: true,
+                                  })}
+                                  type="checkbox"
+                                />
+                                {label}
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                      ) : null}
+                      {familyLengthOptions.length > 0 ? (
+                        <fieldset className={styles.photoLengthScope} disabled={!draft.file && !existing}>
+                          <legend>Длины · ничего не выбрано = все</legend>
+                          <div className={styles.photoLengthOptions}>
+                            {familyLengthOptions.map((length) => (
+                              <label className={styles.photoLengthOption} key={length}>
+                                <input
+                                  checked={effectiveLengthsMm.includes(length)}
+                                  onChange={(event) => updatePhotoDraft(slot.role, {
+                                    lengthsMm: event.target.checked
+                                      ? Array.from(new Set([...effectiveLengthsMm, length])).sort(
+                                          (left, right) => left - right,
+                                        )
+                                      : effectiveLengthsMm.filter((value) => value !== length),
+                                    diameterKeys: effectiveDiameterKeys,
+                                    scopeTouched: true,
+                                  })}
+                                  type="checkbox"
+                                />
+                                L={length} мм
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                      ) : null}
+                      {!draft.file && existing && !draft.scopeTouched ? (
+                        <small className={styles.photoScopeHint}>
+                          Сохранено: диаметры {existing.diameter_keys.length ? existing.diameter_keys.join(", ") : "все"};
+                          {" "}длины {existing.lengths_mm.length ? `${existing.lengths_mm.join(", ")} мм` : "все"}.
+                        </small>
+                      ) : null}
                       {draft.file ? <span className={styles.fileName}>{draft.file.name}</span> : null}
                     </article>
                   );
@@ -2122,9 +2274,8 @@ export default function AdminCatalogManager() {
                 <div className={styles.mediaSectionHeader}>
                   <h3>Фотографии выбранного SKU</h3>
                   <p>
-                    По умолчанию фото объединяются по виду материала и длине для всех диаметров.
-                    Марки нержавеющей стали используют одну галерею. Если внешний вид зависит от d/D,
-                    отметьте это у конкретного файла.
+                    Новое фото относится только к выбранной выше модели и не распространяется на другие SKU.
+                    Для групповой привязки используйте фотографии семейства.
                   </p>
                 </div>
                 <div className={`${styles.photoSlots} ${styles.skuPhotoSlots}`}>
@@ -2220,51 +2371,12 @@ export default function AdminCatalogManager() {
                             value={draft.alt}
                           />
                         </label>
-                        <label className={styles.photoScopeField}>
-                          <input
-                            checked={draft.diameterSpecific}
-                            disabled={!draft.file}
-                            onChange={(event) => updateSkuPhotoDraft(slot.role, {
-                              diameterSpecific: event.target.checked,
-                            })}
-                            type="checkbox"
-                          />
-                          Только для выбранного диаметра d/D
-                        </label>
-                        {selectedSkuLengthOptions.length > 0 ? (
-                          <fieldset className={styles.photoLengthScope} disabled={!draft.file}>
-                            <legend>Фото применяется к длинам</legend>
-                            <div className={styles.photoLengthOptions}>
-                              {selectedSkuLengthOptions.map((length) => (
-                                <label className={styles.photoLengthOption} key={length}>
-                                  <input
-                                    checked={draft.lengthsMm.includes(length)}
-                                    onChange={(event) => updateSkuPhotoDraft(slot.role, {
-                                      lengthsMm: event.target.checked
-                                        ? Array.from(new Set([...draft.lengthsMm, length])).sort(
-                                            (left, right) => left - right,
-                                          )
-                                        : draft.lengthsMm.filter((value) => value !== length),
-                                    })}
-                                    type="checkbox"
-                                  />
-                                  {length} мм
-                                </label>
-                              ))}
-                            </div>
-                          </fieldset>
-                        ) : null}
                         <small className={styles.photoScopeHint}>
-                          {!draft.file && ownMedia
-                            ? selectedSkuLengthOptions.length > 0
-                              ? `Сохранено: ${ownMedia.diameter_specific ? "только этот d/D" : "все диаметры"}; ` +
-                                `длины ${ownMedia.lengths_mm.length
-                                  ? ownMedia.lengths_mm.join(", ")
-                                  : selectedSku?.length_mm} мм.`
-                              : `Сохранено: ${ownMedia.diameter_specific ? "только этот d/D" : "все диаметры"}; у изделия нет длины.`
-                            : selectedSkuLengthOptions.length > 0
-                              ? "Выберите одну или несколько длин. Материал остаётся текущим."
-                              : "У изделия нет параметра длины. Материал остаётся текущим."}
+                          {ownMedia?.sku_specific
+                            ? `Только модель ${selectedSku?.article ?? "—"}.`
+                            : ownMedia
+                              ? "Старое фото с групповой привязкой. При замене станет фото только этой модели."
+                              : `Будет сохранено только для модели ${selectedSku?.article ?? "—"}.`}
                         </small>
                         {draft.file ? <span className={styles.fileName}>{draft.file.name}</span> : null}
                       </article>

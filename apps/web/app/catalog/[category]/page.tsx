@@ -79,6 +79,10 @@ function combinationValue(
   return typeof value === "string" ? value : null;
 }
 
+function isPipeCategory(category: CategoryNode) {
+  return /(?:труб|trub)/iu.test(`${category.name} ${category.slug}`);
+}
+
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { category: slug } = await params;
   const category = await categoryBySlug(slug);
@@ -116,7 +120,13 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     ? selectedOrFirst(appliedOuterPipe, filters.outer_pipes)
     : undefined;
   const execution = selectedFilter(query.execution, filters.executions);
-  const length = selectedFilter(query.length, filters.lengths);
+  const defaultLength = isPipeCategory(category) && filters.lengths.some((option) => option.value === "1000")
+    ? "1000"
+    : undefined;
+  const allLengthsRequested = query.length === "all";
+  const length = allLengthsRequested
+    ? undefined
+    : selectedFilter(query.length, filters.lengths) ?? (query.length ? undefined : defaultLength);
   let innerThickness = selectedFilter(query.inner_thickness, filters.wall_thicknesses);
   const diameterCombinations = filterVariantItems(
     filters.variant_combinations,
@@ -153,6 +163,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   }
   const [material, steel] = compoundParts(appliedInnerPipe, 2);
   const [outerMaterial, outerSteel, outerThickness] = compoundParts(appliedOuterPipe, 3);
+  const [preferredMaterial, preferredSteel] = compoundParts(innerPipe, 2);
+  const [preferredOuterMaterial, preferredOuterSteel] = compoundParts(outerPipe, 3);
   const [angle, insulation] = compoundParts(execution, 2);
   const page = Math.max(1, Number(query.page ?? "1") || 1);
   const offset = (page - 1) * PAGE_SIZE;
@@ -162,10 +174,16 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     inner_thickness: innerThickness,
     outer_pipe: appliedOuterPipe,
     execution,
-    length,
+    length: allLengthsRequested ? "all" : length,
   };
   const extraFacets = [
-    { name: "length", label: "Длина L", value: length, options: filters.lengths },
+    {
+      name: "length",
+      label: "Длина L",
+      value: allLengthsRequested ? "all" : length,
+      options: filters.lengths,
+      allValue: defaultLength ? "all" : "",
+    },
   ];
 
   const productResponse = await getProducts({
@@ -182,6 +200,11 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     outerWallThickness: outerThickness,
     angle,
     insulation,
+    preferredDiameter: diameter,
+    preferredSteelGrade: preferredSteel,
+    preferredMaterial,
+    preferredOuterSteelGrade: preferredOuterSteel,
+    preferredOuterMaterial,
   });
   const totalPages = Math.max(1, Math.ceil(productResponse.total / PAGE_SIZE));
 
