@@ -33,6 +33,7 @@ type AdminMediaItem = {
   role: string | null;
   file_name: string | null;
   diameter_specific: boolean;
+  lengths_mm: number[];
 };
 
 type AdminSKU = {
@@ -144,6 +145,7 @@ type PhotoDraft = {
   previewUrl: string | null;
   alt: string;
   diameterSpecific: boolean;
+  lengthsMm: number[];
 };
 
 class ApiRequestError extends Error {
@@ -171,14 +173,14 @@ const photoSlots: Array<{ role: PhotoRole; number: string; title: string; hint: 
 
 function createEmptyPhotoDrafts(): Record<PhotoRole, PhotoDraft> {
   return {
-    general: { file: null, previewUrl: null, alt: "", diameterSpecific: false },
-    top: { file: null, previewUrl: null, alt: "", diameterSpecific: false },
-    connection: { file: null, previewUrl: null, alt: "", diameterSpecific: false },
+    general: { file: null, previewUrl: null, alt: "", diameterSpecific: false, lengthsMm: [] },
+    top: { file: null, previewUrl: null, alt: "", diameterSpecific: false, lengthsMm: [] },
+    connection: { file: null, previewUrl: null, alt: "", diameterSpecific: false, lengthsMm: [] },
   };
 }
 
 function createEmptyPhotoDraft(): PhotoDraft {
-  return { file: null, previewUrl: null, alt: "", diameterSpecific: false };
+  return { file: null, previewUrl: null, alt: "", diameterSpecific: false, lengthsMm: [] };
 }
 
 function mediaItemFromValue(value: unknown): AdminMediaItem | null {
@@ -191,6 +193,12 @@ function mediaItemFromValue(value: unknown): AdminMediaItem | null {
     role: "role" in value && typeof value.role === "string" ? value.role : null,
     file_name: "file_name" in value && typeof value.file_name === "string" ? value.file_name : null,
     diameter_specific: "diameter_specific" in value && value.diameter_specific === true,
+    lengths_mm:
+      "lengths_mm" in value && Array.isArray(value.lengths_mm)
+        ? value.lengths_mm.filter(
+            (length): length is number => Number.isInteger(length) && length >= 0,
+          )
+        : [],
   };
 }
 
@@ -244,17 +252,23 @@ function skuMaterialGroup(material: string | null | undefined) {
 }
 
 function skuHasSameVisualExecution(left: AdminSKU, right: AdminSKU) {
-  return (
-    skuMaterialGroup(left.material) === skuMaterialGroup(right.material) &&
-    left.length_mm === right.length_mm
-  );
+  return skuMaterialGroup(left.material) === skuMaterialGroup(right.material);
 }
 
 function skuMediaAppliesToExecution(media: AdminMediaItem, owner: AdminSKU, target: AdminSKU) {
-  return !media.diameter_specific || (
+  const lengths = media.lengths_mm.length
+    ? media.lengths_mm
+    : owner.length_mm === null
+      ? []
+      : [owner.length_mm];
+  const lengthMatches = !lengths.length || (
+    target.length_mm !== null && lengths.includes(target.length_mm)
+  );
+  const diameterMatches = !media.diameter_specific || (
     owner.diameter_mm === target.diameter_mm &&
     owner.outer_diameter_mm === target.outer_diameter_mm
   );
+  return lengthMatches && diameterMatches;
 }
 
 function visualSkuMediaByRole(
@@ -621,6 +635,24 @@ export default function AdminCatalogManager() {
     () => skuMediaByRole(selectedSku?.attributes),
     [selectedSku],
   );
+  const selectedSkuLengthOptions = useMemo(() => {
+    if (!selectedSku) {
+      return [];
+    }
+    const material = skuMaterialGroup(selectedSku.material);
+    return Array.from(
+      new Set(
+        (selectedProduct?.skus ?? [])
+          .filter(
+            (sku) =>
+              sku.is_active &&
+              skuMaterialGroup(sku.material) === material &&
+              sku.length_mm !== null,
+          )
+          .map((sku) => sku.length_mm as number),
+      ),
+    ).sort((left, right) => left - right);
+  }, [selectedProduct?.skus, selectedSku]);
   const selectedFamilyMedia = useMemo(
     () => mediaByRole(selectedProduct?.media ?? []),
     [selectedProduct?.media],
@@ -960,6 +992,13 @@ export default function AdminCatalogManager() {
       file,
       previewUrl: file ? URL.createObjectURL(file) : null,
       diameterSpecific: file ? Boolean(selectedSkuOwnMedia[role]?.diameter_specific) : false,
+      lengthsMm: file
+        ? selectedSkuOwnMedia[role]?.lengths_mm.length
+          ? selectedSkuOwnMedia[role].lengths_mm
+          : selectedSku?.length_mm === null || selectedSku?.length_mm === undefined
+            ? []
+            : [selectedSku.length_mm]
+        : [],
     });
     event.target.value = "";
   }
@@ -969,7 +1008,12 @@ export default function AdminCatalogManager() {
     if (currentPreview) {
       URL.revokeObjectURL(currentPreview);
     }
-    updateSkuPhotoDraft(role, { file: null, previewUrl: null, diameterSpecific: false });
+    updateSkuPhotoDraft(role, {
+      file: null,
+      previewUrl: null,
+      diameterSpecific: false,
+      lengthsMm: [],
+    });
   }
 
   async function persistPhotoDraft(role: PhotoRole, draft: PhotoDraft) {
@@ -1018,6 +1062,9 @@ export default function AdminCatalogManager() {
     if (!draft.file) {
       throw new Error("Фото SKU не выбрано");
     }
+    if (sku.length_mm !== null && draft.lengthsMm.length === 0) {
+      throw new Error("Выберите хотя бы одну длину для фотографии SKU");
+    }
     const contentBase64 = await fileToBase64(draft.file);
     const uploadResponse = await apiRequestWithStatus<AdminMediaItem>(`/api/v1/admin/skus/${sku.id}/photo`, {
       method: "POST",
@@ -1026,6 +1073,7 @@ export default function AdminCatalogManager() {
         content_base64: contentBase64,
         role,
         diameter_specific: draft.diameterSpecific,
+        lengths_mm: draft.lengthsMm,
         alt:
           textOrNull(draft.alt) ??
           `${sku.name} (${sku.article}) — ${photoSlots
@@ -2183,10 +2231,40 @@ export default function AdminCatalogManager() {
                           />
                           Только для выбранного диаметра d/D
                         </label>
+                        {selectedSkuLengthOptions.length > 0 ? (
+                          <fieldset className={styles.photoLengthScope} disabled={!draft.file}>
+                            <legend>Фото применяется к длинам</legend>
+                            <div className={styles.photoLengthOptions}>
+                              {selectedSkuLengthOptions.map((length) => (
+                                <label className={styles.photoLengthOption} key={length}>
+                                  <input
+                                    checked={draft.lengthsMm.includes(length)}
+                                    onChange={(event) => updateSkuPhotoDraft(slot.role, {
+                                      lengthsMm: event.target.checked
+                                        ? Array.from(new Set([...draft.lengthsMm, length])).sort(
+                                            (left, right) => left - right,
+                                          )
+                                        : draft.lengthsMm.filter((value) => value !== length),
+                                    })}
+                                    type="checkbox"
+                                  />
+                                  {length} мм
+                                </label>
+                              ))}
+                            </div>
+                          </fieldset>
+                        ) : null}
                         <small className={styles.photoScopeHint}>
-                          {ownMedia?.diameter_specific && !draft.file
-                            ? "Сохранённое фото действует только для d/D этого SKU."
-                            : "По умолчанию фото применяется ко всем диаметрам этого материала и длины."}
+                          {!draft.file && ownMedia
+                            ? selectedSkuLengthOptions.length > 0
+                              ? `Сохранено: ${ownMedia.diameter_specific ? "только этот d/D" : "все диаметры"}; ` +
+                                `длины ${ownMedia.lengths_mm.length
+                                  ? ownMedia.lengths_mm.join(", ")
+                                  : selectedSku?.length_mm} мм.`
+                              : `Сохранено: ${ownMedia.diameter_specific ? "только этот d/D" : "все диаметры"}; у изделия нет длины.`
+                            : selectedSkuLengthOptions.length > 0
+                              ? "Выберите одну или несколько длин. Материал остаётся текущим."
+                              : "У изделия нет параметра длины. Материал остаётся текущим."}
                         </small>
                         {draft.file ? <span className={styles.fileName}>{draft.file.name}</span> : null}
                       </article>

@@ -23,6 +23,7 @@ class AdminMediaItem(BaseModel):
     role: str | None = None
     file_name: str | None = None
     diameter_specific: bool = False
+    lengths_mm: list[int] = Field(default_factory=list)
 
 
 class AdminSKURead(BaseModel):
@@ -204,3 +205,4 @@ class AdminPhotoUpload(BaseModel):
     alt: str | None = Field(default=None, max_length=240)
     role: str | None = Field(default=None, max_length=60)
     diameter_specific: bool = False
+    lengths_mm: list[int] = Field(default_factory=list)

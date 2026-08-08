@@ -47,6 +47,7 @@ type ProductPhotoItem = {
   alt: string;
   fit?: "cover" | "contain";
   diameterSpecific?: boolean;
+  lengthsMm: number[];
 };
 
 type ProductSchemeItem = {
@@ -674,6 +675,12 @@ function photoFromValue(
     fit: "contain",
     diameterSpecific:
       "diameter_specific" in value && value.diameter_specific === true,
+    lengthsMm:
+      "lengths_mm" in value && Array.isArray(value.lengths_mm)
+        ? value.lengths_mm.filter(
+            (length): length is number => Number.isInteger(length) && length >= 0,
+          )
+        : [],
   };
 }
 
@@ -750,10 +757,7 @@ function hasSameVisualExecution(
   left: Product["skus"][number],
   right: Product["skus"][number],
 ) {
-  return (
-    skuVisualMaterial(left.material) === skuVisualMaterial(right.material) &&
-    left.length_mm === right.length_mm
-  );
+  return skuVisualMaterial(left.material) === skuVisualMaterial(right.material);
 }
 
 function skuPhotoAppliesToExecution(
@@ -761,10 +765,19 @@ function skuPhotoAppliesToExecution(
   owner: Product["skus"][number],
   target: Product["skus"][number],
 ) {
-  return !photo.diameterSpecific || (
+  const lengths = photo.lengthsMm.length
+    ? photo.lengthsMm
+    : owner.length_mm === null
+      ? []
+      : [owner.length_mm];
+  const lengthMatches = !lengths.length || (
+    target.length_mm !== null && lengths.includes(target.length_mm)
+  );
+  const diameterMatches = !photo.diameterSpecific || (
     owner.diameter_mm === target.diameter_mm &&
     owner.outer_diameter_mm === target.outer_diameter_mm
   );
+  return lengthMatches && diameterMatches;
 }
 
 function visualSkuMediaByRole(

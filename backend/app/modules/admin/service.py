@@ -448,6 +448,7 @@ def normalize_media_list(extra_attributes: dict[str, Any] | None) -> list[AdminM
                 role=item.get("role") if isinstance(item.get("role"), str) else None,
                 file_name=item.get("file_name") if isinstance(item.get("file_name"), str) else None,
                 diameter_specific=item.get("diameter_specific") is True,
+                lengths_mm=normalized_media_lengths(item.get("lengths_mm")),
             )
         )
     return media
@@ -462,6 +463,19 @@ def normalize_media_item(value: Any) -> AdminMediaItem | None:
         role=value.get("role") if isinstance(value.get("role"), str) else None,
         file_name=value.get("file_name") if isinstance(value.get("file_name"), str) else None,
         diameter_specific=value.get("diameter_specific") is True,
+        lengths_mm=normalized_media_lengths(value.get("lengths_mm")),
+    )
+
+
+def normalized_media_lengths(value: Any) -> list[int]:
+    if not isinstance(value, list):
+        return []
+    return sorted(
+        {
+            item
+            for item in value
+            if isinstance(item, int) and not isinstance(item, bool) and 0 <= item <= 100000
+        }
     )
 
 
@@ -955,12 +969,16 @@ async def attach_sku_photo(
     target.write_bytes(content)
 
     relative = target.relative_to(Path(settings.media_storage_dir))
+    lengths_mm = normalized_media_lengths(payload.lengths_mm)
+    if not lengths_mm and sku.length_mm is not None:
+        lengths_mm = [sku.length_mm]
     media_item = AdminMediaItem(
         url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
         alt=payload.alt,
         role=role,
         file_name=file_name,
         diameter_specific=payload.diameter_specific,
+        lengths_mm=lengths_mm,
     )
     media = [item for item in normalize_sku_media(sku.attributes) if item.role != role]
     media.append(media_item)

@@ -281,12 +281,17 @@ def test_normalize_media_list_skips_invalid_items() -> None:
 
 def test_normalize_media_item_reads_category_or_sku_photo() -> None:
     media = normalize_media_item(
-        {"url": "/media/catalog/category-covers/deflectors/category-cover.jpg", "role": "category-cover"}
+        {
+            "url": "/media/catalog/category-covers/deflectors/category-cover.jpg",
+            "role": "category-cover",
+            "lengths_mm": [1000, 500, 1000, -1, "250"],
+        }
     )
 
     assert media is not None
     assert media.url.endswith("category-cover.jpg")
     assert media.role == "category-cover"
+    assert media.lengths_mm == [500, 1000]
     assert normalize_media_item({"alt": "broken"}) is None
 
 
@@ -691,6 +696,80 @@ def test_diameter_specific_photo_overrides_generic_only_for_matching_diameter() 
     assert image is not None
     assert image.url.endswith("specific-100.jpg?v=2")
     assert image.diameter_specific is True
+
+
+def test_photo_scope_intersects_selected_diameter_and_multiple_lengths() -> None:
+    shared_fields = {
+        "is_active": True,
+        "material": "Нержавеющая сталь",
+        "outer_diameter_mm": None,
+    }
+    scoped_owner = SimpleNamespace(
+        **shared_fields,
+        id="owner-200-500",
+        diameter_mm=200,
+        length_mm=500,
+        attributes={
+            "sku_media": [
+                {
+                    "url": "/media/scoped.jpg?v=20",
+                    "role": "general",
+                    "diameter_specific": True,
+                    "lengths_mm": [500, 1000],
+                }
+            ]
+        },
+    )
+    matching_target = SimpleNamespace(
+        **shared_fields,
+        id="target-200-1000",
+        diameter_mm=200,
+        length_mm=1000,
+        attributes={},
+    )
+    wrong_length = SimpleNamespace(
+        **shared_fields,
+        id="target-200-250",
+        diameter_mm=200,
+        length_mm=250,
+        attributes={
+            "sku_media": [
+                {"url": "/media/fallback-length.jpg?v=1", "role": "general"}
+            ]
+        },
+    )
+    wrong_diameter = SimpleNamespace(
+        **shared_fields,
+        id="target-150-1000",
+        diameter_mm=150,
+        length_mm=1000,
+        attributes={
+            "sku_media": [
+                {"url": "/media/fallback-diameter.jpg?v=1", "role": "general"}
+            ]
+        },
+    )
+
+    matching = primary_visual_sku_image(
+        matching_target,
+        [scoped_owner, matching_target],
+    )
+    length_fallback = primary_visual_sku_image(
+        wrong_length,
+        [scoped_owner, wrong_length],
+    )
+    diameter_fallback = primary_visual_sku_image(
+        wrong_diameter,
+        [scoped_owner, wrong_diameter],
+    )
+
+    assert matching is not None and matching.url.endswith("scoped.jpg?v=20")
+    assert length_fallback is not None and length_fallback.url.endswith(
+        "fallback-length.jpg?v=1"
+    )
+    assert diameter_fallback is not None and diameter_fallback.url.endswith(
+        "fallback-diameter.jpg?v=1"
+    )
 
 
 def test_catalog_sku_filters_apply_all_available_parameters_with_and_logic() -> None:

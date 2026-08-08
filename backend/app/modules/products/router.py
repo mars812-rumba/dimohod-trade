@@ -78,6 +78,7 @@ def primary_product_image(extra_attributes: dict[str, object] | None) -> Product
         alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
         role=value.get("role") if isinstance(value.get("role"), str) else None,
         diameter_specific=value.get("diameter_specific") is True,
+        lengths_mm=media_lengths(value.get("lengths_mm")),
     )
 
 
@@ -101,6 +102,7 @@ def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem 
                 alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
                 role=value.get("role") if isinstance(value.get("role"), str) else "general",
                 diameter_specific=value.get("diameter_specific") is True,
+                lengths_mm=media_lengths(value.get("lengths_mm")),
             )
         if raw_media:
             return None
@@ -112,22 +114,37 @@ def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem 
             alt=legacy.get("alt") if isinstance(legacy.get("alt"), str) else None,
             role="general",
             diameter_specific=legacy.get("diameter_specific") is True,
+            lengths_mm=media_lengths(legacy.get("lengths_mm")),
         )
     return None
 
 
-def same_visual_sku(left: SKU, right: SKU) -> bool:
-    return (
-        material_group(left.material) == material_group(right.material)
-        and left.length_mm == right.length_mm
+def media_lengths(value: object) -> list[int]:
+    if not isinstance(value, list):
+        return []
+    return sorted(
+        {
+            item
+            for item in value
+            if isinstance(item, int) and not isinstance(item, bool) and 0 <= item <= 100000
+        }
     )
+
+
+def same_visual_sku(left: SKU, right: SKU) -> bool:
+    return material_group(left.material) == material_group(right.material)
 
 
 def image_applies_to_sku(image: ProductMediaItem, owner_sku: SKU, target_sku: SKU) -> bool:
-    return not image.diameter_specific or (
+    lengths = image.lengths_mm or (
+        [owner_sku.length_mm] if owner_sku.length_mm is not None else []
+    )
+    length_matches = not lengths or target_sku.length_mm in lengths
+    diameter_matches = not image.diameter_specific or (
         owner_sku.diameter_mm == target_sku.diameter_mm
         and owner_sku.outer_diameter_mm == target_sku.outer_diameter_mm
     )
+    return length_matches and diameter_matches
 
 
 def primary_visual_sku_image(

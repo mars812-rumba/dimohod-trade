@@ -14,6 +14,7 @@ export type MediaItem = {
   alt: string | null;
   role: string | null;
   diameter_specific?: boolean;
+  lengths_mm?: number[];
 };
 
 export type CatalogTreeResponse = {

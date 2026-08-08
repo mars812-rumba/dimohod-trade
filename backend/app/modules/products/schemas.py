@@ -20,6 +20,7 @@ class ProductMediaItem(BaseModel):
     alt: str | None = None
     role: str | None = None
     diameter_specific: bool = False
+    lengths_mm: list[int] = Field(default_factory=list)
 
 
 class SKURead(BaseModel):

@@ -777,6 +777,46 @@
   line-height: 1.4;
 }
 
+.photoLengthScope {
+  margin: 2px 10px 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.photoLengthScope legend {
+  padding: 0 4px;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.photoLengthOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.photoLengthOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.photoLengthOption input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+}
+
 .fileName {
   display: block;
   overflow: hidden;
