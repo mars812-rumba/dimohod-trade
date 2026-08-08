@@ -20,7 +20,9 @@ class ProductMediaItem(BaseModel):
     alt: str | None = None
     role: str | None = None
     diameter_specific: bool = False
+    diameter_keys: list[str] = Field(default_factory=list)
     lengths_mm: list[int] = Field(default_factory=list)
+    sku_specific: bool = False
 
 
 class SKURead(BaseModel):
@@ -129,6 +131,8 @@ class CompatibleProductItem(BaseModel):
     product_name: str
     product_slug: str
     product_kind: str | None
+    purpose: list[str] = Field(default_factory=list)
+    short_description: str | None = None
     sku_id: UUID
     sku_key: str
     article: str

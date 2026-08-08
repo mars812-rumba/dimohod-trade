@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  Barcode,
   Calculator,
   CheckCircle2,
   ChevronDown,
@@ -19,7 +18,6 @@ import {
   Mail,
   MapPin,
   Package,
-  PanelsTopLeft,
   Phone,
   Ruler,
   ShieldCheck,
@@ -268,6 +266,43 @@ function compatiblePipePriceUnit(item: CompatibleProduct) {
   return `за ${item.length_mm} мм`;
 }
 
+function compactCompatibleMaterial(value: string | null) {
+  const key = materialKey(value);
+  if (key === "stainless") {
+    return "нерж.";
+  }
+  if (key === "galvanized") {
+    return "оцинк.";
+  }
+  return value?.trim() || null;
+}
+
+function compatiblePipeProfile(steel: string | null, material: string | null) {
+  const materialName = compactCompatibleMaterial(material);
+  return [steel?.trim() || null, materialName].filter(Boolean).join(" ") || null;
+}
+
+function compatibleSteelSummary(item: CompatibleProduct) {
+  const inner = compatiblePipeProfile(item.steel_grade, item.material);
+  const outer = compatiblePipeProfile(item.outer_steel_grade, item.outer_material);
+  const innerThickness = compactDecimal(item.wall_thickness_mm);
+  const outerThickness = compactDecimal(item.outer_wall_thickness_mm);
+  const thickness = innerThickness && outerThickness && innerThickness !== outerThickness
+    ? `${innerThickness}/${outerThickness} мм`
+    : innerThickness || outerThickness
+      ? `${innerThickness ?? outerThickness} мм`
+      : null;
+  const profile = inner && outer ? `${inner} / ${outer}` : inner ?? outer;
+  return profile ? `${profile}${thickness ? ` — ${thickness}` : ""}` : null;
+}
+
+function compatiblePurpose(item: CompatibleProduct) {
+  return item.purpose.find((value) => value.trim())?.trim()
+    ?? item.short_description?.trim()
+    ?? item.product_kind?.trim()
+    ?? null;
+}
+
 function CompatibleProductFamilyCard({
   items,
   source,
@@ -299,6 +334,8 @@ function CompatibleProductFamilyCard({
   );
   const diameter = compatibleDiameterLabel(selected);
   const priceUnit = compatiblePipePriceUnit(selected);
+  const purpose = compatiblePurpose(selected);
+  const steelSummary = compatibleSteelSummary(selected);
 
   return (
     <article className="compatible-product-card">
@@ -317,29 +354,13 @@ function CompatibleProductFamilyCard({
       </div>
       <div className="compatible-product-body">
         <strong>{selected.product_name}</strong>
-        <small><Barcode aria-hidden="true" size={12} /> Арт. {selected.article}</small>
+        {purpose ? <small><Target aria-hidden="true" size={12} /> {purpose}</small> : null}
         <div className="compatible-product-specs">
           {diameter ? <span><CircleDot aria-hidden="true" size={13} /> {diameter}</span> : null}
           {selected.insulation_mm !== null ? (
             <span><Layers3 aria-hidden="true" size={13} /> утепление {selected.insulation_mm} мм</span>
           ) : null}
-          {selected.steel_grade ? (
-            <span><Cog aria-hidden="true" size={13} /> внутри {selected.steel_grade}</span>
-          ) : null}
-          {selected.material ? (
-            <span><PanelsTopLeft aria-hidden="true" size={13} /> внутри {materialLabel(selected.material)}</span>
-          ) : null}
-          {selected.outer_steel_grade ? (
-            <span>
-              <Cog aria-hidden="true" size={13} /> снаружи {steelWithThicknessLabel(
-                selected.outer_steel_grade,
-                selected.outer_wall_thickness_mm,
-              )}
-            </span>
-          ) : null}
-          {selected.outer_material ? (
-            <span><PanelsTopLeft aria-hidden="true" size={13} /> снаружи {materialLabel(selected.outer_material)}</span>
-          ) : null}
+          {steelSummary ? <span><Cog aria-hidden="true" size={13} /> {steelSummary}</span> : null}
         </div>
         {lengthOptions.length > 1 ? (
           <div className="compatible-length-picker">

@@ -388,6 +388,8 @@ async def compatible_items_for_sku(
             product_name=target_product.name,
             product_slug=target_product.slug,
             product_kind=target_product.product_kind,
+            purpose=target_product.purpose,
+            short_description=target_product.short_description,
             sku_id=target_sku.id,
             sku_key=target_sku.article,
             article=target_sku.article,

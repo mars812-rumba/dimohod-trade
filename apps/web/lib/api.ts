@@ -14,7 +14,9 @@ export type MediaItem = {
   alt: string | null;
   role: string | null;
   diameter_specific?: boolean;
+  diameter_keys?: string[];
   lengths_mm?: number[];
+  sku_specific?: boolean;
 };
 
 export type CatalogTreeResponse = {
@@ -132,6 +134,8 @@ export type CompatibleProduct = {
   product_name: string;
   product_slug: string;
   product_kind: string | null;
+  purpose: string[];
+  short_description: string | null;
   sku_id: string;
   sku_key: string;
   article: string;
