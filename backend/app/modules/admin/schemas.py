@@ -19,6 +19,7 @@ class AdminCategoryRead(BaseModel):
 
 class AdminMediaItem(BaseModel):
     media_id: str | None = None
+    content_sha256: str | None = None
     url: str
     alt: str | None = None
     role: str | None = None

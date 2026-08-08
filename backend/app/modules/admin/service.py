@@ -1,5 +1,6 @@
 import base64
 import binascii
+import hashlib
 import json
 import re
 from decimal import Decimal
@@ -432,7 +433,11 @@ async def generate_product_seo(
         ) from exc
 
 
-def normalize_media_list(extra_attributes: dict[str, Any] | None) -> list[AdminMediaItem]:
+def normalize_media_list(
+    extra_attributes: dict[str, Any] | None,
+    *,
+    inspect_content: bool = False,
+) -> list[AdminMediaItem]:
     raw_media = (extra_attributes or {}).get(MEDIA_KEY)
     if not isinstance(raw_media, list):
         return []
@@ -444,6 +449,7 @@ def normalize_media_list(extra_attributes: dict[str, Any] | None) -> list[AdminM
         media.append(
             AdminMediaItem(
                 media_id=normalized_media_id(item),
+                content_sha256=item.get("content_sha256") if isinstance(item.get("content_sha256"), str) else None,
                 url=item["url"],
                 alt=item.get("alt") if isinstance(item.get("alt"), str) else None,
                 role=item.get("role") if isinstance(item.get("role"), str) else None,
@@ -454,7 +460,29 @@ def normalize_media_list(extra_attributes: dict[str, Any] | None) -> list[AdminM
                 sku_specific=item.get("sku_specific") is True,
             )
         )
-    return media
+    deduplicated: dict[str, AdminMediaItem] = {}
+    for item in media:
+        content_sha256 = stored_media_content_sha256(item) if inspect_content else item.content_sha256
+        deduplication_key = (
+            f"{item.role}:{content_sha256}"
+            if content_sha256
+            else item.media_id or item.url
+        )
+        existing = deduplicated.get(deduplication_key)
+        if existing is None:
+            deduplicated[deduplication_key] = item.model_copy(
+                update={"content_sha256": content_sha256}
+            )
+            continue
+        deduplicated[deduplication_key] = existing.model_copy(
+            update={
+                "alt": item.alt or existing.alt,
+                "content_sha256": content_sha256 or existing.content_sha256,
+                "diameter_keys": merged_media_scope(existing.diameter_keys, item.diameter_keys),
+                "lengths_mm": merged_media_scope(existing.lengths_mm, item.lengths_mm),
+            }
+        )
+    return list(deduplicated.values())
 
 
 def normalize_media_item(value: Any) -> AdminMediaItem | None:
@@ -462,6 +490,7 @@ def normalize_media_item(value: Any) -> AdminMediaItem | None:
         return None
     return AdminMediaItem(
         media_id=normalized_media_id(value),
+        content_sha256=value.get("content_sha256") if isinstance(value.get("content_sha256"), str) else None,
         url=value["url"],
         alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
         role=value.get("role") if isinstance(value.get("role"), str) else None,
@@ -479,6 +508,29 @@ def normalized_media_id(value: dict[str, Any]) -> str:
         return stored.strip()
     role = value.get("role") if isinstance(value.get("role"), str) else ""
     return str(uuid5(NAMESPACE_URL, f"dimohod-media:{role}:{value['url']}"))
+
+
+def merged_media_scope[T](existing: list[T], incoming: list[T]) -> list[T]:
+    """An empty scope means all values, otherwise preserve the union."""
+    if not existing or not incoming:
+        return []
+    return sorted(set(existing) | set(incoming))
+
+
+def stored_media_content_sha256(item: AdminMediaItem) -> str | None:
+    if item.content_sha256:
+        return item.content_sha256
+    media_path = item.url.split("?", 1)[0]
+    if not media_path.startswith("/media/"):
+        return None
+    storage_root = Path(settings.media_storage_dir).resolve()
+    target = (storage_root / media_path.removeprefix("/media/")).resolve()
+    if not target.is_relative_to(storage_root) or not target.is_file():
+        return None
+    try:
+        return hashlib.sha256(target.read_bytes()).hexdigest()
+    except OSError:
+        return None
 
 
 def normalized_media_diameter_keys(value: Any) -> list[str]:
@@ -557,11 +609,13 @@ def canonical_sku_photo_name(file_name: str, role: str | None) -> tuple[str, str
 def resolve_product_media(
     product_extra_attributes: dict[str, Any] | None,
     category_extra_attributes: dict[str, Any] | None,
+    *,
+    inspect_content: bool = False,
 ) -> list[AdminMediaItem]:
     """Logical Product owns form-factor media; Category media is legacy fallback only."""
     if isinstance((product_extra_attributes or {}).get(MEDIA_KEY), list):
-        return normalize_media_list(product_extra_attributes)
-    return normalize_media_list(category_extra_attributes)
+        return normalize_media_list(product_extra_attributes, inspect_content=inspect_content)
+    return normalize_media_list(category_extra_attributes, inspect_content=inspect_content)
 
 
 def inherit_legacy_product_content(product: Product, legacy_products: list[Product]) -> bool:
@@ -612,7 +666,11 @@ def validate_photo_content(content: bytes) -> None:
 
 
 def product_to_admin_read(product: Product) -> AdminProductRead:
-    media = resolve_product_media(product.extra_attributes, product.category.extra_attributes)
+    media = resolve_product_media(
+        product.extra_attributes,
+        product.category.extra_attributes,
+        inspect_content=True,
+    )
     return AdminProductRead(
         id=product.id,
         category_id=product.category_id,
@@ -896,22 +954,59 @@ async def attach_product_photo_content(
 ) -> AdminProductRead:
     product = await get_admin_product(session, product_id)
     validate_photo_content(content)
-    media_id = str(uuid4())
-    file_name = canonical_photo_name(file_name, role, media_id)
 
-    geometry_family = product.extra_attributes.get("geometry_family")
+    geometry_family = (product.extra_attributes or {}).get("geometry_family")
     storage_key = safe_storage_key(geometry_family if isinstance(geometry_family, str) else product.slug)
     product_dir = Path(settings.media_storage_dir) / "catalog" / "categories" / storage_key
     product_dir.mkdir(parents=True, exist_ok=True)
 
     # First write also migrates any legacy category-level media into this form-factor.
-    media = resolve_product_media(product.extra_attributes, product.category.extra_attributes)
+    media = resolve_product_media(
+        product.extra_attributes,
+        product.category.extra_attributes,
+        inspect_content=True,
+    )
+    content_sha256 = hashlib.sha256(content).hexdigest()
+    duplicate_index = next(
+        (
+            index
+            for index, item in enumerate(media)
+            if item.role == role and stored_media_content_sha256(item) == content_sha256
+        ),
+        None,
+    )
+    if duplicate_index is not None:
+        existing = media[duplicate_index]
+        media[duplicate_index] = existing.model_copy(
+            update={
+                "alt": alt or existing.alt,
+                "content_sha256": content_sha256,
+                "diameter_keys": merged_media_scope(
+                    existing.diameter_keys,
+                    normalized_media_diameter_keys(diameter_keys),
+                ),
+                "lengths_mm": merged_media_scope(
+                    existing.lengths_mm,
+                    normalized_media_lengths(lengths_mm),
+                ),
+            }
+        )
+        product.extra_attributes = {
+            **(product.extra_attributes or {}),
+            MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
+        }
+        await session.commit()
+        return product_to_admin_read(await get_admin_product(session, product_id))
+
+    media_id = str(uuid4())
+    file_name = canonical_photo_name(file_name, role, media_id)
     target = product_dir / file_name
     target.write_bytes(content)
 
     relative = target.relative_to(Path(settings.media_storage_dir))
     media_item = AdminMediaItem(
         media_id=media_id,
+        content_sha256=content_sha256,
         url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
         alt=alt,
         role=role,
@@ -939,7 +1034,11 @@ async def update_product_photo_scope(
 ) -> AdminProductRead:
     photo_key = str(photo_key)
     product = await get_admin_product(session, product_id)
-    media = resolve_product_media(product.extra_attributes, product.category.extra_attributes)
+    media = resolve_product_media(
+        product.extra_attributes,
+        product.category.extra_attributes,
+        inspect_content=True,
+    )
     photo_index = next(
         (index for index, item in enumerate(media) if item.media_id == photo_key),
         None,
@@ -1074,9 +1173,9 @@ async def delete_sku_photo(session: AsyncSession, sku_id: UUID, role: str | None
 async def delete_product_photo(session: AsyncSession, product_id: UUID, photo_key: str) -> AdminProductRead:
     photo_key = str(photo_key)
     product = await get_admin_product(session, product_id)
-    media = normalize_media_list(product.extra_attributes)
+    media = normalize_media_list(product.extra_attributes, inspect_content=True)
     if not media:
-        media = normalize_media_list(product.category.extra_attributes)
+        media = normalize_media_list(product.category.extra_attributes, inspect_content=True)
 
     resolved_index = next(
         (index for index, item in enumerate(media) if item.media_id == photo_key),

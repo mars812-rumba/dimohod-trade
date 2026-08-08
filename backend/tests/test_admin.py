@@ -283,6 +283,31 @@ def test_normalize_media_list_skips_invalid_items() -> None:
     )[0].media_id == media[0].media_id
 
 
+def test_normalize_media_list_merges_repeated_photo_scopes() -> None:
+    media = normalize_media_list(
+        {
+            "media": [
+                {
+                    "url": "/media/catalog/photo.jpg",
+                    "role": "general",
+                    "diameter_keys": ["200/300"],
+                    "lengths_mm": [500],
+                },
+                {
+                    "url": "/media/catalog/photo.jpg",
+                    "role": "general",
+                    "diameter_keys": ["200/300"],
+                    "lengths_mm": [1000],
+                },
+            ]
+        }
+    )
+
+    assert len(media) == 1
+    assert media[0].diameter_keys == ["200/300"]
+    assert media[0].lengths_mm == [500, 1000]
+
+
 def test_normalize_media_item_reads_category_or_sku_photo() -> None:
     media = normalize_media_item(
         {

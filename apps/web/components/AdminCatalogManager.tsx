@@ -2130,12 +2130,17 @@ export default function AdminCatalogManager() {
               <div className={styles.photoSlots}>
                 {photoSlots.flatMap((slot) => {
                   const draft = photoDrafts[slot.role];
-                  const existingPhotos = selectedProduct.media
-                    .map((media, index) => ({ media, index }))
-                    .filter(
-                      ({ media }) =>
-                        media.role === slot.role || (slot.role === "connection" && media.role === "detail"),
-                    );
+                  const existingPhotos = Array.from(
+                    new Map(
+                      selectedProduct.media
+                        .map((media, index) => ({ media, index }))
+                        .filter(
+                          ({ media }) =>
+                            media.role === slot.role || (slot.role === "connection" && media.role === "detail"),
+                        )
+                        .map((entry) => [entry.media.media_id ?? `${entry.media.url}:${entry.index}`, entry] as const),
+                    ).values(),
+                  );
                   const inputId = `photo-${selectedProduct.id}-${slot.role}`;
                   const existingCards = existingPhotos.map(({ media, index }) => {
                     const photoKey = media.media_id ?? String(index);
