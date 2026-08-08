@@ -5,7 +5,7 @@ import re
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
-from uuid import UUID
+from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 import httpx
 from fastapi import HTTPException, status
@@ -443,12 +443,15 @@ def normalize_media_list(extra_attributes: dict[str, Any] | None) -> list[AdminM
             continue
         media.append(
             AdminMediaItem(
+                media_id=normalized_media_id(item),
                 url=item["url"],
                 alt=item.get("alt") if isinstance(item.get("alt"), str) else None,
                 role=item.get("role") if isinstance(item.get("role"), str) else None,
                 file_name=item.get("file_name") if isinstance(item.get("file_name"), str) else None,
                 diameter_specific=item.get("diameter_specific") is True,
+                diameter_keys=normalized_media_diameter_keys(item.get("diameter_keys")),
                 lengths_mm=normalized_media_lengths(item.get("lengths_mm")),
+                sku_specific=item.get("sku_specific") is True,
             )
         )
     return media
@@ -458,12 +461,35 @@ def normalize_media_item(value: Any) -> AdminMediaItem | None:
     if not isinstance(value, dict) or not isinstance(value.get("url"), str):
         return None
     return AdminMediaItem(
+        media_id=normalized_media_id(value),
         url=value["url"],
         alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
         role=value.get("role") if isinstance(value.get("role"), str) else None,
         file_name=value.get("file_name") if isinstance(value.get("file_name"), str) else None,
         diameter_specific=value.get("diameter_specific") is True,
+        diameter_keys=normalized_media_diameter_keys(value.get("diameter_keys")),
         lengths_mm=normalized_media_lengths(value.get("lengths_mm")),
+        sku_specific=value.get("sku_specific") is True,
+    )
+
+
+def normalized_media_id(value: dict[str, Any]) -> str:
+    stored = value.get("media_id")
+    if isinstance(stored, str) and stored.strip():
+        return stored.strip()
+    role = value.get("role") if isinstance(value.get("role"), str) else ""
+    return str(uuid5(NAMESPACE_URL, f"dimohod-media:{role}:{value['url']}"))
+
+
+def normalized_media_diameter_keys(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return sorted(
+        {
+            item.strip()
+            for item in value
+            if isinstance(item, str) and item.strip() and len(item.strip()) <= 32
+        }
     )
 
 
@@ -514,9 +540,11 @@ def safe_storage_key(value: str) -> str:
     return safe_value or "product"
 
 
-def canonical_photo_name(file_name: str, role: str | None) -> str:
+def canonical_photo_name(file_name: str, role: str | None, media_id: str | None = None) -> str:
     safe_name = safe_asset_name(file_name)
     canonical_stem = PHOTO_ROLE_FILENAMES.get(role or "")
+    if canonical_stem and media_id:
+        canonical_stem = f"{canonical_stem}-{media_id[:8]}"
     return f"{canonical_stem}{Path(safe_name).suffix}" if canonical_stem else safe_name
 
 
@@ -850,6 +878,8 @@ async def attach_product_photo(session: AsyncSession, product_id: UUID, payload:
         content=decode_photo_payload(payload.content_base64),
         alt=payload.alt,
         role=payload.role,
+        diameter_keys=payload.diameter_keys,
+        lengths_mm=payload.lengths_mm,
     )
 
 
@@ -861,10 +891,13 @@ async def attach_product_photo_content(
     content: bytes,
     alt: str | None,
     role: str | None,
+    diameter_keys: list[str] | None = None,
+    lengths_mm: list[int] | None = None,
 ) -> AdminProductRead:
     product = await get_admin_product(session, product_id)
     validate_photo_content(content)
-    file_name = canonical_photo_name(file_name, role)
+    media_id = str(uuid4())
+    file_name = canonical_photo_name(file_name, role, media_id)
 
     geometry_family = product.extra_attributes.get("geometry_family")
     storage_key = safe_storage_key(geometry_family if isinstance(geometry_family, str) else product.slug)
@@ -873,35 +906,55 @@ async def attach_product_photo_content(
 
     # First write also migrates any legacy category-level media into this form-factor.
     media = resolve_product_media(product.extra_attributes, product.category.extra_attributes)
-    replace_index = next(
-        (
-            index
-            for index, item in enumerate(media)
-            if (role and item.role == role) or item.file_name == file_name
-        ),
-        None,
-    )
-    if replace_index is None and len(media) >= 3:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Form-factor already has three photos; choose a role to replace",
-        )
-
     target = product_dir / file_name
     target.write_bytes(content)
 
     relative = target.relative_to(Path(settings.media_storage_dir))
     media_item = AdminMediaItem(
+        media_id=media_id,
         url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
         alt=alt,
         role=role,
         file_name=file_name,
+        diameter_keys=normalized_media_diameter_keys(diameter_keys),
+        lengths_mm=normalized_media_lengths(lengths_mm),
     )
-    if replace_index is None:
-        media.append(media_item)
-    else:
-        media[replace_index] = media_item
+    media.append(media_item)
 
+    product.extra_attributes = {
+        **(product.extra_attributes or {}),
+        MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
+    }
+    await session.commit()
+    return product_to_admin_read(await get_admin_product(session, product_id))
+
+
+async def update_product_photo_scope(
+    session: AsyncSession,
+    product_id: UUID,
+    photo_key: str,
+    *,
+    diameter_keys: list[str],
+    lengths_mm: list[int],
+) -> AdminProductRead:
+    photo_key = str(photo_key)
+    product = await get_admin_product(session, product_id)
+    media = resolve_product_media(product.extra_attributes, product.category.extra_attributes)
+    photo_index = next(
+        (index for index, item in enumerate(media) if item.media_id == photo_key),
+        None,
+    )
+    if photo_index is None and photo_key.isdigit():
+        legacy_index = int(photo_key)
+        photo_index = legacy_index if 0 <= legacy_index < len(media) else None
+    if photo_index is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found")
+    media[photo_index] = media[photo_index].model_copy(
+        update={
+            "diameter_keys": normalized_media_diameter_keys(diameter_keys),
+            "lengths_mm": normalized_media_lengths(lengths_mm),
+        }
+    )
     product.extra_attributes = {
         **(product.extra_attributes or {}),
         MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
@@ -979,6 +1032,7 @@ async def attach_sku_photo(
         file_name=file_name,
         diameter_specific=payload.diameter_specific,
         lengths_mm=lengths_mm,
+        sku_specific=True,
     )
     media = [item for item in normalize_sku_media(sku.attributes) if item.role != role]
     media.append(media_item)
@@ -1017,16 +1071,24 @@ async def delete_sku_photo(session: AsyncSession, sku_id: UUID, role: str | None
     await session.commit()
 
 
-async def delete_product_photo(session: AsyncSession, product_id: UUID, photo_index: int) -> AdminProductRead:
+async def delete_product_photo(session: AsyncSession, product_id: UUID, photo_key: str) -> AdminProductRead:
+    photo_key = str(photo_key)
     product = await get_admin_product(session, product_id)
     media = normalize_media_list(product.extra_attributes)
     if not media:
         media = normalize_media_list(product.category.extra_attributes)
 
-    if photo_index < 0 or photo_index >= len(media):
+    resolved_index = next(
+        (index for index, item in enumerate(media) if item.media_id == photo_key),
+        None,
+    )
+    if resolved_index is None and photo_key.isdigit():
+        legacy_index = int(photo_key)
+        resolved_index = legacy_index if 0 <= legacy_index < len(media) else None
+    if resolved_index is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found")
 
-    media.pop(photo_index)
+    media.pop(resolved_index)
     product.extra_attributes = {
         **(product.extra_attributes or {}),
         MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],

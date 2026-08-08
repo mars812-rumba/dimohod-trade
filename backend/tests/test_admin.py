@@ -277,6 +277,10 @@ def test_normalize_media_list_skips_invalid_items() -> None:
     assert media[0].url == "/media/catalog/photo.jpg"
     assert media[0].alt == "Фото"
     assert media[0].role == "general"
+    assert media[0].media_id is not None
+    assert normalize_media_list(
+        {"media": [{"url": "/media/catalog/photo.jpg", "role": "general"}]}
+    )[0].media_id == media[0].media_id
 
 
 def test_normalize_media_item_reads_category_or_sku_photo() -> None:
@@ -339,6 +343,33 @@ def test_family_photo_scope_filters_by_diameter_and_length() -> None:
     assert primary_product_image(attributes, matching) is not None
     assert primary_product_image(attributes, wrong_diameter) is None
     assert primary_product_image(attributes, wrong_length) is None
+
+
+def test_family_photo_prefers_the_most_specific_matching_scope() -> None:
+    attributes = {
+        "media": [
+            {"url": "/media/global.jpg", "role": "general"},
+            {
+                "url": "/media/length-1000.jpg",
+                "role": "general",
+                "lengths_mm": [1000],
+            },
+            {
+                "url": "/media/d200-length-1000.jpg",
+                "role": "general",
+                "diameter_keys": ["200/300"],
+                "lengths_mm": [1000],
+            },
+        ]
+    }
+
+    exact = SimpleNamespace(diameter_mm=200, outer_diameter_mm=300, length_mm=1000)
+    other_diameter = SimpleNamespace(diameter_mm=150, outer_diameter_mm=250, length_mm=1000)
+    other_length = SimpleNamespace(diameter_mm=200, outer_diameter_mm=300, length_mm=500)
+
+    assert primary_product_image(attributes, exact).url.endswith("d200-length-1000.jpg")
+    assert primary_product_image(attributes, other_diameter).url.endswith("length-1000.jpg")
+    assert primary_product_image(attributes, other_length).url.endswith("global.jpg")
 
 
 def test_public_sku_attributes_expose_gallery_and_seo_only() -> None:
@@ -410,6 +441,7 @@ def test_form_factor_photo_names_are_canonical() -> None:
     assert canonical_photo_name("IMG 100.PNG", "general") == "photo-1.png"
     assert canonical_photo_name("top.webp", "top") == "photo-2.webp"
     assert canonical_photo_name("detail.jpg", "connection") == "photo-3.jpg"
+    assert canonical_photo_name("IMG 100.PNG", "general", "12345678-abcd") == "photo-1-12345678.png"
     assert safe_storage_key("Deflector Standard") == "deflector-standard"
 
 

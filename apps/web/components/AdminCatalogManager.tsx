@@ -28,6 +28,7 @@ type AdminProductListItem = {
 };
 
 type AdminMediaItem = {
+  media_id: string | null;
   url: string;
   alt: string | null;
   role: string | null;
@@ -152,6 +153,11 @@ type PhotoDraft = {
   scopeTouched: boolean;
 };
 
+type FamilyPhotoScopeDraft = {
+  diameterKeys: string[];
+  lengthsMm: number[];
+};
+
 class ApiRequestError extends Error {
   status: number;
   url: string;
@@ -192,6 +198,7 @@ function mediaItemFromValue(value: unknown): AdminMediaItem | null {
     return null;
   }
   return {
+    media_id: "media_id" in value && typeof value.media_id === "string" ? value.media_id : null,
     url: value.url,
     alt: "alt" in value && typeof value.alt === "string" ? value.alt : null,
     role: "role" in value && typeof value.role === "string" ? value.role : null,
@@ -233,7 +240,14 @@ function mediaByRole(values: AdminMediaItem[]): Partial<Record<PhotoRole, AdminM
   return values.reduce<Partial<Record<PhotoRole, AdminMediaItem>>>((result, item) => {
     const role = mediaRole(item.role);
     if (role) {
-      result[role] = item;
+      const current = result[role];
+      const specificity = Number(item.diameter_keys.length > 0) + Number(item.lengths_mm.length > 0);
+      const currentSpecificity = current
+        ? Number(current.diameter_keys.length > 0) + Number(current.lengths_mm.length > 0)
+        : -1;
+      if (!current || specificity >= currentSpecificity) {
+        result[role] = item;
+      }
     }
     return result;
   }, {});
@@ -634,6 +648,7 @@ export default function AdminCatalogManager() {
   const [skuForm, setSkuForm] = useState<SKUFormState>(emptySkuForm);
   const [productSeoForm, setProductSeoForm] = useState<ProductSeoFormState>(emptyProductSeoForm);
   const [photoDrafts, setPhotoDrafts] = useState<Record<PhotoRole, PhotoDraft>>(createEmptyPhotoDrafts);
+  const [familyPhotoScopeDrafts, setFamilyPhotoScopeDrafts] = useState<Record<string, FamilyPhotoScopeDraft>>({});
   const [categoryCoverDraft, setCategoryCoverDraft] = useState<PhotoDraft>(createEmptyPhotoDraft);
   const [skuPhotoDrafts, setSkuPhotoDrafts] = useState<Record<PhotoRole, PhotoDraft>>(createEmptyPhotoDrafts);
   const [status, setStatus] = useState("");
@@ -659,10 +674,6 @@ export default function AdminCatalogManager() {
   const selectedSkuOwnMedia = useMemo(
     () => skuMediaByRole(selectedSku?.attributes),
     [selectedSku],
-  );
-  const familyMediaByRoleAll = useMemo(
-    () => mediaByRole(selectedProduct?.media ?? []),
-    [selectedProduct?.media],
   );
   const selectedFamilyMedia = useMemo(
     () => mediaByRole(
@@ -713,9 +724,9 @@ export default function AdminCatalogManager() {
     }),
     [compatibilityCatalog, compatibleProductIds],
   );
-  const pendingFamilyPhotoCount = photoSlots.filter(
-    ({ role }) => photoDrafts[role].file || photoDrafts[role].scopeTouched,
-  ).length;
+  const pendingFamilyPhotoCount =
+    photoSlots.filter(({ role }) => photoDrafts[role].file).length +
+    Object.keys(familyPhotoScopeDrafts).length;
   const pendingSkuPhotoCount = photoSlots.filter(({ role }) => skuPhotoDrafts[role].file).length;
   const pendingPhotoCount = pendingFamilyPhotoCount + pendingSkuPhotoCount;
   const normalizedProductName = selectedProduct?.name.toLocaleLowerCase("ru-RU") ?? "";
@@ -789,6 +800,7 @@ export default function AdminCatalogManager() {
 
   useEffect(() => {
     resetPhotoDrafts();
+    setFamilyPhotoScopeDrafts({});
   }, [selectedProduct?.id]);
 
   useEffect(() => {
@@ -960,6 +972,21 @@ export default function AdminCatalogManager() {
     }));
   }
 
+  function updateFamilyPhotoScope(
+    photoKey: string,
+    media: AdminMediaItem,
+    patch: Partial<FamilyPhotoScopeDraft>,
+  ) {
+    setFamilyPhotoScopeDrafts((current) => ({
+      ...current,
+      [photoKey]: {
+        diameterKeys: current[photoKey]?.diameterKeys ?? media.diameter_keys,
+        lengthsMm: current[photoKey]?.lengthsMm ?? media.lengths_mm,
+        ...patch,
+      },
+    }));
+  }
+
   function selectPhoto(role: PhotoRole, event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
     const currentPreview = photoDrafts[role].previewUrl;
@@ -969,8 +996,8 @@ export default function AdminCatalogManager() {
     updatePhotoDraft(role, {
       file,
       previewUrl: file ? URL.createObjectURL(file) : null,
-      diameterKeys: file ? familyMediaByRoleAll[role]?.diameter_keys ?? [] : [],
-      lengthsMm: file ? familyMediaByRoleAll[role]?.lengths_mm ?? [] : [],
+      diameterKeys: [],
+      lengthsMm: [],
       scopeTouched: false,
     });
     event.target.value = "";
@@ -1103,12 +1130,12 @@ export default function AdminCatalogManager() {
     };
   }
 
-  async function persistFamilyPhotoScope(photoIndex: number, draft: PhotoDraft) {
+  async function persistFamilyPhotoScope(photoKey: string, draft: FamilyPhotoScopeDraft) {
     if (!selectedProduct) {
       throw new Error("Семейство не выбрано");
     }
     const response = await apiRequestWithStatus<AdminProduct>(
-      `/api/v1/admin/products/${selectedProduct.id}/photos/${photoIndex}`,
+      `/api/v1/admin/products/${selectedProduct.id}/photos/${photoKey}`,
       {
         method: "PATCH",
         body: JSON.stringify({
@@ -1117,7 +1144,7 @@ export default function AdminCatalogManager() {
         }),
       },
     );
-    const media = response.data.media[photoIndex];
+    const media = response.data.media.find((item) => item.media_id === photoKey);
     if (!media) {
       throw new Error("Область фото сохранена, но фотография отсутствует в ответе backend");
     }
@@ -1336,17 +1363,12 @@ export default function AdminCatalogManager() {
           const result = await persistPhotoDraft(slot.role, draft);
           photoResults.push(result);
           savedPhotos.push(slot.title);
-        } else if (draft.scopeTouched) {
-          const photoIndex = selectedProduct.media.findIndex(
-            (item) => item.role === slot.role || (slot.role === "connection" && item.role === "detail"),
-          );
-          if (photoIndex < 0) {
-            throw new Error(`Нельзя сохранить область: фото «${slot.title}» отсутствует`);
-          }
-          const result = await persistFamilyPhotoScope(photoIndex, draft);
-          photoResults.push(result);
-          savedPhotos.push(`${slot.title} · область применения`);
         }
+      }
+      for (const [photoKey, scope] of Object.entries(familyPhotoScopeDrafts)) {
+        const result = await persistFamilyPhotoScope(photoKey, scope);
+        photoResults.push(result);
+        savedPhotos.push("Область применения фото семейства");
       }
       for (const slot of photoSlots) {
         const draft = skuPhotoDrafts[slot.role];
@@ -1359,6 +1381,7 @@ export default function AdminCatalogManager() {
       await refreshCurrentProduct(savedSku.id);
       if (photoResults.length) {
         resetPhotoDrafts();
+        setFamilyPhotoScopeDrafts({});
         resetSkuPhotoDrafts();
       }
       setStatus(photoResults.length ? `SKU и ${photoResults.length} фото сохранены` : "SKU сохранён");
@@ -1444,17 +1467,12 @@ export default function AdminCatalogManager() {
           const result = await persistPhotoDraft(slot.role, draft);
           photoStatuses.push(result);
           savedPhotoCount += 1;
-        } else if (draft.scopeTouched) {
-          const photoIndex = selectedProduct.media.findIndex(
-            (item) => item.role === slot.role || (slot.role === "connection" && item.role === "detail"),
-          );
-          if (photoIndex < 0) {
-            throw new Error(`Нельзя сохранить область: фото «${slot.title}» отсутствует`);
-          }
-          const result = await persistFamilyPhotoScope(photoIndex, draft);
-          photoStatuses.push(result);
-          savedPhotoCount += 1;
         }
+      }
+      for (const [photoKey, scope] of Object.entries(familyPhotoScopeDrafts)) {
+        const result = await persistFamilyPhotoScope(photoKey, scope);
+        photoStatuses.push(result);
+        savedPhotoCount += 1;
       }
       for (const slot of photoSlots) {
         const draft = skuPhotoDrafts[slot.role];
@@ -1480,6 +1498,7 @@ export default function AdminCatalogManager() {
         }
       }
       resetPhotoDrafts();
+      setFamilyPhotoScopeDrafts({});
       resetSkuPhotoDrafts();
       const target = photoTargetSku
         ? `SKU ${photoTargetSku.article} · ${photoTargetSku.material ?? "материал не задан"} · ` +
@@ -1523,7 +1542,7 @@ export default function AdminCatalogManager() {
     }
   }
 
-  async function deletePhoto(index: number) {
+  async function deletePhoto(photoKey: string) {
     if (!selectedProduct) {
       return;
     }
@@ -1531,10 +1550,15 @@ export default function AdminCatalogManager() {
     setStatus("Удаляю фото из карточки...");
     try {
       const product = await apiRequest<AdminProduct>(
-        `/api/v1/admin/products/${selectedProduct.id}/photos/${index}`,
+        `/api/v1/admin/products/${selectedProduct.id}/photos/${photoKey}`,
         { method: "DELETE" },
       );
       setSelectedProduct(product);
+      setFamilyPhotoScopeDrafts((current) => {
+        const next = { ...current };
+        delete next[photoKey];
+        return next;
+      });
       await loadProducts();
       setStatus("Фото убрано из карточки");
     } catch (error) {
@@ -2104,41 +2128,120 @@ export default function AdminCatalogManager() {
                 <p>Общие для семейства или ограниченные выбранными диаметрами и длинами.</p>
               </div>
               <div className={styles.photoSlots}>
-                {photoSlots.map((slot) => {
+                {photoSlots.flatMap((slot) => {
                   const draft = photoDrafts[slot.role];
-                  const existingIndex = selectedProduct.media.findIndex(
-                    (item) => item.role === slot.role || (slot.role === "connection" && item.role === "detail"),
-                  );
-                  const existing = existingIndex >= 0 ? selectedProduct.media[existingIndex] : null;
-                  const previewSrc = draft.previewUrl ?? (existing ? buildBackendUrl(existing.url) : null);
+                  const existingPhotos = selectedProduct.media
+                    .map((media, index) => ({ media, index }))
+                    .filter(
+                      ({ media }) =>
+                        media.role === slot.role || (slot.role === "connection" && media.role === "detail"),
+                    );
                   const inputId = `photo-${selectedProduct.id}-${slot.role}`;
-                  const effectiveDiameterKeys = draft.file || draft.scopeTouched
-                    ? draft.diameterKeys
-                    : existing?.diameter_keys ?? [];
-                  const effectiveLengthsMm = draft.file || draft.scopeTouched
-                    ? draft.lengthsMm
-                    : existing?.lengths_mm ?? [];
+                  const existingCards = existingPhotos.map(({ media, index }) => {
+                    const photoKey = media.media_id ?? String(index);
+                    const scopeDraft = familyPhotoScopeDrafts[photoKey];
+                    const diameterKeys = scopeDraft?.diameterKeys ?? media.diameter_keys;
+                    const lengthsMm = scopeDraft?.lengthsMm ?? media.lengths_mm;
+                    return (
+                      <article className={styles.photoSlot} key={photoKey}>
+                        <div className={styles.photoSlotHead}>
+                          <span className={styles.photoNumber}>{slot.number}</span>
+                          <span>
+                            <strong>{slot.title} · сохранено</strong>
+                            <small>{slot.hint}</small>
+                          </span>
+                          <span className={scopeDraft ? styles.pendingBadge : styles.savedBadge}>
+                            {scopeDraft ? "изменено" : "сохранено"}
+                          </span>
+                        </div>
+                        <div className={styles.photoPreview}>
+                          <img
+                            alt={media.alt || `${selectedProduct.name}, ${slot.hint}`}
+                            src={buildBackendUrl(media.url)}
+                          />
+                        </div>
+                        <div className={styles.photoSlotActions}>
+                          <button
+                            className={styles.clearButton}
+                            disabled={isBusy}
+                            onClick={() => deletePhoto(photoKey)}
+                            type="button"
+                          >
+                            Удалить
+                          </button>
+                        </div>
+                        {familyDiameterOptions.length > 0 ? (
+                          <fieldset className={styles.photoLengthScope}>
+                            <legend>Диаметры · ничего не выбрано = все</legend>
+                            <div className={styles.photoLengthOptions}>
+                              {familyDiameterOptions.map(({ key, label }) => (
+                                <label className={styles.photoLengthOption} key={key}>
+                                  <input
+                                    checked={diameterKeys.includes(key)}
+                                    onChange={(event) => updateFamilyPhotoScope(photoKey, media, {
+                                      diameterKeys: event.target.checked
+                                        ? Array.from(new Set([...diameterKeys, key])).sort((left, right) =>
+                                            left.localeCompare(right, "ru", { numeric: true }),
+                                          )
+                                        : diameterKeys.filter((value) => value !== key),
+                                    })}
+                                    type="checkbox"
+                                  />
+                                  {label}
+                                </label>
+                              ))}
+                            </div>
+                          </fieldset>
+                        ) : null}
+                        {familyLengthOptions.length > 0 ? (
+                          <fieldset className={styles.photoLengthScope}>
+                            <legend>Длины · ничего не выбрано = все</legend>
+                            <div className={styles.photoLengthOptions}>
+                              {familyLengthOptions.map((length) => (
+                                <label className={styles.photoLengthOption} key={length}>
+                                  <input
+                                    checked={lengthsMm.includes(length)}
+                                    onChange={(event) => updateFamilyPhotoScope(photoKey, media, {
+                                      lengthsMm: event.target.checked
+                                        ? Array.from(new Set([...lengthsMm, length])).sort((left, right) => left - right)
+                                        : lengthsMm.filter((value) => value !== length),
+                                    })}
+                                    type="checkbox"
+                                  />
+                                  L={length} мм
+                                </label>
+                              ))}
+                            </div>
+                          </fieldset>
+                        ) : null}
+                        <small className={styles.photoScopeHint}>
+                          Диаметры: {diameterKeys.length ? diameterKeys.join(", ") : "все"}; длины:{" "}
+                          {lengthsMm.length ? `${lengthsMm.join(", ")} мм` : "все"}.
+                        </small>
+                      </article>
+                    );
+                  });
 
-                  return (
-                    <article className={styles.photoSlot} key={slot.role}>
+                  const uploadCard = (
+                    <article className={styles.photoSlot} key={`new-${slot.role}`}>
                       <div className={styles.photoSlotHead}>
                         <span className={styles.photoNumber}>{slot.number}</span>
                         <span>
-                          <strong>{slot.title}</strong>
+                          <strong>Добавить · {slot.title}</strong>
                           <small>{slot.hint}</small>
                         </span>
-                        <span className={draft.file || draft.scopeTouched ? styles.pendingBadge : styles.savedBadge}>
-                          {draft.file ? "выбрано" : draft.scopeTouched ? "изменено" : existing ? "сохранено" : "пусто"}
+                        <span className={draft.file ? styles.pendingBadge : styles.savedBadge}>
+                          {draft.file ? "выбрано" : `${existingPhotos.length} шт.`}
                         </span>
                       </div>
 
                       <div className={styles.photoPreview}>
-                        {previewSrc ? (
-                          <img alt={draft.alt || existing?.alt || `${selectedProduct.name}, ${slot.hint}`} src={previewSrc} />
+                        {draft.previewUrl ? (
+                          <img alt={draft.alt || `${selectedProduct.name}, ${slot.hint}`} src={draft.previewUrl} />
                         ) : (
                           <div className={styles.photoPlaceholder}>
                             <ImagePlus size={24} />
-                            <span>{slot.hint}</span>
+                            <span>Новое фото: {slot.hint}</span>
                           </div>
                         )}
                       </div>
@@ -2151,21 +2254,10 @@ export default function AdminCatalogManager() {
                           onChange={(event) => selectPhoto(slot.role, event)}
                           type="file"
                         />
-                        <label className={styles.fileButton} htmlFor={inputId}>
-                          {previewSrc ? "Заменить файл" : "Выбрать файл"}
-                        </label>
+                        <label className={styles.fileButton} htmlFor={inputId}>Выбрать новый файл</label>
                         {draft.file ? (
                           <button className={styles.clearButton} onClick={() => clearPhotoDraft(slot.role)} type="button">
                             Отменить выбор
-                          </button>
-                        ) : existing ? (
-                          <button
-                            className={styles.clearButton}
-                            disabled={isBusy}
-                            onClick={() => deletePhoto(existingIndex)}
-                            type="button"
-                          >
-                            Удалить
                           </button>
                         ) : null}
                       </div>
@@ -2179,21 +2271,19 @@ export default function AdminCatalogManager() {
                         />
                       </label>
                       {familyDiameterOptions.length > 0 ? (
-                        <fieldset className={styles.photoLengthScope} disabled={!draft.file && !existing}>
+                        <fieldset className={styles.photoLengthScope} disabled={!draft.file}>
                           <legend>Диаметры · ничего не выбрано = все</legend>
                           <div className={styles.photoLengthOptions}>
                             {familyDiameterOptions.map(({ key, label }) => (
                               <label className={styles.photoLengthOption} key={key}>
                                 <input
-                                  checked={effectiveDiameterKeys.includes(key)}
+                                  checked={draft.diameterKeys.includes(key)}
                                   onChange={(event) => updatePhotoDraft(slot.role, {
                                     diameterKeys: event.target.checked
-                                      ? Array.from(new Set([...effectiveDiameterKeys, key])).sort((left, right) =>
+                                      ? Array.from(new Set([...draft.diameterKeys, key])).sort((left, right) =>
                                           left.localeCompare(right, "ru", { numeric: true }),
                                         )
-                                      : effectiveDiameterKeys.filter((value) => value !== key),
-                                    lengthsMm: effectiveLengthsMm,
-                                    scopeTouched: true,
+                                      : draft.diameterKeys.filter((value) => value !== key),
                                   })}
                                   type="checkbox"
                                 />
@@ -2204,21 +2294,17 @@ export default function AdminCatalogManager() {
                         </fieldset>
                       ) : null}
                       {familyLengthOptions.length > 0 ? (
-                        <fieldset className={styles.photoLengthScope} disabled={!draft.file && !existing}>
+                        <fieldset className={styles.photoLengthScope} disabled={!draft.file}>
                           <legend>Длины · ничего не выбрано = все</legend>
                           <div className={styles.photoLengthOptions}>
                             {familyLengthOptions.map((length) => (
                               <label className={styles.photoLengthOption} key={length}>
                                 <input
-                                  checked={effectiveLengthsMm.includes(length)}
+                                  checked={draft.lengthsMm.includes(length)}
                                   onChange={(event) => updatePhotoDraft(slot.role, {
                                     lengthsMm: event.target.checked
-                                      ? Array.from(new Set([...effectiveLengthsMm, length])).sort(
-                                          (left, right) => left - right,
-                                        )
-                                      : effectiveLengthsMm.filter((value) => value !== length),
-                                    diameterKeys: effectiveDiameterKeys,
-                                    scopeTouched: true,
+                                      ? Array.from(new Set([...draft.lengthsMm, length])).sort((left, right) => left - right)
+                                      : draft.lengthsMm.filter((value) => value !== length),
                                   })}
                                   type="checkbox"
                                 />
@@ -2228,15 +2314,10 @@ export default function AdminCatalogManager() {
                           </div>
                         </fieldset>
                       ) : null}
-                      {!draft.file && existing && !draft.scopeTouched ? (
-                        <small className={styles.photoScopeHint}>
-                          Сохранено: диаметры {existing.diameter_keys.length ? existing.diameter_keys.join(", ") : "все"};
-                          {" "}длины {existing.lengths_mm.length ? `${existing.lengths_mm.join(", ")} мм` : "все"}.
-                        </small>
-                      ) : null}
                       {draft.file ? <span className={styles.fileName}>{draft.file.name}</span> : null}
                     </article>
                   );
+                  return [...existingCards, uploadCard];
                 })}
                 {hasConeTerminationScheme ? (
                   <article className={`${styles.photoSlot} ${styles.schemeSlot}`}>

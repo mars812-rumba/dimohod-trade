@@ -7,6 +7,7 @@ from app.db.session import get_db
 from app.modules.admin.schemas import (
     AdminCategoryRead,
     AdminMediaItem,
+    AdminPhotoScopeUpdate,
     AdminPhotoUpload,
     AdminProductListResponse,
     AdminProductRead,
@@ -36,6 +37,7 @@ from app.modules.admin.service import (
     product_to_admin_read,
     update_sku,
     update_product,
+    update_product_photo_scope,
 )
 
 router = APIRouter()
@@ -224,10 +226,26 @@ async def upload_admin_product_photo_file(
     )
 
 
-@router.delete("/products/{product_id}/photos/{photo_index}", response_model=AdminProductRead)
-async def delete_admin_product_photo(
+@router.patch("/products/{product_id}/photos/{photo_key}", response_model=AdminProductRead)
+async def update_admin_product_photo_scope(
     product_id: UUID,
-    photo_index: int,
+    photo_key: str,
+    payload: AdminPhotoScopeUpdate,
     session: AsyncSession = Depends(get_db),
 ) -> AdminProductRead:
-    return await delete_product_photo(session, product_id, photo_index)
+    return await update_product_photo_scope(
+        session,
+        product_id,
+        photo_key,
+        diameter_keys=payload.diameter_keys,
+        lengths_mm=payload.lengths_mm,
+    )
+
+
+@router.delete("/products/{product_id}/photos/{photo_key}", response_model=AdminProductRead)
+async def delete_admin_product_photo(
+    product_id: UUID,
+    photo_key: str,
+    session: AsyncSession = Depends(get_db),
+) -> AdminProductRead:
+    return await delete_product_photo(session, product_id, photo_key)

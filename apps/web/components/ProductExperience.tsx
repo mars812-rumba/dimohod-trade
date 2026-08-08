@@ -736,6 +736,10 @@ function familyPhotoAppliesToSku(
   );
 }
 
+function familyPhotoSpecificity(photo: ProductPhotoItem) {
+  return Number(photo.diameterKeys.length > 0) + Number(photo.lengthsMm.length > 0);
+}
+
 function sharedProductMediaByRole(
   product: Product,
   activeSku: Product["skus"][number] | null,
@@ -753,7 +757,10 @@ function sharedProductMediaByRole(
     }
     const photo = photoFromValue(value, role, `${product.name} — ${mediaRoleLabel(role).toLocaleLowerCase("ru-RU")}`);
     if (photo && familyPhotoAppliesToSku(photo, activeSku)) {
-      result[role] = photo;
+      const current = result[role];
+      if (!current || familyPhotoSpecificity(photo) >= familyPhotoSpecificity(current)) {
+        result[role] = photo;
+      }
     }
     return result;
   }, {});

@@ -80,10 +80,16 @@ def primary_product_image(
     ]
     if not applicable_media:
         return None
-    value = next((item for item in applicable_media if item.get("role") == "general"), None)
+    general_media = [item for item in applicable_media if item.get("role") == "general"]
+    value = max(
+        enumerate(general_media),
+        key=lambda pair: (product_image_specificity(pair[1]), pair[0]),
+        default=(0, None),
+    )[1]
     if value is None:
         return None
     return ProductMediaItem(
+        media_id=value.get("media_id") if isinstance(value.get("media_id"), str) else None,
         url=value["url"],
         alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
         role=value.get("role") if isinstance(value.get("role"), str) else None,
@@ -110,6 +116,7 @@ def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem 
         )
         if value is not None:
             return ProductMediaItem(
+                media_id=value.get("media_id") if isinstance(value.get("media_id"), str) else None,
                 url=value["url"],
                 alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
                 role=value.get("role") if isinstance(value.get("role"), str) else "general",
@@ -124,6 +131,7 @@ def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem 
     legacy = values.get("sku_photo")
     if isinstance(legacy, dict) and isinstance(legacy.get("url"), str):
         return ProductMediaItem(
+            media_id=legacy.get("media_id") if isinstance(legacy.get("media_id"), str) else None,
             url=legacy["url"],
             alt=legacy.get("alt") if isinstance(legacy.get("alt"), str) else None,
             role="general",
@@ -177,6 +185,12 @@ def product_image_applies_to_sku(image: dict[str, object], target_sku: SKU | Non
     return (
         (not diameter_keys or sku_diameter_key(target_sku) in diameter_keys)
         and (not lengths or target_sku.length_mm in lengths)
+    )
+
+
+def product_image_specificity(image: dict[str, object]) -> int:
+    return int(bool(media_diameter_keys(image.get("diameter_keys")))) + int(
+        bool(media_lengths(image.get("lengths_mm")))
     )
 
 

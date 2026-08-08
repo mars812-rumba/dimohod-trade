@@ -16,6 +16,7 @@ class CategorySummary(BaseModel):
 
 
 class ProductMediaItem(BaseModel):
+    media_id: str | None = None
     url: str
     alt: str | None = None
     role: str | None = None

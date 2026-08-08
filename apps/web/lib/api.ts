@@ -10,6 +10,7 @@ export type CategoryNode = {
 };
 
 export type MediaItem = {
+  media_id?: string | null;
   url: string;
   alt: string | null;
   role: string | null;

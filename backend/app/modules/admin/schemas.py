@@ -18,12 +18,15 @@ class AdminCategoryRead(BaseModel):
 
 
 class AdminMediaItem(BaseModel):
+    media_id: str | None = None
     url: str
     alt: str | None = None
     role: str | None = None
     file_name: str | None = None
     diameter_specific: bool = False
+    diameter_keys: list[str] = Field(default_factory=list)
     lengths_mm: list[int] = Field(default_factory=list)
+    sku_specific: bool = False
 
 
 class AdminSKURead(BaseModel):
@@ -205,4 +208,11 @@ class AdminPhotoUpload(BaseModel):
     alt: str | None = Field(default=None, max_length=240)
     role: str | None = Field(default=None, max_length=60)
     diameter_specific: bool = False
+    diameter_keys: list[str] = Field(default_factory=list)
+    lengths_mm: list[int] = Field(default_factory=list)
+    sku_specific: bool = False
+
+
+class AdminPhotoScopeUpdate(BaseModel):
+    diameter_keys: list[str] = Field(default_factory=list)
     lengths_mm: list[int] = Field(default_factory=list)
