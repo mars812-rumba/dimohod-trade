@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { Phone, Search, ShoppingCart } from "lucide-react";
 import { InstallAppButton } from "../components/InstallAppButton";
 import "./globals.css";
@@ -30,6 +31,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
+      <Script id="pwa-install-bootstrap" strategy="beforeInteractive">
+        {`
+          (function () {
+            window.addEventListener("beforeinstallprompt", function (event) {
+              event.preventDefault();
+              window.__dimohodInstallPrompt = event;
+              window.dispatchEvent(new Event("dimohod:pwa-install-ready"));
+            });
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.register(${JSON.stringify(`${basePath}/sw.js`)}).catch(function () {});
+            }
+          })();
+        `}
+      </Script>
       <body>
         <header className="site-header">
           <Link href="/" className="brand" aria-label="Dimohod Trade">
@@ -48,7 +63,7 @@ export default function RootLayout({
             <Link href="/catalog?scenario=gaz">Для газа</Link>
           </nav>
           <div className="header-right">
-            <InstallAppButton basePath={basePath} />
+            <InstallAppButton />
             <a href="tel:+79650756555" className="header-phone">
               <Phone size={15} /> +7 (965) 075-65-55
             </a>

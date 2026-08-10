@@ -508,21 +508,6 @@ ul {
   outline-offset: 2px;
 }
 
-.install-app-help {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  width: min(280px, calc(100vw - 32px));
-  padding: 11px 13px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  color: var(--text);
-  background: var(--surface);
-  box-shadow: 0 12px 32px rgba(16, 33, 39, 0.2);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
 .header-phone {
   display: flex;
   align-items: center;
