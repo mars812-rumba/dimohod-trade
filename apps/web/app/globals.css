@@ -5800,13 +5800,17 @@ ul {
 }
 
 .catalog-page .catalog-category-media img {
+  box-sizing: border-box;
+  padding: 10px;
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
   filter: saturate(0.84) contrast(1.02);
-  transition: transform 240ms ease, filter 240ms ease;
+  transition: filter 160ms ease;
 }
 
 .catalog-page .catalog-category-card:hover .catalog-category-media img {
   filter: saturate(1) contrast(1.03);
-  transform: scale(1.025);
 }
 
 .catalog-page .catalog-category-body {
@@ -5815,17 +5819,11 @@ ul {
 
 .catalog-page .catalog-category-body h2 {
   max-width: 720px;
-  font-size: clamp(27px, 3vw, 38px);
-  font-weight: 650;
-  line-height: 1;
+  font-size: clamp(24px, 2.7vw, 34px);
+  font-weight: 500;
+  line-height: 1.04;
   letter-spacing: -0.025em;
-}
-
-.catalog-page .catalog-category-body > p:not(.meta) {
-  max-width: 66ch;
-  margin-top: 12px;
-  font-size: 13px;
-  line-height: 1.55;
+  text-wrap: balance;
 }
 
 .catalog-page .catalog-category-facts {
@@ -5849,7 +5847,7 @@ ul {
   color: #667980;
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-size: 9px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.045em;
   text-transform: uppercase;
 }
@@ -5864,8 +5862,9 @@ ul {
   margin: 0;
   color: var(--catalog-steel-deep);
   font-size: 12px;
-  font-weight: 450;
+  font-weight: 400;
   line-height: 1.35;
+  text-wrap: pretty;
 }
 
 .catalog-page .catalog-category-link {
@@ -5874,7 +5873,7 @@ ul {
   color: var(--catalog-steel);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-size: 10px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -6147,11 +6146,11 @@ ul {
   }
 
   .catalog-page .catalog-category-body {
-    padding: 16px;
+    padding: 14px;
   }
 
   .catalog-page .catalog-category-body h2 {
-    font-size: clamp(19px, 6vw, 27px);
+    font-size: clamp(18px, 5.3vw, 24px);
   }
 
   .catalog-page .catalog-category-facts {
@@ -6169,7 +6168,7 @@ ul {
   }
 
   .catalog-page .catalog-category-facts dd {
-    font-size: 11px;
+    font-size: 10.5px;
   }
 
   .catalog-page .catalog-category-link {

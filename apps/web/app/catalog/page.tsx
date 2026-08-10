@@ -61,7 +61,6 @@ function CategoryCard({ category }: { category: CategoryNode }) {
       </div>
       <div className="catalog-category-body">
         <h2>{category.name}</h2>
-        {category.description ? <p>{category.description}</p> : null}
         {facts.length ? (
           <dl className="catalog-category-facts">
             {facts.map((fact) => {
