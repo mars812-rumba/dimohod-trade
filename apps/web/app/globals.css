@@ -5816,7 +5816,7 @@ ul {
 .catalog-page .catalog-category-body h2 {
   max-width: 720px;
   font-size: clamp(27px, 3vw, 38px);
-  font-weight: 780;
+  font-weight: 650;
   line-height: 1;
   letter-spacing: -0.025em;
 }
@@ -5843,12 +5843,20 @@ ul {
 }
 
 .catalog-page .catalog-category-facts dt {
+  display: flex;
+  gap: 6px;
+  align-items: center;
   color: #667980;
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.045em;
   text-transform: uppercase;
+}
+
+.catalog-page .catalog-category-facts dt svg {
+  flex: 0 0 auto;
+  color: var(--catalog-signal);
 }
 
 .catalog-page .catalog-category-facts dd {
@@ -5856,7 +5864,7 @@ ul {
   margin: 0;
   color: var(--catalog-steel-deep);
   font-size: 12px;
-  font-weight: 680;
+  font-weight: 450;
   line-height: 1.35;
 }
 
@@ -5866,7 +5874,7 @@ ul {
   color: var(--catalog-steel);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Boxes, Layers3, Ruler, type LucideIcon } from "lucide-react";
 import { getCatalogTree, type CategoryNode } from "@/lib/api";
 
 // The backend is not reachable from the isolated Next.js image build. Render the
@@ -31,18 +31,21 @@ function CategoryCard({ category }: { category: CategoryNode }) {
   const steelGrades = category.steel_grades ?? [];
   const facts = [
     productNames.length
-      ? { label: "Изделия", value: compactList(productNames) }
+      ? { icon: Boxes, label: "Изделия", value: compactList(productNames) }
       : null,
     standardLengths.length
       ? {
+          icon: Ruler,
           label: "Стандартная длина",
           value: `${standardLengths.join(" / ")} мм`,
         }
       : null,
     steelGrades.length
-      ? { label: "Марка стали", value: steelGrades.join(" / ") }
+      ? { icon: Layers3, label: "Марка стали", value: steelGrades.join(" / ") }
       : null,
-  ].filter((fact): fact is { label: string; value: string } => fact !== null);
+  ].filter(
+    (fact): fact is { icon: LucideIcon; label: string; value: string } => fact !== null,
+  );
 
   return (
     <Link className="catalog-category-card" href={`/catalog/${category.slug}`}>
@@ -61,12 +64,18 @@ function CategoryCard({ category }: { category: CategoryNode }) {
         {category.description ? <p>{category.description}</p> : null}
         {facts.length ? (
           <dl className="catalog-category-facts">
-            {facts.map((fact) => (
-              <div key={fact.label}>
-                <dt>{fact.label}</dt>
-                <dd>{fact.value}</dd>
-              </div>
-            ))}
+            {facts.map((fact) => {
+              const Icon = fact.icon;
+              return (
+                <div key={fact.label}>
+                  <dt>
+                    <Icon size={14} strokeWidth={1.65} aria-hidden />
+                    <span>{fact.label}</span>
+                  </dt>
+                  <dd>{fact.value}</dd>
+                </div>
+              );
+            })}
           </dl>
         ) : null}
         <span className="catalog-category-link">
