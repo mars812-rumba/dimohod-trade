@@ -19,7 +19,31 @@ function leafCategories(categories: CategoryNode[]): CategoryNode[] {
   );
 }
 
+function compactList(values: string[], limit = 3) {
+  const visible = values.slice(0, limit);
+  const remaining = values.length - visible.length;
+  return `${visible.join(", ")}${remaining > 0 ? ` · ещё ${remaining}` : ""}`;
+}
+
 function CategoryCard({ category }: { category: CategoryNode }) {
+  const productNames = category.product_names ?? [];
+  const standardLengths = category.standard_lengths_mm ?? [];
+  const steelGrades = category.steel_grades ?? [];
+  const facts = [
+    productNames.length
+      ? { label: "Изделия", value: compactList(productNames) }
+      : null,
+    standardLengths.length
+      ? {
+          label: "Стандартная длина",
+          value: `${standardLengths.join(" / ")} мм`,
+        }
+      : null,
+    steelGrades.length
+      ? { label: "Марка стали", value: steelGrades.join(" / ") }
+      : null,
+  ].filter((fact): fact is { label: string; value: string } => fact !== null);
+
   return (
     <Link className="catalog-category-card" href={`/catalog/${category.slug}`}>
       <div className="catalog-category-media">
@@ -35,6 +59,16 @@ function CategoryCard({ category }: { category: CategoryNode }) {
       <div className="catalog-category-body">
         <h2>{category.name}</h2>
         {category.description ? <p>{category.description}</p> : null}
+        {facts.length ? (
+          <dl className="catalog-category-facts">
+            {facts.map((fact) => (
+              <div key={fact.label}>
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
         <span className="catalog-category-link">
           Смотреть изделия <ArrowRight size={15} />
         </span>

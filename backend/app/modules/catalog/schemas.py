@@ -17,6 +17,9 @@ class CategoryTreeNode(BaseModel):
     description: str | None = None
     sort_order: int = 0
     cover: CatalogMediaItem | None = None
+    product_names: list[str] = Field(default_factory=list)
+    standard_lengths_mm: list[int] = Field(default_factory=list)
+    steel_grades: list[str] = Field(default_factory=list)
     children: list["CategoryTreeNode"] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

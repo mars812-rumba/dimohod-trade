@@ -6,11 +6,15 @@ export type CategoryNode = {
   description: string | null;
   sort_order: number;
   cover: MediaItem | null;
+  product_names: string[];
+  standard_lengths_mm: number[];
+  steel_grades: string[];
   children: CategoryNode[];
 };
 
 export type MediaItem = {
   media_id?: string | null;
+  scope?: "family" | "variant" | "sku" | null;
   url: string;
   alt: string | null;
   role: string | null;
