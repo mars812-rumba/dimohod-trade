@@ -470,6 +470,51 @@ ul {
   margin-left: auto;
 }
 
+.install-app {
+  position: relative;
+}
+
+.install-app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.install-app-button:hover {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.install-app-button:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.55);
+  outline-offset: 2px;
+}
+
+.install-app-help {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(280px, calc(100vw - 32px));
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(16, 33, 39, 0.2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .header-phone {
   display: flex;
   align-items: center;
@@ -1548,6 +1593,58 @@ ul {
   display: grid;
   grid-template-columns: minmax(280px, 0.95fr) minmax(260px, 0.78fr) minmax(300px, 0.95fr);
   min-height: 560px;
+}
+
+.configurator-text-field { display: grid; gap: 9px; }
+.configurator-text-field input,
+.lead-form input,
+.lead-form textarea {
+  width: 100%;
+  border: 1px solid #c8d2d5;
+  border-radius: 3px;
+  background: #fff;
+  color: #102127;
+  font: inherit;
+}
+.configurator-text-field input { min-height: 44px; padding: 0 12px; }
+.configurator-result-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 22px 26px; border-top: 1px solid #ccd5d7; background: #f4f6f5; }
+.configurator-result-actions > div { display: grid; gap: 3px; margin-right: auto; }
+.configurator-result-actions > div span { color: #607075; font-size: 12px; }
+.configurator-result-actions button,
+.configurator-result-actions a,
+.lead-form button { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border: 0; border-radius: 3px; color: #fff; background: #ed5b2a; font-weight: 760; cursor: pointer; }
+.configurator-result-actions a { color: #173d4c; border: 1px solid #ccd5d7; background: #fff; }
+.configurator-lead { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 28px; padding: 28px; border-top: 1px solid #ccd5d7; background: #fff; }
+.configurator-lead aside { display: flex; flex-direction: column; gap: 10px; padding: 22px; color: #fff; background: #173d4c; }
+.configurator-lead aside a { color: #fff; font-size: 20px; font-weight: 800; }
+.configurator-lead aside span { margin-top: auto; color: #b7c7cc; font-size: 11px; line-height: 1.6; }
+
+.lead-form { display: grid; gap: 15px; color: #102127; }
+.lead-form h3 { margin: 0 0 4px; font-size: 24px; }
+.lead-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.lead-form label { display: grid; gap: 7px; }
+.lead-form label > span { font-size: 12px; font-weight: 760; }
+.lead-form input { min-height: 44px; padding: 0 12px; }
+.lead-form textarea { resize: vertical; padding: 11px 12px; }
+.lead-form-footer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+.lead-file { position: relative; display: flex !important; flex-direction: row; gap: 7px !important; align-items: center; min-height: 44px; padding: 0 13px; border: 1px dashed #91a4aa; cursor: pointer; }
+.lead-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.lead-form-note { color: #68797e; font-size: 10px; line-height: 1.5; }
+.lead-form-error { margin: 0; color: #bd3d16; font-size: 12px; }
+.lead-form-success { display: flex; gap: 12px; align-items: flex-start; padding: 24px; color: #173d4c; background: #e7f1eb; }
+.lead-form-success div { display: grid; gap: 4px; }
+.lead-form-success span { font-size: 12px; }
+.contactCard .lead-form { padding: 24px; background: #f4f6f5; }
+
+@media (max-width: 900px) {
+  .configurator-lead { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  .lead-form-grid { grid-template-columns: 1fr; }
+  .configurator-result-actions button,
+  .configurator-result-actions a { width: 100%; }
+  .configurator-lead { padding: 18px; }
 }
 
 .configurator-controls,
@@ -3647,6 +3744,15 @@ ul {
 
   .header-phone {
     display: none;
+  }
+
+  .install-app-label {
+    display: none;
+  }
+
+  .install-app-button {
+    width: 38px;
+    padding: 0;
   }
 
   .page {
