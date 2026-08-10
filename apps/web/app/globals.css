@@ -418,6 +418,14 @@ ul {
   color: #fff;
 }
 
+.brand-logo {
+  display: block;
+  width: 112px;
+  height: 51px;
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+
 .brand-mark {
   width: 38px;
   height: 38px;
@@ -3744,6 +3752,11 @@ ul {
 
   .header-phone {
     display: none;
+  }
+
+  .brand-logo {
+    width: 102px;
+    height: 46px;
   }
 
   .install-app-label {

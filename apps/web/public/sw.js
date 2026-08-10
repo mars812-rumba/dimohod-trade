@@ -1,6 +1,6 @@
 const CACHE_NAME = "dimohod-trade-shell-v1";
 const APP_ASSETS = [
-  "brand/logo-mark.svg",
+  "brand/logo-original.jpg",
   "brand/app-icon-192.png",
   "brand/app-icon-512.png",
   "brand/apple-touch-icon.png",

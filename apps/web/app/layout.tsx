@@ -13,7 +13,6 @@ export const metadata: Metadata = {
   manifest: `${basePath}/manifest.webmanifest`,
   icons: {
     icon: [
-      { url: `${basePath}/brand/logo-mark.svg`, type: "image/svg+xml" },
       { url: `${basePath}/brand/app-icon-192.png`, sizes: "192x192", type: "image/png" },
     ],
     apple: [{ url: `${basePath}/brand/apple-touch-icon.png`, sizes: "180x180", type: "image/png" }],
@@ -34,13 +33,13 @@ export default function RootLayout({
       <body>
         <header className="site-header">
           <Link href="/" className="brand" aria-label="Dimohod Trade">
-            <span className="brand-mark">
-              <img alt="" height="38" src={`${basePath}/brand/logo-mark.svg`} width="38" />
-            </span>
-            <span className="brand-name">
-              <span className="brand-name-top">Дымоход Трейд</span>
-              <span className="brand-name-sub">системы дымоходов</span>
-            </span>
+            <img
+              alt=""
+              className="brand-logo"
+              height="51"
+              src={`${basePath}/brand/logo-original.jpg`}
+              width="112"
+            />
           </Link>
           <nav className="top-nav" aria-label="Основная навигация">
             <Link href="/catalog">Каталог</Link>
