@@ -19,6 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
+import { LeadForm } from "../components/LeadForm";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -56,6 +57,27 @@ const scenarios = [
     text: "Диаметр по паспорту котла, герметичность и проверка стали под конденсат.",
     image: "/images/home/scenario-gaz.webp",
   },
+  {
+    icon: Wrench,
+    slug: "gilzovanie",
+    title: "Гильзование",
+    text: "Подбор элементов для существующего кирпичного канала и доступ к ревизии.",
+    image: "/images/home/scenario-gilzovanie.webp",
+  },
+  {
+    icon: Home,
+    slug: "dacha",
+    title: "Дача или коммерческая баня",
+    text: "Схема с учётом режима использования объекта и фактической трассы.",
+    image: "/images/home/scenario-banya.webp",
+  },
+];
+
+const faq = [
+  ["Можно ли заказать комплект только по фото?", "Фото помогает начать подбор, но обычно нужны модель печи, диаметр патрубка, высота и места прохода через конструкции. Если данных не хватит, инженер перечислит, что уточнить."],
+  ["Конфигуратор сразу показывает окончательный комплект?", "Нет. Это бета-версия для черновой схемы. Перед заказом специалист проверяет диаметр, сталь, узлы прохода и конкретные позиции."],
+  ["Почему в черновой смете нет цены?", "Сначала нужно подтвердить совместимость и исполнение деталей. После проверки состав можно связать с конкретными SKU и актуальными ценами."],
+  ["Можно прислать готовый план или свою смету?", "Да. Прикрепите PDF или изображение к форме — мы сверим маршрут и отметим недостающие данные."],
 ];
 
 const route = [
@@ -112,20 +134,17 @@ export default function HomePage() {
                 Санкт-Петербург · доставка по России
               </p>
               <h1>
-                Дымоход —
-                <span> это система,</span>
-                а не набор труб.
+                Дымоход под <span>ваш отопитель.</span>
               </h1>
               <p className={styles.heroLead}>
-                Конфигуратор сам проверит совместимость узлов и найдёт холодные зоны — вам
-                останется нажать «собрать».
+                Подберём комплект по вашей трассе и параметрам отопителя.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#calculator">
-                  Подобрать безопасный комплект <ArrowRight size={18} />
+                  Подобрать дымоход <ArrowRight size={18} />
                 </a>
                 <Link className={styles.secondaryButton} href="/catalog">
-                  <ShoppingBag size={17} /> Открыть каталог
+                  <ShoppingBag size={17} /> Смотреть каталог
                 </Link>
               </div>
               <dl className={styles.proof}>
@@ -287,9 +306,31 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className={styles.trustSection}>
+        <div className={styles.shell}>
+          <div className={styles.sectionHeading}>
+            <div><p className={styles.overline}>Документы и ответственность</p><h2>Проверяем комплект до оплаты.</h2></div>
+            <p>Не обещаем совместимость без исходных данных. Для выбранных позиций инженер уточнит доступные паспорта, документы и условия гарантии производителя.</p>
+          </div>
+          <div className={styles.trustGrid}>
+            <article><FileCheck2 size={24} /><strong>Паспорта и сертификаты</strong><span>Уточняем комплект документов для конкретных выбранных изделий.</span></article>
+            <article><ShieldCheck size={24} /><strong>Гарантия без общих обещаний</strong><span>Условия зависят от производителя и позиции — фиксируем их в предложении.</span></article>
+            <article><Wrench size={24} /><strong>Инженерная проверка</strong><span>Черновой расчёт не становится заказом, пока специалист не проверит исходные данные.</span></article>
+          </div>
+          <div className={styles.companyLine}><MapPin size={16} /><span>Санкт-Петербург, ул. Хрустальная, 11Б</span><FileCheck2 size={16} /><span>ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span></div>
+        </div>
+      </section>
+
+      <section className={styles.faqSection}>
+        <div className={styles.shell}>
+          <div className={styles.sectionHeading}><div><p className={styles.overline}>Коротко о подборе</p><h2>Частые вопросы.</h2></div><p>Ответы о черновом расчёте, материалах и проверке комплекта.</p></div>
+          <div className={styles.faqList}>{faq.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div>
+        </div>
+      </section>
+
       <section className={styles.contactSection}>
         <div className={styles.shell}>
-          <div className={styles.contactCard}>
+          <div className={styles.contactCard} id="send-materials">
             <div className={styles.contactMark}>
               <Ruler size={30} />
               <Wrench size={28} />
@@ -302,14 +343,8 @@ export default function HomePage() {
                 скажем, что именно нужно уточнить.
               </p>
             </div>
-            <div className={styles.contactActions}>
-              <a href="tel:+79650756555" className={styles.primaryButton}>
-                <Phone size={17} /> +7 (965) 075-65-55
-              </a>
-              <a href="mailto:office@dimohod-trade.ru" className={styles.contactMail}>
-                <Mail size={17} /> office@dimohod-trade.ru
-              </a>
-            </div>
+            <LeadForm source="homepage-materials" compact />
+            <div className={styles.contactAlternatives}><a href="tel:+79650756555"><Phone size={16} /> +7 (965) 075-65-55</a><a href="mailto:info@dimohod-trade.pro"><Mail size={16} /> info@dimohod-trade.pro</a></div>
           </div>
         </div>
       </section>
