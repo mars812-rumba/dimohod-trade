@@ -29,6 +29,7 @@ type AdminProductListItem = {
 
 type AdminMediaItem = {
   media_id: string | null;
+  scope: "family" | "variant" | "sku" | null;
   url: string;
   alt: string | null;
   role: string | null;
@@ -151,6 +152,7 @@ type PhotoDraft = {
   diameterKeys: string[];
   lengthsMm: number[];
   scopeTouched: boolean;
+  skuSpecific: boolean;
 };
 
 type FamilyPhotoScopeDraft = {
@@ -183,14 +185,14 @@ const photoSlots: Array<{ role: PhotoRole; number: string; title: string; hint: 
 
 function createEmptyPhotoDrafts(): Record<PhotoRole, PhotoDraft> {
   return {
-    general: { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false },
-    top: { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false },
-    connection: { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false },
+    general: { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false, skuSpecific: false },
+    top: { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false, skuSpecific: false },
+    connection: { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false, skuSpecific: false },
   };
 }
 
 function createEmptyPhotoDraft(): PhotoDraft {
-  return { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false };
+  return { file: null, previewUrl: null, alt: "", diameterSpecific: false, diameterKeys: [], lengthsMm: [], scopeTouched: false, skuSpecific: false };
 }
 
 function mediaItemFromValue(value: unknown): AdminMediaItem | null {
@@ -199,6 +201,10 @@ function mediaItemFromValue(value: unknown): AdminMediaItem | null {
   }
   return {
     media_id: "media_id" in value && typeof value.media_id === "string" ? value.media_id : null,
+    scope:
+      "scope" in value && (value.scope === "family" || value.scope === "variant" || value.scope === "sku")
+        ? value.scope
+        : null,
     url: value.url,
     alt: "alt" in value && typeof value.alt === "string" ? value.alt : null,
     role: "role" in value && typeof value.role === "string" ? value.role : null,
@@ -302,6 +308,16 @@ function familyMediaAppliesToSku(media: AdminMediaItem, sku: AdminSKU | null) {
     (!media.diameter_keys.length || (diameterKey !== null && media.diameter_keys.includes(diameterKey))) &&
     (!media.lengths_mm.length || (sku.length_mm !== null && media.lengths_mm.includes(sku.length_mm)))
   );
+}
+
+function inferredMediaScope(media: AdminMediaItem): "family" | "variant" | "sku" {
+  if (media.scope) {
+    return media.scope;
+  }
+  if (media.sku_specific) {
+    return "sku";
+  }
+  return media.diameter_keys.length || media.lengths_mm.length ? "variant" : "family";
 }
 
 function visualSkuMediaByRole(
@@ -675,11 +691,39 @@ export default function AdminCatalogManager() {
     () => skuMediaByRole(selectedSku?.attributes),
     [selectedSku],
   );
+  const familyMedia = useMemo(() => {
+    const rawMedia = Array.isArray(selectedProduct?.extra_attributes.media)
+      ? selectedProduct.extra_attributes.media.flatMap((value) => {
+          const media = mediaItemFromValue(value);
+          return media ? [media] : [];
+        })
+      : [];
+    const merged = new Map<string, AdminMediaItem>();
+    [...(selectedProduct?.media ?? []), ...rawMedia].forEach((media) => {
+      const normalized = { ...media, scope: inferredMediaScope(media) };
+      merged.set(
+        media.media_id ?? `${normalized.scope}:${media.role ?? "photo"}:${media.url}`,
+        normalized,
+      );
+    });
+    return Array.from(merged.values());
+  }, [selectedProduct?.extra_attributes.media, selectedProduct?.media]);
   const selectedFamilyMedia = useMemo(
     () => mediaByRole(
-      (selectedProduct?.media ?? []).filter((media) => familyMediaAppliesToSku(media, selectedSku)),
+      familyMedia.filter(
+        (media) =>
+          inferredMediaScope(media) !== "sku" && familyMediaAppliesToSku(media, selectedSku),
+      ),
     ),
-    [selectedProduct?.media, selectedSku],
+    [familyMedia, selectedSku],
+  );
+  const baseFamilyMedia = useMemo(
+    () => mediaByRole(familyMedia.filter((media) => inferredMediaScope(media) === "family")),
+    [familyMedia],
+  );
+  const storedVariantMedia = useMemo(
+    () => mediaByRole(familyMedia.filter((media) => inferredMediaScope(media) === "variant")),
+    [familyMedia],
   );
   const familyDiameterOptions = useMemo(() => {
     const options = new Map<string, string>();
@@ -1064,10 +1108,13 @@ export default function AdminCatalogManager() {
     updateSkuPhotoDraft(role, {
       file,
       previewUrl: file ? URL.createObjectURL(file) : null,
-      diameterSpecific: false,
-      diameterKeys: [],
-      lengthsMm: [],
+      diameterSpecific: Boolean(selectedSku && skuDiameterKey(selectedSku)),
+      diameterKeys: file && selectedSku && skuDiameterKey(selectedSku) ? [skuDiameterKey(selectedSku) as string] : [],
+      lengthsMm: file && selectedSku?.length_mm !== null && selectedSku?.length_mm !== undefined
+        ? [selectedSku.length_mm]
+        : [],
       scopeTouched: false,
+      skuSpecific: false,
     });
     event.target.value = "";
   }
@@ -1083,12 +1130,20 @@ export default function AdminCatalogManager() {
       diameterSpecific: false,
       diameterKeys: [],
       lengthsMm: [],
+      skuSpecific: false,
     });
   }
 
-  async function persistPhotoDraft(role: PhotoRole, draft: PhotoDraft) {
+  async function persistPhotoDraft(
+    role: PhotoRole,
+    draft: PhotoDraft,
+    scope: "family" | "variant" = "family",
+  ) {
     if (!selectedProduct || !draft.file) {
       throw new Error("Фото не выбрано");
+    }
+    if (scope === "variant" && !draft.diameterKeys.length && !draft.lengthsMm.length) {
+      throw new Error("Для фото варианта выберите диаметр или длину либо включите «Только для выбранного SKU»");
     }
 
     const contentBase64 = await fileToBase64(draft.file);
@@ -1100,8 +1155,9 @@ export default function AdminCatalogManager() {
           file_name: draft.file.name,
           content_base64: contentBase64,
           role,
-          diameter_keys: draft.diameterKeys,
-          lengths_mm: draft.lengthsMm,
+          scope,
+          diameter_keys: scope === "variant" ? draft.diameterKeys : [],
+          lengths_mm: scope === "variant" ? draft.lengthsMm : [],
           alt:
             textOrNull(draft.alt) ??
             `${selectedProduct.name} — ${photoSlots
@@ -1373,9 +1429,11 @@ export default function AdminCatalogManager() {
       for (const slot of photoSlots) {
         const draft = skuPhotoDrafts[slot.role];
         if (draft.file) {
-          const result = await persistSkuPhoto(savedSku, slot.role, draft);
+          const result = draft.skuSpecific
+            ? await persistSkuPhoto(savedSku, slot.role, draft)
+            : await persistPhotoDraft(slot.role, draft, "variant");
           photoResults.push(result);
-          savedPhotos.push(`SKU · ${slot.hint}`);
+          savedPhotos.push(`${draft.skuSpecific ? "SKU" : "Диаметр/длина"} · ${slot.hint}`);
         }
       }
       await refreshCurrentProduct(savedSku.id);
@@ -1482,9 +1540,14 @@ export default function AdminCatalogManager() {
         if (!photoTargetSku) {
           throw new Error("Выберите SKU перед загрузкой его фотографий");
         }
-        const result = await persistSkuPhoto(photoTargetSku, slot.role, draft);
-        photoStatuses.push(result);
-        savedSkuPhotos.push(result);
+        if (draft.skuSpecific) {
+          const result = await persistSkuPhoto(photoTargetSku, slot.role, draft);
+          photoStatuses.push(result);
+          savedSkuPhotos.push(result);
+        } else {
+          const result = await persistPhotoDraft(slot.role, draft, "variant");
+          photoStatuses.push(result);
+        }
         savedPhotoCount += 1;
       }
       const refreshedProduct = await refreshCurrentProduct(photoTargetSku?.id);
@@ -2132,16 +2195,18 @@ export default function AdminCatalogManager() {
                   const draft = photoDrafts[slot.role];
                   const existingPhotos = Array.from(
                     new Map(
-                      selectedProduct.media
+                      familyMedia
                         .map((media, index) => ({ media, index }))
                         .filter(
                           ({ media }) =>
-                            media.role === slot.role || (slot.role === "connection" && media.role === "detail"),
+                            inferredMediaScope(media) === "family" &&
+                            (media.role === slot.role || (slot.role === "connection" && media.role === "detail")),
                         )
                         .map((entry) => [entry.media.media_id ?? `${entry.media.url}:${entry.index}`, entry] as const),
                     ).values(),
-                  );
+                  ).slice(-1);
                   const inputId = `photo-${selectedProduct.id}-${slot.role}`;
+                  const baseMediaEntry = existingPhotos.at(-1) ?? null;
                   const existingCards = existingPhotos.map(({ media, index }) => {
                     const photoKey = media.media_id ?? String(index);
                     const scopeDraft = familyPhotoScopeDrafts[photoKey];
@@ -2175,7 +2240,7 @@ export default function AdminCatalogManager() {
                             Удалить
                           </button>
                         </div>
-                        {familyDiameterOptions.length > 0 ? (
+                        {media.scope === "variant" && familyDiameterOptions.length > 0 ? (
                           <fieldset className={styles.photoLengthScope}>
                             <legend>Диаметры · ничего не выбрано = все</legend>
                             <div className={styles.photoLengthOptions}>
@@ -2198,7 +2263,7 @@ export default function AdminCatalogManager() {
                             </div>
                           </fieldset>
                         ) : null}
-                        {familyLengthOptions.length > 0 ? (
+                        {media.scope === "variant" && familyLengthOptions.length > 0 ? (
                           <fieldset className={styles.photoLengthScope}>
                             <legend>Длины · ничего не выбрано = все</legend>
                             <div className={styles.photoLengthOptions}>
@@ -2232,21 +2297,24 @@ export default function AdminCatalogManager() {
                       <div className={styles.photoSlotHead}>
                         <span className={styles.photoNumber}>{slot.number}</span>
                         <span>
-                          <strong>Добавить · {slot.title}</strong>
+                          <strong>{baseMediaEntry ? `${slot.title} · базовое` : `Добавить базовое · ${slot.title}`}</strong>
                           <small>{slot.hint}</small>
                         </span>
                         <span className={draft.file ? styles.pendingBadge : styles.savedBadge}>
-                          {draft.file ? "выбрано" : `${existingPhotos.length} шт.`}
+                          {draft.file ? "выбрано" : existingPhotos.length ? "базовое задано" : "не задано"}
                         </span>
                       </div>
 
                       <div className={styles.photoPreview}>
-                        {draft.previewUrl ? (
-                          <img alt={draft.alt || `${selectedProduct.name}, ${slot.hint}`} src={draft.previewUrl} />
+                        {draft.previewUrl || baseMediaEntry ? (
+                          <img
+                            alt={draft.alt || baseMediaEntry?.media.alt || `${selectedProduct.name}, ${slot.hint}`}
+                            src={draft.previewUrl ?? buildBackendUrl(baseMediaEntry?.media.url ?? "")}
+                          />
                         ) : (
                           <div className={styles.photoPlaceholder}>
                             <ImagePlus size={24} />
-                            <span>Новое фото: {slot.hint}</span>
+                            <span>Базовое фото: {slot.hint}</span>
                           </div>
                         )}
                       </div>
@@ -2259,10 +2327,21 @@ export default function AdminCatalogManager() {
                           onChange={(event) => selectPhoto(slot.role, event)}
                           type="file"
                         />
-                        <label className={styles.fileButton} htmlFor={inputId}>Выбрать новый файл</label>
+                        <label className={styles.fileButton} htmlFor={inputId}>
+                          {existingPhotos.length ? "Заменить базовое фото" : "Выбрать базовое фото"}
+                        </label>
                         {draft.file ? (
                           <button className={styles.clearButton} onClick={() => clearPhotoDraft(slot.role)} type="button">
                             Отменить выбор
+                          </button>
+                        ) : baseMediaEntry ? (
+                          <button
+                            className={styles.clearButton}
+                            disabled={isBusy}
+                            onClick={() => deletePhoto(baseMediaEntry.media.media_id ?? String(baseMediaEntry.index))}
+                            type="button"
+                          >
+                            Удалить базовое
                           </button>
                         ) : null}
                       </div>
@@ -2275,7 +2354,7 @@ export default function AdminCatalogManager() {
                           value={draft.alt}
                         />
                       </label>
-                      {familyDiameterOptions.length > 0 ? (
+                      {draft.scopeTouched && familyDiameterOptions.length > 0 ? (
                         <fieldset className={styles.photoLengthScope} disabled={!draft.file}>
                           <legend>Диаметры · ничего не выбрано = все</legend>
                           <div className={styles.photoLengthOptions}>
@@ -2298,7 +2377,7 @@ export default function AdminCatalogManager() {
                           </div>
                         </fieldset>
                       ) : null}
-                      {familyLengthOptions.length > 0 ? (
+                      {draft.scopeTouched && familyLengthOptions.length > 0 ? (
                         <fieldset className={styles.photoLengthScope} disabled={!draft.file}>
                           <legend>Длины · ничего не выбрано = все</legend>
                           <div className={styles.photoLengthOptions}>
@@ -2322,7 +2401,7 @@ export default function AdminCatalogManager() {
                       {draft.file ? <span className={styles.fileName}>{draft.file.name}</span> : null}
                     </article>
                   );
-                  return [...existingCards, uploadCard];
+                  return [uploadCard];
                 })}
                 {hasConeTerminationScheme ? (
                   <article className={`${styles.photoSlot} ${styles.schemeSlot}`}>
@@ -2358,10 +2437,10 @@ export default function AdminCatalogManager() {
 
               <div className={styles.skuPhotoSection}>
                 <div className={styles.mediaSectionHeader}>
-                  <h3>Фотографии выбранного SKU</h3>
+                  <h3>Фотографии по диаметру и длине</h3>
                   <p>
-                    Новое фото относится только к выбранной выше модели и не распространяется на другие SKU.
-                    Для групповой привязки используйте фотографии семейства.
+                    Диаметр и длина подставляются из выбранной выше модели. При необходимости отметьте
+                    несколько значений или включите режим «только этот SKU».
                   </p>
                 </div>
                 <div className={`${styles.photoSlots} ${styles.skuPhotoSlots}`}>
@@ -2369,29 +2448,41 @@ export default function AdminCatalogManager() {
                     const draft = skuPhotoDrafts[slot.role];
                     const ownMedia = selectedSkuOwnMedia[slot.role] ?? null;
                     const existing = selectedSkuMedia[slot.role] ?? null;
-                    const familyFallback = selectedFamilyMedia[slot.role] ?? null;
-                    const visibleMedia = existing ?? familyFallback;
+                    const matchingFamilyMedia = selectedFamilyMedia[slot.role] ?? null;
+                    const matchingVariant =
+                      matchingFamilyMedia && inferredMediaScope(matchingFamilyMedia) === "variant"
+                        ? matchingFamilyMedia
+                        : null;
+                    const storedVariant = storedVariantMedia[slot.role] ?? null;
+                    const managedVariant = matchingVariant ?? storedVariant;
+                    const baseFallback = baseFamilyMedia[slot.role] ?? null;
+                    const visibleMedia = existing ?? managedVariant ?? baseFallback;
                     const previewSrc = draft.previewUrl ?? (visibleMedia ? buildBackendUrl(visibleMedia.url) : null);
                     const inputId = `sku-photo-${skuForm.id ?? "new"}-${slot.role}`;
                     const usesSharedSkuMedia = !draft.file && !ownMedia && Boolean(existing);
-                    const usesFamilyFallback = !draft.file && !existing && Boolean(familyFallback);
+                    const usesManagedVariant = !draft.file && !existing && Boolean(managedVariant);
+                    const usesBaseFallback = !draft.file && !existing && !managedVariant && Boolean(baseFallback);
 
                     return (
                       <article className={styles.photoSlot} key={slot.role}>
                         <div className={styles.photoSlotHead}>
                           <span className={styles.photoNumber}>{slot.number}</span>
                           <span>
-                            <strong>SKU · {slot.title}</strong>
+                            <strong>Вариант · {slot.title}</strong>
                             <small>{slot.hint}</small>
                           </span>
                           <span className={draft.file ? styles.pendingBadge : styles.savedBadge}>
                             {draft.file
                               ? "новый файл"
                               : ownMedia
-                                ? "сохранено"
-                                : usesSharedSkuMedia
-                                  ? "общее фото"
-                                  : "не задано"}
+                                ? "точное SKU"
+                                : managedVariant
+                                  ? matchingVariant
+                                    ? "по параметрам"
+                                    : "другие параметры"
+                                  : baseFallback
+                                    ? "базовое"
+                                    : "не задано"}
                           </span>
                         </div>
 
@@ -2411,8 +2502,14 @@ export default function AdminCatalogManager() {
                               <span>Фото не задано</span>
                             </div>
                           )}
-                          {usesFamilyFallback ? (
-                            <span className={styles.fallbackLabel}>Показано фото семейства</span>
+                          {usesManagedVariant ? (
+                            <span className={styles.fallbackLabel}>
+                              {matchingVariant
+                                ? "Фото по диаметру и длине"
+                                : "Сохранено для других параметров"}
+                            </span>
+                          ) : usesBaseFallback ? (
+                            <span className={styles.fallbackLabel}>Базовое фото семейства</span>
                           ) : usesSharedSkuMedia ? (
                             <span className={styles.fallbackLabel}>Общее фото исполнения</span>
                           ) : null}
@@ -2427,7 +2524,7 @@ export default function AdminCatalogManager() {
                             type="file"
                           />
                           <label className={styles.fileButton} htmlFor={inputId}>
-                            {draft.previewUrl || existing ? "Заменить файл" : "Выбрать файл"}
+                            Выбрать новое фото
                           </label>
                           {draft.file ? (
                             <button
@@ -2446,6 +2543,15 @@ export default function AdminCatalogManager() {
                             >
                               Удалить
                             </button>
+                          ) : managedVariant?.media_id ? (
+                            <button
+                              className={styles.clearButton}
+                              disabled={isBusy}
+                              onClick={() => deletePhoto(managedVariant.media_id as string)}
+                              type="button"
+                            >
+                              Удалить фото параметров
+                            </button>
                           ) : null}
                         </div>
 
@@ -2457,12 +2563,72 @@ export default function AdminCatalogManager() {
                             value={draft.alt}
                           />
                         </label>
+                        {draft.file ? (
+                          <label className={styles.photoLengthOption}>
+                            <input
+                              checked={draft.skuSpecific}
+                              onChange={(event) => updateSkuPhotoDraft(slot.role, { skuSpecific: event.target.checked })}
+                              type="checkbox"
+                            />
+                            Только для выбранного SKU {selectedSku?.article ?? "—"}
+                          </label>
+                        ) : null}
+                        {draft.file && !draft.skuSpecific && familyDiameterOptions.length > 0 ? (
+                          <fieldset className={styles.photoLengthScope}>
+                            <legend>Диаметры</legend>
+                            <div className={styles.photoLengthOptions}>
+                              {familyDiameterOptions.map(({ key, label }) => (
+                                <label className={styles.photoLengthOption} key={key}>
+                                  <input
+                                    checked={draft.diameterKeys.includes(key)}
+                                    onChange={(event) => updateSkuPhotoDraft(slot.role, {
+                                      diameterKeys: event.target.checked
+                                        ? Array.from(new Set([...draft.diameterKeys, key])).sort((left, right) =>
+                                            left.localeCompare(right, "ru", { numeric: true }),
+                                          )
+                                        : draft.diameterKeys.filter((value) => value !== key),
+                                    })}
+                                    type="checkbox"
+                                  />
+                                  {label}
+                                </label>
+                              ))}
+                            </div>
+                          </fieldset>
+                        ) : null}
+                        {draft.file && !draft.skuSpecific && familyLengthOptions.length > 0 ? (
+                          <fieldset className={styles.photoLengthScope}>
+                            <legend>Длины</legend>
+                            <div className={styles.photoLengthOptions}>
+                              {familyLengthOptions.map((length) => (
+                                <label className={styles.photoLengthOption} key={length}>
+                                  <input
+                                    checked={draft.lengthsMm.includes(length)}
+                                    onChange={(event) => updateSkuPhotoDraft(slot.role, {
+                                      lengthsMm: event.target.checked
+                                        ? Array.from(new Set([...draft.lengthsMm, length])).sort((left, right) => left - right)
+                                        : draft.lengthsMm.filter((value) => value !== length),
+                                    })}
+                                    type="checkbox"
+                                  />
+                                  L={length} мм
+                                </label>
+                              ))}
+                            </div>
+                          </fieldset>
+                        ) : null}
                         <small className={styles.photoScopeHint}>
-                          {ownMedia?.sku_specific
-                            ? `Только модель ${selectedSku?.article ?? "—"}.`
+                          {draft.file
+                            ? draft.skuSpecific
+                              ? `Будет сохранено только для модели ${selectedSku?.article ?? "—"}.`
+                              : `Будет применяться к выбранным диаметрам и длинам.`
                             : ownMedia
-                              ? "Старое фото с групповой привязкой. При замене станет фото только этой модели."
-                              : `Будет сохранено только для модели ${selectedSku?.article ?? "—"}.`}
+                              ? `Собственное фото SKU ${selectedSku?.article ?? "—"}.`
+                              : managedVariant
+                                ? `Диаметры: ${managedVariant.diameter_keys.join(", ") || "все"}; длины: ${managedVariant.lengths_mm.join(", ") || "все"} мм.${matchingVariant ? "" : " Не совпадает с выбранным SKU."}`
+                                : baseFallback
+                                  ? "Используется базовое фото семейства."
+                                  : "Фото этой роли ещё не загружено."}
                         </small>
                         {draft.file ? <span className={styles.fileName}>{draft.file.name}</span> : null}
                       </article>
