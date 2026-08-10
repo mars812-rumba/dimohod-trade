@@ -78,7 +78,7 @@
   color: var(--steel);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-size: 12px;
-  font-weight: 760;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -99,7 +99,7 @@
   max-width: 780px;
   margin: 0;
   font-size: clamp(58px, 7.2vw, 105px);
-  font-weight: 780;
+  font-weight: 650;
   line-height: 0.86;
   letter-spacing: -0.065em;
   text-wrap: balance;
@@ -107,7 +107,7 @@
 
 .heroCopy h1 span {
   display: block;
-  color: var(--steel);
+  color: var(--signal);
 }
 
 .heroLead {
@@ -116,6 +116,7 @@
   color: var(--ink-soft);
   font-size: clamp(17px, 1.5vw, 20px);
   line-height: 1.58;
+  text-wrap: pretty;
 }
 
 .heroActions,
@@ -136,7 +137,7 @@
   padding: 0 20px;
   border-radius: 3px;
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 600;
   transition:
     transform 150ms ease,
     background 150ms ease,
@@ -192,11 +193,20 @@
 }
 
 .proof dt {
+  display: flex;
+  gap: 9px;
+  align-items: center;
   color: var(--steel-deep);
   font-family: "Arial Narrow", "Aptos Narrow", sans-serif;
   font-size: 25px;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.proof dt svg {
+  flex: 0 0 auto;
+  color: var(--signal);
 }
 
 .proof dd {
@@ -363,7 +373,7 @@
 
 .scenarioGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-top: 1px solid var(--line);
   border-left: 1px solid var(--line);
 }
@@ -615,9 +625,61 @@
   background: #fff;
 }
 
+.trustSection,
+.faqSection {
+  padding: 94px 0;
+}
+
+.trustSection {
+  background: #eef2f2;
+}
+
+.trustGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.trustGrid article {
+  display: grid;
+  gap: 13px;
+  min-height: 210px;
+  padding: 28px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+
+.trustGrid svg { color: var(--signal); }
+.trustGrid strong { font-size: 18px; }
+.trustGrid span { color: #617177; font-size: 13px; line-height: 1.6; }
+
+.companyLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  padding: 20px 24px;
+  color: var(--steel-deep);
+  border: 1px solid var(--line);
+  border-top: 0;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.companyLine svg { color: var(--signal); }
+
+.faqSection { background: #fff; }
+.faqList { max-width: 920px; border-top: 1px solid var(--line); }
+.faqList details { border-bottom: 1px solid var(--line); }
+.faqList summary { padding: 22px 4px; cursor: pointer; font-size: 17px; font-weight: 760; }
+.faqList p { max-width: 760px; margin: -4px 0 24px; color: #596a70; font-size: 14px; line-height: 1.65; }
+
 .contactCard {
   display: grid;
-  grid-template-columns: 90px minmax(0, 1fr) auto;
+  grid-template-columns: 90px minmax(0, 0.8fr) minmax(360px, 0.9fr);
   gap: 36px;
   align-items: center;
   padding: 48px;
@@ -666,6 +728,11 @@
   flex-direction: column;
   margin-top: 0;
 }
+
+.contactCard :global(.lead-form) { grid-column: 3; grid-row: 1 / span 2; }
+.contactAlternatives { grid-column: 2; display: flex; flex-wrap: wrap; gap: 18px; }
+.contactAlternatives a { display: inline-flex; gap: 7px; align-items: center; color: #d8e1e3; font-size: 13px; }
+.contactAlternatives svg { color: var(--signal); }
 
 .contactMail {
   display: inline-flex;
@@ -755,6 +822,9 @@
     grid-template-columns: 80px 1fr;
   }
 
+  .contactCard :global(.lead-form) { grid-column: 1 / -1; grid-row: auto; }
+  .contactAlternatives { grid-column: 2; }
+
   .contactActions {
     grid-column: 2;
     align-items: flex-start;
@@ -781,7 +851,7 @@
 
   .heroCopy {
     margin-inline: -14px;
-    padding: 40px 14px;
+    padding: 24px 14px 28px;
     background:
       linear-gradient(
         180deg,
@@ -797,25 +867,59 @@
   }
 
   .heroCopy h1 {
-    font-size: clamp(50px, 17vw, 76px);
-    line-height: 0.88;
+    max-width: 520px;
+    font-size: clamp(38px, 12vw, 52px);
+    line-height: 0.94;
   }
 
-  .heroActions,
+  .kicker {
+    margin-bottom: 12px;
+    font-size: 10px;
+  }
+
+  .heroLead {
+    max-width: 440px;
+    margin-top: 16px;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .heroActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 18px;
+  }
+
   .primaryButton,
   .secondaryButton {
     width: 100%;
+    min-height: 46px;
+    padding: 0 10px;
+    font-size: clamp(10px, 3.2vw, 12px);
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .proof {
     grid-template-columns: 1fr;
+    margin-top: 24px;
   }
 
   .proof div,
   .proof div + div {
-    padding: 15px 0;
+    padding: 13px 0;
     border-top: 1px solid var(--line);
     border-left: 0;
+  }
+
+  .proof dt {
+    font-size: 23px;
+  }
+
+  .heroActions {
+    margin-top: 20px;
   }
 
   .heroSystem {
@@ -871,7 +975,8 @@
   }
 
   .scenarioGrid,
-  .catalogGrid {
+  .catalogGrid,
+  .trustGrid {
     grid-template-columns: 1fr;
   }
 
@@ -902,6 +1007,12 @@
     align-items: stretch;
     width: 100%;
   }
+
+  .contactCard :global(.lead-form),
+  .contactAlternatives { grid-column: auto; }
+
+  .trustSection,
+  .faqSection { padding: 68px 0; }
 
   .footerGrid {
     grid-template-columns: 1fr;

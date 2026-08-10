@@ -5,16 +5,20 @@ import {
   ArrowRight,
   Check,
   ChevronRight,
+  Database,
   FileCheck2,
   FlameKindling,
   Gauge,
   Home,
+  LayoutGrid,
+  ListChecks,
   Mail,
   MapPin,
+  PackageCheck,
   Phone,
   Ruler,
   ShieldCheck,
-  ShoppingBag,
+  SlidersHorizontal,
   Wrench,
   Zap,
 } from "lucide-react";
@@ -139,28 +143,39 @@ export default function HomePage() {
               <p className={styles.heroLead}>
                 Подберём комплект по вашей трассе и параметрам отопителя.
               </p>
-              <div className={styles.heroActions}>
-                <a className={styles.primaryButton} href="#calculator">
-                  Подобрать дымоход <ArrowRight size={18} />
-                </a>
-                <Link className={styles.secondaryButton} href="/catalog">
-                  <ShoppingBag size={17} /> Смотреть каталог
-                </Link>
-              </div>
               <dl className={styles.proof}>
                 <div>
-                  <dt>6 339</dt>
+                  <dt>
+                    <Database size={20} strokeWidth={1.65} aria-hidden />
+                    <span>6 339</span>
+                  </dt>
                   <dd>вариантов в базе</dd>
                 </div>
                 <div>
-                  <dt>11</dt>
+                  <dt>
+                    <ListChecks size={20} strokeWidth={1.65} aria-hidden />
+                    <span>11</span>
+                  </dt>
                   <dd>правил совместимости</dd>
                 </div>
                 <div>
-                  <dt>1 комплект</dt>
+                  <dt>
+                    <PackageCheck size={20} strokeWidth={1.65} aria-hidden />
+                    <span>1 комплект</span>
+                  </dt>
                   <dd>вместо списка деталей</dd>
                 </div>
               </dl>
+              <div className={styles.heroActions}>
+                <a className={styles.primaryButton} href="#calculator">
+                  <SlidersHorizontal size={18} strokeWidth={1.7} aria-hidden />
+                  Подобрать дымоход
+                </a>
+                <Link className={styles.secondaryButton} href="/catalog">
+                  <LayoutGrid size={17} strokeWidth={1.7} aria-hidden />
+                  Смотреть каталог
+                </Link>
+              </div>
             </div>
 
             <div className={styles.heroSystem}>
