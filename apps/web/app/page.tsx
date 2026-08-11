@@ -19,6 +19,7 @@ import {
   Ruler,
   ShieldCheck,
   SlidersHorizontal,
+  Star,
   Timer,
   Wrench,
   Zap,
@@ -379,6 +380,39 @@ export default function HomePage() {
             <article><Wrench size={24} /><strong>Инженерная проверка</strong><span>Черновой расчёт не становится заказом, пока специалист не проверит исходные данные.</span></article>
           </div>
           <div className={styles.companyLine}><MapPin size={16} /><span>Санкт-Петербург, ул. Хрустальная, 11Б</span><FileCheck2 size={16} /><span>ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span></div>
+        </div>
+      </section>
+
+      <section className={styles.reviewsSection} aria-labelledby="reviews-title">
+        <div className={styles.shell}>
+          <div className={styles.reviewsLayout}>
+            <div className={styles.reviewsIntro}>
+              <div className={styles.reviewsMark} aria-hidden>
+                <Star size={25} strokeWidth={1.8} />
+              </div>
+              <h2 id="reviews-title">Что пишут наши клиенты.</h2>
+              <p>
+                Здесь отображаются опубликованные отзывы из карточки «Дымоход-Трейд».
+                Рейтинг и содержание обновляет Яндекс.
+              </p>
+              <a
+                className={styles.reviewsLink}
+                href="https://yandex.ru/maps/org/dymokhod_treyd/1368513691/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Все отзывы на Яндекс Картах <ArrowRight size={17} aria-hidden />
+              </a>
+            </div>
+
+            <div className={styles.reviewsWidget}>
+              <iframe
+                src="https://yandex.ru/maps-reviews-widget/1368513691?comments"
+                title="Отзывы о Дымоход-Трейд на Яндекс Картах"
+                loading="lazy"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
