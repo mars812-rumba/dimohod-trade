@@ -79,6 +79,8 @@ export function ScenarioPageTemplate({
               alt={content.heroImageAlt}
               fill
               priority
+              fetchPriority="high"
+              quality={78}
               sizes="(max-width: 820px) 100vw, 46vw"
             />
           </div>
@@ -127,7 +129,9 @@ export function ScenarioPageTemplate({
                       src={`${assetBasePath}${option.image}`}
                       alt=""
                       fill
-                      sizes="(max-width: 820px) 100vw, 50vw"
+                      loading="lazy"
+                      quality={72}
+                      sizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
                     />
                   </div>
                 ) : (

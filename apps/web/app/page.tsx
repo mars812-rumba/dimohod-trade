@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type CSSProperties } from "react";
 import {
@@ -52,7 +53,7 @@ const scenarios = [
     slug: "dom",
     title: "Частный дом",
     text: "Выберите печь, камин или котёл и перейдите к подходящему сценарию.",
-    image: "/images/home/hero-photo.jpg",
+    image: "/images/home/hero-photo-720.webp",
     href: "/solutions/dom",
   },
   {
@@ -136,11 +137,29 @@ const assetUrl = (path: string) => `${basePath}${path}`;
 
 export default function HomePage() {
   const heroStyle = {
-    "--hero-image": `url("${assetUrl("/images/home/hero-photo.jpg")}")`,
+    "--hero-image": `url("${assetUrl("/images/home/hero-photo-720.webp")}")`,
+    "--hero-image-mobile": `url("${assetUrl("/images/home/hero-photo-480.webp")}")`,
   } as CSSProperties;
 
   return (
-    <main className={styles.main}>
+    <>
+      <link
+        rel="preload"
+        as="image"
+        href={assetUrl("/images/home/hero-photo-480.webp")}
+        media="(max-width: 720px)"
+        type="image/webp"
+        fetchPriority="high"
+      />
+      <link
+        rel="preload"
+        as="image"
+        href={assetUrl("/images/home/hero-photo-720.webp")}
+        media="(min-width: 721px)"
+        type="image/webp"
+        fetchPriority="high"
+      />
+      <main className={styles.main}>
       <section className={styles.hero} style={heroStyle}>
         <div className={styles.shell}>
           <div className={styles.heroGrid}>
@@ -244,7 +263,14 @@ export default function HomePage() {
                   href={scenario.href}
                 >
                   <span className={styles.scenarioImage}>
-                    <img src={assetUrl(scenario.image)} alt="" />
+                    <Image
+                      src={assetUrl(scenario.image)}
+                      alt=""
+                      fill
+                      loading="lazy"
+                      quality={72}
+                      sizes="(max-width: 720px) calc(100vw - 28px), (max-width: 1020px) 50vw, 33vw"
+                    />
                     <span className={styles.scenarioIcon}>
                       <Icon size={20} />
                     </span>
@@ -427,6 +453,7 @@ export default function HomePage() {
           <div className={styles.footerBottom}>© 2026 Дымоход Трейд</div>
         </div>
       </footer>
-    </main>
+      </main>
+    </>
   );
 }
