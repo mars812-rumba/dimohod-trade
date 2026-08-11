@@ -20,8 +20,8 @@ import {
   Package,
   Phone,
   Ruler,
-  ScanLine,
   ShieldCheck,
+  Sparkles,
   Target,
   Truck,
   Wrench,
@@ -1257,7 +1257,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
               )}
               {activeImage?.kind !== "scheme" && hasLaserWeldedSeam ? (
                 <div className="product-image-technology-badge">
-                  <ScanLine aria-hidden="true" size={16} strokeWidth={1.8} />
+                  <Sparkles aria-hidden="true" size={13} strokeWidth={1.8} />
                   <span>Лазерная сварка шва</span>
                 </div>
               ) : null}

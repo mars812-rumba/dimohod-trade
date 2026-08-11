@@ -2878,16 +2878,16 @@ body.mobile-menu-open {
   right: 18px;
   z-index: 3;
   display: inline-flex;
-  gap: 7px;
+  gap: 5px;
   align-items: center;
-  min-height: 32px;
-  padding: 7px 11px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  min-height: 26px;
+  padding: 5px 8px;
+  border: 1px solid rgba(120, 91, 19, 0.28);
   border-radius: 3px;
-  color: #fff;
-  background: #435f69;
-  box-shadow: 0 5px 16px rgba(16, 33, 39, 0.16);
-  font-size: 11px;
+  color: #2d2612;
+  background: #e5bb58;
+  box-shadow: 0 4px 12px rgba(16, 33, 39, 0.14);
+  font-size: 9px;
   font-weight: 700;
   line-height: 1.2;
   pointer-events: none;
@@ -5264,9 +5264,9 @@ body.mobile-menu-open {
   .product-page .product-image-technology-badge {
     top: 8px;
     right: 8px;
-    min-height: 28px;
-    padding: 6px 8px;
-    font-size: 9px;
+    min-height: 23px;
+    padding: 4px 6px;
+    font-size: 7.5px;
   }
 
   .product-page .sku-panel {
@@ -5742,9 +5742,9 @@ body.mobile-menu-open {
 .catalog-product-technology-badge {
   top: 12px;
   right: 12px;
-  min-height: 27px;
-  padding: 5px 8px;
-  font-size: 9px;
+  min-height: 22px;
+  padding: 4px 6px;
+  font-size: 7.5px;
 }
 
 .catalog-product-media img {
