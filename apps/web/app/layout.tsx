@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
 import Script from "next/script";
-import { Phone, Search, ShoppingCart } from "lucide-react";
-import { InstallAppButton } from "../components/InstallAppButton";
+import { SiteHeader } from "../components/SiteHeader";
 import "./globals.css";
 
 const basePath = process.env.NEXT_BASE_PATH ?? "";
@@ -37,6 +35,7 @@ export default function RootLayout({
             window.addEventListener("beforeinstallprompt", function (event) {
               event.preventDefault();
               window.__dimohodInstallPrompt = event;
+              window.__dimohodInstallPromptPath = window.location.pathname;
               window.dispatchEvent(new Event("dimohod:pwa-install-ready"));
             });
             if ("serviceWorker" in navigator) {
@@ -46,35 +45,7 @@ export default function RootLayout({
         `}
       </Script>
       <body>
-        <header className="site-header">
-          <Link href="/" className="brand" aria-label="Dimohod Trade">
-            <img
-              alt=""
-              className="brand-logo"
-              height="51"
-              src={`${basePath}/brand/logo-original.jpg`}
-              width="112"
-            />
-          </Link>
-          <nav className="top-nav" aria-label="Основная навигация">
-            <Link href="/catalog">Каталог</Link>
-            <Link href="/catalog?scenario=banya">Для бани</Link>
-            <Link href="/catalog?scenario=kamin">Для камина</Link>
-            <Link href="/catalog?scenario=gaz">Для газа</Link>
-          </nav>
-          <div className="header-right">
-            <InstallAppButton />
-            <a href="tel:+79650756555" className="header-phone">
-              <Phone size={15} /> +7 (965) 075-65-55
-            </a>
-            <button type="button" className="icon-button" aria-label="Поиск" title="Поиск">
-              <Search size={18} />
-            </button>
-            <button type="button" className="icon-button" aria-label="Корзина" title="Корзина">
-              <ShoppingCart size={18} />
-            </button>
-          </div>
-        </header>
+        <SiteHeader />
         {children}
       </body>
     </html>
