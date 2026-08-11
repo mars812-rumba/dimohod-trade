@@ -24,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/privacy") },
     { url: absoluteUrl("/consent-personal-data") },
     { url: absoluteUrl("/cookie-policy") },
+    { url: absoluteUrl("/user-agreement") },
     ...Object.keys(scenarioPages).map((slug) => ({
       url: absoluteUrl(`/solutions/${slug}`),
     })),

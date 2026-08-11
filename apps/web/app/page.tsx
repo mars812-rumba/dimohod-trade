@@ -24,7 +24,12 @@ import {
 } from "lucide-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 import { LeadForm } from "../components/LeadForm";
-import { cookiePolicyPath, personalDataConsentPath, privacyPolicyPath } from "@/lib/privacy";
+import {
+  cookiePolicyPath,
+  personalDataConsentPath,
+  privacyPolicyPath,
+  userAgreementPath,
+} from "@/lib/privacy";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -394,6 +399,7 @@ export default function HomePage() {
               <Link href={privacyPolicyPath}>Политика персональных данных</Link>
               <Link href={personalDataConsentPath}>Согласие на обработку данных</Link>
               <Link href={cookiePolicyPath}>Cookie и локальные технологии</Link>
+              <Link href={userAgreementPath}>Пользовательское соглашение</Link>
             </div>
             <div className={styles.address}>
               <MapPin size={15} />

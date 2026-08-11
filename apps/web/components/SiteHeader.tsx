@@ -12,7 +12,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { CategoryNode, CatalogTreeResponse } from "@/lib/api";
 import { InstallAppButton } from "./InstallAppButton";
-import { personalDataConsentPath, privacyPolicyPath } from "@/lib/privacy";
+import {
+  personalDataConsentPath,
+  privacyPolicyPath,
+  userAgreementPath,
+} from "@/lib/privacy";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -199,6 +203,7 @@ export function SiteHeader() {
             <Link href="/#send-materials" onClick={closeMenu}>Отправить фото или схему</Link>
             <Link href={privacyPolicyPath} onClick={closeMenu}>Политика персональных данных</Link>
             <Link href={personalDataConsentPath} onClick={closeMenu}>Согласие на обработку данных</Link>
+            <Link href={userAgreementPath} onClick={closeMenu}>Пользовательское соглашение</Link>
           </nav>
 
           <div className="mobile-menu-footer">

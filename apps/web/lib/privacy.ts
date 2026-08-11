@@ -1,6 +1,7 @@
 export const privacyPolicyPath = "/privacy";
 export const personalDataConsentPath = "/consent-personal-data";
 export const cookiePolicyPath = "/cookie-policy";
+export const userAgreementPath = "/user-agreement";
 
 export const personalDataConsentVersion = "2026-08-11";
 
