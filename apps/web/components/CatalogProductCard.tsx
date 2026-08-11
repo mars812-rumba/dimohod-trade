@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ScanLine } from "lucide-react";
 import type { ProductListItem } from "@/lib/api";
-import { steelWithThicknessLabel } from "@/lib/productLabels";
+import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productSelectionPath } from "@/lib/productUrls";
 import { steelSelectionBadges } from "@/lib/steelSelection";
 
@@ -92,6 +92,7 @@ function catalogSpecs(product: ProductListItem) {
 export function CatalogProductCard({ product }: { product: ProductListItem }) {
   const specs = catalogSpecs(product);
   const steelBadges = steelSelectionBadges(product);
+  const hasLaserWeldedSeam = isLaserWeldedPipe(product);
   const href = productSelectionPath(product.slug, product, product.selected_sku);
 
   return (
@@ -105,10 +106,16 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
         ) : (
           <span>{product.product_kind ?? "товар"}</span>
         )}
+        {hasLaserWeldedSeam ? (
+          <div className="product-image-technology-badge catalog-product-technology-badge">
+            <ScanLine aria-hidden="true" size={14} strokeWidth={1.8} />
+            <span>Лазерная сварка шва</span>
+          </div>
+        ) : null}
         {steelBadges.length > 0 ? (
           <div
             className="product-image-badges catalog-product-image-badges"
-            aria-label="Назначение варианта"
+            aria-label="Характеристики варианта"
           >
             {steelBadges.map((badge) => (
               <span

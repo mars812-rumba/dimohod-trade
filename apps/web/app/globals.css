@@ -2872,6 +2872,31 @@ body.mobile-menu-open {
   background: #efbd4e;
 }
 
+.product-image-technology-badge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 3;
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-height: 32px;
+  padding: 7px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 3px;
+  color: #fff;
+  background: #435f69;
+  box-shadow: 0 5px 16px rgba(16, 33, 39, 0.16);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.product-image-technology-badge svg {
+  flex: 0 0 auto;
+}
+
 .product-image-badge-warning {
   color: #fff;
   background: #b74620;
@@ -5236,6 +5261,14 @@ body.mobile-menu-open {
     white-space: nowrap;
   }
 
+  .product-page .product-image-technology-badge {
+    top: 8px;
+    right: 8px;
+    min-height: 28px;
+    padding: 6px 8px;
+    font-size: 9px;
+  }
+
   .product-page .sku-panel {
     margin-top: 12px;
     box-shadow: 0 12px 30px rgba(16, 33, 39, 0.1);
@@ -5704,6 +5737,14 @@ body.mobile-menu-open {
   font-size: 8px;
   letter-spacing: 0.02em;
   white-space: nowrap;
+}
+
+.catalog-product-technology-badge {
+  top: 12px;
+  right: 12px;
+  min-height: 27px;
+  padding: 5px 8px;
+  font-size: 9px;
 }
 
 .catalog-product-media img {

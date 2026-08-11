@@ -20,6 +20,7 @@ import {
   Package,
   Phone,
   Ruler,
+  ScanLine,
   ShieldCheck,
   Target,
   Truck,
@@ -29,7 +30,7 @@ import {
 } from "lucide-react";
 import { DimensionScheme } from "@/components/DimensionScheme";
 import type { CompatibleProduct, Product } from "@/lib/api";
-import { steelWithThicknessLabel } from "@/lib/productLabels";
+import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productPublicPath, productSelectionPath } from "@/lib/productUrls";
 import {
   steelSelectionBadges,
@@ -994,6 +995,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const variantDimensions = useMemo(() => buildVariantDimensions(product.skus), [product.skus]);
   const variantAttributes = publicVariantAttributes(activeSku);
   const steelBadges = steelSelectionBadges(activeSku);
+  const hasLaserWeldedSeam = isLaserWeldedPipe(product);
 
   const loadCompatibility = useCallback(
     (sku: Product["skus"][number]) => {
@@ -1253,8 +1255,14 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   <span>Фото товара</span>
                 </div>
               )}
+              {activeImage?.kind !== "scheme" && hasLaserWeldedSeam ? (
+                <div className="product-image-technology-badge">
+                  <ScanLine aria-hidden="true" size={16} strokeWidth={1.8} />
+                  <span>Лазерная сварка шва</span>
+                </div>
+              ) : null}
               {activeImage?.kind !== "scheme" && steelBadges.length > 0 ? (
-                <div className="product-image-badges" aria-label="Назначение выбранного варианта">
+                <div className="product-image-badges" aria-label="Характеристики выбранного варианта">
                   {steelBadges.map((badge) => (
                     <span
                       className={`product-image-badge product-image-badge-${badge.tone}`}
@@ -1670,8 +1678,8 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
             <a href="tel:+79650756555" className="panel-phone">
               <Phone size={14} /> +7 (965) 075-65-55
             </a>
-            <a href="mailto:office@dimohod-trade.ru" className="panel-email">
-              <Mail size={14} /> office@dimohod-trade.ru
+            <a href="mailto:info@dimohod-trade.pro" className="panel-email">
+              <Mail size={14} /> info@dimohod-trade.pro
             </a>
           </div>
         </aside>
