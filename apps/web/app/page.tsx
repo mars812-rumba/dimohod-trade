@@ -95,37 +95,31 @@ const scenarios = [
 const heroScenarios = [
   {
     title: "Для бани",
-    shortTitle: "Баня",
     image: "/images/home/scenario-banya.webp",
     href: "/solutions/banya",
   },
   {
     title: "Для дома",
-    shortTitle: "Дом",
     image: "/images/home/hero-house-chimney-v1-720.webp",
     href: "/solutions/dom",
   },
   {
     title: "Для печи",
-    shortTitle: "Печь",
     image: "/images/home/scenario-kamin.webp",
     href: "/solutions/pech",
   },
   {
     title: "Для камина",
-    shortTitle: "Камин",
     image: "/images/home/scenario-kamin.webp",
     href: "/solutions/kamin",
   },
   {
     title: "Для твердотопливного котла",
-    shortTitle: "ТТ котёл",
     image: "/images/home/scenario-tt-kotel.webp",
     href: "/solutions/tverdotoplivny-kotel",
   },
   {
     title: "Для газового котла",
-    shortTitle: "Газ",
     image: "/images/home/scenario-gaz.webp",
     href: "/solutions/gazovyy-kotel",
   },
@@ -251,7 +245,7 @@ export default function HomePage() {
                 </a>
                 <Link className={styles.secondaryButton} href="/catalog">
                   <LayoutGrid size={17} strokeWidth={1.7} aria-hidden />
-                  Смотреть каталог
+                  Открыть каталог
                 </Link>
               </div>
             </div>
