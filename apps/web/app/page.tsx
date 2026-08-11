@@ -91,6 +91,24 @@ const scenarios = [
   },
 ];
 
+const heroScenarios = [
+  {
+    title: "Для бани",
+    image: "/images/home/scenario-banya.webp",
+    href: "/solutions/banya",
+  },
+  {
+    title: "Для камина",
+    image: "/images/home/scenario-kamin.webp",
+    href: "/solutions/kamin",
+  },
+  {
+    title: "Для котельной",
+    image: "/images/home/scenario-tt-kotel.webp",
+    href: "/solutions/tverdotoplivny-kotel",
+  },
+];
+
 const faq = [
   ["Можно ли заказать комплект только по фото?", "Фото помогает начать подбор, но обычно нужны модель печи, диаметр патрубка, высота и места прохода через конструкции. Если данных не хватит, инженер перечислит, что уточнить."],
   ["Конфигуратор сразу показывает окончательный комплект?", "Нет. Это бета-версия для черновой схемы. Перед заказом специалист проверяет диаметр, сталь, узлы прохода и конкретные позиции."],
@@ -138,8 +156,8 @@ const assetUrl = (path: string) => `${basePath}${path}`;
 
 export default function HomePage() {
   const heroStyle = {
-    "--hero-image": `url("${assetUrl("/images/home/hero-photo-720.webp")}")`,
-    "--hero-image-mobile": `url("${assetUrl("/images/home/hero-photo-480.webp")}")`,
+    "--hero-image": `url("${assetUrl("/images/home/hero-house-chimney-v1-720.webp")}")`,
+    "--hero-image-mobile": `url("${assetUrl("/images/home/hero-house-chimney-v1-480.webp")}")`,
   } as CSSProperties;
 
   return (
@@ -147,7 +165,7 @@ export default function HomePage() {
       <link
         rel="preload"
         as="image"
-        href={assetUrl("/images/home/hero-photo-480.webp")}
+        href={assetUrl("/images/home/hero-house-chimney-v1-480.webp")}
         media="(max-width: 720px)"
         type="image/webp"
         fetchPriority="high"
@@ -155,7 +173,7 @@ export default function HomePage() {
       <link
         rel="preload"
         as="image"
-        href={assetUrl("/images/home/hero-photo-720.webp")}
+        href={assetUrl("/images/home/hero-house-chimney-v1-720.webp")}
         media="(min-width: 721px)"
         type="image/webp"
         fetchPriority="high"
@@ -175,6 +193,20 @@ export default function HomePage() {
               <p className={styles.heroLead}>
                 Подберём комплект по вашей трассе и параметрам отопителя.
               </p>
+              <nav className={styles.heroScenarios} aria-label="Сценарии подбора дымохода">
+                {heroScenarios.map((scenario) => (
+                  <Link className={styles.heroScenario} href={scenario.href} key={scenario.href}>
+                    <Image
+                      src={assetUrl(scenario.image)}
+                      alt=""
+                      fill
+                      sizes="(max-width: 720px) 31vw, 220px"
+                    />
+                    <span>{scenario.title}</span>
+                    <ArrowRight size={16} aria-hidden />
+                  </Link>
+                ))}
+              </nav>
               <dl className={styles.proof}>
                 <div>
                   <dt>
