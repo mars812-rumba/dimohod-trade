@@ -32,7 +32,10 @@ async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
     active_product_category_ids = set(
         (
             await session.scalars(
-                select(Product.category_id).where(Product.is_active.is_(True)).distinct()
+                select(Product.category_id)
+                .join(SKU, SKU.product_id == Product.id)
+                .where(Product.is_active.is_(True), SKU.is_active.is_(True))
+                .distinct()
             )
         ).all()
     )
@@ -41,9 +44,14 @@ async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
 
     product_names: dict[UUID, set[str]] = defaultdict(set)
     product_rows = await session.execute(
-        select(Product.category_id, Product.name).where(
-            Product.is_active.is_(True), Product.category_id.in_(visible_ids)
+        select(Product.category_id, Product.name)
+        .join(SKU, SKU.product_id == Product.id)
+        .where(
+            Product.is_active.is_(True),
+            Product.category_id.in_(visible_ids),
+            SKU.is_active.is_(True),
         )
+        .distinct()
     )
     for category_id, product_name in product_rows:
         cleaned_name = product_name.strip() if product_name else ""
