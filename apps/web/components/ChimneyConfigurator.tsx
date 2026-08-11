@@ -1,9 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Download, Mail } from "lucide-react";
+import { LeadForm } from "./LeadForm";
 
 type RouteType = "ceiling" | "wall";
-type StoveType = "bania" | "kamin";
+type StoveType = "bania" | "pech" | "kamin" | "tt-kotel" | "gaz";
 type OutletType = "vertical" | "horizontal";
 type RoofType = "pitched" | "flat";
 
@@ -111,19 +114,19 @@ const V_W = 200;
 const H_H = 80;
 
 const BOM_LABELS: Record<BomType, [string, string]> = {
-  start_cap: ["Стартовый конус / вывод из печки", "адаптер"],
-  tee: ["Тройник 90° с ревизией", "узел прочистки"],
-  adapter: ["Переходник на сэндвич", "одностенный → сэндвич"],
+  start_cap: ["Стартовый элемент", "тип уточняется"],
+  tee: ["Тройник с ревизией", "исполнение уточняется"],
+  adapter: ["Переходник", "соединение участков"],
   elbow: ["Отвод 90°", "смена направления"],
-  pipe: ["Труба-сэндвич 1000мм", "Ø115/200"],
-  pipe_short: ["Труба-сэндвич 500мм", "Ø115/200"],
-  wall_bracket: ["Кронштейн стеновой", "шаг ~2м"],
-  ceiling_passage: ["Потолочно-проходной узел", "разделка+теплоизоляция"],
-  wall_passage: ["Стеновой проходной узел", "гильза+теплоизоляция"],
-  roof_flashing_pitch: ["Кровельная разделка (скат)", "мастер-флеш"],
-  roof_flashing_flat: ["Кровельная разделка (плоск.)", "стакан"],
+  pipe: ["Труба 1000 мм", "исполнение и диаметр уточняются"],
+  pipe_short: ["Труба 500 мм", "исполнение и диаметр уточняются"],
+  wall_bracket: ["Кронштейн стеновой", "расположение по схеме"],
+  ceiling_passage: ["Потолочно-проходной узел", "состав требует проверки"],
+  wall_passage: ["Стеновой проходной узел", "состав требует проверки"],
+  roof_flashing_pitch: ["Кровельный узел для ската", "исполнение уточняется"],
+  roof_flashing_flat: ["Кровельный узел для плоскости", "исполнение уточняется"],
   storm_collar: ["Юбка / стакан", "гидроизоляция"],
-  cap: ["Оголовок с искрогасителем", "нерж. AISI 430"],
+  cap: ["Оголовок", "исполнение уточняется"],
 };
 
 const ROUTE_OPTIONS: Array<{ id: RouteType; label: string }> = [
@@ -133,8 +136,21 @@ const ROUTE_OPTIONS: Array<{ id: RouteType; label: string }> = [
 
 const STOVE_OPTIONS: Array<{ id: StoveType; label: string }> = [
   { id: "bania", label: "Банная печь" },
-  { id: "kamin", label: "Камин / котёл" },
+  { id: "pech", label: "Отопительная печь" },
+  { id: "kamin", label: "Камин" },
+  { id: "tt-kotel", label: "Твердотопливный котёл" },
+  { id: "gaz", label: "Газовый котёл" },
 ];
+
+const SCENARIO_STOVE_PRESETS: Record<string, StoveType> = {
+  banya: "bania",
+  pech: "pech",
+  kamin: "kamin",
+  "tt-kotel": "tt-kotel",
+  "tverdotoplivny-kotel": "tt-kotel",
+  gaz: "gaz",
+  "gazovyy-kotel": "gaz",
+};
 
 const OUTLET_OPTIONS: Array<{ id: OutletType; label: string }> = [
   { id: "vertical", label: "Вертикальный" },
@@ -494,13 +510,17 @@ function renderBackground(item: BgItem, index: number) {
 }
 
 export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorProps) {
+  const searchParams = useSearchParams();
+  const scenario = searchParams.get("scenario");
+  const initialStove = scenario ? SCENARIO_STOVE_PRESETS[scenario] : undefined;
   const [route, setRoute] = useState<RouteType>("ceiling");
-  const [stove, setStove] = useState<StoveType>("bania");
+  const [stove, setStove] = useState<StoveType>(initialStove ?? "bania");
   const [outlet, setOutlet] = useState<OutletType>("vertical");
   const [distanceM, setDistanceM] = useState(1.5);
   const [floors, setFloors] = useState(1);
   const [roof, setRoof] = useState<RoofType>("pitched");
   const [heightM, setHeightM] = useState(5);
+  const [stoveModel, setStoveModel] = useState("");
 
   const scene = useMemo(
     () =>
@@ -511,20 +531,57 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   );
 
   const totalQty = scene.bom.reduce((sum, item) => sum + item.qty, 0);
+  const stoveLabel = STOVE_OPTIONS.find((option) => option.id === stove)?.label ?? "Источник";
   const sceneTitle =
     route === "ceiling" ? "Схема: через перекрытие и кровлю" : "Схема: наружный монтаж по стене";
   const assetUrl = (asset: AssetName) => `${assetBasePath}/images/configurator/${asset}.png`;
+  const configuration = useMemo(
+    () =>
+      [
+        `Маршрут: ${route === "ceiling" ? "через дом" : "по улице"}`,
+        `Источник: ${stoveLabel}`,
+        `Модель отопителя / патрубок: ${stoveModel.trim() || "не указаны"}`,
+        route === "ceiling" ? `Этажность: ${floors}; кровля: ${roof === "pitched" ? "скатная" : "плоская"}` : `Выход: ${outlet === "vertical" ? "вертикальный" : "горизонтальный"}; до стены: ${distanceM.toFixed(1)} м`,
+        `Высота: ${heightM.toFixed(1)} м`,
+        "Позиции:",
+        ...scene.bom.map((part) => `${BOM_LABELS[part.type][0]} — ${part.qty} шт.`),
+      ].join("\n"),
+    [distanceM, floors, heightM, outlet, roof, route, scene.bom, stoveLabel, stoveModel],
+  );
+
+  function savePdf() {
+    const escapeHtml = (value: string) =>
+      value.replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[character] ?? character);
+    const rows = scene.bom.map((part) => `<tr><td>${BOM_LABELS[part.type][0]}</td><td>${part.qty}</td></tr>`).join("");
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.opener = null;
+    const summary = escapeHtml(configuration.split("\nПозиции:")[0]).replaceAll("\n", "<br>");
+    printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Черновая смета — Дымоход Трейд</title><style>body{font:15px Arial,sans-serif;color:#102127;margin:40px}h1{font-size:28px}p{line-height:1.55}table{width:100%;border-collapse:collapse;margin:24px 0}td,th{padding:10px;border:1px solid #ccd5d7;text-align:left}.note{padding:16px;background:#eef2f2} @page{size:A4;margin:18mm}</style></head><body><h1>Черновая смета дымохода</h1><p>${summary}</p><table><thead><tr><th>Позиция</th><th>Количество</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Это предварительный состав без цены и конкретных SKU. Перед заказом инженер проверит диаметр, сталь, проходные узлы и совместимость.</p><p>Дымоход Трейд · +7 (965) 075-65-55 · info@dimohod-trade.pro</p><script>window.onload=()=>window.print()<\/script></body></html>`);
+    printWindow.document.close();
+  }
 
   return (
     <div className="chimney-configurator" aria-label="Интерактивный конфигуратор комплекта дымохода">
       <div className="configurator-header">
         <div>
-          <p className="eyebrow">Живой расчёт · MVP</p>
+          <p className="eyebrow">Бета · результат уточняет инженер</p>
           <h3>Соберите базовую схему дымохода за 30 секунд.</h3>
           <p>
             Теперь конфигуратор учитывает два маршрута: вертикальный проход через дом и кровлю,
             либо боковое подключение с наружным стояком по фасаду.
           </p>
+          {initialStove ? (
+            <p className="configurator-preset" role="status">
+              Сценарий страницы: <strong>{stoveLabel}</strong>
+            </p>
+          ) : null}
         </div>
         <div className="configurator-count" aria-live="polite">
           <strong>{totalQty}</strong>
@@ -535,13 +592,26 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       <div className="configurator-body">
         <div className="configurator-controls">
           <div className="configurator-field">
+            <label className="configurator-text-field">
+              <span className="configurator-label">Модель отопителя и параметры патрубка</span>
+              <input
+                name="stove-model"
+                value={stoveModel}
+                onChange={(event) => setStoveModel(event.target.value)}
+                placeholder="Например: модель отопителя и параметры патрубка"
+              />
+            </label>
+          </div>
+
+          <div className="configurator-field">
             <div className="configurator-label">Маршрут</div>
-            <div className="configurator-segmented">
+            <div className="configurator-segmented" role="group" aria-label="Маршрут дымохода">
               {ROUTE_OPTIONS.map((option) => (
                 <button
                   key={option.id}
                   type="button"
                   className={option.id === route ? "active" : ""}
+                  aria-pressed={option.id === route}
                   onClick={() => setRoute(option.id)}
                 >
                   {option.label}
@@ -551,13 +621,18 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           </div>
 
           <div className="configurator-field">
-            <div className="configurator-label">Источник</div>
-            <div className="configurator-segmented">
+            <div className="configurator-label" id="configurator-source-label">Источник</div>
+            <div
+              className="configurator-segmented"
+              role="group"
+              aria-labelledby="configurator-source-label"
+            >
               {STOVE_OPTIONS.map((option) => (
                 <button
                   key={option.id}
                   type="button"
                   className={option.id === stove ? "active" : ""}
+                  aria-pressed={option.id === stove}
                   onClick={() => setStove(option.id)}
                 >
                   {option.label}
@@ -569,13 +644,14 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           {route === "wall" ? (
             <>
               <div className="configurator-field">
-                <div className="configurator-label">Выход из печи</div>
-                <div className="configurator-segmented">
+                <div className="configurator-label">Выход из отопителя</div>
+                <div className="configurator-segmented" role="group" aria-label="Выход из отопителя">
                   {OUTLET_OPTIONS.map((option) => (
                     <button
                       key={option.id}
                       type="button"
                       className={option.id === outlet ? "active" : ""}
+                      aria-pressed={option.id === outlet}
                       onClick={() => setOutlet(option.id)}
                     >
                       {option.label}
@@ -606,12 +682,13 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             <>
               <div className="configurator-field">
                 <div className="configurator-label">Перекрытия</div>
-                <div className="configurator-segmented">
+                <div className="configurator-segmented" role="group" aria-label="Количество этажей">
                   {FLOOR_OPTIONS.map((option) => (
                     <button
                       key={option.id}
                       type="button"
                       className={option.id === floors ? "active" : ""}
+                      aria-pressed={option.id === floors}
                       onClick={() => setFloors(option.id)}
                     >
                       {option.label}
@@ -622,12 +699,13 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
 
               <div className="configurator-field">
                 <div className="configurator-label">Кровля</div>
-                <div className="configurator-segmented">
+                <div className="configurator-segmented" role="group" aria-label="Тип кровли">
                   {ROOF_OPTIONS.map((option) => (
                     <button
                       key={option.id}
                       type="button"
                       className={option.id === roof ? "active" : ""}
+                      aria-pressed={option.id === roof}
                       onClick={() => setRoof(option.id)}
                     >
                       {option.label}
@@ -661,8 +739,8 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           <div className="configurator-note">
             <strong>{sceneTitle}</strong>
             <span>
-              По улице и в холодной зоне используем только сэндвич. Диаметр, сталь и конкретные SKU
-              подтянем из базы после подключения правил совместимости.
+              Исполнение участков, диаметр, сталь и конкретные SKU подтверждаются после проверки
+              исходных данных и применимых правил.
             </span>
           </div>
         </div>
@@ -720,6 +798,26 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             })}
           </div>
         </div>
+      </div>
+      <div className="configurator-result-actions">
+        <div>
+          <strong>Черновая смета готова</strong>
+          <span>Сохраните её в PDF или отправьте состав на проверку.</span>
+        </div>
+        <button type="button" onClick={savePdf}>
+          <Download aria-hidden size={16} /> Сохранить PDF
+        </button>
+        <a href={`mailto:info@dimohod-trade.pro?subject=${encodeURIComponent("Проверка сметы дымохода")}&body=${encodeURIComponent(configuration)}`}>
+          <Mail aria-hidden size={16} /> Отправить по почте
+        </a>
+      </div>
+      <div className="configurator-lead">
+        <LeadForm source="configurator" configuration={configuration} title="Проверить комплект перед заказом" />
+        <aside>
+          <strong>Можно просто позвонить</strong>
+          <a href="tel:+79650756555">+7 (965) 075-65-55</a>
+          <span>Санкт-Петербург, ул. Хрустальная, 11Б<br />ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span>
+        </aside>
       </div>
     </div>
   );

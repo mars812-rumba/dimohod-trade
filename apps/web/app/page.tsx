@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { Suspense, type CSSProperties } from "react";
 import {
   ArrowRight,
   Check,
@@ -27,9 +27,9 @@ import { LeadForm } from "../components/LeadForm";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
-  title: "Дымоход Трейд — безопасный комплект дымохода",
+  title: "Дымоход Трейд — подбор комплекта дымохода",
   description:
-    "Подберём совместимый комплект дымохода для бани, камина или котла: маршрут, диаметры, проходные узлы, крепёж и документы.",
+    "Подготовьте черновой комплект дымохода для бани, печи, камина или котла. Уточним маршрут, исходные данные и позиции для проверки.",
 };
 
 const scenarios = [
@@ -37,43 +37,49 @@ const scenarios = [
     icon: FlameKindling,
     slug: "banya",
     title: "Баня и сауна",
-    text: "Высокая температура, влажность и безопасный проход через деревянное перекрытие.",
+    text: "Модель банной печи, параметры патрубка и маршрут через конструкции объекта.",
     image: "/images/home/scenario-banya.webp",
+    href: "/solutions/banya",
+  },
+  {
+    icon: Home,
+    slug: "dom",
+    title: "Частный дом",
+    text: "Выберите печь, камин или котёл и перейдите к подходящему сценарию.",
+    image: "/images/home/hero-photo.jpg",
+    href: "/solutions/dom",
+  },
+  {
+    icon: FlameKindling,
+    slug: "pech",
+    title: "Отопительная печь",
+    text: "Паспорт отопителя, точка подключения и маршрут через помещения дома.",
+    image: "/images/home/scenario-kamin.webp",
+    href: "/solutions/pech",
   },
   {
     icon: Home,
     slug: "kamin",
     title: "Камин",
-    text: "Стабильная тяга, аккуратный участок в интерьере и доступ к ревизии.",
+    text: "Модель топки, место подключения, новая трасса или существующий канал.",
     image: "/images/home/scenario-kamin.webp",
+    href: "/solutions/kamin",
   },
   {
     icon: Zap,
     slug: "tt-kotel",
     title: "Твердотопливный котёл",
-    text: "Толщина и марка стали с учётом температуры, сажи и возможного перегрева.",
+    text: "Точная модель котла, параметры патрубка и полный маршрут котельной.",
     image: "/images/home/scenario-tt-kotel.webp",
+    href: "/solutions/tverdotoplivny-kotel",
   },
   {
     icon: Gauge,
     slug: "gaz",
     title: "Газовый котёл",
-    text: "Диаметр по паспорту котла, герметичность и проверка стали под конденсат.",
+    text: "Документация модели и разрешённая производителем конфигурация системы.",
     image: "/images/home/scenario-gaz.webp",
-  },
-  {
-    icon: Wrench,
-    slug: "gilzovanie",
-    title: "Гильзование",
-    text: "Подбор элементов для существующего кирпичного канала и доступ к ревизии.",
-    image: "/images/home/scenario-gilzovanie.webp",
-  },
-  {
-    icon: Home,
-    slug: "dacha",
-    title: "Дача или коммерческая баня",
-    text: "Схема с учётом режима использования объекта и фактической трассы.",
-    image: "/images/home/scenario-banya.webp",
+    href: "/solutions/gazovyy-kotel",
   },
 ];
 
@@ -88,7 +94,7 @@ const route = [
   { number: "01", title: "Источник", text: "Печь или котёл" },
   { number: "02", title: "Тёплая зона", text: "Стартовый участок" },
   { number: "03", title: "Проход", text: "Стена или кровля" },
-  { number: "04", title: "Холодная зона", text: "Только сэндвич" },
+  { number: "04", title: "Наружный участок", text: "Проверка исполнения" },
   { number: "05", title: "Оголовок", text: "Завершение системы" },
 ];
 
@@ -114,7 +120,7 @@ const catalogGroups = [
   },
   {
     title: "Монтаж и проходы",
-    text: "Узлы, которые связывают комплект с домом и делают монтаж безопасным.",
+    text: "Узлы, которые связывают комплект с конструкциями конкретного объекта.",
     tags: ["ППУ", "Кронштейны", "Разделки"],
   },
 ];
@@ -180,10 +186,10 @@ export default function HomePage() {
 
             <div className={styles.heroSystem}>
               <div className={styles.systemRule}>
-                <ShieldCheck size={22} />
+                <ShieldCheck size={22} aria-hidden />
                 <div>
-                  <span>Жёсткое правило</span>
-                  <strong>Улица и холодный чердак — только сэндвич</strong>
+                  <span>Проверяемые исходные данные</span>
+                  <strong>Отопитель, маршрут и каждый участок системы</strong>
                 </div>
               </div>
             </div>
@@ -203,8 +209,8 @@ export default function HomePage() {
           </ol>
           <p className={styles.routePromise}>
             <ShieldCheck size={17} aria-hidden />
-            Каждый шаг конфигуратор проверяет на совместимость с предыдущим — ошибиться просто не
-            получится.
+            Конфигуратор связывает шаги в черновую схему, а недостающие данные сохраняет для
+            проверки специалистом.
           </p>
         </div>
       </section>
@@ -218,7 +224,7 @@ export default function HomePage() {
             </div>
             <p>
               Не нужно знать названия всех деталей. Выберите задачу, а мы покажем, какие данные
-              понадобятся для безопасного подбора.
+              понадобятся для проверяемого подбора.
             </p>
           </div>
 
@@ -229,7 +235,7 @@ export default function HomePage() {
                 <Link
                   key={scenario.slug}
                   className={styles.scenarioCard}
-                  href={`/catalog?scenario=${scenario.slug}`}
+                  href={scenario.href}
                 >
                   <span className={styles.scenarioImage}>
                     <img src={assetUrl(scenario.image)} alt="" />
@@ -241,7 +247,7 @@ export default function HomePage() {
                     <strong>{scenario.title}</strong>
                     <small>{scenario.text}</small>
                     <span>
-                      Перейти к подбору <ArrowRight size={15} />
+                      Открыть сценарий <ArrowRight size={15} aria-hidden />
                     </span>
                   </span>
                 </Link>
@@ -263,7 +269,15 @@ export default function HomePage() {
               перестроятся сразу; перед заказом результат проверит специалист.
             </p>
           </div>
-          <ChimneyConfigurator assetBasePath={basePath} />
+          <Suspense
+            fallback={(
+              <div className={styles.configuratorFallback} role="status">
+                Загружаем конфигуратор…
+              </div>
+            )}
+          >
+            <ChimneyConfigurator assetBasePath={basePath} />
+          </Suspense>
         </div>
       </section>
 
@@ -328,7 +342,7 @@ export default function HomePage() {
             <p>Не обещаем совместимость без исходных данных. Для выбранных позиций инженер уточнит доступные паспорта, документы и условия гарантии производителя.</p>
           </div>
           <div className={styles.trustGrid}>
-            <article><FileCheck2 size={24} /><strong>Паспорта и сертификаты</strong><span>Уточняем комплект документов для конкретных выбранных изделий.</span></article>
+            <article><FileCheck2 size={24} /><strong>Документы на изделия</strong><span>Уточняем доступный комплект документов для конкретных выбранных позиций.</span></article>
             <article><ShieldCheck size={24} /><strong>Гарантия без общих обещаний</strong><span>Условия зависят от производителя и позиции — фиксируем их в предложении.</span></article>
             <article><Wrench size={24} /><strong>Инженерная проверка</strong><span>Черновой расчёт не становится заказом, пока специалист не проверит исходные данные.</span></article>
           </div>
@@ -373,6 +387,7 @@ export default function HomePage() {
             </div>
             <div className={styles.footerLinks}>
               <Link href="/catalog">Каталог</Link>
+              <Link href="/solutions">Решения</Link>
               <a href="#calculator">Конфигуратор</a>
               <a href="tel:+79650756555">Контакты</a>
             </div>
