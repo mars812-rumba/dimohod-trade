@@ -379,7 +379,7 @@ export default function HomePage() {
             <article><ShieldCheck size={24} /><strong>Гарантия без общих обещаний</strong><span>Условия зависят от производителя и позиции — фиксируем их в предложении.</span></article>
             <article><Wrench size={24} /><strong>Инженерная проверка</strong><span>Черновой расчёт не становится заказом, пока специалист не проверит исходные данные.</span></article>
           </div>
-          <div className={styles.companyLine}><MapPin size={16} /><span>Санкт-Петербург, ул. Хрустальная, 11Б</span><FileCheck2 size={16} /><span>ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span></div>
+          <div className={styles.companyLine}><MapPin size={16} /><span>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2</span><FileCheck2 size={16} /><span>ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span></div>
         </div>
       </section>
 
@@ -444,6 +444,34 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className={styles.mapSection} aria-labelledby="map-title">
+        <div className={styles.shell}>
+          <div className={styles.mapPanel}>
+            <div className={styles.mapHeading}>
+              <div>
+                <h2 id="map-title">Дымоход-Трейд на карте.</h2>
+                <p>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2 · этаж 1</p>
+              </div>
+              <a
+                href="https://yandex.ru/maps/org/dymokhod_treyd/1368513691/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Открыть в Яндекс Картах <ArrowRight size={17} aria-hidden />
+              </a>
+            </div>
+            <div className={styles.mapFrame}>
+              <iframe
+                src="https://yandex.ru/map-widget/v1/?z=16&ol=biz&oid=1368513691"
+                title="Дымоход-Трейд на Яндекс Картах"
+                loading="lazy"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <footer className={styles.footer}>
         <div className={styles.shell}>
           <div className={styles.footerGrid}>
@@ -476,7 +504,7 @@ export default function HomePage() {
               <strong>Контакты</strong>
               <div className={styles.address}>
                 <MapPin aria-hidden size={15} />
-                <span>Санкт-Петербург, ул. Хрустальная, 11Б</span>
+                <span>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2</span>
               </div>
               <div className={styles.legal}>
                 <FileCheck2 aria-hidden size={15} />
