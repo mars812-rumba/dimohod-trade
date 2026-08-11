@@ -25,6 +25,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
+import { HeroScenarioSlider } from "../components/HeroScenarioSlider";
 import { LeadForm } from "../components/LeadForm";
 import {
   cookiePolicyPath,
@@ -94,18 +95,39 @@ const scenarios = [
 const heroScenarios = [
   {
     title: "Для бани",
+    shortTitle: "Баня",
     image: "/images/home/scenario-banya.webp",
     href: "/solutions/banya",
   },
   {
+    title: "Для дома",
+    shortTitle: "Дом",
+    image: "/images/home/hero-house-chimney-v1-720.webp",
+    href: "/solutions/dom",
+  },
+  {
+    title: "Для печи",
+    shortTitle: "Печь",
+    image: "/images/home/scenario-kamin.webp",
+    href: "/solutions/pech",
+  },
+  {
     title: "Для камина",
+    shortTitle: "Камин",
     image: "/images/home/scenario-kamin.webp",
     href: "/solutions/kamin",
   },
   {
-    title: "Для котельной",
+    title: "Для твердотопливного котла",
+    shortTitle: "ТТ котёл",
     image: "/images/home/scenario-tt-kotel.webp",
     href: "/solutions/tverdotoplivny-kotel",
+  },
+  {
+    title: "Для газового котла",
+    shortTitle: "Газ",
+    image: "/images/home/scenario-gaz.webp",
+    href: "/solutions/gazovyy-kotel",
   },
 ];
 
@@ -193,20 +215,12 @@ export default function HomePage() {
               <p className={styles.heroLead}>
                 Подберём комплект по вашей трассе и параметрам отопителя.
               </p>
-              <nav className={styles.heroScenarios} aria-label="Сценарии подбора дымохода">
-                {heroScenarios.map((scenario) => (
-                  <Link className={styles.heroScenario} href={scenario.href} key={scenario.href}>
-                    <Image
-                      src={assetUrl(scenario.image)}
-                      alt=""
-                      fill
-                      sizes="(max-width: 720px) 31vw, 220px"
-                    />
-                    <span>{scenario.title}</span>
-                    <ArrowRight size={16} aria-hidden />
-                  </Link>
-                ))}
-              </nav>
+              <HeroScenarioSlider
+                items={heroScenarios.map((scenario) => ({
+                  ...scenario,
+                  image: assetUrl(scenario.image),
+                }))}
+              />
               <dl className={styles.proof}>
                 <div>
                   <dt>
