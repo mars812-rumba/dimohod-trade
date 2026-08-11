@@ -101,7 +101,7 @@
   font-size: clamp(58px, 7.2vw, 105px);
   font-weight: 650;
   line-height: 0.86;
-  letter-spacing: -0.065em;
+  letter-spacing: -0.04em;
   text-wrap: balance;
 }
 
@@ -184,7 +184,8 @@
 }
 
 .proof div {
-  padding: 18px 18px 0 0;
+  min-width: 0;
+  padding: 20px 20px 0 0;
 }
 
 .proof div + div {
@@ -198,7 +199,7 @@
   align-items: center;
   color: var(--steel-deep);
   font-family: "Arial Narrow", "Aptos Narrow", sans-serif;
-  font-size: 25px;
+  font-size: clamp(19px, 1.8vw, 25px);
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -210,9 +211,11 @@
 }
 
 .proof dd {
-  margin: 6px 0 0;
+  max-width: 24ch;
+  margin: 9px 0 0;
   color: #617177;
   font-size: 12px;
+  line-height: 1.45;
 }
 
 .heroSystem {
@@ -224,18 +227,18 @@
 .systemRule {
   position: absolute;
   right: 30px;
-  bottom: 30px;
-  left: -30px;
+  bottom: 62px;
+  left: -46px;
   z-index: 3;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 14px;
   align-items: center;
-  min-height: 88px;
-  padding: 18px 20px;
+  min-height: 96px;
+  padding: 20px 22px;
   color: #fff;
   background: var(--steel-deep);
-  box-shadow: 0 16px 42px rgba(16, 33, 39, 0.24);
+  box-shadow: 0 24px 48px rgba(16, 33, 39, 0.3);
 }
 
 .systemRule svg {
@@ -257,7 +260,10 @@
 }
 
 .systemRule strong {
+  max-width: 48ch;
   font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
 }
 
 .route {
@@ -490,6 +496,14 @@
 .calculatorSection :global(.configurator-sheet),
 .calculatorSection :global(.configurator-svg-wrap) {
   background-color: #e9eeee;
+}
+
+.configuratorFallback {
+  min-height: 360px;
+  padding: 32px;
+  border: 1px solid var(--line);
+  color: #596a70;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .safetySection {
@@ -851,7 +865,7 @@
 
   .heroCopy {
     margin-inline: -14px;
-    padding: 24px 14px 28px;
+    padding: 24px 14px 100px;
     background:
       linear-gradient(
         180deg,
@@ -896,7 +910,7 @@
     width: 100%;
     min-height: 46px;
     padding: 0 10px;
-    font-size: clamp(10px, 3.2vw, 12px);
+    font-size: clamp(10px, 3vw, 12px);
     line-height: 1.15;
     text-align: center;
     white-space: nowrap;
@@ -909,13 +923,23 @@
 
   .proof div,
   .proof div + div {
-    padding: 13px 0;
+    display: grid;
+    grid-template-columns: minmax(136px, 0.9fr) minmax(0, 1.1fr);
+    gap: 14px;
+    align-items: center;
+    padding: 14px 0;
     border-top: 1px solid var(--line);
     border-left: 0;
   }
 
   .proof dt {
-    font-size: 23px;
+    font-size: clamp(17px, 5vw, 21px);
+    line-height: 1.08;
+  }
+
+  .proof dd {
+    margin-top: 0;
+    font-size: 11px;
   }
 
   .heroActions {
@@ -923,7 +947,10 @@
   }
 
   .heroSystem {
-    min-height: 116px;
+    z-index: 2;
+    min-height: 0;
+    margin-top: -66px;
+    padding: 0 8px 30px;
   }
 
   .systemRule {
@@ -932,6 +959,8 @@
     bottom: auto;
     left: auto;
     width: 100%;
+    min-height: 92px;
+    box-shadow: 0 20px 42px rgba(16, 33, 39, 0.3);
   }
 
   .route {

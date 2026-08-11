@@ -5,20 +5,20 @@ import {
   ArrowRight,
   Check,
   ChevronRight,
-  Database,
   FileCheck2,
   FlameKindling,
   Gauge,
   Home,
   LayoutGrid,
-  ListChecks,
   Mail,
   MapPin,
-  PackageCheck,
+  MessageCircleQuestion,
   Phone,
+  ReceiptText,
   Ruler,
   ShieldCheck,
   SlidersHorizontal,
+  Timer,
   Wrench,
   Zap,
 } from "lucide-react";
@@ -152,30 +152,30 @@ export default function HomePage() {
               <dl className={styles.proof}>
                 <div>
                   <dt>
-                    <Database size={20} strokeWidth={1.65} aria-hidden />
-                    <span>6 339</span>
+                    <Timer size={20} strokeWidth={1.65} aria-hidden />
+                    <span>≈ 2 минуты</span>
                   </dt>
-                  <dd>вариантов в базе</dd>
+                  <dd>на пошаговый подбор совместимого комплекта</dd>
                 </div>
                 <div>
                   <dt>
-                    <ListChecks size={20} strokeWidth={1.65} aria-hidden />
-                    <span>11</span>
+                    <ReceiptText size={20} strokeWidth={1.65} aria-hidden />
+                    <span>Состав на экране</span>
                   </dt>
-                  <dd>правил совместимости</dd>
+                  <dd>увидите элементы и их количество в одной смете</dd>
                 </div>
                 <div>
                   <dt>
-                    <PackageCheck size={20} strokeWidth={1.65} aria-hidden />
-                    <span>1 комплект</span>
+                    <MessageCircleQuestion size={20} strokeWidth={1.65} aria-hidden />
+                    <span>Помощь специалиста</span>
                   </dt>
-                  <dd>вместо списка деталей</dd>
+                  <dd>менеджер подключится к сложным вопросам</dd>
                 </div>
               </dl>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#calculator">
                   <SlidersHorizontal size={18} strokeWidth={1.7} aria-hidden />
-                  Подобрать дымоход
+                  Подобрать за 2 минуты
                 </a>
                 <Link className={styles.secondaryButton} href="/catalog">
                   <LayoutGrid size={17} strokeWidth={1.7} aria-hidden />
@@ -188,8 +188,8 @@ export default function HomePage() {
               <div className={styles.systemRule}>
                 <ShieldCheck size={22} aria-hidden />
                 <div>
-                  <span>Проверяемые исходные данные</span>
-                  <strong>Отопитель, маршрут и каждый участок системы</strong>
+                  <span>Результат конфигуратора</span>
+                  <strong>Черновой комплект можно проверить и уточнить перед заказом</strong>
                 </div>
               </div>
             </div>
