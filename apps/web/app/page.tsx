@@ -387,27 +387,41 @@ export default function HomePage() {
       <footer className={styles.footer}>
         <div className={styles.shell}>
           <div className={styles.footerGrid}>
-            <div>
-              <strong>Дымоход Трейд</strong>
+            <div className={styles.footerBrand}>
+              <Link href="/" aria-label="Дымоход Трейд — главная">
+                <img
+                  alt="Дымоход Трейд"
+                  height="82"
+                  src={assetUrl("/brand/logo-original.jpg")}
+                  width="180"
+                />
+              </Link>
               <p>Подбор, комплектация и поставка дымоходных систем.</p>
             </div>
-            <div className={styles.footerLinks}>
+            <nav className={styles.footerLinks} aria-label="Разделы сайта">
+              <strong>Разделы сайта</strong>
               <Link href="/catalog">Каталог</Link>
               <Link href="/solutions">Решения</Link>
               <a href="#calculator">Конфигуратор</a>
               <a href="tel:+79650756555">Контакты</a>
+            </nav>
+            <nav className={styles.footerLinks} aria-label="Правовые документы">
+              <strong>Документы</strong>
               <Link href={privacyPolicyPath}>Политика персональных данных</Link>
               <Link href={personalDataConsentPath}>Согласие на обработку данных</Link>
               <Link href={cookiePolicyPath}>Cookie и локальные технологии</Link>
               <Link href={userAgreementPath}>Пользовательское соглашение</Link>
-            </div>
-            <div className={styles.address}>
-              <MapPin size={15} />
-              <span>Санкт-Петербург, ул. Хрустальная, 11Б</span>
-            </div>
-            <div className={styles.legal}>
-              <FileCheck2 size={15} />
-              <span>ООО «Дымоходы-трейд плюс» · ИНН 7811635572 · ОГРН 1177847018216</span>
+            </nav>
+            <div className={styles.footerContacts}>
+              <strong>Контакты</strong>
+              <div className={styles.address}>
+                <MapPin aria-hidden size={15} />
+                <span>Санкт-Петербург, ул. Хрустальная, 11Б</span>
+              </div>
+              <div className={styles.legal}>
+                <FileCheck2 aria-hidden size={15} />
+                <span>ООО «Дымоходы-трейд плюс» · ИНН 7811635572 · ОГРН 1177847018216</span>
+              </div>
             </div>
           </div>
           <div className={styles.footerBottom}>© 2026 Дымоход Трейд</div>

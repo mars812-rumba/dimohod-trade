@@ -765,8 +765,8 @@
 
 .footerGrid {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr 1fr 1.3fr;
-  gap: 34px;
+  grid-template-columns: 1.25fr 0.72fr 1.15fr 1.15fr;
+  gap: clamp(28px, 4vw, 58px);
   align-items: start;
   padding: 46px 0 38px;
 }
@@ -775,9 +775,18 @@
   color: #fff;
 }
 
+.footerBrand img {
+  display: block;
+  width: 180px;
+  height: 82px;
+  object-fit: contain;
+  object-position: left center;
+  mix-blend-mode: screen;
+}
+
 .footerGrid p {
   max-width: 260px;
-  margin: 10px 0 0;
+  margin: 14px 0 0;
   font-size: 12px;
   line-height: 1.5;
 }
@@ -786,6 +795,33 @@
   display: grid;
   gap: 8px;
   font-size: 13px;
+}
+
+.footerLinks strong,
+.footerContacts > strong {
+  margin-bottom: 7px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.footerLinks a {
+  width: fit-content;
+  line-height: 1.45;
+}
+
+.footerLinks a:hover {
+  color: #fff;
+}
+
+.footerLinks a:focus-visible,
+.footerBrand a:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.55);
+  outline-offset: 4px;
+}
+
+.footerContacts {
+  display: grid;
+  gap: 14px;
 }
 
 .address,
@@ -960,7 +996,9 @@
     left: auto;
     width: 100%;
     min-height: 92px;
+    margin-bottom: -56px;
     box-shadow: 0 20px 42px rgba(16, 33, 39, 0.3);
+    transform: translateY(-56px);
   }
 
   .route {
@@ -1045,6 +1083,12 @@
 
   .footerGrid {
     grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .footerBrand img {
+    width: 164px;
+    height: 75px;
   }
 }
 
