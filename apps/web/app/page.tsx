@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 import { LeadForm } from "../components/LeadForm";
+import { cookiePolicyPath, personalDataConsentPath, privacyPolicyPath } from "@/lib/privacy";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -390,6 +391,9 @@ export default function HomePage() {
               <Link href="/solutions">Решения</Link>
               <a href="#calculator">Конфигуратор</a>
               <a href="tel:+79650756555">Контакты</a>
+              <Link href={privacyPolicyPath}>Политика персональных данных</Link>
+              <Link href={personalDataConsentPath}>Согласие на обработку данных</Link>
+              <Link href={cookiePolicyPath}>Cookie и локальные технологии</Link>
             </div>
             <div className={styles.address}>
               <MapPin size={15} />
@@ -397,7 +401,7 @@ export default function HomePage() {
             </div>
             <div className={styles.legal}>
               <FileCheck2 size={15} />
-              <span>ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span>
+              <span>ООО «Дымоходы-трейд плюс» · ИНН 7811635572 · ОГРН 1177847018216</span>
             </div>
           </div>
           <div className={styles.footerBottom}>© 2026 Дымоход Трейд</div>

@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { CategoryNode, CatalogTreeResponse } from "@/lib/api";
 import { InstallAppButton } from "./InstallAppButton";
+import { personalDataConsentPath, privacyPolicyPath } from "@/lib/privacy";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -110,9 +111,9 @@ export function SiteHeader() {
 
         <nav className="top-nav" aria-label="Основная навигация">
           <Link href="/catalog">Каталог</Link>
-          <Link href="/catalog?scenario=banya">Для бани</Link>
-          <Link href="/catalog?scenario=kamin">Для камина</Link>
-          <Link href="/catalog?scenario=gaz">Для газа</Link>
+          <Link href="/solutions">Решения</Link>
+          <Link href="/solutions/banya">Для бани</Link>
+          <Link href="/solutions/dom">Для дома</Link>
         </nav>
 
         <div className="header-right">
@@ -175,11 +176,29 @@ export function SiteHeader() {
                 ) : null}
               </div>
             </details>
-            <Link href="/catalog?scenario=banya" onClick={closeMenu}>Для бани и сауны</Link>
-            <Link href="/catalog?scenario=kamin" onClick={closeMenu}>Для камина</Link>
-            <Link href="/catalog?scenario=gaz" onClick={closeMenu}>Для газового котла</Link>
+            <details className="mobile-menu-catalog">
+              <summary>
+                <span>Решения</span>
+                <ChevronDown aria-hidden size={17} />
+              </summary>
+              <div className="mobile-menu-catalog-body">
+                <Link href="/solutions" onClick={closeMenu}>Все сценарии</Link>
+                <Link href="/solutions/banya" onClick={closeMenu}>Для бани и сауны</Link>
+                <Link href="/solutions/dom" onClick={closeMenu}>Для частного дома</Link>
+                <Link href="/solutions/pech" onClick={closeMenu}>Для отопительной печи</Link>
+                <Link href="/solutions/kamin" onClick={closeMenu}>Для камина</Link>
+                <Link href="/solutions/tverdotoplivny-kotel" onClick={closeMenu}>
+                  Для твердотопливного котла
+                </Link>
+                <Link href="/solutions/gazovyy-kotel" onClick={closeMenu}>
+                  Для газового котла
+                </Link>
+              </div>
+            </details>
             <Link href="/#calculator" onClick={closeMenu}>Подобрать комплект</Link>
             <Link href="/#send-materials" onClick={closeMenu}>Отправить фото или схему</Link>
+            <Link href={privacyPolicyPath} onClick={closeMenu}>Политика персональных данных</Link>
+            <Link href={personalDataConsentPath} onClick={closeMenu}>Согласие на обработку данных</Link>
           </nav>
 
           <div className="mobile-menu-footer">
