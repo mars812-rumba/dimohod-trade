@@ -484,7 +484,7 @@
   white-space: nowrap;
 }
 
-.productCardImage img {
+.productCardImage > img {
   object-fit: contain;
   padding: 24px;
 }
@@ -1918,7 +1918,7 @@
   }
 
   .productCardSummary {
-    grid-template-rows: 240px auto;
+    grid-template-rows: auto auto;
     border-right: 0;
   }
 
