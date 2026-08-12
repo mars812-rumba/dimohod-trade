@@ -7,6 +7,18 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["178.236.16.63", "sunny-rentals.online"],
   basePath,
   reactStrictMode: true,
+  async headers() {
+    const imageCacheHeaders = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=2592000, stale-while-revalidate=86400",
+      },
+    ];
+    return [
+      { source: "/images/:path*", headers: imageCacheHeaders },
+      { source: "/brand/:path*", headers: imageCacheHeaders },
+    ];
+  },
   async rewrites() {
     return [
       {

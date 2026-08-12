@@ -1,3 +1,4 @@
+import mimetypes
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -7,6 +8,9 @@ from starlette.responses import Response
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+
+
+mimetypes.add_type("image/webp", ".webp")
 
 
 class PublicMediaFiles(StaticFiles):
