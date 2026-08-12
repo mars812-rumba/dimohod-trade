@@ -880,6 +880,64 @@
   border-color: rgba(255, 255, 255, 0.14);
 }
 
+.installationAccordion {
+  margin-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.installationAccordion details {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.installationAccordion summary {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 20px;
+  gap: 10px;
+  align-items: center;
+  min-height: 54px;
+  color: #fff;
+  cursor: pointer;
+  list-style: none;
+}
+
+.installationAccordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.installationAccordion summary:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.7);
+  outline-offset: 3px;
+}
+
+.installationAccordion summary strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.installationAccordion summary svg {
+  color: var(--signal);
+  transition: transform 160ms ease;
+}
+
+.installationAccordion details[open] summary svg {
+  transform: rotate(90deg);
+}
+
+.installationNumber {
+  color: #9fb7c0;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.installationAccordion details > p {
+  margin: -2px 30px 18px 40px;
+  color: #d6e0e3;
+  font-size: 13px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
 .productCardCaution {
   margin: 20px 0 0;
   padding-top: 16px;
@@ -888,6 +946,12 @@
   font-size: 11px;
   line-height: 1.55;
   text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .installationAccordion summary svg {
+    transition: none;
+  }
 }
 
 .productGuidanceFooter {

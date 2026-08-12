@@ -199,8 +199,18 @@ const featuredProductCard = {
   ],
   skuReference: "d150-250-l1000-aisi304-t080-ins50",
   installation: [
-    "Для крепления используются клёпки и фирменные хомуты.",
-    "Соединения элементов нельзя размещать внутри стен и перекрытий.",
+    {
+      title: "В перекрытиях",
+      text: "При прокладке дымохода внутри помещения через перекрытия изделия крепят хомутом к перекрытию. В месте прохода предусматривают гильзовку и устройство пожарной отсечки. Исполнение проходного узла проверяют перед монтажом.",
+    },
+    {
+      title: "В стенах",
+      text: "При проходе через стену предусматривают гильзовку и устройство пожарной отсечки. Соединения изделий не размещают внутри стены: стыки оставляют доступными для осмотра.",
+    },
+    {
+      title: "По наружной стене",
+      text: "При наружном монтаже по вертикальной схеме изделия крепят к универсальным консолям через силовой хомут. Стыки фиксируют клёпками или фирменным широким хомутом; широкий хомут можно выбрать для более аккуратного внешнего вида.",
+    },
   ],
 };
 
@@ -489,14 +499,18 @@ export default async function HomePage() {
                   <h3>Рекомендации по монтажу</h3>
                 </div>
               </div>
-              <ul className={styles.productCardList}>
-                {featuredProductCard.installation.map((item) => (
-                  <li key={item}>
-                    <ChevronRight size={15} aria-hidden />
-                    <span>{item}</span>
-                  </li>
+              <div className={styles.installationAccordion}>
+                {featuredProductCard.installation.map((item, index) => (
+                  <details key={item.title} open={index === 0}>
+                    <summary>
+                      <span className={styles.installationNumber}>0{index + 1}</span>
+                      <strong>{item.title}</strong>
+                      <ChevronRight size={17} strokeWidth={1.8} aria-hidden />
+                    </summary>
+                    <p>{item.text}</p>
+                  </details>
                 ))}
-              </ul>
+              </div>
               <p className={styles.productCardCaution}>
                 Рекомендации помогают разобраться в применении изделия, но не заменяют проект и
                 проверку специалиста.
