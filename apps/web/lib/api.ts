@@ -329,7 +329,12 @@ export async function getCompatibleProducts(
 ): Promise<CompatibleProduct[]> {
   const response = await fetch(
     `${apiBaseUrl}/api/v1/products/${encodeURIComponent(productSlug)}/compatible?sku=${encodeURIComponent(skuReference)}`,
-    { cache: "no-store" },
+    {
+      next: {
+        revalidate: 300,
+        tags: [`home-compatible-${productSlug}-${skuReference}`],
+      },
+    },
   );
 
   if (!response.ok) {
@@ -341,6 +346,8 @@ export async function getCompatibleProducts(
 
 export async function getProductPreview(productSlug: string): Promise<Product | null> {
   const response = await fetch(`${apiBaseUrl}/api/v1/products/${encodeURIComponent(productSlug)}`, {
+    // The family payload exceeds Next.js' 2 MB fetch-cache limit. The homepage
+    // stores a compact, processed projection with unstable_cache instead.
     cache: "no-store",
   });
 

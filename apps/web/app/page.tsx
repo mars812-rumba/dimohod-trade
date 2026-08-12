@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { Suspense, type CSSProperties } from "react";
 import {
   ArrowRight,
@@ -31,6 +32,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
+import { HeroSmoke } from "../components/HeroSmoke";
 import { LeadForm } from "../components/LeadForm";
 import { ProductGalleryPreview } from "../components/ProductGalleryPreview";
 import { YANDEX_MAPS_RATING } from "../components/YandexRatingBadge";
@@ -261,25 +263,41 @@ function productPreviewMedia(value: unknown): MediaItem[] {
     .filter((item): item is MediaItem => Boolean(item));
 }
 
+const getCachedHomeProductDemo = unstable_cache(
+  async () => {
+    const [compatibleProducts, previewProduct] = await Promise.all([
+      getCompatibleProducts("sendvich-truba", featuredProductCard.skuReference),
+      getProductPreview("sendvich-truba"),
+    ]);
+    const previewSku = previewProduct?.skus.find(
+      (sku) => sku.slug === featuredProductCard.skuReference,
+    ) ?? null;
+
+    return {
+      compatibleProducts: completeCompatibleProducts(compatibleProducts),
+      previewBadges: steelSelectionBadges(previewSku),
+      previewMedia: productPreviewMedia(previewProduct?.extra_attributes.media),
+    };
+  },
+  ["home-product-demo-v1"],
+  { revalidate: 300, tags: ["home-product-demo"] },
+);
+
 export default async function HomePage() {
-  const [compatibleProducts, previewProduct] = await Promise.all([
-    getCompatibleProducts("sendvich-truba", featuredProductCard.skuReference)
-      .then(completeCompatibleProducts)
-      .catch(() => []),
-    getProductPreview("sendvich-truba").catch(() => null),
-  ]);
-  const previewMedia = productPreviewMedia(previewProduct?.extra_attributes.media).map((item) => ({
+  const homeProductDemo = await getCachedHomeProductDemo().catch(() => ({
+    compatibleProducts: [],
+    previewBadges: [],
+    previewMedia: [],
+  }));
+  const previewMedia = homeProductDemo.previewMedia.map((item) => ({
     ...item,
     url: assetUrl(item.url),
     thumbnail_url: item.thumbnail_url ? assetUrl(item.thumbnail_url) : null,
   }));
-  const previewSku = previewProduct?.skus.find(
-    (sku) => sku.slug === featuredProductCard.skuReference,
-  ) ?? null;
-  const previewBadges = steelSelectionBadges(previewSku);
+  const { compatibleProducts, previewBadges } = homeProductDemo;
   const heroStyle = {
-    "--hero-image": `url("${assetUrl("/images/home/hero-chimney-smoke-v3-1600.webp")}")`,
-    "--hero-image-mobile": `url("${assetUrl("/images/home/hero-chimney-smoke-v3-720.webp")}")`,
+    "--hero-image": `url("${assetUrl("/images/home/hero-chimney-clean-v4-1600.webp")}")`,
+    "--hero-image-mobile": `url("${assetUrl("/images/home/hero-chimney-clean-v4-720.webp")}")`,
   } as CSSProperties;
 
   return (
@@ -287,7 +305,7 @@ export default async function HomePage() {
       <link
         rel="preload"
         as="image"
-        href={assetUrl("/images/home/hero-chimney-smoke-v3-720.webp")}
+        href={assetUrl("/images/home/hero-chimney-clean-v4-720.webp")}
         media="(max-width: 720px)"
         type="image/webp"
         fetchPriority="high"
@@ -295,13 +313,14 @@ export default async function HomePage() {
       <link
         rel="preload"
         as="image"
-        href={assetUrl("/images/home/hero-chimney-smoke-v3-1600.webp")}
+        href={assetUrl("/images/home/hero-chimney-clean-v4-1600.webp")}
         media="(min-width: 721px)"
         type="image/webp"
         fetchPriority="high"
       />
       <main className={styles.main}>
       <section className={styles.hero} style={heroStyle}>
+        <HeroSmoke />
         <div className={styles.shell}>
           <div className={styles.heroGrid}>
             <div className={styles.heroCopy}>
