@@ -467,7 +467,7 @@ export default function HomePage() {
             <div className={styles.reviewsIntro}>
               <div className={styles.reviewsMark}>
                 <Image
-                  src="/images/home/yandex-maps-icon-user-v2.jpg"
+                src="/images/home/yandex-maps-icon-transparent-v3.png"
                   alt="Яндекс Карты"
                   width={128}
                   height={128}
