@@ -278,8 +278,8 @@ export default async function HomePage() {
   ) ?? null;
   const previewBadges = steelSelectionBadges(previewSku);
   const heroStyle = {
-    "--hero-image": `url("${assetUrl("/images/home/hero-chimney-smoke-v2-1600.webp")}")`,
-    "--hero-image-mobile": `url("${assetUrl("/images/home/hero-chimney-smoke-v2-720.webp")}")`,
+    "--hero-image": `url("${assetUrl("/images/home/hero-chimney-smoke-v3-1600.webp")}")`,
+    "--hero-image-mobile": `url("${assetUrl("/images/home/hero-chimney-smoke-v3-720.webp")}")`,
   } as CSSProperties;
 
   return (
@@ -287,7 +287,7 @@ export default async function HomePage() {
       <link
         rel="preload"
         as="image"
-        href={assetUrl("/images/home/hero-chimney-smoke-v2-720.webp")}
+        href={assetUrl("/images/home/hero-chimney-smoke-v3-720.webp")}
         media="(max-width: 720px)"
         type="image/webp"
         fetchPriority="high"
@@ -295,7 +295,7 @@ export default async function HomePage() {
       <link
         rel="preload"
         as="image"
-        href={assetUrl("/images/home/hero-chimney-smoke-v2-1600.webp")}
+        href={assetUrl("/images/home/hero-chimney-smoke-v3-1600.webp")}
         media="(min-width: 721px)"
         type="image/webp"
         fetchPriority="high"

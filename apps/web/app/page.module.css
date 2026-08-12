@@ -1713,14 +1713,14 @@
     padding: 24px 14px 100px;
     background:
       linear-gradient(
-        180deg,
-        rgba(248, 250, 249, 0.9) 0%,
-        rgba(248, 250, 249, 0.76) 58%,
-        rgba(248, 250, 249, 0.18) 100%
+        90deg,
+        rgba(248, 250, 249, 0.94) 0%,
+        rgba(248, 250, 249, 0.82) 54%,
+        rgba(248, 250, 249, 0.24) 100%
       ),
       var(--hero-image-mobile),
       linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
-    background-position: center, right center, center;
+    background-position: center, center top, center;
     background-repeat: no-repeat;
     background-size: 100% 100%, cover, auto;
   }
