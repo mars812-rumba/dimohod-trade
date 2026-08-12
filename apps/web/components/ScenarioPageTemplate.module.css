@@ -277,24 +277,35 @@
   background: var(--scenario-surface);
 }
 
-.guidanceItem > svg {
-  margin-bottom: 20px;
-  color: var(--scenario-signal);
-}
-
 .guidanceItem h3 {
   margin: 0;
   font-size: 19px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
 }
 
 .guidanceItem ul {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   margin: 18px 0 0;
-  padding-left: 20px;
+  padding: 0;
   color: var(--scenario-muted);
   font-size: 14px;
   line-height: 1.55;
+  list-style: none;
+}
+
+.guidanceItem li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+
+.guidanceItem li svg {
+  margin-top: 2px;
+  color: var(--scenario-signal);
 }
 
 .mistakeItem {
@@ -550,20 +561,43 @@ a.groupItem:hover {
   margin: 0;
   color: #fff;
   font-size: 16px;
+  font-weight: 600;
 }
 
 .reviewColumns ul {
   display: grid;
-  gap: 8px;
+  gap: 11px;
   margin: 14px 0 0;
-  padding-left: 18px;
+  padding: 0;
   color: #c6d4d8;
   font-size: 14px;
   line-height: 1.5;
+  list-style: none;
+}
+
+.reviewColumns li {
+  display: grid;
+  grid-template-columns: 19px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+
+.reviewColumns li svg {
+  margin-top: 2px;
+  color: #a9c1c8;
 }
 
 .faqList {
   max-width: 860px;
+}
+
+.faqHeading {
+  margin-bottom: 24px;
+}
+
+.faqHeading h2 {
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 560;
 }
 
 .faqList details {
@@ -571,16 +605,36 @@ a.groupItem:hover {
 }
 
 .faqList summary {
-  padding: 22px 34px 22px 0;
-  font-size: 17px;
-  font-weight: 650;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  gap: 16px;
+  align-items: center;
+  padding: 19px 0;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
   cursor: pointer;
+  list-style: none;
+}
+
+.faqList summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqList summary svg {
+  color: var(--scenario-steel);
+  transition: transform 160ms ease-out;
+}
+
+.faqList details[open] summary svg {
+  transform: rotate(180deg);
 }
 
 .faqList p {
   max-width: 720px;
-  margin: -4px 0 24px;
+  margin: -2px 42px 22px 0;
   color: var(--scenario-muted);
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -666,6 +720,28 @@ a.groupItem:hover {
 
   .guidanceItem {
     min-height: auto;
+    padding: 22px;
+  }
+
+  .guidanceItem h3 {
+    font-size: 17px;
+  }
+
+  .guidanceItem ul {
+    font-size: 13.5px;
+  }
+
+  .faqHeading h2 {
+    font-size: 34px;
+  }
+
+  .faqList summary {
+    padding: 17px 0;
+    font-size: 15px;
+  }
+
+  .faqList p {
+    margin-right: 28px;
   }
 
   .routeOption,
@@ -675,5 +751,11 @@ a.groupItem:hover {
 
   .routeImage {
     min-height: 205px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faqList summary svg {
+    transition: none;
   }
 }

@@ -6,6 +6,7 @@ import {
   Building2,
   Camera,
   Check,
+  ChevronDown,
   FileText,
   FlameKindling,
   Home,
@@ -147,31 +148,47 @@ export function ScenarioPageTemplate({
               ) : null}
               <div className={styles.guidanceGrid}>
                 <article className={styles.guidanceItem}>
-                  <NotebookTabs size={22} strokeWidth={1.7} aria-hidden />
                   <h3>Что проверить в паспорте</h3>
                   <ul>
-                    {content.guidance.passport.map((item) => <li key={item}>{item}</li>)}
+                    {content.guidance.passport.map((item) => (
+                      <li key={item}>
+                        <NotebookTabs size={17} strokeWidth={1.7} aria-hidden />
+                        <span>{item}</span>
+                      </li>
+                    ))}
                   </ul>
                 </article>
                 <article className={styles.guidanceItem}>
-                  <Wrench size={22} strokeWidth={1.7} aria-hidden />
                   <h3>Материал и исполнение</h3>
                   <ul>
-                    {content.guidance.material.map((item) => <li key={item}>{item}</li>)}
+                    {content.guidance.material.map((item) => (
+                      <li key={item}>
+                        <Wrench size={17} strokeWidth={1.7} aria-hidden />
+                        <span>{item}</span>
+                      </li>
+                    ))}
                   </ul>
                 </article>
                 <article className={styles.guidanceItem}>
-                  <ShieldCheck size={22} strokeWidth={1.7} aria-hidden />
                   <h3>Что проверить по безопасности</h3>
                   <ul>
-                    {content.guidance.safety.map((item) => <li key={item}>{item}</li>)}
+                    {content.guidance.safety.map((item) => (
+                      <li key={item}>
+                        <ShieldCheck size={17} strokeWidth={1.7} aria-hidden />
+                        <span>{item}</span>
+                      </li>
+                    ))}
                   </ul>
                 </article>
                 <article className={`${styles.guidanceItem} ${styles.mistakeItem}`}>
-                  <AlertTriangle size={22} strokeWidth={1.7} aria-hidden />
                   <h3>Типовые ошибки</h3>
                   <ul>
-                    {content.guidance.mistakes.map((item) => <li key={item}>{item}</li>)}
+                    {content.guidance.mistakes.map((item) => (
+                      <li key={item}>
+                        <AlertTriangle size={17} strokeWidth={1.7} aria-hidden />
+                        <span>{item}</span>
+                      </li>
+                    ))}
                   </ul>
                 </article>
               </div>
@@ -338,32 +355,35 @@ export function ScenarioPageTemplate({
             <div>
               <h3>Можем собрать сразу</h3>
               <ul>
-                <li>паспортные параметры и фотографии объекта;</li>
-                <li>черновую геометрию трассы;</li>
-                <li>предварительный список реальных позиций.</li>
+                <li><Check size={16} aria-hidden /><span>паспортные параметры и фотографии объекта;</span></li>
+                <li><Check size={16} aria-hidden /><span>черновую геометрию трассы;</span></li>
+                <li><Check size={16} aria-hidden /><span>предварительный список реальных позиций.</span></li>
               </ul>
             </div>
             <div>
               <h3>Проверяет специалист</h3>
               <ul>
-                <li>совместимость оборудования и элементов;</li>
-                <li>проходы, крепление и условия монтажа;</li>
-                <li>финальный состав перед заказом.</li>
+                <li><ShieldCheck size={16} aria-hidden /><span>совместимость оборудования и элементов;</span></li>
+                <li><ShieldCheck size={16} aria-hidden /><span>проходы, крепление и условия монтажа;</span></li>
+                <li><ShieldCheck size={16} aria-hidden /><span>финальный состав перед заказом.</span></li>
               </ul>
             </div>
           </div>
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section className={`${styles.section} ${styles.faqSection}`}>
         <div className={styles.shell}>
-          <div className={styles.sectionIntro}>
+          <div className={`${styles.sectionIntro} ${styles.faqHeading}`}>
             <h2>Частые вопросы</h2>
           </div>
           <div className={styles.faqList}>
             {content.faq.map((item) => (
               <details key={item.question}>
-                <summary>{item.question}</summary>
+                <summary>
+                  <span>{item.question}</span>
+                  <ChevronDown size={20} strokeWidth={1.7} aria-hidden />
+                </summary>
                 <p>{item.answer}</p>
               </details>
             ))}
