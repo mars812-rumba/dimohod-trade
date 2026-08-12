@@ -2,8 +2,8 @@
 
 import {
   ChevronDown,
-  FlameKindling,
   Mail,
+  MapPin,
   Menu,
   Phone,
   SlidersHorizontal,
@@ -209,17 +209,20 @@ export function SiteHeader() {
 
           <div className="mobile-menu-footer">
             <a href="tel:+79650756555">
-              <Phone aria-hidden size={18} />
+              <Phone aria-hidden size={16} />
               <span>+7 (965) 075-65-55</span>
             </a>
             <a href="mailto:office@dimohod-trade.pro">
-              <Mail aria-hidden size={18} />
+              <Mail aria-hidden size={16} />
               <span>office@dimohod-trade.pro</span>
             </a>
+            <p>
+              <MapPin aria-hidden size={16} />
+              <span>Санкт-Петербург · доставка по России</span>
+            </p>
             <div className="mobile-menu-install">
               <InstallAppButton />
             </div>
-            <p><FlameKindling aria-hidden size={16} /> Санкт-Петербург · доставка по России</p>
           </div>
         </div>
       </dialog>
