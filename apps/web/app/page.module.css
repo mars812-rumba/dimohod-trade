@@ -463,6 +463,27 @@
   background: #edf1f1;
 }
 
+.productCardImage :global(.yandex-rating-badge) {
+  top: 10px;
+  left: 10px;
+}
+
+.productCardImage :global(.product-image-badges) {
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  flex-wrap: nowrap;
+  gap: 4px;
+  max-width: none;
+}
+
+.productCardImage :global(.product-image-badge) {
+  min-height: 24px;
+  padding: 4px 7px;
+  font-size: 8px;
+  white-space: nowrap;
+}
+
 .productCardImage img {
   object-fit: contain;
   padding: 24px;

@@ -3,11 +3,14 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { MediaItem } from "@/lib/api";
+import type { SteelBadge } from "@/lib/steelSelection";
+import { YandexRatingBadge } from "./YandexRatingBadge";
 import styles from "../app/page.module.css";
 
 type ProductGalleryPreviewProps = {
   media: MediaItem[];
   productName: string;
+  badges: SteelBadge[];
 };
 
 const roleLabels: Record<string, string> = {
@@ -22,7 +25,7 @@ function roleLabel(role: string | null, index: number) {
   return role ? roleLabels[role] ?? role : `Фото ${index + 1}`;
 }
 
-export function ProductGalleryPreview({ media, productName }: ProductGalleryPreviewProps) {
+export function ProductGalleryPreview({ media, productName, badges }: ProductGalleryPreviewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selected = media[selectedIndex] ?? media[0];
 
@@ -33,6 +36,7 @@ export function ProductGalleryPreview({ media, productName }: ProductGalleryPrev
   return (
     <div className={styles.productPreviewGallery}>
       <div className={styles.productCardImage} aria-live="polite">
+        <YandexRatingBadge />
         <Image
           key={selected.url}
           src={selected.url}
@@ -42,6 +46,18 @@ export function ProductGalleryPreview({ media, productName }: ProductGalleryPrev
           unoptimized
           sizes="(max-width: 720px) calc(100vw - 30px), 480px"
         />
+        {badges.length > 0 ? (
+          <div className="product-image-badges" aria-label="Характеристики выбранного варианта">
+            {badges.map((badge) => (
+              <span
+                className={`product-image-badge product-image-badge-${badge.tone}`}
+                key={`${badge.tone}-${badge.label}`}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {media.length > 1 ? (

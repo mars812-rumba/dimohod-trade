@@ -47,6 +47,7 @@ import {
   userAgreementPath,
 } from "@/lib/privacy";
 import { productSelectionPath } from "@/lib/productUrls";
+import { steelSelectionBadges } from "@/lib/steelSelection";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -266,6 +267,10 @@ export default async function HomePage() {
     url: assetUrl(item.url),
     thumbnail_url: item.thumbnail_url ? assetUrl(item.thumbnail_url) : null,
   }));
+  const previewSku = previewProduct?.skus.find(
+    (sku) => sku.slug === featuredProductCard.skuReference,
+  ) ?? null;
+  const previewBadges = steelSelectionBadges(previewSku);
   const heroStyle = {
     "--hero-image": `url("${assetUrl("/images/home/hero-house-chimney-v1-720.webp")}")`,
     "--hero-image-mobile": `url("${assetUrl("/images/home/hero-house-chimney-v1-480.webp")}")`,
@@ -434,6 +439,7 @@ export default async function HomePage() {
                   role: "general",
                 }]}
                 productName={featuredProductCard.name}
+                badges={previewBadges}
               />
               <div className={styles.productCardSummaryBody}>
                 <span className={styles.productCardEyebrow}>Фрагмент карточки товара</span>
