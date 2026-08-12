@@ -25,7 +25,6 @@ import {
   Zap,
 } from "lucide-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
-import { HeroScenarioSlider } from "../components/HeroScenarioSlider";
 import { LeadForm } from "../components/LeadForm";
 import {
   cookiePolicyPath,
@@ -87,39 +86,6 @@ const scenarios = [
     slug: "gaz",
     title: "Газовый котёл",
     text: "Документация модели и разрешённая производителем конфигурация системы.",
-    image: "/images/home/scenario-gaz.webp",
-    href: "/solutions/gazovyy-kotel",
-  },
-];
-
-const heroScenarios = [
-  {
-    title: "Для бани",
-    image: "/images/home/scenario-banya.webp",
-    href: "/solutions/banya",
-  },
-  {
-    title: "Для дома",
-    image: "/images/home/hero-house-chimney-v1-720.webp",
-    href: "/solutions/dom",
-  },
-  {
-    title: "Для печи",
-    image: "/images/home/scenario-kamin.webp",
-    href: "/solutions/pech",
-  },
-  {
-    title: "Для камина",
-    image: "/images/home/scenario-kamin.webp",
-    href: "/solutions/kamin",
-  },
-  {
-    title: "Для твердотопливного котла",
-    image: "/images/home/scenario-tt-kotel.webp",
-    href: "/solutions/tverdotoplivny-kotel",
-  },
-  {
-    title: "Для газового котла",
     image: "/images/home/scenario-gaz.webp",
     href: "/solutions/gazovyy-kotel",
   },
@@ -270,12 +236,6 @@ export default function HomePage() {
                   <dd>менеджер подключится к сложным вопросам</dd>
                 </div>
               </dl>
-              <HeroScenarioSlider
-                items={heroScenarios.map((scenario) => ({
-                  ...scenario,
-                  image: assetUrl(scenario.image),
-                }))}
-              />
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#calculator">
                   <SlidersHorizontal size={18} strokeWidth={1.7} aria-hidden />
