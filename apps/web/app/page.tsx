@@ -570,7 +570,7 @@ export default async function HomePage() {
               <p>От выбора детали до её места в системе.</p>
               <div>
                 <Link className={styles.productPreviewLink} href={featuredProductCard.href}>
-                  Посмотреть эту карточку <ArrowRight size={16} aria-hidden />
+                  Смотреть всё о товаре <ArrowRight size={16} aria-hidden />
                 </Link>
                 <Link className={styles.primaryButton} href="/catalog">
                   Открыть каталог <ArrowRight size={17} aria-hidden />
