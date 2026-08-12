@@ -269,79 +269,10 @@
 
 .systemRule strong {
   max-width: 48ch;
+  margin: 0;
   font-size: 14px;
   font-weight: 650;
   line-height: 1.4;
-}
-
-.route {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--line);
-  list-style: none;
-  background: rgba(255, 255, 255, 0.82);
-}
-
-.route li {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
-  align-items: center;
-  min-height: 92px;
-  padding: 18px;
-  border-right: 1px solid var(--line);
-}
-
-.route li:last-child {
-  border-right: 0;
-}
-
-.route li > span {
-  color: var(--signal);
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.route strong,
-.route small {
-  display: block;
-}
-
-.route strong {
-  font-size: 14px;
-}
-
-.route small {
-  margin-top: 3px;
-  color: #6a797e;
-  font-size: 11px;
-}
-
-.route svg {
-  color: #9cabaf;
-}
-
-.routePromise {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin: 0;
-  padding: 15px 18px;
-  color: var(--steel-deep);
-  border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.94);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.45;
-}
-
-.routePromise svg {
-  flex: 0 0 auto;
-  color: var(--signal);
 }
 
 .scenarioSection,
@@ -1532,18 +1463,6 @@
     min-height: 520px;
   }
 
-  .route {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .route li:nth-child(3) {
-    border-right: 0;
-  }
-
-  .route li:nth-child(n + 4) {
-    border-top: 1px solid var(--line);
-  }
-
   .scenarioGrid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1708,6 +1627,7 @@
     right: auto;
     bottom: auto;
     left: auto;
+    grid-template-columns: auto 1fr;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -1715,26 +1635,6 @@
     margin-bottom: -56px;
     box-shadow: 0 20px 42px rgba(16, 33, 39, 0.3);
     transform: translateY(-56px);
-  }
-
-  .route {
-    grid-template-columns: 1fr;
-  }
-
-  .route li,
-  .route li:nth-child(3) {
-    border-top: 1px solid var(--line);
-    border-right: 0;
-  }
-
-  .route li:first-child {
-    border-top: 0;
-  }
-
-  .routePromise {
-    align-items: flex-start;
-    padding: 16px;
-    font-size: 12px;
   }
 
   .scenarioSection,

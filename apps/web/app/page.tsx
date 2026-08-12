@@ -141,14 +141,6 @@ const yandexReviews = [
   },
 ];
 
-const route = [
-  { number: "01", title: "Источник", text: "Печь или котёл" },
-  { number: "02", title: "Тёплая зона", text: "Стартовый участок" },
-  { number: "03", title: "Проход", text: "Стена или кровля" },
-  { number: "04", title: "Наружный участок", text: "Проверка исполнения" },
-  { number: "05", title: "Оголовок", text: "Завершение системы" },
-];
-
 const checks = [
   "Диаметр патрубка и всех элементов",
   "Контур для тёплой и холодной зоны",
@@ -288,24 +280,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-
-          <ol className={styles.route} aria-label="Маршрут дымоходной системы">
-            {route.map((step) => (
-              <li key={step.number}>
-                <span>{step.number}</span>
-                <div>
-                  <strong>{step.title}</strong>
-                  <small>{step.text}</small>
-                </div>
-                <ChevronRight size={17} aria-hidden />
-              </li>
-            ))}
-          </ol>
-          <p className={styles.routePromise}>
-            <ShieldCheck size={17} aria-hidden />
-            Конфигуратор связывает шаги в черновую схему, а недостающие данные сохраняет для
-            проверки специалистом.
-          </p>
         </div>
       </section>
 
