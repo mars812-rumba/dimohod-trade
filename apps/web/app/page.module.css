@@ -327,6 +327,8 @@
   padding: 20px 22px;
   color: var(--ink);
   border: 1px solid rgba(255, 255, 255, 0.72);
+  border-right-color: rgba(50, 98, 118, 0.28);
+  border-bottom: 2px solid rgba(50, 98, 118, 0.3);
   background: rgba(255, 255, 255, 0.84);
   backdrop-filter: blur(8px);
 }
