@@ -715,8 +715,8 @@
 
 .reviewsMark {
   overflow: hidden;
-  width: 108px;
-  height: 70px;
+  width: 64px;
+  height: 64px;
   margin-bottom: 30px;
   background: #000;
 }
