@@ -563,7 +563,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     if (!printWindow) return;
     printWindow.opener = null;
     const summary = escapeHtml(configuration.split("\nПозиции:")[0]).replaceAll("\n", "<br>");
-    printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Черновая смета — Дымоход Трейд</title><style>body{font:15px Arial,sans-serif;color:#102127;margin:40px}h1{font-size:28px}p{line-height:1.55}table{width:100%;border-collapse:collapse;margin:24px 0}td,th{padding:10px;border:1px solid #ccd5d7;text-align:left}.note{padding:16px;background:#eef2f2} @page{size:A4;margin:18mm}</style></head><body><h1>Черновая смета дымохода</h1><p>${summary}</p><table><thead><tr><th>Позиция</th><th>Количество</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Это предварительный состав без цены и конкретных SKU. Перед заказом инженер проверит диаметр, сталь, проходные узлы и совместимость.</p><p>Дымоход Трейд · +7 (965) 075-65-55 · info@dimohod-trade.pro</p><script>window.onload=()=>window.print()<\/script></body></html>`);
+    printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Комплект из конфигуратора — Дымоход Трейд</title><style>body{font:15px Arial,sans-serif;color:#102127;margin:40px}h1{font-size:28px}p{line-height:1.55}table{width:100%;border-collapse:collapse;margin:24px 0}td,th{padding:10px;border:1px solid #ccd5d7;text-align:left}.note{padding:16px;background:#eef2f2} @page{size:A4;margin:18mm}</style></head><body><h1>Комплект дымохода из конфигуратора</h1><p>${summary}</p><table><thead><tr><th>Позиция</th><th>Количество</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Комплект собран по указанным параметрам без цены и конкретных SKU. Перед заказом инженер проверит диаметр, сталь, проходные узлы и совместимость.</p><p>Дымоход Трейд · +7 (965) 075-65-55 · info@dimohod-trade.pro</p><script>window.onload=()=>window.print()<\/script></body></html>`);
     printWindow.document.close();
   }
 
@@ -801,7 +801,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       </div>
       <div className="configurator-result-actions">
         <div>
-          <strong>Черновая смета готова</strong>
+          <strong>Комплект собран в конфигураторе</strong>
           <span>Сохраните её в PDF или отправьте состав на проверку.</span>
         </div>
         <button type="button" onClick={savePdf}>

@@ -356,7 +356,7 @@ export function ScenarioPageTemplate({
               <h3>Можем собрать сразу</h3>
               <ul>
                 <li><Check size={16} aria-hidden /><span>паспортные параметры и фотографии объекта;</span></li>
-                <li><Check size={16} aria-hidden /><span>черновую геометрию трассы;</span></li>
+                <li><Check size={16} aria-hidden /><span>геометрию трассы по указанным параметрам;</span></li>
                 <li><Check size={16} aria-hidden /><span>предварительный список реальных позиций.</span></li>
               </ul>
             </div>
