@@ -28,6 +28,7 @@
 
 .hero {
   position: relative;
+  overflow: hidden;
   padding: 76px 0 0;
   border-bottom: 1px solid var(--line);
   background:
@@ -42,13 +43,91 @@
     linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
   background-position:
     center,
-    center,
+    center top,
     center;
   background-repeat: no-repeat, no-repeat, no-repeat;
   background-size:
     100% 100%,
     cover,
     auto;
+}
+
+.hero > .shell {
+  position: relative;
+  z-index: 2;
+}
+
+.heroSmoke {
+  position: absolute;
+  z-index: 1;
+  top: -70px;
+  left: 50%;
+  width: 140px;
+  height: 240px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.heroSmoke span {
+  --smoke-drift: 24px;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 118px;
+  height: 112px;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 31% 63%, rgba(207, 216, 213, 0.72) 0 18%, transparent 48%),
+    radial-gradient(circle at 57% 38%, rgba(237, 241, 239, 0.82) 0 23%, transparent 53%),
+    radial-gradient(circle at 75% 66%, rgba(197, 208, 204, 0.67) 0 19%, transparent 48%),
+    radial-gradient(ellipse at 49% 72%, rgba(225, 232, 229, 0.76) 0 30%, transparent 64%);
+  filter: blur(5px);
+  animation: hero-smoke-rise 5.5s ease-out infinite;
+  animation-play-state: paused;
+}
+
+.heroSmoke[data-active="true"] span {
+  animation-play-state: running;
+}
+
+.heroSmoke span:nth-child(2) {
+  --smoke-drift: 42px;
+  animation-delay: -4.4s;
+}
+
+.heroSmoke span:nth-child(3) {
+  --smoke-drift: 15px;
+  animation-delay: -3.3s;
+}
+
+.heroSmoke span:nth-child(4) {
+  --smoke-drift: 50px;
+  animation-delay: -2.2s;
+}
+
+.heroSmoke span:nth-child(5) {
+  --smoke-drift: 30px;
+  animation-delay: -1.1s;
+}
+
+@keyframes hero-smoke-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, 16px, 0) scale(0.32, 0.4);
+  }
+
+  14% {
+    opacity: 0.88;
+  }
+
+  62% {
+    opacity: 0.58;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(-50% + var(--smoke-drift)), -205px, 0) scale(1.45, 1.7);
+  }
 }
 
 .hero::before {
@@ -1705,24 +1784,32 @@
 
   .hero {
     padding-top: 0;
-    background: #eef2f2;
-  }
-
-  .heroCopy {
-    margin-inline: -14px;
-    padding: 24px 14px 100px;
     background:
       linear-gradient(
         90deg,
         rgba(248, 250, 249, 0.94) 0%,
-        rgba(248, 250, 249, 0.82) 54%,
-        rgba(248, 250, 249, 0.24) 100%
+        rgba(248, 250, 249, 0.78) 52%,
+        rgba(248, 250, 249, 0.12) 100%
       ),
       var(--hero-image-mobile),
-      linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
+      #eef2f2;
     background-position: center, center top, center;
     background-repeat: no-repeat;
     background-size: 100% 100%, cover, auto;
+  }
+
+  .heroCopy {
+    margin-inline: 0;
+    padding: 24px 0 100px;
+    background: none;
+  }
+
+  .heroSmoke {
+    top: -30px;
+    left: 70%;
+    width: 112px;
+    height: 232px;
+    transform: translateX(-50%) scale(0.86);
   }
 
   .heroCopy h1 {
@@ -2105,6 +2192,17 @@
   .footerBrand img {
     width: 164px;
     height: 75px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroSmoke span {
+    animation: none;
+  }
+
+  .heroSmoke span:first-child {
+    opacity: 0.34;
+    transform: translate3d(-45%, -66px, 0) scale(1.2);
   }
 }
 
