@@ -7,11 +7,14 @@ import {
   Boxes,
   Check,
   ChevronRight,
+  CircleDot,
+  Cog,
   FileCheck2,
   FlameKindling,
   Gauge,
   Home,
   LayoutGrid,
+  Layers3,
   Link2,
   ListChecks,
   Mail,
@@ -30,6 +33,7 @@ import {
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 import { LeadForm } from "../components/LeadForm";
 import { YANDEX_MAPS_RATING } from "../components/YandexRatingBadge";
+import { getCompatibleProducts, type CompatibleProduct } from "@/lib/api";
 import {
   cookiePolicyPath,
   personalDataConsentPath,
@@ -182,11 +186,7 @@ const featuredProductCard = {
     ["Наружный диаметр", "250 мм"],
     ["Длина", "1000 мм"],
   ],
-  compatible: [
-    "Тройник с К/О 90° Ø150/250",
-    "Отвод 45° Ø150/250",
-    "Хомут широкий Ø150",
-  ],
+  skuReference: "d150-250-l1000-aisi304-t080-ins50",
   installation: [
     "Для крепления используются клёпки и фирменные хомуты.",
     "Соединения элементов нельзя размещать внутри стен и перекрытий.",
@@ -196,7 +196,53 @@ const featuredProductCard = {
 const basePath = process.env.NEXT_BASE_PATH ?? "";
 const assetUrl = (path: string) => `${basePath}${path}`;
 
-export default function HomePage() {
+function completeCompatibleProducts(items: CompatibleProduct[]) {
+  const seenProducts = new Set<string>();
+  return items.filter((item) => {
+    const description = item.short_description?.trim() ?? "";
+    const isComplete = Boolean(
+      item.product_name.trim() &&
+      item.product_slug.trim() &&
+      item.primary_image?.url &&
+      item.price_rub &&
+      description.length >= 80,
+    );
+    if (!isComplete || seenProducts.has(item.product_id)) {
+      return false;
+    }
+    seenProducts.add(item.product_id);
+    return true;
+  }).slice(0, 4);
+}
+
+function compatibleDiameter(item: CompatibleProduct) {
+  if (item.diameter_mm !== null && item.outer_diameter_mm !== null) {
+    return `Ø${item.diameter_mm}/${item.outer_diameter_mm} мм`;
+  }
+  const diameter = item.diameter_mm ?? item.outer_diameter_mm;
+  return diameter === null ? null : `Ø${diameter} мм`;
+}
+
+function compatibleSteel(item: CompatibleProduct) {
+  const steel = item.steel_grade ?? item.material;
+  if (!steel) {
+    return null;
+  }
+  const thickness = item.wall_thickness_mm
+    ? ` · ${Number(item.wall_thickness_mm).toLocaleString("ru-RU")} мм`
+    : "";
+  return `${steel}${thickness}`;
+}
+
+function compatiblePrice(value: string) {
+  return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Number(value))} ₽`;
+}
+
+export default async function HomePage() {
+  const compatibleProducts = await getCompatibleProducts(
+    "sendvich-truba",
+    featuredProductCard.skuReference,
+  ).then(completeCompatibleProducts).catch(() => []);
   const heroStyle = {
     "--hero-image": `url("${assetUrl("/images/home/hero-house-chimney-v1-720.webp")}")`,
     "--hero-image-mobile": `url("${assetUrl("/images/home/hero-house-chimney-v1-480.webp")}")`,
@@ -384,47 +430,76 @@ export default function HomePage() {
               </div>
             </article>
 
-            <div className={styles.productCardDetails}>
-              <section className={styles.productCardDetail}>
+            <section className={`${styles.productCardDetail} ${styles.productCardInstallation}`}>
+              <div className={styles.productCardDetailHeading}>
+                <span aria-hidden><Wrench size={19} strokeWidth={1.8} /></span>
+                <div>
+                  <small>По данным карточки</small>
+                  <h3>Рекомендации по монтажу</h3>
+                </div>
+              </div>
+              <ul className={styles.productCardList}>
+                {featuredProductCard.installation.map((item) => (
+                  <li key={item}>
+                    <ChevronRight size={15} aria-hidden />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className={styles.productCardCaution}>
+                Рекомендации помогают разобраться в применении изделия, но не заменяют проект и
+                проверку специалиста.
+              </p>
+            </section>
+
+            {compatibleProducts.length > 0 ? (
+              <section className={`${styles.productCardDetail} ${styles.compatiblePreview}`}>
                 <div className={styles.productCardDetailHeading}>
                   <span aria-hidden><Link2 size={19} strokeWidth={1.8} /></span>
                   <div>
-                    <small>Следующий шаг</small>
+                    <small>Сопутствующие товары</small>
                     <h3>Совместимые элементы</h3>
                   </div>
                 </div>
-                <ul className={styles.productCardList}>
-                  {featuredProductCard.compatible.map((item) => (
-                    <li key={item}>
-                      <Check size={15} aria-hidden />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              <section className={`${styles.productCardDetail} ${styles.productCardInstallation}`}>
-                <div className={styles.productCardDetailHeading}>
-                  <span aria-hidden><Wrench size={19} strokeWidth={1.8} /></span>
-                  <div>
-                    <small>По данным карточки</small>
-                    <h3>Рекомендации по монтажу</h3>
-                  </div>
+                <div className={styles.compatibleGrid}>
+                  {compatibleProducts.map((item) => {
+                    const diameter = compatibleDiameter(item);
+                    const steel = compatibleSteel(item);
+                    return (
+                      <article className={styles.compatibleSlide} key={item.product_id}>
+                        <div className={styles.compatibleSlideImage}>
+                          <Image
+                            src={assetUrl(item.primary_image!.thumbnail_url ?? item.primary_image!.url)}
+                            alt={item.primary_image!.alt ?? `${item.product_name} — общий вид`}
+                            fill
+                            loading="lazy"
+                            unoptimized
+                            sizes="(max-width: 720px) calc(100vw - 70px), (max-width: 1020px) 50vw, 25vw"
+                          />
+                        </div>
+                        <div className={styles.compatibleSlideBody}>
+                          <h4>{item.product_name}</h4>
+                          <p>{item.short_description}</p>
+                          <div className={styles.compatibleSlideSpecs}>
+                            {diameter ? <span><CircleDot size={13} aria-hidden />{diameter}</span> : null}
+                            {item.insulation_mm !== null ? (
+                              <span><Layers3 size={13} aria-hidden />Изоляция {item.insulation_mm} мм</span>
+                            ) : null}
+                            {steel ? <span><Cog size={13} aria-hidden />{steel}</span> : null}
+                          </div>
+                          <div className={styles.compatibleSlideFooter}>
+                            <strong>{compatiblePrice(item.price_rub!)}</strong>
+                            <Link href={productSelectionPath(item.product_slug, item, item.article)}>
+                              Открыть <ArrowRight size={14} aria-hidden />
+                            </Link>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
-                <ul className={styles.productCardList}>
-                  {featuredProductCard.installation.map((item) => (
-                    <li key={item}>
-                      <ChevronRight size={15} aria-hidden />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className={styles.productCardCaution}>
-                  Рекомендации помогают разобраться в применении изделия, но не заменяют проект и
-                  проверку специалиста.
-                </p>
               </section>
-            </div>
+            ) : null}
 
             <div className={styles.productGuidanceFooter}>
               <p>От выбора детали до её места в системе.</p>
