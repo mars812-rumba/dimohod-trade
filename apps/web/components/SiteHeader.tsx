@@ -3,6 +3,7 @@
 import {
   ChevronDown,
   FlameKindling,
+  Mail,
   Menu,
   Phone,
   SlidersHorizontal,
@@ -210,6 +211,10 @@ export function SiteHeader() {
             <a href="tel:+79650756555">
               <Phone aria-hidden size={18} />
               <span>+7 (965) 075-65-55</span>
+            </a>
+            <a href="mailto:office@dimohod-trade.pro">
+              <Mail aria-hidden size={18} />
+              <span>office@dimohod-trade.pro</span>
             </a>
             <div className="mobile-menu-install">
               <InstallAppButton />
