@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense, type CSSProperties } from "react";
 import {
   ArrowRight,
+  Boxes,
   Check,
   ChevronRight,
   FileCheck2,
@@ -11,6 +12,8 @@ import {
   Gauge,
   Home,
   LayoutGrid,
+  Link2,
+  ListChecks,
   Mail,
   MapPin,
   MessageCircleQuestion,
@@ -33,6 +36,7 @@ import {
   privacyPolicyPath,
   userAgreementPath,
 } from "@/lib/privacy";
+import { productSelectionPath } from "@/lib/productUrls";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -172,6 +176,31 @@ const catalogGroups = [
   },
 ];
 
+const featuredProductCard = {
+  name: "Сэндвич-труба Ø150/250",
+  variant: "L=1000 мм · AISI 304 · 0,8 мм · изоляция 50 мм",
+  image: "/media/catalog/categories/sendvich-truba-truba/photo-1.webp",
+  href: productSelectionPath(
+    "sendvich-truba",
+    { diameter_mm: 150, outer_diameter_mm: 250 },
+    "d150-250-l1000-aisi304-t080-ins50",
+  ),
+  specs: [
+    ["Внутренний диаметр", "150 мм"],
+    ["Наружный диаметр", "250 мм"],
+    ["Длина", "1000 мм"],
+  ],
+  compatible: [
+    "Тройник с К/О 90° Ø150/250",
+    "Отвод 45° Ø150/250",
+    "Хомут широкий Ø150",
+  ],
+  installation: [
+    "Для крепления используются клёпки и фирменные хомуты.",
+    "Соединения элементов нельзя размещать внутри стен и перекрытий.",
+  ],
+};
+
 const basePath = process.env.NEXT_BASE_PATH ?? "";
 const assetUrl = (path: string) => `${basePath}${path}`;
 
@@ -277,6 +306,164 @@ export default function HomePage() {
             Конфигуратор связывает шаги в черновую схему, а недостающие данные сохраняет для
             проверки специалистом.
           </p>
+        </div>
+      </section>
+
+      <section className={styles.differenceSection} aria-labelledby="difference-title">
+        <div className={styles.shell}>
+          <div className={styles.differenceIntro}>
+            <div>
+              <p className={styles.overline}>Не просто трубы</p>
+              <h2 id="difference-title">
+                Трубу купить легко. Сложнее собрать правильный дымоход.
+              </h2>
+            </div>
+            <p>
+              Укажите параметры отопителя и трассы — конфигуратор сформирует черновой комплект
+              целиком: элементы и их количество.
+            </p>
+          </div>
+
+          <div className={styles.differenceFlow}>
+            <article className={styles.differenceScenario}>
+              <span className={styles.differenceIcon} aria-hidden>
+                <Boxes size={23} strokeWidth={1.65} />
+              </span>
+              <div>
+                <span className={styles.differenceLabel}>Самостоятельный подбор</span>
+                <h3>Покупать по отдельности</h3>
+                <p>
+                  Трубы, переходники, тройники и крепёж нужно самостоятельно сверять по диаметру,
+                  типу и связям между элементами.
+                </p>
+              </div>
+            </article>
+
+            <div className={styles.differenceDirection} aria-hidden>
+              <ArrowRight size={25} strokeWidth={1.7} />
+            </div>
+
+            <article className={`${styles.differenceScenario} ${styles.differenceScenarioResolved}`}>
+              <span className={styles.differenceIcon} aria-hidden>
+                <ListChecks size={23} strokeWidth={1.65} />
+              </span>
+              <div>
+                <span className={styles.differenceLabel}>Подбор по параметрам</span>
+                <h3>Собрать комплект</h3>
+                <p>
+                  Вы задаёте параметры отопителя и трассы. Конфигуратор показывает черновой состав
+                  системы и количество элементов на одном экране.
+                </p>
+              </div>
+            </article>
+
+            <div className={styles.differenceFooter}>
+              <p>Вы описываете задачу — мы помогаем собрать систему.</p>
+              <a className={styles.primaryButton} href="#calculator">
+                Собрать комплект <ArrowRight size={17} aria-hidden />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.productGuidanceSection} aria-labelledby="product-guidance-title">
+        <div className={styles.shell}>
+          <div className={styles.productGuidanceIntro}>
+            <div>
+              <p className={styles.overline}>Больше, чем каталог</p>
+              <h2 id="product-guidance-title">
+                Выбрали деталь — покажем, что к ней подходит и как её установить.
+              </h2>
+            </div>
+            <p>
+              В карточке изделия — характеристики, совместимые элементы и рекомендации по
+              монтажу. Нужная информация собрана в одном месте.
+            </p>
+          </div>
+
+          <div className={styles.productCardPreview}>
+            <article className={styles.productCardSummary}>
+              <div className={styles.productCardImage}>
+                <Image
+                  src={assetUrl(featuredProductCard.image)}
+                  alt="Сэндвич-труба Ø150/250"
+                  fill
+                  loading="lazy"
+                  quality={72}
+                  unoptimized
+                  sizes="(max-width: 720px) calc(100vw - 70px), 300px"
+                />
+              </div>
+              <div className={styles.productCardSummaryBody}>
+                <span className={styles.productCardEyebrow}>Фрагмент карточки товара</span>
+                <h3>{featuredProductCard.name}</h3>
+                <p>{featuredProductCard.variant}</p>
+                <dl className={styles.productCardSpecs}>
+                  {featuredProductCard.specs.map(([label, value]) => (
+                    <div key={label}>
+                      <dt>{label}</dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </article>
+
+            <div className={styles.productCardDetails}>
+              <section className={styles.productCardDetail}>
+                <div className={styles.productCardDetailHeading}>
+                  <span aria-hidden><Link2 size={19} strokeWidth={1.8} /></span>
+                  <div>
+                    <small>Следующий шаг</small>
+                    <h3>Совместимые элементы</h3>
+                  </div>
+                </div>
+                <ul className={styles.productCardList}>
+                  {featuredProductCard.compatible.map((item) => (
+                    <li key={item}>
+                      <Check size={15} aria-hidden />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className={`${styles.productCardDetail} ${styles.productCardInstallation}`}>
+                <div className={styles.productCardDetailHeading}>
+                  <span aria-hidden><Wrench size={19} strokeWidth={1.8} /></span>
+                  <div>
+                    <small>По данным карточки</small>
+                    <h3>Рекомендации по монтажу</h3>
+                  </div>
+                </div>
+                <ul className={styles.productCardList}>
+                  {featuredProductCard.installation.map((item) => (
+                    <li key={item}>
+                      <ChevronRight size={15} aria-hidden />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className={styles.productCardCaution}>
+                  Рекомендации помогают разобраться в применении изделия, но не заменяют проект и
+                  проверку специалиста.
+                </p>
+              </section>
+            </div>
+
+            <div className={styles.productGuidanceFooter}>
+              <p>От выбора детали до её места в системе.</p>
+              <div>
+                <Link className={styles.productPreviewLink} href={featuredProductCard.href}>
+                  Посмотреть эту карточку <ArrowRight size={16} aria-hidden />
+                </Link>
+                <Link className={styles.primaryButton} href="/catalog">
+                  Открыть каталог <ArrowRight size={17} aria-hidden />
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -534,7 +721,7 @@ export default function HomePage() {
               </p>
             </div>
             <LeadForm source="homepage-materials" compact />
-            <div className={styles.contactAlternatives}><a href="tel:+79650756555"><Phone size={16} /> +7 (965) 075-65-55</a><a href="mailto:info@dimohod-trade.pro"><Mail size={16} /> info@dimohod-trade.pro</a></div>
+            <div className={styles.contactAlternatives}><a href="tel:+79650756555"><Phone size={16} /> +7 (965) 075-65-55</a><a href="mailto:office@dimohod-trade.pro"><Mail size={16} /> office@dimohod-trade.pro</a></div>
           </div>
         </div>
       </section>
