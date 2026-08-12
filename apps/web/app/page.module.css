@@ -718,7 +718,7 @@
   width: 64px;
   height: 64px;
   margin-bottom: 30px;
-  background: #000;
+  background: transparent;
 }
 
 .reviewsMark img {
@@ -1273,28 +1273,39 @@
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    margin-top: 18px;
+    margin-top: 14px;
   }
 
   .proof div,
   .proof div + div {
     display: grid;
-    grid-template-columns: minmax(136px, 0.9fr) minmax(0, 1.1fr);
-    gap: 14px;
+    grid-template-columns: minmax(122px, 0.82fr) minmax(0, 1.18fr);
+    gap: 10px;
     align-items: center;
-    padding: 14px 0;
+    padding: 10px 0;
     border-top: 1px solid var(--line);
     border-left: 0;
   }
 
+  .proof div:first-child {
+    border-top: 0;
+  }
+
   .proof dt {
-    font-size: clamp(17px, 5vw, 21px);
+    gap: 7px;
+    font-size: clamp(16px, 4.6vw, 19px);
     line-height: 1.08;
+  }
+
+  .proof dt svg {
+    width: 17px;
+    height: 17px;
   }
 
   .proof dd {
     margin-top: 0;
-    font-size: 11px;
+    font-size: 10.5px;
+    line-height: 1.35;
   }
 
   .heroActions {
