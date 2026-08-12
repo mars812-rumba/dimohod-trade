@@ -162,11 +162,11 @@ const yandexReviews = [
       "Приехал без предварительной записи, получил консультацию, а заказ изготовили примерно за полчаса.",
   },
   {
-    author: "Инкогнито 4478",
-    date: "13 октября 2024",
-    rating: 1,
+    author: "Глеб Борисыч",
+    date: "7 марта 2025",
+    rating: 5,
     summary:
-      "Указал на сложности с поиском офиса, расхождение цены с сайтом, отсутствие оплаты картой и документов.",
+      "Давно сотрудничает с компанией; положительно оценил качество, сроки выполнения и ответственность.",
   },
 ];
 
@@ -465,8 +465,13 @@ export default function HomePage() {
         <div className={styles.shell}>
           <div className={styles.reviewsLayout}>
             <div className={styles.reviewsIntro}>
-              <div className={styles.reviewsMark} aria-hidden>
-                <Star size={25} strokeWidth={1.8} />
+              <div className={styles.reviewsMark}>
+                <Image
+                  src="/images/home/yandex-maps-logo-user.jpg"
+                  alt="Яндекс Карты"
+                  width={128}
+                  height={82}
+                />
               </div>
               <h2 id="reviews-title">Что пишут наши клиенты.</h2>
               <p>
