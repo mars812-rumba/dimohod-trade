@@ -325,9 +325,9 @@
   align-items: center;
   min-height: 96px;
   padding: 20px 22px;
-  color: #fff;
-  background: var(--steel-deep);
-  box-shadow: 0 24px 48px rgba(16, 33, 39, 0.3);
+  color: var(--ink);
+  border: 2px solid var(--steel-deep);
+  background: transparent;
 }
 
 .systemRule svg {
@@ -341,7 +341,7 @@
 
 .systemRule span {
   margin-bottom: 4px;
-  color: #9fb7c0;
+  color: var(--steel-deep);
   font-family: ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
@@ -1981,7 +1981,6 @@
     max-width: 100%;
     min-height: 92px;
     margin-bottom: -56px;
-    box-shadow: 0 20px 42px rgba(16, 33, 39, 0.3);
     transform: translateY(-56px);
   }
 
