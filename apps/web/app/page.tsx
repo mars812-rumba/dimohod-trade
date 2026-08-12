@@ -32,8 +32,14 @@ import {
 } from "lucide-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 import { LeadForm } from "../components/LeadForm";
+import { ProductGalleryPreview } from "../components/ProductGalleryPreview";
 import { YANDEX_MAPS_RATING } from "../components/YandexRatingBadge";
-import { getCompatibleProducts, type CompatibleProduct } from "@/lib/api";
+import {
+  getCompatibleProducts,
+  getProductPreview,
+  type CompatibleProduct,
+  type MediaItem,
+} from "@/lib/api";
 import {
   cookiePolicyPath,
   personalDataConsentPath,
@@ -238,11 +244,28 @@ function compatiblePrice(value: string) {
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Number(value))} ₽`;
 }
 
+function productPreviewMedia(value: unknown): MediaItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter(
+    (item): item is MediaItem =>
+      Boolean(item && typeof item === "object" && "url" in item && typeof item.url === "string"),
+  );
+}
+
 export default async function HomePage() {
-  const compatibleProducts = await getCompatibleProducts(
-    "sendvich-truba",
-    featuredProductCard.skuReference,
-  ).then(completeCompatibleProducts).catch(() => []);
+  const [compatibleProducts, previewProduct] = await Promise.all([
+    getCompatibleProducts("sendvich-truba", featuredProductCard.skuReference)
+      .then(completeCompatibleProducts)
+      .catch(() => []),
+    getProductPreview("sendvich-truba").catch(() => null),
+  ]);
+  const previewMedia = productPreviewMedia(previewProduct?.extra_attributes.media).map((item) => ({
+    ...item,
+    url: assetUrl(item.url),
+    thumbnail_url: item.thumbnail_url ? assetUrl(item.thumbnail_url) : null,
+  }));
   const heroStyle = {
     "--hero-image": `url("${assetUrl("/images/home/hero-house-chimney-v1-720.webp")}")`,
     "--hero-image-mobile": `url("${assetUrl("/images/home/hero-house-chimney-v1-480.webp")}")`,
@@ -404,17 +427,14 @@ export default async function HomePage() {
 
           <div className={styles.productCardPreview}>
             <article className={styles.productCardSummary}>
-              <div className={styles.productCardImage}>
-                <Image
-                  src={assetUrl(featuredProductCard.image)}
-                  alt="Сэндвич-труба Ø150/250"
-                  fill
-                  loading="lazy"
-                  quality={72}
-                  unoptimized
-                  sizes="(max-width: 720px) calc(100vw - 70px), 300px"
-                />
-              </div>
+              <ProductGalleryPreview
+                media={previewMedia.length ? previewMedia : [{
+                  url: assetUrl(featuredProductCard.image),
+                  alt: "Сэндвич-труба Ø150/250 — общий вид",
+                  role: "general",
+                }]}
+                productName={featuredProductCard.name}
+              />
               <div className={styles.productCardSummaryBody}>
                 <span className={styles.productCardEyebrow}>Фрагмент карточки товара</span>
                 <h3>{featuredProductCard.name}</h3>

@@ -16,6 +16,9 @@ export type MediaItem = {
   media_id?: string | null;
   scope?: "family" | "variant" | "sku" | null;
   url: string;
+  thumbnail_url?: string | null;
+  width?: number | null;
+  height?: number | null;
   alt: string | null;
   role: string | null;
   diameter_specific?: boolean;
@@ -318,6 +321,38 @@ export async function getProducts({
   }
 
   return (await response.json()) as ProductListResponse;
+}
+
+export async function getCompatibleProducts(
+  productSlug: string,
+  skuReference: string,
+): Promise<CompatibleProduct[]> {
+  const response = await fetch(
+    `${apiBaseUrl}/api/v1/products/${encodeURIComponent(productSlug)}/compatible?sku=${encodeURIComponent(skuReference)}`,
+    { next: { revalidate: 300 } },
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to load compatible products");
+  }
+
+  return (await response.json()) as CompatibleProduct[];
+}
+
+export async function getProductPreview(productSlug: string): Promise<Product | null> {
+  const response = await fetch(`${apiBaseUrl}/api/v1/products/${encodeURIComponent(productSlug)}`, {
+    next: { revalidate: 300 },
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error("Failed to load product preview");
+  }
+
+  return (await response.json()) as Product;
 }
 
 export async function getProductFilters(category?: string): Promise<ProductFiltersResponse> {
