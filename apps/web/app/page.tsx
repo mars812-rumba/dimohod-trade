@@ -132,6 +132,44 @@ const faq = [
   ["Можно прислать готовый план или свою смету?", "Да. Прикрепите PDF или изображение к форме — мы сверим маршрут и отметим недостающие данные."],
 ];
 
+const yandexReviews = [
+  {
+    author: "Иван Семёнович Крузенштерн",
+    date: "4 июля",
+    rating: 5,
+    summary:
+      "Отметил качество материалов, точную стыковку деталей, выбор исполнения и возможность заказать монтаж.",
+  },
+  {
+    author: "Алексей Чуб",
+    date: "28 февраля 2025",
+    rating: 5,
+    summary:
+      "Положительно оценил скорость, качество, рыночные цены и профессиональную работу замерщика.",
+  },
+  {
+    author: "Артем Богданов",
+    date: "31 марта 2025",
+    rating: 5,
+    summary:
+      "Заказывает здесь с 2018 года; отметил нестандартное изготовление, выбор AISI 304 для наружного контура и цены.",
+  },
+  {
+    author: "Евгений М.",
+    date: "6 июня",
+    rating: 5,
+    summary:
+      "Приехал без предварительной записи, получил консультацию, а заказ изготовили примерно за полчаса.",
+  },
+  {
+    author: "Инкогнито 4478",
+    date: "13 октября 2024",
+    rating: 1,
+    summary:
+      "Указал на сложности с поиском офиса, расхождение цены с сайтом, отсутствие оплаты картой и документов.",
+  },
+];
+
 const route = [
   { number: "01", title: "Источник", text: "Печь или котёл" },
   { number: "02", title: "Тёплая зона", text: "Стартовый участок" },
@@ -432,9 +470,20 @@ export default function HomePage() {
               </div>
               <h2 id="reviews-title">Что пишут наши клиенты.</h2>
               <p>
-                Здесь отображаются опубликованные отзывы из карточки «Дымоход-Трейд».
-                Рейтинг и содержание обновляет Яндекс.
+                Кратко пересказали опубликованные отзывы из карточки «Дымоход-Трейд».
+                Оригиналы и актуальный рейтинг доступны на Яндекс Картах.
               </p>
+              <div className={styles.reviewsRating} aria-label="Рейтинг 4,8 из 5">
+                <strong>4,8</strong>
+                <div>
+                  <span className={styles.reviewsStars} aria-hidden>
+                    {Array.from({ length: 5 }, (_, index) => (
+                      <Star key={index} size={17} fill="currentColor" />
+                    ))}
+                  </span>
+                  <small>47 отзывов · 89 оценок · данные на 12.08.2026</small>
+                </div>
+              </div>
               <a
                 className={styles.reviewsLink}
                 href="https://yandex.ru/maps/org/dymokhod_treyd/1368513691/"
@@ -446,11 +495,48 @@ export default function HomePage() {
             </div>
 
             <div className={styles.reviewsWidget}>
-              <iframe
-                src="https://yandex.ru/maps-reviews-widget/1368513691?comments"
-                title="Отзывы о Дымоход-Трейд на Яндекс Картах"
-                loading="lazy"
-              />
+              <div
+                className={styles.reviewsCarousel}
+                role="region"
+                aria-label="Отзывы клиентов. Прокручивайте горизонтально"
+                tabIndex={0}
+              >
+                <div className={styles.reviewsTrack}>
+                  {yandexReviews.map((review) => (
+                    <article className={styles.reviewCard} key={`${review.author}-${review.date}`}>
+                      <div className={styles.reviewHeader}>
+                        <span className={styles.reviewAvatar} aria-hidden>
+                          {review.author.slice(0, 1)}
+                        </span>
+                        <div>
+                          <strong>{review.author}</strong>
+                          <span>{review.date}</span>
+                        </div>
+                      </div>
+                      <div
+                        className={styles.reviewStars}
+                        aria-label={`Оценка ${review.rating} из 5`}
+                      >
+                        {Array.from({ length: 5 }, (_, index) => (
+                          <Star
+                            key={index}
+                            size={18}
+                            fill={index < review.rating ? "currentColor" : "none"}
+                          />
+                        ))}
+                      </div>
+                      <p>{review.summary}</p>
+                      <a
+                        href="https://yandex.ru/maps/org/dymokhod_treyd/1368513691/reviews/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Оригинал на Яндекс Картах <ArrowRight size={15} aria-hidden />
+                      </a>
+                    </article>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

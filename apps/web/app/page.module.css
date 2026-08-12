@@ -63,12 +63,18 @@
 
 .heroGrid {
   display: grid;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   grid-template-columns: minmax(0, 0.92fr) minmax(440px, 0.78fr);
   gap: clamp(44px, 7vw, 104px);
   align-items: center;
 }
 
 .heroCopy {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 34px 0 62px;
 }
 
@@ -179,7 +185,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   max-width: 700px;
-  margin: 40px 0 0;
+  margin: 26px 0 0;
   border-top: 1px solid var(--line);
 }
 
@@ -220,6 +226,8 @@
 
 .heroSystem {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   align-self: stretch;
   min-height: 620px;
 }
@@ -737,6 +745,37 @@
   line-height: 1.65;
 }
 
+.reviewsRating {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 28px;
+}
+
+.reviewsRating > strong {
+  color: var(--ink);
+  font-size: 44px;
+  font-weight: 720;
+  line-height: 1;
+}
+
+.reviewsRating > div {
+  display: grid;
+  gap: 5px;
+}
+
+.reviewsRating small {
+  color: #68777c;
+  font-size: 12px;
+}
+
+.reviewsStars,
+.reviewStars {
+  display: flex;
+  gap: 2px;
+  color: #d79d00;
+}
+
 .reviewsLink {
   display: inline-flex;
   gap: 9px;
@@ -762,18 +801,117 @@
 }
 
 .reviewsWidget {
+  display: flex;
   min-width: 0;
-  height: 560px;
   padding: 18px;
   background: #e8edef;
 }
 
-.reviewsWidget iframe {
-  display: block;
+.reviewsCarousel {
   width: 100%;
-  height: 100%;
-  border: 0;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: #9babad transparent;
+  scrollbar-width: thin;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reviewsCarousel:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.42);
+  outline-offset: 3px;
+}
+
+.reviewsTrack {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  min-height: 100%;
+  padding-bottom: 10px;
+}
+
+.reviewCard {
+  display: flex;
+  flex: 0 0 clamp(280px, 28vw, 360px);
+  flex-direction: column;
+  min-height: 380px;
+  padding: 28px;
   background: #fff;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.reviewHeader {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.reviewHeader > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.reviewHeader strong {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.reviewHeader > div span {
+  color: #718085;
+  font-size: 12px;
+}
+
+.reviewAvatar {
+  display: grid;
+  flex: 0 0 42px;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: #fff;
+  background: var(--steel-deep);
+  font-size: 16px;
+  font-weight: 760;
+}
+
+.reviewStars {
+  margin-top: 24px;
+}
+
+.reviewCard > p {
+  margin: 22px 0 28px;
+  color: #344950;
+  font-size: 16px;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.reviewCard > a {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  align-self: flex-start;
+  margin-top: auto;
+  color: var(--steel-deep);
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: underline;
+  text-decoration-color: rgba(23, 61, 76, 0.28);
+  text-underline-offset: 4px;
+}
+
+.reviewCard > a:hover {
+  color: var(--signal-dark);
+  text-decoration-color: currentcolor;
+}
+
+.reviewCard > a:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.35);
+  outline-offset: 4px;
 }
 
 .faqSection { background: #fff; }
@@ -1131,7 +1269,10 @@
 
   .proof {
     grid-template-columns: 1fr;
-    margin-top: 24px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin-top: 18px;
   }
 
   .proof div,
@@ -1156,6 +1297,9 @@
   }
 
   .heroActions {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     margin-top: 20px;
   }
 
@@ -1172,6 +1316,8 @@
     bottom: auto;
     left: auto;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     min-height: 92px;
     margin-bottom: -56px;
     box-shadow: 0 20px 42px rgba(16, 33, 39, 0.3);
@@ -1295,8 +1441,13 @@
   }
 
   .reviewsWidget {
-    height: 590px;
     padding: 10px;
+  }
+
+  .reviewCard {
+    flex-basis: min(78vw, 330px);
+    min-height: 360px;
+    padding: 24px;
   }
 
   .footerGrid {
