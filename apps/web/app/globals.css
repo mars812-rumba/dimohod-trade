@@ -546,13 +546,13 @@ ul {
   padding: 0 15px;
   border-radius: 3px;
   color: #fff;
-  background: var(--accent-strong);
+  background: var(--accent);
   font-size: 13px;
   font-weight: 650;
 }
 
 .header-configurator:hover {
-  background: #9f3212;
+  background: var(--accent-strong);
 }
 
 .header-configurator:focus-visible,
@@ -1831,7 +1831,7 @@ body.mobile-menu-open {
 .configurator-result-actions > div span { color: #607075; font-size: 12px; }
 .configurator-result-actions button,
 .configurator-result-actions a,
-.lead-form button { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border: 0; border-radius: 3px; color: #fff; background: #bd3d16; font-weight: 760; cursor: pointer; }
+.lead-form button { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border: 0; border-radius: 3px; color: #fff; background: #ed5b2a; font-weight: 760; cursor: pointer; }
 .configurator-result-actions a { color: #173d4c; border: 1px solid #ccd5d7; background: #fff; }
 .configurator-lead { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 28px; padding: 28px; border-top: 1px solid #ccd5d7; background: #fff; }
 .configurator-lead aside { display: flex; flex-direction: column; gap: 10px; padding: 22px; color: #fff; background: #173d4c; }
@@ -1946,7 +1946,7 @@ body.mobile-menu-open {
 
 .configurator-segmented button.active {
   border-color: rgba(177, 63, 32, 0.54);
-  background: var(--accent-strong);
+  background: var(--accent);
   color: #fff;
   box-shadow: 0 14px 34px rgba(177, 63, 32, 0.2);
 }
