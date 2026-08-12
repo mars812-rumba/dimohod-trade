@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 import { LeadForm } from "../components/LeadForm";
+import { YANDEX_MAPS_RATING } from "../components/YandexRatingBadge";
 import {
   cookiePolicyPath,
   personalDataConsentPath,
@@ -438,8 +439,11 @@ export default function HomePage() {
                 Кратко пересказали опубликованные отзывы из карточки «Дымоход-Трейд».
                 Оригиналы и актуальный рейтинг доступны на Яндекс Картах.
               </p>
-              <div className={styles.reviewsRating} aria-label="Рейтинг 4,8 из 5">
-                <strong>4,8</strong>
+              <div
+                className={styles.reviewsRating}
+                aria-label={`Рейтинг ${YANDEX_MAPS_RATING} из 5`}
+              >
+                <strong>{YANDEX_MAPS_RATING}</strong>
                 <div>
                   <span className={styles.reviewsStars} aria-hidden>
                     {Array.from({ length: 5 }, (_, index) => (

@@ -29,6 +29,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { DimensionScheme } from "@/components/DimensionScheme";
+import { YandexRatingBadge } from "@/components/YandexRatingBadge";
 import type { CompatibleProduct, Product } from "@/lib/api";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productPublicPath, productSelectionPath } from "@/lib/productUrls";
@@ -43,7 +44,10 @@ type ProductPhotoItem = {
   kind?: "photo";
   role: string;
   src: string;
+  thumbnailSrc?: string;
   alt: string;
+  width?: number;
+  height?: number;
   fit?: "cover" | "contain";
   diameterSpecific?: boolean;
   diameterKeys: string[];
@@ -344,7 +348,9 @@ function CompatibleProductFamilyCard({
         {selected.primary_image ? (
           <img
             alt={selected.primary_image.alt ?? `${selected.product_name} — общий вид`}
-            src={publicMediaUrl(selected.primary_image.url)}
+            src={publicMediaUrl(selected.primary_image.thumbnail_url ?? selected.primary_image.url)}
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <span className="compatible-product-placeholder">
@@ -695,7 +701,13 @@ function photoFromValue(
   return {
     role: mediaRoleLabel(role),
     src: publicMediaUrl(value.url),
+    thumbnailSrc:
+      "thumbnail_url" in value && typeof value.thumbnail_url === "string"
+        ? publicMediaUrl(value.thumbnail_url)
+        : undefined,
     alt: "alt" in value && typeof value.alt === "string" ? value.alt : fallbackAlt,
+    width: "width" in value && typeof value.width === "number" ? value.width : undefined,
+    height: "height" in value && typeof value.height === "number" ? value.height : undefined,
     fit: "contain",
     diameterSpecific:
       "diameter_specific" in value && value.diameter_specific === true,
@@ -1234,7 +1246,12 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
       <div className="product-layout">
         <div className="product-main">
           <div className="product-image-wrap">
-            <div className="product-focus-media">
+            <div
+              className={`product-focus-media${
+                activeImage && activeImage.kind !== "scheme" ? " product-focus-media-photo" : ""
+              }`}
+            >
+              <YandexRatingBadge />
               {activeImage?.kind === "scheme" ? (
                 <div className="product-dimension-scheme">
                   <DimensionScheme
@@ -1249,6 +1266,11 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                   className={`product-image${activeImage.fit === "contain" ? " product-image-contain" : ""}`}
                   src={activeImage.src}
                   alt={activeImage.alt}
+                  width={activeImage.width}
+                  height={activeImage.height}
+                  fetchPriority="high"
+                  loading="eager"
+                  decoding="async"
                 />
               ) : (
                 <div className="product-image-placeholder">
@@ -1292,7 +1314,13 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                         compact
                       />
                     ) : (
-                      <img src={item.src} alt="" aria-hidden="true" />
+                      <img
+                        src={item.thumbnailSrc ?? item.src}
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     )}
                     <span>{item.role}</span>
                   </button>

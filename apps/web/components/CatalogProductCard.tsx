@@ -4,6 +4,7 @@ import type { ProductListItem } from "@/lib/api";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productSelectionPath } from "@/lib/productUrls";
 import { steelSelectionBadges } from "@/lib/steelSelection";
+import { YandexRatingBadge } from "@/components/YandexRatingBadge";
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -98,10 +99,16 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
   return (
     <Link className="catalog-product-card" href={href}>
       <div className="catalog-product-media">
+        <YandexRatingBadge />
         {product.primary_image ? (
           <img
-            src={publicMediaUrl(product.primary_image.url)}
+            className="catalog-product-photo"
+            src={publicMediaUrl(product.primary_image.thumbnail_url ?? product.primary_image.url)}
             alt={product.primary_image.alt ?? `${product.name} — общий вид`}
+            width={product.primary_image.width ?? undefined}
+            height={product.primary_image.height ?? undefined}
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <span>{product.product_kind ?? "товар"}</span>
