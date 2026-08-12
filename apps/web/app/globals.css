@@ -5290,6 +5290,19 @@ body.mobile-menu-open {
   .product-page .yandex-rating-badge {
     top: 8px;
     left: 8px;
+    gap: 4px;
+    min-height: 22px;
+    padding: 3px 6px 3px 3px;
+    font-size: 8px;
+  }
+
+  .product-page .yandex-rating-badge strong {
+    font-size: 10px;
+  }
+
+  .product-page .yandex-rating-badge .yandex-rating-badge-icon {
+    width: 14px;
+    height: 14px;
   }
 
   .product-page .product-image-badges {
