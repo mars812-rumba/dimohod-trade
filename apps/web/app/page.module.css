@@ -231,11 +231,11 @@
 
 .primaryButton {
   color: #fff;
-  background: var(--signal);
+  background: var(--signal-dark);
 }
 
 .primaryButton:hover {
-  background: var(--signal-dark);
+  background: #9f3212;
   transform: translateY(-2px);
 }
 
@@ -1189,7 +1189,7 @@
 .catalogNumber {
   display: block;
   margin-bottom: 66px;
-  color: var(--signal);
+  color: var(--signal-dark);
   font-family: ui-monospace, monospace;
   font-size: 12px;
   font-weight: 800;
@@ -1348,7 +1348,7 @@
 }
 
 .reviewsRating small {
-  color: #68777c;
+  color: #59696e;
   font-size: 12px;
 }
 
@@ -1445,7 +1445,7 @@
 }
 
 .reviewHeader > div span {
-  color: #718085;
+  color: #5f6d72;
   font-size: 12px;
 }
 
@@ -1556,6 +1556,9 @@
 }
 
 .contactCard :global(.lead-form) { grid-column: 3; grid-row: 1 / span 2; }
+.contactCard :global(.lead-form-note) { color: #b7c7cc; }
+.contactCard :global(.personal-data-consent label) { color: #c4d1d5; }
+.contactCard :global(.personal-data-consent a) { color: #fff; }
 .contactAlternatives { grid-column: 2; display: flex; flex-wrap: wrap; gap: 18px; }
 .contactAlternatives a { display: inline-flex; gap: 7px; align-items: center; color: #d8e1e3; font-size: 13px; }
 .contactAlternatives svg { color: var(--signal); }
