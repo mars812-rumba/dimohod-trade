@@ -247,12 +247,6 @@ export default function HomePage() {
               <p className={styles.heroLead}>
                 Подберём комплект по вашей трассе и параметрам отопителя.
               </p>
-              <HeroScenarioSlider
-                items={heroScenarios.map((scenario) => ({
-                  ...scenario,
-                  image: assetUrl(scenario.image),
-                }))}
-              />
               <dl className={styles.proof}>
                 <div>
                   <dt>
@@ -276,6 +270,12 @@ export default function HomePage() {
                   <dd>менеджер подключится к сложным вопросам</dd>
                 </div>
               </dl>
+              <HeroScenarioSlider
+                items={heroScenarios.map((scenario) => ({
+                  ...scenario,
+                  image: assetUrl(scenario.image),
+                }))}
+              />
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#calculator">
                   <SlidersHorizontal size={18} strokeWidth={1.7} aria-hidden />
@@ -467,10 +467,10 @@ export default function HomePage() {
             <div className={styles.reviewsIntro}>
               <div className={styles.reviewsMark}>
                 <Image
-                  src="/images/home/yandex-maps-icon-user-v5.png"
+                  src="/images/home/yandex-maps-icon-user-v6.png"
                   alt="Яндекс Карты"
-                  width={200}
-                  height={200}
+                  width={1280}
+                  height={1280}
                 />
               </div>
               <h2 id="reviews-title">Что пишут наши клиенты.</h2>
