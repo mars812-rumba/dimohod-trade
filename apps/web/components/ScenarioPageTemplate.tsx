@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
+  AlertTriangle,
   Building2,
   Camera,
   Check,
@@ -9,6 +10,7 @@ import {
   FlameKindling,
   Home,
   Map,
+  NotebookTabs,
   Ruler,
   ShieldCheck,
   Wrench,
@@ -87,6 +89,98 @@ export function ScenarioPageTemplate({
         </div>
       </section>
 
+      {content.diameterGuide || content.guidance ? (
+        <section className={styles.guideSection} aria-labelledby="scenario-guide-title">
+          <div className={styles.shell}>
+            {content.diameterGuide ? (
+              <div className={styles.diameterGuide}>
+                <div className={styles.sectionIntro}>
+                  <p className={styles.guideLabel}>Ориентир, не готовый подбор</p>
+                  <h2 id="scenario-guide-title">{content.diameterGuide.title}</h2>
+                  <p>{content.diameterGuide.description}</p>
+                </div>
+                <div className={styles.tableWrap}>
+                  <table className={styles.diameterTable}>
+                    <thead>
+                      <tr>
+                        <th scope="col">Оборудование</th>
+                        <th scope="col">Паспортный ориентир</th>
+                        <th scope="col">Что это значит</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {content.diameterGuide.rows.map((row) => (
+                        <tr key={`${row.equipment}-${row.diameter}`}>
+                          <th scope="row">{row.equipment}</th>
+                          <td>{row.diameter}</td>
+                          <td>{row.explanation}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className={styles.guideNote}>
+                  <AlertTriangle size={18} strokeWidth={1.8} aria-hidden />
+                  <span>{content.diameterGuide.note}</span>
+                </p>
+                {content.diameterGuide.sources?.length ? (
+                  <p className={styles.guideSources}>
+                    <span>Источники примеров:</span>
+                    {content.diameterGuide.sources.map((source) => (
+                      <a href={source.href} key={source.href} target="_blank" rel="noopener noreferrer">
+                        {source.label}
+                      </a>
+                    ))}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            {content.guidance ? (
+              <>
+              {!content.diameterGuide ? (
+                <div className={styles.sectionIntro}>
+                  <p className={styles.guideLabel}>Выберите правильный сценарий</p>
+                  <h2 id="scenario-guide-title">Что нужно определить до подбора</h2>
+                  <p>Сначала собираем проверяемые исходные данные, затем переходим к конкретным изделиям.</p>
+                </div>
+              ) : null}
+              <div className={styles.guidanceGrid}>
+                <article className={styles.guidanceItem}>
+                  <NotebookTabs size={22} strokeWidth={1.7} aria-hidden />
+                  <h3>Что проверить в паспорте</h3>
+                  <ul>
+                    {content.guidance.passport.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </article>
+                <article className={styles.guidanceItem}>
+                  <Wrench size={22} strokeWidth={1.7} aria-hidden />
+                  <h3>Материал и исполнение</h3>
+                  <ul>
+                    {content.guidance.material.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </article>
+                <article className={styles.guidanceItem}>
+                  <ShieldCheck size={22} strokeWidth={1.7} aria-hidden />
+                  <h3>Что проверить по безопасности</h3>
+                  <ul>
+                    {content.guidance.safety.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </article>
+                <article className={`${styles.guidanceItem} ${styles.mistakeItem}`}>
+                  <AlertTriangle size={22} strokeWidth={1.7} aria-hidden />
+                  <h3>Типовые ошибки</h3>
+                  <ul>
+                    {content.guidance.mistakes.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </article>
+              </div>
+              </>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
       <section className={styles.section} id="source-data">
         <div className={styles.shell}>
           <div className={styles.sectionIntro}>
@@ -107,6 +201,18 @@ export function ScenarioPageTemplate({
               );
             })}
           </div>
+          <aside className={styles.measureNote}>
+            <Ruler size={23} strokeWidth={1.7} aria-hidden />
+            <div>
+              <h3>Как зафиксировать размер патрубка</h3>
+              <p>
+                Сначала найдите размер в паспорте. Дополнительно сфотографируйте шильдик и
+                соединение рядом с линейкой или штангенциркулем, укажите внутренний и наружный
+                размеры, если они доступны. Не измеряйте горячее или работающее оборудование —
+                тип соединения и окончательный размер проверит специалист.
+              </p>
+            </div>
+          </aside>
         </div>
       </section>
 
@@ -225,13 +331,27 @@ export function ScenarioPageTemplate({
       <section className={styles.reviewSection}>
         <div className={`${styles.shell} ${styles.reviewLayout}`}>
           <div>
-            <p className={styles.reviewLabel}>Статус результата</p>
-            <h2>Сначала черновик, затем проверка</h2>
+            <p className={styles.reviewLabel}>Граница ответственности</p>
+            <h2>Что видно сразу, а что требует проверки</h2>
           </div>
-          <p>
-            Конфигуратор показывает предварительный состав. Недостающие параметры сохраняются в
-            списке уточнений, а проверенный статус появляется только после действия специалиста.
-          </p>
+          <div className={styles.reviewColumns}>
+            <div>
+              <h3>Можем собрать сразу</h3>
+              <ul>
+                <li>паспортные параметры и фотографии объекта;</li>
+                <li>черновую геометрию трассы;</li>
+                <li>предварительный список реальных позиций.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Проверяет специалист</h3>
+              <ul>
+                <li>совместимость оборудования и элементов;</li>
+                <li>проходы, крепление и условия монтажа;</li>
+                <li>финальный состав перед заказом.</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
