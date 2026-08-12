@@ -329,7 +329,7 @@ export async function getCompatibleProducts(
 ): Promise<CompatibleProduct[]> {
   const response = await fetch(
     `${apiBaseUrl}/api/v1/products/${encodeURIComponent(productSlug)}/compatible?sku=${encodeURIComponent(skuReference)}`,
-    { next: { revalidate: 300 } },
+    { cache: "no-store" },
   );
 
   if (!response.ok) {
@@ -341,7 +341,7 @@ export async function getCompatibleProducts(
 
 export async function getProductPreview(productSlug: string): Promise<Product | null> {
   const response = await fetch(`${apiBaseUrl}/api/v1/products/${encodeURIComponent(productSlug)}`, {
-    next: { revalidate: 300 },
+    cache: "no-store",
   });
 
   if (response.status === 404) {

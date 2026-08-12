@@ -50,6 +50,8 @@ import { productSelectionPath } from "@/lib/productUrls";
 import { steelSelectionBadges } from "@/lib/steelSelection";
 import styles from "./page.module.css";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Дымоход Трейд — подбор комплекта дымохода",
   description:
@@ -249,10 +251,14 @@ function productPreviewMedia(value: unknown): MediaItem[] {
   if (!Array.isArray(value)) {
     return [];
   }
-  return value.filter(
+  const media = value.filter(
     (item): item is MediaItem =>
       Boolean(item && typeof item === "object" && "url" in item && typeof item.url === "string"),
   );
+  const roles = ["general", "top", "connection"];
+  return roles
+    .map((role) => media.find((item) => item.role === role))
+    .filter((item): item is MediaItem => Boolean(item));
 }
 
 export default async function HomePage() {
