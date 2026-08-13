@@ -198,14 +198,14 @@ export const banyaScenario: ScenarioPageContent = {
       title: "Через перекрытие и кровлю",
       description:
         "Дымоход поднимается от печи внутри здания, проходит перекрытия и выходит через кровлю.",
-      image: "/images/home/scenario-banya-user.webp",
+      image: "/images/home/banya-route-through-roof.webp",
     },
     {
       slug: "through-wall",
       title: "Через стену и по фасаду",
       description:
         "Дымоход выходит через стену и далее поднимается снаружи по фасаду.",
-      image: "/images/home/hero-chimney-system.webp",
+      image: "/images/home/banya-route-through-wall.webp",
     },
   ],
   selectionQuestions: [

@@ -266,7 +266,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                     {option.image ? (
                       <span className={styles.routeChoiceImage}>
                         <Image
-                          alt=""
+                          alt={`Схема маршрута: ${option.title}`}
                           fill
                           loading="lazy"
                           quality={72}
