@@ -15,6 +15,10 @@ const scenarioOrder = [
   "gazovyy-kotel",
 ];
 
+const scenarioCardImages: Record<string, string> = {
+  dom: "/images/home/solution-card-dom-user.webp",
+};
+
 export const metadata: Metadata = {
   title: "Подбор дымохода по отопителю и объекту",
   description:
@@ -50,54 +54,9 @@ export default function SolutionsPage() {
 
   return (
     <main className={styles.main}>
-      <div className={styles.shell}>
-        <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
-          <Link href="/">Главная</Link>
-          <span aria-hidden>/</span>
-          <span aria-current="page">Решения</span>
-        </nav>
-      </div>
-
-      <section className={styles.hero}>
-        <div className={`${styles.shell} ${styles.heroGrid}`}>
-          <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>Сценарии подбора</p>
-            <h1>Начните с объекта и вашего отопителя</h1>
-            <p className={styles.heroSummary}>
-              Каждая страница собирает свой набор исходных данных и ведёт к комплекту в конфигураторе без
-              универсальных технических предположений.
-            </p>
-            <div className={styles.heroActions}>
-              <Link className={styles.primaryButton} href="/solutions/dom">
-                Выбрать для дома
-                <ArrowRight size={18} aria-hidden />
-              </Link>
-              <Link className={styles.secondaryButton} href="/solutions/banya">
-                Выбрать для бани
-              </Link>
-            </div>
-          </div>
-
-          <div className={styles.heroMedia}>
-            <Image
-              src={`${assetBasePath}/images/home/hero-photo-720.webp`}
-              alt="Металлический дымоход на фасаде частного дома"
-              fill
-              priority
-              fetchPriority="high"
-              quality={78}
-              sizes="(max-width: 820px) 100vw, 46vw"
-            />
-          </div>
-        </div>
-      </section>
-
       <section className={styles.routeSection}>
         <div className={styles.shell}>
-          <div className={styles.sectionIntro}>
-            <h2>Выберите свою ситуацию</h2>
-            <p>Если точной модели оборудования пока нет, начните с объекта и подготовьте план.</p>
-          </div>
+          <h1 className={styles.visuallyHidden}>Сценарии подбора дымохода</h1>
           <div className={styles.routeGrid}>
             {scenarios.map((scenario) => (
               <Link
@@ -107,7 +66,7 @@ export default function SolutionsPage() {
               >
                 <div className={styles.routeImage}>
                   <Image
-                    src={`${assetBasePath}${scenario.heroImage}`}
+                    src={`${assetBasePath}${scenarioCardImages[scenario.slug] ?? scenario.heroImage}`}
                     alt=""
                     fill
                     loading="lazy"
