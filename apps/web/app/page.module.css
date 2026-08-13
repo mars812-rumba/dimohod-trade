@@ -773,56 +773,6 @@
   scroll-snap-stop: always;
 }
 
-.compatibleCarouselControls {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 14px;
-}
-
-.compatibleCarouselDots {
-  display: flex;
-  gap: 7px;
-  align-items: center;
-}
-
-.compatibleCarouselDots button {
-  width: 28px;
-  height: 4px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: var(--line);
-  cursor: pointer;
-}
-
-.compatibleCarouselDots button:hover,
-.compatibleCarouselDots button:focus-visible,
-.compatibleCarouselDots .compatibleCarouselDotActive {
-  background: var(--signal);
-}
-
-.compatibleCarouselDots button:focus-visible,
-.compatibleCarouselPause:focus-visible {
-  outline: 3px solid rgba(237, 91, 42, 0.3);
-  outline-offset: 3px;
-}
-
-.compatibleCarouselPause {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 9px;
-  color: var(--steel-deep);
-  border: 1px solid var(--line);
-  background: var(--white);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .compatibleSlide {
   display: flex;
   min-width: 0;

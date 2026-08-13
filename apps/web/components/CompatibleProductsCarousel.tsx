@@ -1,7 +1,6 @@
 "use client";
 
-import { Children, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play } from "lucide-react";
+import { Children, type ReactNode, useEffect, useRef, useState } from "react";
 import styles from "../app/page.module.css";
 
 type CompatibleProductsCarouselProps = {
@@ -17,19 +16,10 @@ export function CompatibleProductsCarousel({ children }: CompatibleProductsCarou
   const itemCount = Children.count(children);
   const pageCount = Math.ceil(itemCount / ITEMS_PER_PAGE);
   const [page, setPage] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-
-  const scrollToPage = useCallback((nextPage: number, behavior: ScrollBehavior = "smooth") => {
-    const track = trackRef.current;
-    const target = track?.children.item(nextPage * ITEMS_PER_PAGE) as HTMLElement | null;
-    if (!track || !target) return;
-    track.scrollTo({ left: target.offsetLeft, behavior });
-    setPage(nextPage);
-  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -50,7 +40,7 @@ export function CompatibleProductsCarousel({ children }: CompatibleProductsCarou
   }, []);
 
   useEffect(() => {
-    if (pageCount < 2 || paused || hovered || focused || reducedMotion || !visible) return;
+    if (pageCount < 2 || hovered || focused || reducedMotion || !visible) return;
     const timer = window.setInterval(() => {
       setPage((current) => {
         const next = (current + 1) % pageCount;
@@ -61,7 +51,7 @@ export function CompatibleProductsCarousel({ children }: CompatibleProductsCarou
       });
     }, AUTOPLAY_DELAY_MS);
     return () => window.clearInterval(timer);
-  }, [focused, hovered, pageCount, paused, reducedMotion, visible]);
+  }, [focused, hovered, pageCount, reducedMotion, visible]);
 
   const syncPageFromScroll = () => {
     if (frameRef.current !== null) return;
@@ -103,41 +93,10 @@ export function CompatibleProductsCarousel({ children }: CompatibleProductsCarou
       <div
         className={styles.compatibleTrack}
         ref={trackRef}
-        onPointerDown={() => setPaused(true)}
         onScroll={syncPageFromScroll}
       >
         {children}
       </div>
-
-      {pageCount > 1 ? (
-        <div className={styles.compatibleCarouselControls}>
-          <div className={styles.compatibleCarouselDots} aria-label="Страницы товаров">
-            {Array.from({ length: pageCount }, (_, index) => (
-              <button
-                aria-label={`Показать товары ${index * ITEMS_PER_PAGE + 1}–${Math.min((index + 1) * ITEMS_PER_PAGE, itemCount)}`}
-                aria-current={page === index ? "true" : undefined}
-                className={page === index ? styles.compatibleCarouselDotActive : ""}
-                key={index}
-                onClick={() => {
-                  setPaused(true);
-                  scrollToPage(index);
-                }}
-                type="button"
-              />
-            ))}
-          </div>
-          {!reducedMotion ? (
-            <button
-              className={styles.compatibleCarouselPause}
-              onClick={() => setPaused((current) => !current)}
-              type="button"
-            >
-              {paused ? <Play size={14} aria-hidden /> : <Pause size={14} aria-hidden />}
-              {paused ? "Продолжить" : "Пауза"}
-            </button>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   );
 }
