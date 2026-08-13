@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { SolutionHouseGallery } from "@/components/SolutionHouseGallery";
 import { scenarioPages } from "@/lib/scenarioPages";
 import styles from "@/components/ScenarioPageTemplate.module.css";
 
@@ -15,9 +16,20 @@ const scenarioOrder = [
   "gazovyy-kotel",
 ];
 
-const scenarioCardImages: Record<string, string> = {
-  dom: "/images/home/solution-card-dom-user.webp",
-};
+const houseGalleryImages = [
+  {
+    src: `${assetBasePath}/images/solutions/dom/house-chimney-room.webp`,
+    alt: "Печь и вертикальный дымоход в интерьере дома",
+  },
+  {
+    src: `${assetBasePath}/images/solutions/dom/house-chimney-full.webp`,
+    alt: "Полный вид печи и дымохода до потолочного прохода",
+  },
+  {
+    src: `${assetBasePath}/images/solutions/dom/house-stove-close.webp`,
+    alt: "Печь с огнём и подключённым дымоходом",
+  },
+];
 
 export const metadata: Metadata = {
   title: "Подбор дымохода по отопителю и объекту",
@@ -71,31 +83,51 @@ export default function SolutionsPage() {
           </header>
 
           <div className={styles.routeGrid}>
-            {scenarios.map((scenario) => (
-              <Link
-                className={styles.routeOption}
-                href={`/solutions/${scenario.slug}`}
-                key={scenario.slug}
-              >
-                <div className={styles.routeImage}>
-                  <Image
-                    src={`${assetBasePath}${scenarioCardImages[scenario.slug] ?? scenario.heroImage}`}
-                    alt=""
-                    fill
-                    loading="lazy"
-                    quality={72}
-                    sizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
-                  />
-                </div>
-                <div>
-                  <h2>{scenario.eyebrow}</h2>
-                  <p>{scenario.summary}</p>
-                  <span>
-                    Открыть сценарий <ArrowRight size={15} aria-hidden />
-                  </span>
-                </div>
-              </Link>
-            ))}
+            {scenarios.map((scenario) => {
+              if (scenario.slug === "dom") {
+                return (
+                  <article className={styles.routeOption} key={scenario.slug}>
+                    <SolutionHouseGallery images={houseGalleryImages} />
+                    <div>
+                      <h2>{scenario.eyebrow}</h2>
+                      <p>{scenario.summary}</p>
+                      <Link
+                        className={styles.routeOptionAction}
+                        href={`/solutions/${scenario.slug}`}
+                      >
+                        Открыть сценарий <ArrowRight size={15} aria-hidden />
+                      </Link>
+                    </div>
+                  </article>
+                );
+              }
+
+              return (
+                <Link
+                  className={styles.routeOption}
+                  href={`/solutions/${scenario.slug}`}
+                  key={scenario.slug}
+                >
+                  <div className={styles.routeImage}>
+                    <Image
+                      src={`${assetBasePath}${scenario.heroImage}`}
+                      alt=""
+                      fill
+                      loading="lazy"
+                      quality={72}
+                      sizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
+                    />
+                  </div>
+                  <div>
+                    <h2>{scenario.eyebrow}</h2>
+                    <p>{scenario.summary}</p>
+                    <span>
+                      Открыть сценарий <ArrowRight size={15} aria-hidden />
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

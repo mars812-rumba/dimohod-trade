@@ -972,6 +972,149 @@ a.routeOption:focus-visible {
   background: #dce4e5;
 }
 
+.houseGallery {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(100px, 0.85fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+  min-height: 250px;
+  background: #dce4e5;
+}
+
+.houseGalleryItem {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 0;
+  background: #dce4e5;
+  cursor: zoom-in;
+}
+
+.houseGalleryItem:first-child {
+  grid-row: 1 / -1;
+}
+
+.houseGalleryItem img,
+.houseGalleryFullImage img {
+  object-fit: cover;
+}
+
+.houseGalleryItem img {
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.houseGalleryItem:first-child img {
+  object-position: center 62%;
+}
+
+.houseGalleryItem:hover img {
+  transform: scale(1.025);
+}
+
+.houseGalleryItem:focus-visible,
+.houseGalleryClose:focus-visible,
+.houseGalleryArrow:focus-visible,
+.routeOptionAction:focus-visible {
+  z-index: 2;
+  outline: 3px solid rgba(237, 91, 42, 0.55);
+  outline-offset: -3px;
+}
+
+.houseGalleryHint {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 11px;
+  border-radius: 3px;
+  color: #fff;
+  background: rgba(16, 33, 39, 0.82);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.houseGalleryDialog {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  color: #fff;
+  background: #0b171b;
+}
+
+.houseGalleryDialog::backdrop {
+  background: rgba(7, 16, 19, 0.94);
+}
+
+.houseGalleryDialogInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+
+.houseGalleryFullImage {
+  position: absolute;
+  inset: 58px 68px 52px;
+}
+
+.houseGalleryFullImage img {
+  object-fit: contain;
+}
+
+.houseGalleryClose,
+.houseGalleryArrow {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(11, 23, 27, 0.76);
+  cursor: pointer;
+}
+
+.houseGalleryClose {
+  top: max(18px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+}
+
+.houseGalleryArrow {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.houseGalleryArrowPrevious {
+  left: max(18px, env(safe-area-inset-left));
+}
+
+.houseGalleryArrowNext {
+  right: max(18px, env(safe-area-inset-right));
+}
+
+.houseGalleryCounter {
+  position: absolute;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  padding: 7px 10px;
+  border-radius: 3px;
+  background: rgba(11, 23, 27, 0.76);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  transform: translateX(-50%);
+}
+
 .routeIcon {
   margin: 44px 44px 0;
 }
@@ -980,7 +1123,7 @@ a.routeOption:focus-visible {
   padding: 24px;
 }
 
-.routeOption span {
+.routeOption > div:last-child > span {
   display: inline-flex;
   gap: 7px;
   align-items: center;
@@ -988,6 +1131,21 @@ a.routeOption:focus-visible {
   color: var(--scenario-signal-dark);
   font-size: 13px;
   font-weight: 650;
+}
+
+.routeOptionAction {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  margin-top: 18px;
+  color: var(--scenario-signal-dark);
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.routeOptionAction:hover {
+  color: var(--scenario-deep);
 }
 
 .selectionLayout {
@@ -1249,6 +1407,29 @@ a.groupItem:hover {
 
   .solutionsArticleSection {
     padding: 52px 0;
+  }
+
+  .houseGallery {
+    grid-template-columns: minmax(0, 1.55fr) minmax(96px, 0.8fr);
+    min-height: 240px;
+  }
+
+  .houseGalleryFullImage {
+    inset: 64px 16px 58px;
+  }
+
+  .houseGalleryArrow {
+    top: auto;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    transform: none;
+  }
+
+  .houseGalleryArrowPrevious {
+    left: max(16px, env(safe-area-inset-left));
+  }
+
+  .houseGalleryArrowNext {
+    right: max(16px, env(safe-area-inset-right));
   }
 
   .heroActions,
