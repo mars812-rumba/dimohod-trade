@@ -32,6 +32,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
+import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
 import { HeroSmoke } from "../components/HeroSmoke";
 import { LeadForm } from "../components/LeadForm";
 import { ProductGalleryPreview } from "../components/ProductGalleryPreview";
@@ -526,7 +527,7 @@ export default async function HomePage() {
                     <h3>Совместимые элементы</h3>
                   </div>
                 </div>
-                <div className={styles.compatibleGrid}>
+                <CompatibleProductsCarousel>
                   {compatibleProducts.map((item) => {
                     const diameter = compatibleDiameter(item);
                     const steel = compatibleSteel(item);
@@ -562,7 +563,7 @@ export default async function HomePage() {
                       </article>
                     );
                   })}
-                </div>
+                </CompatibleProductsCarousel>
               </section>
             ) : null}
 
