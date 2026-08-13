@@ -5,10 +5,10 @@ import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import {
-  banyaDraftConfiguratorHref,
+  createEmptyScenarioDraft,
   draftFieldStatus,
-  emptyBanyaDraft,
-  type BanyaConfiguratorDraft,
+  scenarioDraftConfiguratorHref,
+  type ScenarioConfiguratorDraft,
   type DraftFieldStatus,
 } from "@/lib/configuratorDraft";
 import type { ScenarioPageContent } from "@/lib/scenarioPages";
@@ -19,8 +19,6 @@ type BanyaIntakeFlowProps = {
   assetBasePath?: string;
 };
 
-const STORAGE_KEY = "dimohod-trade:banya-intake";
-
 const statusLabels: Record<DraftFieldStatus, string> = {
   known: "✓ известно",
   measure: "○ нужно измерить",
@@ -28,14 +26,14 @@ const statusLabels: Record<DraftFieldStatus, string> = {
 };
 
 type MeasurementFieldProps = {
-  draft: BanyaConfiguratorDraft;
-  field: keyof BanyaConfiguratorDraft;
+  draft: ScenarioConfiguratorDraft;
+  field: keyof ScenarioConfiguratorDraft;
   label: string;
   placeholder: string;
   unit?: string;
   numeric?: boolean;
-  onChange: (field: keyof BanyaConfiguratorDraft, value: string) => void;
-  onDefer: (field: keyof BanyaConfiguratorDraft) => void;
+  onChange: (field: keyof ScenarioConfiguratorDraft, value: string) => void;
+  onDefer: (field: keyof ScenarioConfiguratorDraft) => void;
   children?: ReactNode;
 };
 
@@ -87,13 +85,17 @@ function MeasurementHelp({ title, children }: { title?: string; children: ReactN
 }
 
 export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlowProps) {
-  const [intake, setIntake] = useState<BanyaConfiguratorDraft>(emptyBanyaDraft);
+  const scenario = content.slug === "dom" ? "dom" : "banya";
+  const emptyDraft = createEmptyScenarioDraft(scenario);
+  const isHome = scenario === "dom";
+  const storageKey = `dimohod-trade:${scenario}-intake`;
+  const [intake, setIntake] = useState<ScenarioConfiguratorDraft>(emptyDraft);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     try {
-      const saved = window.sessionStorage.getItem(STORAGE_KEY);
-      if (saved) setIntake({ ...emptyBanyaDraft, ...JSON.parse(saved) });
+      const saved = window.sessionStorage.getItem(storageKey);
+      if (saved) setIntake({ ...emptyDraft, ...JSON.parse(saved), scenario });
     } catch {
       // The form remains usable when browser storage is unavailable.
     }
@@ -103,19 +105,19 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
   useEffect(() => {
     if (!isReady) return;
     try {
-      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(intake));
+      window.sessionStorage.setItem(storageKey, JSON.stringify(intake));
     } catch {
       // Values still remain available for the current render.
     }
   }, [intake, isReady]);
 
-  const configuratorHref = banyaDraftConfiguratorHref(intake);
+  const configuratorHref = scenarioDraftConfiguratorHref(intake);
 
-  const update = <Key extends keyof BanyaConfiguratorDraft>(key: Key, value: BanyaConfiguratorDraft[Key]) => {
+  const update = <Key extends keyof ScenarioConfiguratorDraft>(key: Key, value: ScenarioConfiguratorDraft[Key]) => {
     setIntake((current) => ({ ...current, [key]: value }));
   };
 
-  const updateMeasurement = (field: keyof BanyaConfiguratorDraft, value: string) => {
+  const updateMeasurement = (field: keyof ScenarioConfiguratorDraft, value: string) => {
     setIntake((current) => ({
       ...current,
       [field]: value,
@@ -123,7 +125,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
     }));
   };
 
-  const toggleDeferred = (field: keyof BanyaConfiguratorDraft) => {
+  const toggleDeferred = (field: keyof ScenarioConfiguratorDraft) => {
     setIntake((current) => ({
       ...current,
       [field]: "",
@@ -146,15 +148,60 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
             <div className={styles.stepHeading}>
               <span>Шаг 1</span>
               <div>
-                <h3 id="stove-step-title">Какая у вас печь?</h3>
-                <p>Модель и паспорт печи дают исходные требования производителя к подключению дымохода.</p>
+                <h3 id="stove-step-title">
+                  {isHome ? "Какой у вас отопитель?" : "Какая у вас печь?"}
+                </h3>
+                <p>
+                  {isHome
+                    ? "Тип, модель и паспорт отопителя дают исходные требования производителя к подключению дымохода."
+                    : "Модель и паспорт печи дают исходные требования производителя к подключению дымохода."}
+                </p>
               </div>
             </div>
+            {isHome ? (
+              <fieldset className={styles.choiceFieldset}>
+                <legend>Тип отопителя</legend>
+                <div className={styles.choiceRow}>
+                  {[
+                    ["pech", "Отопительная печь"],
+                    ["kamin", "Камин"],
+                    ["tt-kotel", "Твердотопливный котёл"],
+                    ["gaz", "Газовый котёл"],
+                    ["", "Пока не выбран"],
+                  ].map(([value, label]) => (
+                    <label key={label}>
+                      <input
+                        checked={intake.equipmentType === value}
+                        name="home-equipment"
+                        onChange={() => update("equipmentType", value as ScenarioConfiguratorDraft["equipmentType"])}
+                        type="radio"
+                      />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className={styles.choiceContext}>
+                  {intake.equipmentType === "gaz" ? (
+                    <>
+                      Для газового котла сначала откройте{" "}
+                      <Link href="/solutions/gazovyy-kotel">отдельный сценарий</Link>:
+                      допустимый вариант подключения проверяется по документации модели.
+                    </>
+                  ) : (
+                    <>
+                      Подробные вопросы по оборудованию: <Link href="/solutions/pech">печь</Link>,{" "}
+                      <Link href="/solutions/kamin">камин</Link> или{" "}
+                      <Link href="/solutions/tverdotoplivny-kotel">твердотопливный котёл</Link>.
+                    </>
+                  )}
+                </p>
+              </fieldset>
+            ) : null}
             <div className={styles.fieldGrid}>
               <div className={styles.measurementField}>
                 <label className={styles.field}>
                   <span>Производитель</span>
-                  <input autoComplete="organization" onChange={(event) => updateMeasurement("manufacturer", event.target.value)} placeholder="Например, TMF" value={intake.manufacturer} />
+                  <input autoComplete="organization" onChange={(event) => updateMeasurement("manufacturer", event.target.value)} placeholder="Укажите, если известен" value={intake.manufacturer} />
                 </label>
                 <div className={styles.fieldMeta}>
                   <span data-status={draftFieldStatus(intake, "manufacturer")}>{statusLabels[draftFieldStatus(intake, "manufacturer")]}</span>
@@ -177,7 +224,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                 <ChevronDown size={19} aria-hidden />
               </summary>
               <div>
-                <p>В паспорте конкретной печи проверяют разрешённое топливо, размер, форму и направление выходного патрубка, а также требования производителя к дымовому каналу и его обслуживанию.</p>
+                <p>В паспорте конкретного оборудования проверяют разрешённое топливо, размер, форму и направление выходного патрубка, а также требования производителя к дымовому каналу и его обслуживанию.</p>
                 <p>Если модель ещё не выбрана, маршрут можно начать собирать сейчас, а соединительные параметры оставить для уточнения.</p>
               </div>
             </details>
@@ -217,8 +264,8 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
             </fieldset>
 
             <div className={styles.fieldGrid}>
-              <MeasurementField draft={intake} field="diameter" label="Диаметр патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По паспорту печи" unit="мм" />
-              <MeasurementField draft={intake} field="connectionHeight" label="Высота печи или точки подключения" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если известна" unit="мм" />
+              <MeasurementField draft={intake} field="diameter" label="Диаметр патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По паспорту оборудования" unit="мм" />
+              <MeasurementField draft={intake} field="connectionHeight" label={isHome ? "Высота отопителя или точки подключения" : "Высота печи или точки подключения"} onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если известна" unit="мм" />
               <label className={`${styles.field} ${styles.fieldWide}`}>
                 <span>Форма и особенности соединения</span>
                 <input
@@ -235,8 +282,8 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                 <ChevronDown size={19} aria-hidden />
               </summary>
               <div>
-                <p>Сначала найдите присоединительный размер в паспорте печи. Если его нет под рукой, зафиксируйте маркировку оборудования и измерьте доступные внутренний и наружный размеры на остывшем, неработающем оборудовании.</p>
-                <p>Не уменьшайте сечение только ради подключения к существующим трубам. Размер и допустимость перехода проверяет специалист по документации печи и выбранной системе.</p>
+                <p>Сначала найдите присоединительный размер в паспорте оборудования. Если его нет под рукой, зафиксируйте маркировку и измерьте доступные внутренний и наружный размеры на остывшем, неработающем оборудовании.</p>
+                <p>Не уменьшайте сечение только ради подключения к существующим трубам. Размер и допустимость перехода проверяет специалист по документации отопителя и выбранной системе.</p>
               </div>
             </details>
           </section>
@@ -258,7 +305,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                   <label className={styles.routeChoice} data-selected={selected || undefined} key={option.slug}>
                     <input
                       checked={selected}
-                      name="banya-route"
+                      name={`${scenario}-route`}
                       onChange={() => update("route", value)}
                       type="radio"
                       value={value}
@@ -283,10 +330,10 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                 );
               })}
               <label className={`${styles.routeChoice} ${styles.routeChoiceUnknown}`} data-selected={intake.route === "unknown" || undefined}>
-                <input checked={intake.route === "unknown"} name="banya-route" onChange={() => update("route", "unknown")} type="radio" value="unknown" />
+                <input checked={intake.route === "unknown"} name={`${scenario}-route`} onChange={() => update("route", "unknown")} type="radio" value="unknown" />
                 <span className={styles.routeChoiceBody}>
                   <strong>Пока не знаю</strong>
-                  <small>Сохраните данные о печи и патрубке. Маршрут можно выбрать после замеров или консультации.</small>
+                  <small>Сохраните данные об отопителе и патрубке. Маршрут можно выбрать после замеров или консультации.</small>
                 </span>
               </label>
             </fieldset>
@@ -339,7 +386,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
               <span>{intake.route === "unknown" ? "Шаг 4" : "Шаг 5"}</span>
               <div>
                 <h3 id="photos-step-title">Фото места установки</h3>
-                <p>Желательно подготовить общий вид печи, патрубка и предполагаемых мест прохода. Это не обязательно для продолжения.</p>
+                <p>Желательно подготовить общий вид отопителя, патрубка и предполагаемых мест прохода. Это не обязательно для продолжения.</p>
               </div>
             </div>
             <label className={styles.photoReady}>

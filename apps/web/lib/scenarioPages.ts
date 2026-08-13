@@ -881,13 +881,17 @@ export const solidFuelBoilerScenario: ScenarioPageContent = {
 
 export const homeScenario: ScenarioPageContent = {
   slug: "dom",
-  kind: "hub",
+  kind: "object",
   eyebrow: "Для частного дома",
-  title: "Начните подбор дымохода с вашего отопителя",
+  title: "Дымоход для дома — по вашему отопителю и маршруту",
   summary:
-    "Выберите оборудование, соберите исходные данные и перейдите к сценарию, который учитывает его документацию и трассу дома.",
-  heroImage: "/images/home/hero-photo-720.webp",
-  heroImageAlt: "Металлический дымоход на фасаде частного дома",
+    "Укажите тип и модель отопителя, маршрут и известные размеры дома. Недостающие данные можно добавить после замеров.",
+  interactiveIntake: true,
+  heroPrimaryLabel: "Начать подбор",
+  heroSecondaryLabel: "Что нужно подготовить",
+  heroNote: "Не знаете всех размеров сейчас — начните с известных. Остальное можно добавить позже.",
+  heroImage: "/images/solutions/dom/house-chimney-room.webp",
+  heroImageAlt: "Печь и вертикальный дымоход в интерьере частного дома",
   guidance: {
     passport: [
       "сначала определите тип и точную модель отопителя",
@@ -936,41 +940,20 @@ export const homeScenario: ScenarioPageContent = {
       icon: "camera",
     },
   ],
-  routeSectionTitle: "Что будет подключено",
-  routeSectionDescription:
-    "Выберите источник тепла. На следующей странице соберём данные именно для этого оборудования.",
   routeOptions: [
     {
-      slug: "pech",
-      title: "Отопительная печь",
+      slug: "through-roof",
+      title: "Через перекрытия и кровлю",
       description:
-        "Сценарий по модели печи, выходному патрубку, месту установки и маршруту через дом.",
-      image: "/images/home/scenario-kamin.webp",
-      href: "/solutions/pech",
+        "Дымоход поднимается от отопителя внутри дома, проходит перекрытия и выходит через кровлю.",
+      image: "/images/home/banya-route-through-roof.webp",
     },
     {
-      slug: "kamin",
-      title: "Камин или каминная топка",
+      slug: "through-wall",
+      title: "Через стену и по фасаду",
       description:
-        "Проверяем документацию топки, точку подключения, новую трассу или существующий канал.",
-      image: "/images/home/scenario-kamin.webp",
-      href: "/solutions/kamin",
-    },
-    {
-      slug: "tverdotoplivny-kotel",
-      title: "Твердотопливный котёл",
-      description:
-        "Начинаем с паспорта котла, параметров патрубка, котельной и полного маршрута системы.",
-      image: "/images/home/scenario-tt-kotel.webp",
-      href: "/solutions/tverdotoplivny-kotel",
-    },
-    {
-      slug: "gazovyy-kotel",
-      title: "Газовый котёл",
-      description:
-        "Сначала определяем точную модель и разрешённую производителем конфигурацию отвода продуктов сгорания.",
-      image: "/images/home/scenario-gaz.webp",
-      href: "/solutions/gazovyy-kotel",
+        "Дымоход выходит через стену и далее поднимается снаружи по фасаду дома.",
+      image: "/images/home/banya-route-through-wall.webp",
     },
   ],
   selectionQuestions: [
@@ -1044,7 +1027,9 @@ export const homeScenario: ScenarioPageContent = {
         "Отметьте отопитель, высоты этажей, перекрытия, чердак или мансарду, кровлю и предполагаемые повороты. Добавьте фотографии каждой точки прохода и существующей шахты.",
     },
   ],
-  configuratorPreset: {},
+  configuratorPreset: {
+    scenario: "dom",
+  },
   metadata: {
     title: "Дымоход для дома: подбор по отопителю и маршруту",
     description:

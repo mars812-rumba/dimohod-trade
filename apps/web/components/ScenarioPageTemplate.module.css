@@ -253,6 +253,7 @@
 
 .fieldGrid {
   display: grid;
+  grid-column: 2;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px 18px;
 }
@@ -386,6 +387,25 @@
   border-color: var(--scenario-steel);
   color: #fff;
   background: var(--scenario-deep);
+}
+
+.choiceContext {
+  margin: 12px 0 0;
+  color: var(--scenario-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.choiceContext a {
+  color: var(--scenario-signal-dark);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.choiceContext a:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.3);
+  outline-offset: 2px;
 }
 
 .inlineHelp {
@@ -1378,6 +1398,7 @@ a.groupItem:hover {
   }
 
   .choiceFieldset,
+  .fieldGrid,
   .inlineHelp,
   .photoReady {
     grid-column: 1;

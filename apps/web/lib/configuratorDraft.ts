@@ -1,8 +1,9 @@
 export type DraftFieldStatus = "known" | "measure" | "later";
 export type DraftRoute = "ceiling" | "wall" | "unknown";
 
-export type BanyaConfiguratorDraft = {
-  scenario: "banya";
+export type ScenarioConfiguratorDraft = {
+  scenario: "banya" | "dom";
+  equipmentType: "" | "pech" | "kamin" | "tt-kotel" | "gaz";
   manufacturer: string;
   model: string;
   outlet: "" | "top" | "rear";
@@ -22,30 +23,35 @@ export type BanyaConfiguratorDraft = {
   deferredFields: string[];
 };
 
-export const emptyBanyaDraft: BanyaConfiguratorDraft = {
-  scenario: "banya",
-  manufacturer: "",
-  model: "",
-  outlet: "",
-  diameter: "",
-  connectionHeight: "",
-  connectionDetails: "",
-  route: "unknown",
-  ceilingHeight: "",
-  floorThickness: "",
-  levels: "",
-  routeHeight: "",
-  roofAngle: "",
-  wallExitHeight: "",
-  wallDistance: "",
-  outdoorHeight: "",
-  photosReady: false,
-  deferredFields: [],
-};
+export function createEmptyScenarioDraft(
+  scenario: ScenarioConfiguratorDraft["scenario"],
+): ScenarioConfiguratorDraft {
+  return {
+    scenario,
+    equipmentType: "",
+    manufacturer: "",
+    model: "",
+    outlet: "",
+    diameter: "",
+    connectionHeight: "",
+    connectionDetails: "",
+    route: "unknown",
+    ceilingHeight: "",
+    floorThickness: "",
+    levels: "",
+    routeHeight: "",
+    roofAngle: "",
+    wallExitHeight: "",
+    wallDistance: "",
+    outdoorHeight: "",
+    photosReady: false,
+    deferredFields: [],
+  };
+}
 
 export function draftFieldStatus(
-  draft: BanyaConfiguratorDraft,
-  field: keyof BanyaConfiguratorDraft,
+  draft: ScenarioConfiguratorDraft,
+  field: keyof ScenarioConfiguratorDraft,
 ): DraftFieldStatus {
   const value = draft[field];
   if (typeof value === "boolean" ? value : Array.isArray(value) ? value.length > 0 : Boolean(value)) {
@@ -54,8 +60,10 @@ export function draftFieldStatus(
   return draft.deferredFields.includes(field) ? "later" : "measure";
 }
 
-export function banyaDraftConfiguratorHref(draft: BanyaConfiguratorDraft): string {
-  const params = new URLSearchParams({ scenario: draft.scenario });
+export function scenarioDraftConfiguratorHref(draft: ScenarioConfiguratorDraft): string {
+  const params = new URLSearchParams({
+    scenario: draft.equipmentType || draft.scenario,
+  });
   if (draft.route !== "unknown") params.set("route", draft.route);
   if (draft.outlet) params.set("outlet", draft.outlet === "top" ? "vertical" : "horizontal");
 
@@ -80,13 +88,16 @@ export function banyaDraftConfiguratorHref(draft: BanyaConfiguratorDraft): strin
   return `/?${params.toString()}#calculator`;
 }
 
-export function parseBanyaDraft(value: string | null): BanyaConfiguratorDraft | null {
+export function parseScenarioDraft(value: string | null): ScenarioConfiguratorDraft | null {
   if (!value) return null;
   try {
-    const parsed = JSON.parse(value) as Partial<BanyaConfiguratorDraft>;
-    if (parsed.scenario !== "banya") return null;
-    return { ...emptyBanyaDraft, ...parsed, scenario: "banya" };
+    const parsed = JSON.parse(value) as Partial<ScenarioConfiguratorDraft>;
+    if (parsed.scenario !== "banya" && parsed.scenario !== "dom") return null;
+    return { ...createEmptyScenarioDraft(parsed.scenario), ...parsed };
   } catch {
     return null;
   }
 }
+
+// Backward-compatible name for the configurator while scenario drafts are shared.
+export const parseBanyaDraft = parseScenarioDraft;
