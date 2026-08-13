@@ -1,6 +1,15 @@
 "use client";
 
-import { Children, type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import styles from "../app/page.module.css";
 
 type CompatibleProductsCarouselProps = {
@@ -13,9 +22,23 @@ const AUTOPLAY_DELAY_MS = 7000;
 export function CompatibleProductsCarousel({ children }: CompatibleProductsCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
-  const itemCount = Children.count(children);
-  const pageCount = Math.ceil(itemCount / ITEMS_PER_PAGE);
-  const [page, setPage] = useState(0);
+  const scrollEndRef = useRef<number | null>(null);
+  const stepRef = useRef(0);
+  const items = Children.toArray(children);
+  const itemCount = items.length;
+  const loopItems = itemCount > ITEMS_PER_PAGE
+    ? [
+        ...items,
+        ...items.slice(0, ITEMS_PER_PAGE).map((child, index) =>
+          isValidElement(child)
+            ? cloneElement(child as ReactElement<Record<string, unknown>>, {
+                "data-carousel-clone": "true",
+                key: `carousel-clone-${index}`,
+              })
+            : child,
+        ),
+      ]
+    : items;
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -32,6 +55,10 @@ export function CompatibleProductsCarousel({ children }: CompatibleProductsCarou
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
+    track.querySelectorAll<HTMLElement>("[data-carousel-clone]").forEach((clone) => {
+      clone.setAttribute("aria-hidden", "true");
+      clone.setAttribute("inert", "");
+    });
     const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), {
       threshold: 0.45,
     });
@@ -40,18 +67,23 @@ export function CompatibleProductsCarousel({ children }: CompatibleProductsCarou
   }, []);
 
   useEffect(() => {
-    if (pageCount < 2 || hovered || focused || reducedMotion || !visible) return;
+    if (itemCount <= ITEMS_PER_PAGE || hovered || focused || reducedMotion || !visible) return;
     const timer = window.setInterval(() => {
-      setPage((current) => {
-        const next = (current + 1) % pageCount;
-        const track = trackRef.current;
-        const target = track?.children.item(next * ITEMS_PER_PAGE) as HTMLElement | null;
-        if (track && target) track.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
-        return next;
-      });
+      const next = Math.min(stepRef.current + 1, itemCount);
+      const track = trackRef.current;
+      const target = track?.children.item(next) as HTMLElement | null;
+      if (track && target) track.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
+      stepRef.current = next;
     }, AUTOPLAY_DELAY_MS);
     return () => window.clearInterval(timer);
-  }, [focused, hovered, pageCount, reducedMotion, visible]);
+  }, [focused, hovered, itemCount, reducedMotion, visible]);
+
+  const resetLoopIfNeeded = () => {
+    const track = trackRef.current;
+    if (!track || stepRef.current !== itemCount) return;
+    track.scrollTo({ left: 0, behavior: "auto" });
+    stepRef.current = 0;
+  };
 
   const syncPageFromScroll = () => {
     if (frameRef.current !== null) return;
@@ -59,23 +91,26 @@ export function CompatibleProductsCarousel({ children }: CompatibleProductsCarou
       frameRef.current = null;
       const track = trackRef.current;
       if (!track) return;
-      let nearestPage = 0;
+      let nearestStep = 0;
       let nearestDistance = Number.POSITIVE_INFINITY;
-      for (let index = 0; index < pageCount; index += 1) {
-        const target = track.children.item(index * ITEMS_PER_PAGE) as HTMLElement | null;
+      for (let index = 0; index <= itemCount; index += 1) {
+        const target = track.children.item(index) as HTMLElement | null;
         if (!target) continue;
         const distance = Math.abs(track.scrollLeft - target.offsetLeft);
         if (distance < nearestDistance) {
           nearestDistance = distance;
-          nearestPage = index;
+          nearestStep = index;
         }
       }
-      setPage(nearestPage);
+      stepRef.current = nearestStep;
     });
+    if (scrollEndRef.current !== null) window.clearTimeout(scrollEndRef.current);
+    scrollEndRef.current = window.setTimeout(resetLoopIfNeeded, 180);
   };
 
   useEffect(() => () => {
     if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
+    if (scrollEndRef.current !== null) window.clearTimeout(scrollEndRef.current);
   }, []);
 
   return (
@@ -95,7 +130,7 @@ export function CompatibleProductsCarousel({ children }: CompatibleProductsCarou
         ref={trackRef}
         onScroll={syncPageFromScroll}
       >
-        {children}
+        {loopItems}
       </div>
     </div>
   );
