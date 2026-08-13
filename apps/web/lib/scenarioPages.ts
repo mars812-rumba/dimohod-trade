@@ -110,7 +110,7 @@ export const banyaScenario: ScenarioPageContent = {
   heroPrimaryLabel: "Начать подбор",
   heroSecondaryLabel: "Что нужно подготовить",
   heroNote: "Не знаете всех размеров сейчас — начните с известных. Остальное можно добавить позже.",
-  heroImage: "/images/home/scenario-banya.webp",
+  heroImage: "/images/home/scenario-banya-user.webp",
   heroImageAlt: "Банная печь с металлическим дымоходом в деревянной парной",
   diameterGuide: {
     title: "Диаметр для банной печи: начинаем с паспорта",
@@ -198,7 +198,7 @@ export const banyaScenario: ScenarioPageContent = {
       title: "Через перекрытие и кровлю",
       description:
         "Дымоход поднимается от печи внутри здания, проходит перекрытия и выходит через кровлю.",
-      image: "/images/home/scenario-banya.webp",
+      image: "/images/home/scenario-banya-user.webp",
     },
     {
       slug: "through-wall",
