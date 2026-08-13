@@ -54,9 +54,22 @@ export default function SolutionsPage() {
 
   return (
     <main className={styles.main}>
-      <section className={styles.routeSection}>
+      <section className={`${styles.routeSection} ${styles.solutionsSection}`}>
         <div className={styles.shell}>
-          <h1 className={styles.visuallyHidden}>Сценарии подбора дымохода</h1>
+          <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
+            <Link href="/">Главная</Link>
+            <span aria-hidden>/</span>
+            <span aria-current="page">Решения</span>
+          </nav>
+
+          <header className={styles.solutionsIntro}>
+            <h1>Выберите сценарий подбора дымохода</h1>
+            <p>
+              Начните с объекта или отопителя. Неизвестные данные можно
+              добавить позже.
+            </p>
+          </header>
+
           <div className={styles.routeGrid}>
             {scenarios.map((scenario) => (
               <Link
@@ -75,7 +88,7 @@ export default function SolutionsPage() {
                   />
                 </div>
                 <div>
-                  <h3>{scenario.eyebrow}</h3>
+                  <h2>{scenario.eyebrow}</h2>
                   <p>{scenario.summary}</p>
                   <span>
                     Открыть сценарий <ArrowRight size={15} aria-hidden />
@@ -84,6 +97,33 @@ export default function SolutionsPage() {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className={styles.solutionsArticleSection}>
+        <div className={styles.shell}>
+          <article className={styles.solutionsArticle}>
+            <h2>Как выбрать сценарий</h2>
+            <div className={styles.solutionsArticleBody}>
+              <p>
+                Выберите то, что вам уже известно: тип объекта или конкретный
+                отопитель. На следующем шаге можно указать модель оборудования,
+                расположение патрубка, предполагаемый маршрут дымохода и
+                известные размеры.
+              </p>
+              <h3>Если данных пока не хватает</h3>
+              <p>
+                Начните с известных параметров, а недостающие отметьте для
+                уточнения. Подсказки на сценарной странице помогут подготовить
+                замеры, после чего состав системы можно передать специалисту на
+                проверку.
+              </p>
+              <p>
+                Если вы уже знаете нужные изделия, перейдите сразу в{" "}
+                <Link href="/catalog">каталог дымоходов и комплектующих</Link>.
+              </p>
+            </div>
+          </article>
         </div>
       </section>
     </main>

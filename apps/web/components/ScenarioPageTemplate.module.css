@@ -746,6 +746,97 @@
   background: #eaf0f0;
 }
 
+.solutionsSection {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.solutionsIntro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+  gap: clamp(28px, 6vw, 84px);
+  align-items: end;
+  padding: clamp(30px, 5vw, 58px) 0 34px;
+}
+
+.solutionsIntro h1 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(38px, 5vw, 62px);
+  font-weight: var(--scenario-heading-weight);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.solutionsIntro p {
+  max-width: 450px;
+  margin: 0 0 4px;
+  color: var(--scenario-muted);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.solutionsArticleSection {
+  padding: clamp(56px, 7vw, 88px) 0;
+  background: var(--scenario-surface);
+}
+
+.solutionsArticle {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(38px, 8vw, 112px);
+  align-items: start;
+}
+
+.solutionsArticle > h2 {
+  max-width: 390px;
+  margin: 0;
+  font-size: var(--scenario-heading-size);
+  font-weight: var(--scenario-heading-weight);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.solutionsArticleBody {
+  max-width: 720px;
+}
+
+.solutionsArticleBody p {
+  margin: 0;
+  color: var(--scenario-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.solutionsArticleBody h3 {
+  margin: 30px 0 10px;
+  padding-top: 26px;
+  border-top: 1px solid var(--scenario-line);
+  font-size: 20px;
+  font-weight: var(--scenario-card-heading-weight);
+  line-height: 1.25;
+}
+
+.solutionsArticleBody p + p {
+  margin-top: 18px;
+}
+
+.solutionsArticleBody a {
+  color: var(--scenario-signal-dark);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.solutionsArticleBody a:hover {
+  color: var(--scenario-deep);
+}
+
+.solutionsArticleBody a:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.3);
+  outline-offset: 3px;
+}
+
 .systemSection {
   border-top: 1px solid var(--scenario-line);
 }
@@ -798,6 +889,7 @@
 }
 
 .inputItem h3,
+.routeOption h2,
 .routeOption h3,
 .questionList h3,
 .groupItem h3,
@@ -1078,6 +1170,8 @@ a.groupItem:hover {
   .heroGrid,
   .intakeIntro,
   .intakeStep,
+  .solutionsIntro,
+  .solutionsArticle,
   .selectionLayout,
   .reviewLayout,
   .finalCtaLayout {
@@ -1120,6 +1214,11 @@ a.groupItem:hover {
     margin-bottom: 32px;
   }
 
+  .solutionsIntro {
+    gap: 18px;
+    align-items: start;
+  }
+
   .choiceFieldset,
   .inlineHelp,
   .photoReady {
@@ -1136,6 +1235,22 @@ a.groupItem:hover {
 }
 
 @media (max-width: 620px) {
+  .solutionsSection {
+    padding-bottom: 56px;
+  }
+
+  .solutionsIntro {
+    padding: 28px 0 26px;
+  }
+
+  .solutionsIntro h1 {
+    font-size: clamp(36px, 11vw, 48px);
+  }
+
+  .solutionsArticleSection {
+    padding: 52px 0;
+  }
+
   .heroActions,
   .primaryButton,
   .secondaryButton {
