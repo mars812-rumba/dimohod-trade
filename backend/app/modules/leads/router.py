@@ -1,12 +1,14 @@
 import json
 import re
 import uuid
+from asyncio import to_thread
 from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
 from app.core.config import settings
+from app.modules.leads.email import send_lead_email
 
 router = APIRouter()
 
@@ -66,7 +68,22 @@ async def create_lead(
         "consent_version": consent_version,
         "consented_at": datetime.now(UTC).isoformat(),
     }
-    (lead_dir / "lead.json").write_text(
-        json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    return {"id": lead_id, "status": "accepted"}
+    record_path = lead_dir / "lead.json"
+    record_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    email_status = "pending"
+    try:
+        sent = await to_thread(
+            send_lead_email,
+            record,
+            lead_dir / attachment_name if attachment_name else None,
+        )
+        email_status = "sent" if sent else "not_configured"
+    except Exception as error:  # The saved lead remains recoverable if SMTP is unavailable.
+        email_status = "failed"
+        record["email_error"] = type(error).__name__
+
+    record["email_recipient"] = settings.lead_recipient_email
+    record["email_status"] = email_status
+    record_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"id": lead_id, "status": "accepted", "email_status": email_status}

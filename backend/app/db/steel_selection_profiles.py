@@ -1,4 +1,4 @@
-"""Owner-confirmed selection profiles for the inner steel of chimney pipes."""
+"""Owner-confirmed selection profiles for the inner steel of chimney products."""
 
 from copy import deepcopy
 from typing import Any
@@ -79,9 +79,10 @@ def with_steel_selection_profile(
     *,
     steel_grade: str | None,
     product_kind: str | None,
+    contour: str | None = None,
 ) -> dict[str, Any]:
     values = dict(attributes or {})
-    if product_kind != "труба":
+    if product_kind != "труба" and contour != "сэндвич":
         return values
     profile = steel_selection_profile(steel_grade)
     if profile is not None:

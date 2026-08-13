@@ -1,0 +1,8 @@
+[Unit]
+Description=Dimohod Trade PostgreSQL backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/dimohod-trade/deploy/db-backup.sh

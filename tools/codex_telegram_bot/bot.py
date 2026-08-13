@@ -32,6 +32,7 @@ from typing import Any
 
 TELEGRAM_MESSAGE_LIMIT = 4096
 MAX_TELEGRAM_UPLOAD_BYTES = 49 * 1024 * 1024
+MARKDOWN_EXTENSIONS = {".md", ".markdown"}
 DEFAULT_TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe"
 DEFAULT_VISION_MODEL = "gpt-5.6-luna"
 DEFAULT_IMAGE_MODEL = "gpt-image-2"
@@ -39,6 +40,8 @@ DEFAULT_IMAGE_SIZE = "1024x1024"
 DEFAULT_IMAGE_QUALITY = "medium"
 DEFAULT_CODEX_MODEL_KEY = "sol_medium"
 MEDIA_GROUP_SETTLE_SECONDS = 1.2
+CONTEXT_HISTORY_ITEMS = 5
+CONTEXT_HISTORY_BUDGET = 12000
 PROJECT_INSTRUCTIONS = """Работай только над проектом Dimohod Trade в текущем каталоге.
 Перед изменениями прочитай PROJECT_CONTEXT.md и NEXT_STEPS.md.
 Используй приложенный контекст Graphify как карту связей проекта, затем проверяй важные выводы
@@ -51,7 +54,8 @@ backend/configurator/chimney-configurator-png.html, если задача явн
 Если пользователь просит прислать файл из проекта, в финальном ответе добавь отдельной строкой
 [[send_file:relative/path/to/file]] — бот отправит этот файл в Telegram.
 Git commit/push и production deploy выполняются отдельными командами Telegram-бота:
-/commit, /push, /deploy или /ship. Не пытайся обходить sandbox ради записи в .git, сети или Docker.
+/commit, /push, /deploy или /ship. Docker доступен для диагностики, тестов и локальной сборки;
+не выполняй разрушительные действия с контейнерами, образами и volumes без явного запроса.
 
 Запрос пользователя из Telegram:
 """
@@ -94,6 +98,11 @@ class ProjectConfig:
     protected_paths: tuple[str, ...]
     test_commands: tuple[tuple[str, ...], ...]
     deploy_commands: tuple[tuple[str, ...], ...]
+    sandbox_mode: str = "workspace-write"
+    approval_policy: str | None = None
+    remote_deploy_host: str | None = None
+    remote_deploy_root: str | None = None
+    remote_deploy_key: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -136,6 +145,22 @@ def build_project_configs(dimohod_root: Path) -> dict[str, ProjectConfig]:
             deploy_commands=(
                 ("docker", "compose", "up", "-d", "--build", "backend", "web"),
                 ("docker", "compose", "ps", "backend", "web"),
+            ),
+            sandbox_mode="danger-full-access",
+            approval_policy="on-request",
+            remote_deploy_host=(
+                os.getenv("DIMOHOD_REMOTE_DEPLOY_HOST", "deploy@217.114.10.254").strip()
+                or None
+            ),
+            remote_deploy_root=(
+                os.getenv("DIMOHOD_REMOTE_DEPLOY_ROOT", "/opt/dimohod-trade").strip()
+                or None
+            ),
+            remote_deploy_key=Path(
+                os.getenv(
+                    "DIMOHOD_REMOTE_DEPLOY_KEY",
+                    "/root/.ssh/id_ed25519_dimohod_deploy",
+                )
             ),
         ),
         "sunny": ProjectConfig(
@@ -182,6 +207,33 @@ def model_keyboard() -> dict[str, Any]:
             [
                 {"text": model.label, "callback_data": f"model:{model.key}"}
                 for model in CODEX_MODELS.values()
+            ]
+        ]
+    }
+
+
+def discover_openai_keys(environment: dict[str, str] | None = None) -> list[tuple[str, str]]:
+    """Find OPENAI_API_KEY, OPENAI_API_KEY_2, ... without exposing their values."""
+    source = environment if environment is not None else os.environ
+    found: list[tuple[int, str, str]] = []
+    for name, value in source.items():
+        match = re.fullmatch(r"OPENAI_API_KEY(?:_(\d+))?", name)
+        if not match or not value.strip():
+            continue
+        number = int(match.group(1) or "1")
+        found.append((number, name, value.strip()))
+    return [(name, value) for _, name, value in sorted(found)]
+
+
+def openai_key_keyboard(keys: list[tuple[str, str]], selected_index: int) -> dict[str, Any]:
+    return {
+        "inline_keyboard": [
+            [
+                {
+                    "text": f"{'✅ ' if index == selected_index else ''}API {index + 1}",
+                    "callback_data": f"openai_key:{index}",
+                }
+                for index in range(len(keys))
             ]
         ]
     }
@@ -284,6 +336,19 @@ def safe_project_file(project_root: Path, requested_path: str) -> Path:
     if candidate.stat().st_size > MAX_TELEGRAM_UPLOAD_BYTES:
         raise ValueError("Файл слишком большой для отправки в Telegram")
     return candidate
+
+
+def safe_markdown_filename(filename: str) -> str:
+    """Return a filesystem-safe Markdown filename received from Telegram."""
+    name = Path(filename.strip()).name
+    if not name or name in {".", ".."}:
+        raise ValueError("У файла нет имени")
+    if Path(name).suffix.lower() not in MARKDOWN_EXTENSIONS:
+        raise ValueError("Поддерживаются только файлы .md и .markdown")
+    safe_name = re.sub(r"[^\w.() -]+", "_", name, flags=re.UNICODE).strip(" .")
+    if not safe_name:
+        raise ValueError("Некорректное имя файла")
+    return safe_name
 
 
 SEND_FILE_RE = re.compile(r"^\s*\[\[send_file:(?P<path>[^\]]+)]]\s*$", re.MULTILINE)
@@ -480,6 +545,8 @@ class StateStore:
             "threads": {},
             "active_projects": {},
             "models": {},
+            "openai_keys": {},
+            "context_history": {},
         }
         self.configured_users = configured_users or set()
         if path.exists():
@@ -543,6 +610,24 @@ class StateStore:
             self.data.setdefault("models", {})[str(chat_id)] = model_key
             self.save()
 
+    def get_openai_key_index(self, chat_id: int, key_count: int) -> int:
+        if key_count <= 0:
+            return 0
+        with self.lock:
+            value = self.data.setdefault("openai_keys", {}).get(str(chat_id), 0)
+            try:
+                index = int(value)
+            except (TypeError, ValueError):
+                index = 0
+            return index if 0 <= index < key_count else 0
+
+    def set_openai_key_index(self, chat_id: int, index: int, key_count: int) -> None:
+        if not 0 <= index < key_count:
+            raise ValueError("Неизвестный OpenAI API key")
+        with self.lock:
+            self.data.setdefault("openai_keys", {})[str(chat_id)] = index
+            self.save()
+
     def thread_slot(self, project_key: str, model_key: str) -> str:
         # Models share one conversation per project so they can be switched mid-task.
         _ = model_key
@@ -579,6 +664,39 @@ class StateStore:
                 threads.pop(str(chat_id), None)
             self.save()
 
+    def add_context_history(
+        self, chat_id: int, project_key: str, prompt: str, response: str
+    ) -> None:
+        entry = {
+            "prompt": prompt.strip()[:2000],
+            "response": response.strip()[:3500],
+        }
+        with self.lock:
+            histories = self.data.setdefault("context_history", {})
+            chat_history = histories.setdefault(str(chat_id), {})
+            project_history = chat_history.setdefault(project_key, [])
+            project_history.append(entry)
+            chat_history[project_key] = project_history[-CONTEXT_HISTORY_ITEMS:]
+            self.save()
+
+    def get_context_history(self, chat_id: int, project_key: str) -> list[dict[str, str]]:
+        with self.lock:
+            entries = (
+                self.data.setdefault("context_history", {})
+                .get(str(chat_id), {})
+                .get(project_key, [])
+            )
+            if not isinstance(entries, list):
+                return []
+            return [
+                {
+                    "prompt": str(entry.get("prompt") or ""),
+                    "response": str(entry.get("response") or ""),
+                }
+                for entry in entries[-CONTEXT_HISTORY_ITEMS:]
+                if isinstance(entry, dict)
+            ]
+
 
 @dataclass
 class RunningTask:
@@ -605,6 +723,7 @@ class StatusSummary:
     last_action: str = "Запускаю Codex…"
     final_response: str = ""
     thread_id: str | None = None
+    error_message: str = ""
     cancelled: bool = False
 
     def render(self) -> str:
@@ -632,7 +751,10 @@ def consume_codex_event(event: dict[str, Any], summary: StatusSummary) -> bool:
         summary.thread_id = event.get("thread_id")
         return False
     if event_type in {"turn.failed", "error"}:
-        summary.last_action = str(event.get("message") or event.get("error") or "Ошибка Codex")
+        summary.error_message = str(
+            event.get("message") or event.get("error") or "Ошибка Codex"
+        )
+        summary.last_action = summary.error_message
         return True
     item = event.get("item") or {}
     item_type = item.get("type")
@@ -657,6 +779,37 @@ def consume_codex_event(event: dict[str, Any], summary: StatusSummary) -> bool:
         summary.last_action = "Завершаю"
         return True
     return False
+
+
+def is_missing_rollout_error(summary: StatusSummary, diagnostics: str) -> bool:
+    details = f"{summary.error_message}\n{diagnostics}".lower()
+    return "no rollout found for thread id" in details
+
+
+def recovery_context_prompt(
+    prompt: str, history: list[dict[str, str]], budget: int = CONTEXT_HISTORY_BUDGET
+) -> str:
+    if not history:
+        return prompt
+    blocks = []
+    for entry in history:
+        blocks.append(
+            "Предыдущая задача:\n"
+            f"{entry.get('prompt', '').strip()}\n\n"
+            "Итог предыдущего ответа:\n"
+            f"{entry.get('response', '').strip()}"
+        )
+    context = "\n\n---\n\n".join(blocks)
+    if len(context) > budget:
+        context = context[-budget:]
+    return (
+        "Предыдущая Codex-сессия недоступна. Ниже сохранён ограниченный контекст последних "
+        "успешных задач. Проверь текущее состояние по файлам проекта и не считай это описание "
+        "источником истины.\n\n"
+        f"{context}\n\n"
+        "Текущий запрос пользователя:\n"
+        f"{prompt}"
+    )
 
 
 class CodexRunner:
@@ -698,8 +851,10 @@ class CodexRunner:
         model_key = self.state.get_model_key(chat_id)
         model = CODEX_MODELS[model_key]
         thread_slot = self.state.thread_slot(project_key, model_key)
-        common = [
-            self.codex_binary,
+        common = [self.codex_binary]
+        if project.approval_policy:
+            common.extend(["--ask-for-approval", project.approval_policy])
+        common.extend([
             "exec",
             "--json",
             "--color",
@@ -707,12 +862,12 @@ class CodexRunner:
             "--cd",
             str(project.root),
             "--sandbox",
-            "workspace-write",
+            project.sandbox_mode,
             "--model",
             model.model,
             "--config",
             f'model_reasoning_effort="{model.reasoning_effort}"',
-        ]
+        ])
         thread_id = self.state.get_thread(chat_id, thread_slot)
         if thread_id:
             return [*common, "resume", thread_id, prompt]
@@ -783,6 +938,24 @@ def encode_multipart(fields: dict[str, str], file_field: str, file_path: Path) -
     return encode_multipart_payload(fields, [(file_field, file_path, "voice.mp3", "audio/mpeg")])
 
 
+class OpenAIQuotaError(RuntimeError):
+    """The selected API key has exhausted its available billing quota."""
+
+
+def openai_http_error(exc: urllib.error.HTTPError, operation: str) -> RuntimeError:
+    details = exc.read().decode("utf-8", "replace")[-1000:]
+    normalized = details.lower()
+    quota_markers = (
+        "insufficient_quota",
+        "billing_hard_limit_reached",
+        "usage_limit_reached",
+        "exceeded your current quota",
+        "billing limit",
+    )
+    error_type = OpenAIQuotaError if any(marker in normalized for marker in quota_markers) else RuntimeError
+    return error_type(f"OpenAI {operation} HTTP {exc.code}: {details}")
+
+
 def openai_json_request(openai_key: str, path: str, payload: dict[str, Any], timeout: int = 180) -> Any:
     request = urllib.request.Request(
         f"https://api.openai.com/v1/{path.lstrip('/')}",
@@ -793,8 +966,7 @@ def openai_json_request(openai_key: str, path: str, payload: dict[str, Any], tim
         with urllib.request.urlopen(request, timeout=timeout) as response:
             return json.loads(response.read())
     except urllib.error.HTTPError as exc:
-        details = exc.read().decode("utf-8", "replace")[-1000:]
-        raise RuntimeError(f"OpenAI HTTP {exc.code}: {details}") from exc
+        raise openai_http_error(exc, "API") from exc
 
 
 def extract_openai_output_text(result: dict[str, Any]) -> str:
@@ -915,8 +1087,7 @@ def transcribe_voice(source: Path, openai_key: str, model: str) -> str:
         with urllib.request.urlopen(request, timeout=180) as response:
             result = json.loads(response.read())
     except urllib.error.HTTPError as exc:
-        details = exc.read().decode("utf-8", "replace")[-1000:]
-        raise RuntimeError(f"OpenAI transcription HTTP {exc.code}: {details}") from exc
+        raise openai_http_error(exc, "transcription") from exc
     text = str(result.get("text") or "").strip()
     if not text:
         raise RuntimeError("Сервис транскрибации вернул пустой текст")
@@ -930,8 +1101,11 @@ HELP_TEXT = """Я управляю Codex в проектах Dimohod Trade и Su
 Команды:
 /projects — выбрать активный проект
 /models — выбрать модель и уровень рассуждений
+/apis — выбрать OpenAI API key для голоса, фото и изображений
 /status — ветка, изменения и активная задача
 /file path/to/file — прислать файл из проекта
+/file path/to/file.md — получить Markdown-файл из проекта
+Можно отправить боту документ `.md` или `.markdown`: он сохранит файл и передаст его в Codex.
 /image описание — сгенерировать изображение и прислать в чат
 /commit сообщение — подготовить commit изменений
 /publish сообщение — тесты → commit → push
@@ -945,7 +1119,8 @@ HELP_TEXT = """Я управляю Codex в проектах Dimohod Trade и Su
 /id — показать ваш Telegram user ID
 /help — эта справка
 
-Codex работает с sandbox=workspace-write. Одновременно в одном чате выполняется одна задача."""
+Для Дымоходов Codex работает с sandbox=danger-full-access и approval=on-request;
+для Sunny — sandbox=workspace-write. Одновременно в одном чате выполняется одна задача."""
 
 
 def is_protected_commit_path(
@@ -1322,6 +1497,58 @@ class ReleaseManager:
             outputs.append(f"$ {' '.join(command)}\n{output or 'OK'}")
         return "\n\n".join(outputs)
 
+    def deploy_remote(self) -> str:
+        host = self.config.remote_deploy_host
+        remote_root = self.config.remote_deploy_root
+        key = self.config.remote_deploy_key
+        if not host or not remote_root or not key:
+            return ""
+        if not key.is_file():
+            raise RuntimeError(f"Не найден SSH-ключ удалённого deploy: {key}")
+
+        ssh_transport = (
+            f"ssh -i {key} -o BatchMode=yes -o StrictHostKeyChecking=yes"
+        )
+        code_sync = [
+            "rsync",
+            "-a",
+            "--delete-delay",
+            "--human-readable",
+            "-e",
+            ssh_transport,
+            "--exclude=/.git/",
+            "--exclude=/.env",
+            "--exclude=/.codex-telegram/",
+            "--exclude=/.migration/",
+            "--exclude=node_modules/",
+            "--exclude=.next/",
+            "--exclude=__pycache__/",
+            "--exclude=.pytest_cache/",
+            "--exclude=graphify-out/",
+            "--exclude=/storage/",
+            f"{self.project_root}/",
+            f"{host}:{remote_root}/",
+        ]
+        outputs = [run_host_command(code_sync, self.project_root, timeout=900)]
+
+        remote_output = run_host_command(
+            [
+                "ssh",
+                "-i",
+                str(key),
+                "-o",
+                "BatchMode=yes",
+                "-o",
+                "StrictHostKeyChecking=yes",
+                host,
+                f"{remote_root}/deploy/remote-deploy.sh",
+            ],
+            self.project_root,
+            timeout=1800,
+        )
+        outputs.append(remote_output)
+        return "\n\n".join(output for output in outputs if output.strip())
+
     def deploy(
         self,
         *,
@@ -1343,6 +1570,12 @@ class ReleaseManager:
                 continue
             output = run_host_command(list(command), self.project_root, timeout=1200)
             outputs.append(f"$ {' '.join(command)}\n{output or 'OK'}")
+        if self.config.key == "dimohod" and self.config.remote_deploy_host:
+            remote_output = self.deploy_remote()
+            outputs.append(
+                "Remote deploy: https://dimohod-trade.pro\n"
+                + (remote_output or "OK")
+            )
         return "\n\n".join(outputs) or "Frontend build опубликован без перезапуска backend."
 
     def execute(self, action: PendingAction) -> str:
@@ -1402,7 +1635,7 @@ class BotApplication:
         state: StateStore,
         runner: CodexRunner,
         project_root: Path,
-        openai_key: str | None,
+        openai_key: str | list[tuple[str, str]] | None,
         transcribe_model: str,
         vision_model: str,
         image_model: str,
@@ -1416,7 +1649,13 @@ class BotApplication:
         self.runner = runner
         self.project_root = project_root
         self.projects = projects or build_project_configs(project_root)
-        self.openai_key = openai_key
+        self.openai_keys = (
+            openai_key
+            if isinstance(openai_key, list)
+            else [(("OPENAI_API_KEY"), openai_key)] if openai_key else []
+        )
+        # Compatibility for callers/tests that inspect the old single-key field.
+        self.openai_key = self.openai_keys[0][1] if self.openai_keys else None
         self.transcribe_model = transcribe_model
         self.vision_model = vision_model
         self.image_model = image_model
@@ -1436,6 +1675,37 @@ class BotApplication:
         self.media_processing_chats: set[int] = set()
         self.photo_album_lock = threading.Lock()
         self.executor = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="codex-bot")
+
+    def selected_openai_key_index(self, chat_id: int) -> int:
+        return self.state.get_openai_key_index(chat_id, len(self.openai_keys))
+
+    def selected_openai_key_label(self, chat_id: int) -> str:
+        if not self.openai_keys:
+            return "не настроен"
+        return f"API {self.selected_openai_key_index(chat_id) + 1}"
+
+    def run_openai_with_fallback(self, chat_id: int, operation: Any) -> Any:
+        if not self.openai_keys:
+            raise RuntimeError("OPENAI_API_KEY не настроен")
+        start = self.selected_openai_key_index(chat_id)
+        quota_errors: list[str] = []
+        for offset in range(len(self.openai_keys)):
+            index = (start + offset) % len(self.openai_keys)
+            try:
+                result = operation(self.openai_keys[index][1])
+                if index != start:
+                    self.state.set_openai_key_index(chat_id, index, len(self.openai_keys))
+                return result
+            except OpenAIQuotaError as exc:
+                quota_errors.append(str(exc))
+                if offset + 1 < len(self.openai_keys):
+                    next_index = (index + 1) % len(self.openai_keys)
+                    self.state.set_openai_key_index(chat_id, next_index, len(self.openai_keys))
+                    self.api.send_message(
+                        chat_id,
+                        f"⚠️ У API {index + 1} исчерпана квота. Переключаюсь на API {next_index + 1}.",
+                    )
+        raise OpenAIQuotaError("Квота исчерпана у всех настроенных OpenAI API keys.\n" + quota_errors[-1])
 
     def active_project(self, chat_id: int) -> ProjectConfig:
         key = self.state.get_active_project(chat_id)
@@ -1472,13 +1742,13 @@ class BotApplication:
         release_running = "да" if release.is_running() else "нет"
         env_path = project.root / ".env"
         voice_status = (
-            f"включены, модель {self.transcribe_model}"
-            if self.openai_key
+            f"включены, модель {self.transcribe_model}, {self.selected_openai_key_label(chat_id)}"
+            if self.openai_keys
             else "не настроены: OPENAI_API_KEY не загружен"
         )
         photo_status = (
-            f"включены, vision {self.vision_model}, image {self.image_model}"
-            if self.openai_key
+            f"включены, vision {self.vision_model}, image {self.image_model}, {self.selected_openai_key_label(chat_id)}"
+            if self.openai_keys
             else "не настроены: OPENAI_API_KEY не загружен"
         )
         return (
@@ -1722,6 +1992,24 @@ class BotApplication:
                 markdown=True,
             )
             return
+        if data.startswith("openai_key:"):
+            try:
+                index = int(data.partition(":")[2])
+                self.state.set_openai_key_index(chat_id, index, len(self.openai_keys))
+            except (ValueError, IndexError):
+                self.api.answer_callback_query(callback_id, "Неизвестный API key")
+                return
+            self.api.answer_callback_query(callback_id, f"Выбран API {index + 1}")
+            try:
+                self.api.clear_inline_keyboard(chat_id, message_id)
+            except TelegramError:
+                pass
+            self.api.send_message(
+                chat_id,
+                f"✅ Для голоса, фото и изображений выбран API {index + 1}.",
+                message_id,
+            )
+            return
         valid_actions = {
             "release:confirm",
             "release:abort",
@@ -1809,6 +2097,14 @@ class BotApplication:
                     markdown=True,
                     reply_markup=model_keyboard(),
                 )
+                if self.openai_keys:
+                    selected = self.selected_openai_key_index(chat_id)
+                    self.api.send_message(
+                        chat_id,
+                        f"Выберите OpenAI API key.\nСейчас активен: *API {selected + 1}*",
+                        markdown=True,
+                        reply_markup=openai_key_keyboard(self.openai_keys, selected),
+                    )
             elif command == "/projects":
                 current = self.active_project(chat_id)
                 self.api.send_message(
@@ -1827,6 +2123,18 @@ class BotApplication:
                     markdown=True,
                     reply_markup=model_keyboard(),
                 )
+            elif command == "/apis":
+                if not self.openai_keys:
+                    self.api.send_message(chat_id, "В .env не настроены OpenAI API keys.", message_id)
+                else:
+                    selected = self.selected_openai_key_index(chat_id)
+                    self.api.send_message(
+                        chat_id,
+                        f"Выберите OpenAI API key.\nСейчас активен: *API {selected + 1}*",
+                        message_id,
+                        markdown=True,
+                        reply_markup=openai_key_keyboard(self.openai_keys, selected),
+                    )
             elif command == "/help":
                 self.api.send_message(chat_id, HELP_TEXT, message_id)
             elif command == "/id":
@@ -1884,6 +2192,31 @@ class BotApplication:
                 self.api.send_message(chat_id, "Дождитесь завершения задачи или используйте /cancel")
                 return
             self.executor.submit(self.process_voice, chat_id, message_id, message["voice"]["file_id"])
+            return
+
+        if message.get("document"):
+            document = message["document"]
+            try:
+                filename = safe_markdown_filename(str(document.get("file_name") or ""))
+                file_size = int(document.get("file_size") or 0)
+                if file_size > MAX_TELEGRAM_UPLOAD_BYTES:
+                    raise ValueError("Файл слишком большой")
+            except ValueError as exc:
+                self.api.send_message(chat_id, f"Не могу принять документ: {exc}", message_id)
+                return
+            if self.runner.is_running(chat_id):
+                self.api.send_message(chat_id, "Дождитесь завершения задачи или используйте /cancel")
+                return
+            project_key = self.active_project(chat_id).key
+            self.executor.submit(
+                self.process_markdown_document,
+                chat_id,
+                message_id,
+                str(document["file_id"]),
+                filename,
+                caption,
+                project_key,
+            )
             return
 
         if message.get("photo"):
@@ -1991,11 +2324,51 @@ class BotApplication:
                 source = Path(temp_dir) / "voice.ogg"
                 self.api.download_voice(file_id, source)
                 assert self.openai_key is not None
-                text = transcribe_voice(source, self.openai_key, self.transcribe_model)
+                text = self.run_openai_with_fallback(
+                    chat_id,
+                    lambda key: transcribe_voice(source, key, self.transcribe_model),
+                )
             self.api.edit_message(chat_id, status_id, f"🎙 Распознано:\n{text[:3500]}")
             self.route_user_text(chat_id, message_id, text)
         except Exception as exc:
             self.api.edit_message(chat_id, status_id, f"Не удалось распознать голосовое:\n{exc}")
+
+    def process_markdown_document(
+        self,
+        chat_id: int,
+        message_id: int,
+        file_id: str,
+        filename: str,
+        caption: str,
+        project_key: str,
+    ) -> None:
+        status_id = self.api.send_message(chat_id, "📄 Сохраняю Markdown-файл…", message_id)
+        try:
+            project = self.projects[project_key]
+            destination = (
+                project.root
+                / ".codex-telegram"
+                / "uploads"
+                / str(chat_id)
+                / f"{int(time.time())}-{uuid.uuid4().hex[:8]}-{filename}"
+            )
+            self.api.download_file(file_id, destination)
+            if destination.stat().st_size > MAX_TELEGRAM_UPLOAD_BYTES:
+                destination.unlink(missing_ok=True)
+                raise ValueError("Файл слишком большой")
+            relative_path = destination.relative_to(project.root)
+            self.api.edit_message(chat_id, status_id, f"📄 Файл сохранён: {relative_path}")
+            prompt = (
+                "Пользователь отправил Markdown-файл через Telegram.\n"
+                f"Локальный путь: {relative_path}\n"
+                f"Исходное имя: {filename}\n"
+                f"Подпись пользователя: {caption or '(без подписи)'}\n\n"
+                "Прочитай файл и выполни указания пользователя. Если подписи нет, кратко опиши "
+                "содержимое и спроси, что с ним сделать."
+            )
+            self.submit_codex(chat_id, message_id, prompt, project_key=project_key)
+        except Exception as exc:
+            self.api.edit_message(chat_id, status_id, f"Не удалось принять Markdown-файл:\n{exc}")
 
     def process_photo(self, chat_id: int, message_id: int, photos: list[dict[str, Any]], caption: str) -> None:
         self.process_photos(
@@ -2040,8 +2413,9 @@ class BotApplication:
                 self.api.download_file(str(largest["file_id"]), saved_path)
                 saved_paths.append(saved_path)
             assert self.openai_key is not None
-            analysis = analyze_photos(
-                saved_paths, caption, self.openai_key, self.vision_model
+            analysis = self.run_openai_with_fallback(
+                chat_id,
+                lambda key: analyze_photos(saved_paths, caption, key, self.vision_model),
             )
             self.api.edit_message(
                 chat_id,
@@ -2083,13 +2457,16 @@ class BotApplication:
                 / str(chat_id)
                 / f"image-{int(time.time())}-{uuid.uuid4().hex[:8]}.png"
             )
-            generated = generate_image(
-                prompt,
-                self.openai_key,
-                self.image_model,
-                self.image_size,
-                self.image_quality,
-                output_path,
+            generated = self.run_openai_with_fallback(
+                chat_id,
+                lambda key: generate_image(
+                    prompt,
+                    key,
+                    self.image_model,
+                    self.image_size,
+                    self.image_quality,
+                    output_path,
+                ),
             )
             self.api.edit_message(chat_id, status_id, "✅ Изображение готово")
             try:
@@ -2190,9 +2567,28 @@ class BotApplication:
             summary, return_code, diagnostics = self.runner.run(
                 chat_id, codex_prompt, update_status, project_key
             )
+            if (
+                return_code != 0
+                and not summary.cancelled
+                and is_missing_rollout_error(summary, diagnostics)
+            ):
+                model_key = self.state.get_model_key(chat_id)
+                thread_slot = self.state.thread_slot(project_key, model_key)
+                self.state.set_thread(chat_id, None, thread_slot)
+                history = self.state.get_context_history(chat_id, project_key)
+                update_status(
+                    "♻️ Старая сессия Codex недоступна. Создаю новую и восстанавливаю контекст…"
+                )
+                retry_prompt = recovery_context_prompt(codex_prompt, history)
+                summary, return_code, diagnostics = self.runner.run(
+                    chat_id, retry_prompt, update_status, project_key
+                )
             with self.pending_lock:
                 post_action = self.post_codex_actions.pop(chat_id, None)
             if return_code == 0 and summary.final_response:
+                self.state.add_context_history(
+                    chat_id, project_key, prompt, summary.final_response
+                )
                 update_status("✅ Codex завершил задачу")
                 response_text, requested_files = extract_file_requests(summary.final_response)
                 if response_text:
@@ -2220,7 +2616,7 @@ class BotApplication:
                 update_status("⛔ Задача остановлена")
             else:
                 update_status("❌ Codex завершился с ошибкой")
-                details = diagnostics or "Финальный ответ не получен"
+                details = diagnostics or summary.error_message or "Финальный ответ не получен"
                 self.api.send_long_message(chat_id, details[-3500:])
         except Exception as exc:
             with self.pending_lock:
@@ -2272,7 +2668,7 @@ def main() -> int:
         state,
         runner,
         project_root,
-        os.getenv("OPENAI_API_KEY"),
+        discover_openai_keys(),
         os.getenv("OPENAI_TRANSCRIBE_MODEL", DEFAULT_TRANSCRIBE_MODEL),
         os.getenv("OPENAI_VISION_MODEL", DEFAULT_VISION_MODEL),
         os.getenv("OPENAI_IMAGE_MODEL", DEFAULT_IMAGE_MODEL),

@@ -17,7 +17,11 @@ class CategorySummary(BaseModel):
 
 class ProductMediaItem(BaseModel):
     media_id: str | None = None
+    scope: str | None = None
     url: str
+    thumbnail_url: str | None = None
+    width: int | None = None
+    height: int | None = None
     alt: str | None = None
     role: str | None = None
     diameter_specific: bool = False

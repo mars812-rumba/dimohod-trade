@@ -25,6 +25,9 @@ from app.modules.admin.service import (
     parameterize_sku_meta,
     product_seo_facts,
     remove_dynamic_sku_section,
+    remove_single_wall_outdoor_seo_rule,
+    sanitize_seo_knowledge_payload,
+    sanitize_sku_seo_attributes,
     safe_asset_name,
     safe_storage_key,
 )
@@ -277,6 +280,7 @@ def test_normalize_media_list_skips_invalid_items() -> None:
     assert media[0].url == "/media/catalog/photo.jpg"
     assert media[0].alt == "Фото"
     assert media[0].role == "general"
+    assert media[0].scope == "family"
     assert media[0].media_id is not None
     assert normalize_media_list(
         {"media": [{"url": "/media/catalog/photo.jpg", "role": "general"}]}
@@ -306,6 +310,29 @@ def test_normalize_media_list_merges_repeated_photo_scopes() -> None:
     assert len(media) == 1
     assert media[0].diameter_keys == ["200/300"]
     assert media[0].lengths_mm == [500, 1000]
+    assert media[0].scope == "variant"
+
+
+def test_normalize_media_list_keeps_one_base_photo_and_separate_variants() -> None:
+    media = normalize_media_list(
+        {
+            "media": [
+                {"url": "/media/old-base.jpg", "role": "general"},
+                {"url": "/media/current-base.jpg", "role": "general"},
+                {
+                    "url": "/media/length-1000.jpg",
+                    "role": "general",
+                    "lengths_mm": [1000],
+                },
+            ]
+        }
+    )
+
+    assert [item.url for item in media] == [
+        "/media/current-base.jpg",
+        "/media/length-1000.jpg",
+    ]
+    assert [item.scope for item in media] == ["family", "variant"]
 
 
 def test_normalize_media_item_reads_category_or_sku_photo() -> None:
@@ -625,6 +652,107 @@ def test_product_seo_prompt_forbids_unconfirmed_fire_safety_claims() -> None:
 
     assert "Пожарную безопасность описывай только" in prompt
     assert "Не выдумывай" in prompt
+
+
+def test_product_seo_facts_exclude_retired_single_wall_outdoor_rule() -> None:
+    product = SimpleNamespace(
+        name="Одноконтурная труба",
+        category=SimpleNamespace(name="Трубы"),
+        product_kind="труба",
+        brand="Дымоход Трейд",
+        purpose=[],
+        application_tags=[],
+        compatibility_notes=None,
+        extra_attributes={},
+        skus=[],
+    )
+    rules = [
+        {
+            "code": "single_wall_indoor_only",
+            "message": "Одноконтурный элемент использовать внутри помещения.",
+        },
+        {"code": "diameter_required", "message": "Нужно проверить диаметр."},
+    ]
+
+    facts = product_seo_facts(product, compatibility_rules=rules)
+
+    assert [rule["code"] for rule in facts["applicable_compatibility_rules"]] == [
+        "diameter_required"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (
+            "Назначение\nСоединяет участки. Одноконтурные элементы не должны применяться на улице без утепления.",
+            "Назначение\nСоединяет участки.",
+        ),
+        (
+            "Подберите диаметр. По улице и в холодной зоне используем только сэндвич.",
+            "Подберите диаметр.",
+        ),
+        (
+            "Одноконтурная труба соединяет соседние элементы наружным раструбом.",
+            "Одноконтурная труба соединяет соседние элементы наружным раструбом.",
+        ),
+    ],
+)
+def test_single_wall_outdoor_rule_is_removed_from_seo_text(value: str, expected: str) -> None:
+    assert remove_single_wall_outdoor_seo_rule(value) == expected
+
+
+def test_single_wall_outdoor_rule_is_removed_from_sku_seo_attributes() -> None:
+    attributes = {
+        "sku_seo": {
+            "description": "Описание. Одноконтурный элемент допускается только в тёплой зоне.",
+            "seo_title": "Одноконтурная труба",
+        },
+        "internal": "kept",
+    }
+
+    sanitized = sanitize_sku_seo_attributes(attributes)
+
+    assert sanitized["sku_seo"]["description"] == "Описание."
+    assert sanitized["sku_seo"]["seo_title"] == "Одноконтурная труба"
+    assert sanitized["internal"] == "kept"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "Совместимо только с установкой внутри помещения.",
+        "Предназначено для использования внутри тёплого помещения.",
+        "Только внутри помещения",
+    ],
+)
+def test_single_wall_indoor_only_copy_is_removed_in_product_context(value: str) -> None:
+    assert remove_single_wall_outdoor_seo_rule(
+        value,
+        single_wall_context=True,
+    ) == ""
+
+
+def test_neutral_indoor_copy_is_not_removed_without_single_wall_context() -> None:
+    value = "Предназначено для использования внутри помещения."
+
+    assert remove_single_wall_outdoor_seo_rule(value) == value
+
+
+def test_single_wall_indoor_zone_is_removed_from_seo_knowledge() -> None:
+    knowledge = normalize_seo_knowledge(
+        {
+            "purpose": ["Соединяет соседние элементы."],
+            "installationZones": ["Только внутри помещения"],
+            "compatibleWith": ["Совместимо с элементами выбранного диаметра."],
+        }
+    )
+
+    sanitized = sanitize_seo_knowledge_payload(knowledge, single_wall_context=True)
+
+    assert sanitized["installationZones"] == []
+    assert sanitized["purpose"] == ["Соединяет соседние элементы."]
+    assert sanitized["compatibleWith"] == ["Совместимо с элементами выбранного диаметра."]
 
 
 def test_invalid_seo_knowledge_falls_back_to_safe_empty_structure() -> None:

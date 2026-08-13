@@ -13,12 +13,13 @@ RestartSec=5
 Environment=PYTHONUNBUFFERED=1
 Environment=CODEX_BOT_CODEX_BINARY=/home/dimohod-trade/tools/codex_telegram_bot/codex-launcher.sh
 
-# Codex needs its state/workspace; Docker Buildx needs its activity metadata.
+# Codex needs its state/workspace; release commands need the Docker socket and
+# Docker/Buildx client state. The Docker daemon itself remains a separate service.
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/dimohod-trade /home/sunny-rentals /root/.codex /root/.docker/buildx/activity /root/.docker/buildx/refs
+ReadWritePaths=/home/dimohod-trade /home/sunny-rentals /root/.codex /root/.docker /run/docker.sock /var/run/docker.sock
 PrivateDevices=true
 RestrictSUIDSGID=true
 LockPersonality=true

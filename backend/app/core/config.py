@@ -11,6 +11,14 @@ class Settings(BaseSettings):
     media_storage_dir: str = "../storage"
     openai_api_key: str | None = None
     openai_seo_model: str = "gpt-5.6-luna"
+    lead_recipient_email: str = "office@dimohod-trade.pro"
+    lead_from_email: str = "office@dimohod-trade.pro"
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_use_tls: bool = True
+    smtp_use_ssl: bool = False
 
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),

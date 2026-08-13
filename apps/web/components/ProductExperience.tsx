@@ -29,6 +29,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { DimensionScheme } from "@/components/DimensionScheme";
+import { LeadForm } from "@/components/LeadForm";
 import { YandexRatingBadge } from "@/components/YandexRatingBadge";
 import type { CompatibleProduct, Product } from "@/lib/api";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
@@ -994,6 +995,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const [selectedImage, setSelectedImage] = useState(0);
   const [compatibleProducts, setCompatibleProducts] = useState(initialCompatibleProducts);
   const [isLoadingCompatibility, setIsLoadingCompatibility] = useState(false);
+  const [showLeadForm, setShowLeadForm] = useState(false);
   const compatibilityCache = useRef(
     new Map<string, CompatibleProduct[]>(
       initialSku ? [[compatibilityCacheKey(initialSku), initialCompatibleProducts]] : [],
@@ -1682,13 +1684,29 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
           )}
 
           <div className="sku-cta">
-            <button className="button full-button" type="button">
+            <button
+              className="button full-button"
+              type="button"
+              aria-expanded={showLeadForm}
+              onClick={() => setShowLeadForm((current) => !current)}
+            >
               Оставить заявку
             </button>
             <button className="button secondary full-button" type="button">
               Добавить в комплект
             </button>
           </div>
+
+          {showLeadForm ? (
+            <div className="product-lead-form">
+              <LeadForm
+                source="product-card"
+                configuration={`Товар: ${skuH1}\nАртикул: ${activeSku?.article ?? "не указан"}`}
+                compact
+                title="Заявка по товару"
+              />
+            </div>
+          ) : null}
 
           <div className="delivery-info">
             <div className="delivery-row">
@@ -1706,8 +1724,8 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
             <a href="tel:+79650756555" className="panel-phone">
               <Phone size={14} /> +7 (965) 075-65-55
             </a>
-            <a href="mailto:info@dimohod-trade.pro" className="panel-email">
-              <Mail size={14} /> info@dimohod-trade.pro
+            <a href="mailto:office@dimohod-trade.pro" className="panel-email">
+              <Mail size={14} /> office@dimohod-trade.pro
             </a>
           </div>
         </aside>

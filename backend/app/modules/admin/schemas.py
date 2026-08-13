@@ -20,7 +20,11 @@ class AdminCategoryRead(BaseModel):
 class AdminMediaItem(BaseModel):
     media_id: str | None = None
     content_sha256: str | None = None
+    scope: str | None = None
     url: str
+    thumbnail_url: str | None = None
+    width: int | None = None
+    height: int | None = None
     alt: str | None = None
     role: str | None = None
     file_name: str | None = None
@@ -208,6 +212,7 @@ class AdminPhotoUpload(BaseModel):
     content_base64: str = Field(min_length=1)
     alt: str | None = Field(default=None, max_length=240)
     role: str | None = Field(default=None, max_length=60)
+    scope: str | None = Field(default=None, pattern="^(family|variant|sku)$")
     diameter_specific: bool = False
     diameter_keys: list[str] = Field(default_factory=list)
     lengths_mm: list[int] = Field(default_factory=list)

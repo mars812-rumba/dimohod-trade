@@ -13,8 +13,11 @@
 - альбомы до 10 скриншотов: бот объединяет их в одну задачу и анализирует как общий сценарий;
 - генерация изображений командой `/image описание`;
 - отправка файлов из проекта командой `/file path/to/file`;
+- приём документов `.md` и `.markdown`, сохранение в uploads и передача файла в Codex;
 - отправка файлов по запросу Codex через маркер `[[send_file:path/to/file]]` в финальном ответе;
 - сохранение контекста Codex между сообщениями;
+- автоматическое восстановление после потерянного Codex rollout: новая сессия получает
+  ограниченную историю последних пяти успешных задач и итоговых ответов;
 - выбор активного проекта кнопками без запуска второго Telegram-бота;
 - выбор профиля Codex: GPT-5.5 high или GPT-5.6 Sol medium;
 - автоматический Graphify query перед каждой задачей и структурный контекст в запросе Codex;
@@ -22,7 +25,8 @@
 - `/status`, `/file`, `/image`, `/new`, `/cancel`, `/id`, `/help`;
 - подтверждаемые `/commit`, `/push`, `/deploy` и полный `/ship`;
 - только один активный процесс Codex на чат;
-- `sandbox=workspace-write`;
+- `danger-full-access` + `approval_policy=on-request` для Dimohod Trade;
+- `workspace-write` для Sunny Rentals;
 - первый `/start` в личном чате назначает владельца бота.
 
 Состояние хранится в `.codex-telegram/state.json` и не попадает в Git.
@@ -39,6 +43,7 @@ CODEX_BOT_TOKEN=telegram-bot-token
 
 ```dotenv
 OPENAI_API_KEY=openai-platform-api-key
+OPENAI_API_KEY_2=second-openai-platform-api-key
 OPENAI_TRANSCRIBE_MODEL=gpt-4o-mini-transcribe
 OPENAI_VISION_MODEL=gpt-5.6-luna
 OPENAI_IMAGE_MODEL=gpt-image-2
@@ -60,6 +65,11 @@ CODEX_BOT_MAX_WORKERS=2
 ```
 
 `OPENAI_API_KEY` — ключ OpenAI Platform API, а не Telegram-токен и не пароль ChatGPT.
+Бот автоматически обнаруживает `OPENAI_API_KEY_2`, `_3` и последующие ключи. Активный ключ
+выбирается кнопками после `/start` или командой `/apis` и сохраняется для Telegram-чата. Если
+OpenAI возвращает ошибку исчерпанной квоты (`insufficient_quota` или billing/usage limit), бот
+переключается на следующий ключ и повторяет операцию. Временный rate limit и сетевые ошибки не
+переключают ключ, чтобы не маскировать сбой.
 
 ## Использование в Telegram
 
@@ -80,9 +90,10 @@ CODEX_BOT_MAX_WORKERS=2
 
 ## GitHub и deploy
 
-Codex остаётся в `workspace-write`: этот режим специально держит `.git` read-only и не даёт
-командам свободный сетевой доступ. Git и Docker запускает сам бот только через фиксированные
-команды:
+Для Dimohod Trade Codex запускается с `--sandbox danger-full-access` и
+`--ask-for-approval on-request`, поэтому процесс имеет прямой доступ к Docker daemon. Sunny
+Rentals сохраняет режим `workspace-write`. Подтверждаемые Git/deploy-команды бота остаются
+доступны как безопасный стандартный путь публикации:
 
 ```text
 /commit сообщение commit
@@ -101,6 +112,14 @@ backend-тесты и frontend build, создаёт commit, пушит толь
 `npm run build`, а при deploy перезапускает `sunny-api.service` и `sunny-backend.service`.
 Автоматический commit после задачи включает только файлы, реально изменившиеся во время этой
 задачи, поэтому существующее грязное рабочее дерево Sunny не попадёт в commit случайно.
+
+Для Dimohod Trade deploy выполняется на двух серверах: сначала локальный Docker Compose, затем
+код синхронизируется по отдельному SSH-ключу в `deploy@217.114.10.254:/opt/dimohod-trade`, где
+запускается фиксированный `deploy/remote-deploy.sh`. `.env`, Git, состояние бота и сборочные кэши
+на удалённый сервер не копируются. Production `storage/` также не синхронизируется повторно:
+после первоначального переноса источником истины является новый основной сервер.
+Адрес, каталог и ключ можно переопределить через `DIMOHOD_REMOTE_DEPLOY_HOST`,
+`DIMOHOD_REMOTE_DEPLOY_ROOT` и `DIMOHOD_REMOTE_DEPLOY_KEY`.
 
 Graphify хранит отдельный граф в каждом проекте. Перед запуском Codex бот выполняет ограниченный
 `graphify query` по тексту задачи и добавляет найденные узлы как навигационный контекст. Исходные

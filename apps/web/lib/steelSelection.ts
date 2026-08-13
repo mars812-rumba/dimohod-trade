@@ -14,7 +14,14 @@ export type SteelSelectionProfile = {
 
 export type SteelBadge = {
   label: string;
-  tone: "economy" | "standard" | "premium" | "purpose" | "warning";
+  tone:
+    | "economy"
+    | "standard"
+    | "premium"
+    | "fuel"
+    | "condensate-with"
+    | "condensate-without"
+    | "warning";
 };
 
 const tierLabels = {
@@ -78,19 +85,19 @@ export function steelSelectionBadges(source: SteelProfileSource | null): SteelBa
   const condensateBadge: SteelBadge | null = profile.condensateMode
     ? {
         label: profile.condensateMode === "with" ? "С конденсатом" : "Без конденсата",
-        tone: "purpose",
+        tone: profile.condensateMode === "with" ? "condensate-with" : "condensate-without",
       }
     : null;
   if (profile.innerUseStatus === "limited") {
     const badges: SteelBadge[] = [];
     if (tierBadge) badges.push(tierBadge);
     if (condensateBadge) badges.push(condensateBadge);
-    badges.push({ label: "Ограниченное применение", tone: "warning" });
+    badges.push({ label: "С ограничениями", tone: "warning" });
     return badges;
   }
   const fuels = profile.fuelTypes.map((fuel) => fuelLabels[fuel]).filter(Boolean);
   const purposeBadge: SteelBadge | null = fuels.length > 0
-    ? { label: fuels.join(" / "), tone: "purpose" }
+    ? { label: fuels.join(" / "), tone: "fuel" }
     : null;
   const badges: SteelBadge[] = [];
   if (tierBadge) badges.push(tierBadge);

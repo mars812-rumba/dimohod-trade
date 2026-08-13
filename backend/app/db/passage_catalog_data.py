@@ -167,31 +167,52 @@ def flange_skus() -> tuple[SKUSeed, ...]:
 
 PASSAGE_GLASS_SKUS = (
     SKUSeed(
-        "DT-PASSAGE-GLASS-GALV-D210-280",
-        "Проходной стакан, Ø 210–280 мм, оцинковка",
-        "galv-d210-280",
+        "DT-PASSAGE-GLASS-GALV-D100-200",
+        "Проходной стакан 500×500 мм, гильза Ø400 мм, труба Ø100–200 мм, оцинковка",
+        "galv-d100-200-500x500",
         Decimal("1760"),
         material="оцинковка",
-        attributes={"diameter_range": "210–280 мм", "diameter_min_mm": 210, "diameter_max_mm": 280},
+        attributes={
+            "diameter_range": "100–200 мм",
+            "diameter_min_mm": 100,
+            "diameter_max_mm": 200,
+            "base_size": "500×500 мм",
+            "sleeve_diameter_mm": 400,
+        },
     ),
     SKUSeed(
-        "DT-PASSAGE-GLASS-304-D210-280",
-        "Проходной стакан, Ø 210–280 мм, AISI 304",
-        "aisi304-d210-280",
-        Decimal("4125"),
-        material="нержавеющая сталь",
-        steel_grade="AISI 304",
-        attributes={"diameter_range": "210–280 мм", "diameter_min_mm": 210, "diameter_max_mm": 280},
+        "DT-PASSAGE-GLASS-GALV-D210-280",
+        "Проходной стакан 600×600 мм, гильза Ø400 мм, труба Ø210–280 мм, оцинковка",
+        "galv-d210-280-600x600",
+        Decimal("2090"),
+        material="оцинковка",
+        attributes={
+            "diameter_range": "210–280 мм",
+            "diameter_min_mm": 210,
+            "diameter_max_mm": 280,
+            "base_size": "600×600 мм",
+            "sleeve_diameter_mm": 400,
+        },
     ),
     SKUSeed(
-        "DT-PASSAGE-GLASS-430-D210-280",
-        "Проходной стакан, Ø 210–280 мм, AISI 430",
-        "aisi430-d210-280",
-        Decimal("2816"),
-        material="нержавеющая сталь",
-        steel_grade="AISI 430",
-        attributes={"diameter_range": "210–280 мм", "diameter_min_mm": 210, "diameter_max_mm": 280},
+        "DT-PASSAGE-GLASS-GALV-D300-400",
+        "Проходной стакан 700×700 мм, гильза Ø450 мм, труба Ø300–400 мм, оцинковка",
+        "galv-d300-400-700x700",
+        Decimal("2475"),
+        material="оцинковка",
+        attributes={
+            "diameter_range": "300–400 мм",
+            "diameter_min_mm": 300,
+            "diameter_max_mm": 400,
+            "base_size": "700×700 мм",
+            "sleeve_diameter_mm": 450,
+        },
     ),
+)
+
+PASSAGE_GLASS_RETIRED_SKU_ARTICLES = (
+    "DT-PASSAGE-GLASS-304-D210-280",
+    "DT-PASSAGE-GLASS-430-D210-280",
 )
 
 
@@ -229,9 +250,13 @@ PRODUCT_SEEDS = (
         "Проходной стакан",
         "prohodnoy-stakan",
         "проходной_узел",
-        "Варианты по диапазону диаметра и материалу.",
+        "Три оцинкованных исполнения по размеру основания и диапазону диаметра трубы.",
         ("стена", "перекрытие"),
-        {"price_source_sheet": "Фланцы"},
+        {
+            "price_source_sheet": "Фланцы",
+            "owner_confirmed_material": "оцинковка",
+            "owner_confirmed_size_variants": 3,
+        },
         PASSAGE_GLASS_SKUS,
     ),
     ProductSeed(

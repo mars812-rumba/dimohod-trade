@@ -31,6 +31,9 @@ type AdminMediaItem = {
   media_id: string | null;
   scope: "family" | "variant" | "sku" | null;
   url: string;
+  thumbnail_url: string | null;
+  width: number | null;
+  height: number | null;
   alt: string | null;
   role: string | null;
   file_name: string | null;
@@ -206,6 +209,10 @@ function mediaItemFromValue(value: unknown): AdminMediaItem | null {
         ? value.scope
         : null,
     url: value.url,
+    thumbnail_url:
+      "thumbnail_url" in value && typeof value.thumbnail_url === "string" ? value.thumbnail_url : null,
+    width: "width" in value && typeof value.width === "number" ? value.width : null,
+    height: "height" in value && typeof value.height === "number" ? value.height : null,
     alt: "alt" in value && typeof value.alt === "string" ? value.alt : null,
     role: "role" in value && typeof value.role === "string" ? value.role : null,
     file_name: "file_name" in value && typeof value.file_name === "string" ? value.file_name : null,
@@ -647,6 +654,10 @@ async function apiRequestNoContent(path: string, init?: RequestInit): Promise<nu
 
 function buildBackendUrl(path: string): string {
   return apiBaseUrl ? `${apiBaseUrl}${path}` : `${appBasePath}${path}`;
+}
+
+function adminMediaPreviewUrl(media: AdminMediaItem | null | undefined): string {
+  return buildBackendUrl(media?.thumbnail_url ?? media?.url ?? "");
 }
 
 export default function AdminCatalogManager() {
@@ -1697,7 +1708,7 @@ export default function AdminCatalogManager() {
         <div>
           <h1 className={styles.title}>Админка каталога</h1>
           <p className={styles.subtitle}>
-            Фото и схемы хранятся один раз на логический форм-фактор товара, размеры и цена — в SKU.
+            Фото и схемы хранятся один раз. Размеры и цены — в SKU.
           </p>
         </div>
         <div className={styles.status}>{status}</div>
@@ -1745,7 +1756,7 @@ export default function AdminCatalogManager() {
                         `${selectedCategory.name} — ассортимент изделий`
                       }
                       src={
-                        categoryCoverDraft.previewUrl ?? buildBackendUrl(selectedCategoryCover?.url ?? "")
+                        categoryCoverDraft.previewUrl ?? adminMediaPreviewUrl(selectedCategoryCover)
                       }
                     />
                   ) : (
@@ -2227,7 +2238,7 @@ export default function AdminCatalogManager() {
                         <div className={styles.photoPreview}>
                           <img
                             alt={media.alt || `${selectedProduct.name}, ${slot.hint}`}
-                            src={buildBackendUrl(media.url)}
+                            src={adminMediaPreviewUrl(media)}
                           />
                         </div>
                         <div className={styles.photoSlotActions}>
@@ -2309,7 +2320,7 @@ export default function AdminCatalogManager() {
                         {draft.previewUrl || baseMediaEntry ? (
                           <img
                             alt={draft.alt || baseMediaEntry?.media.alt || `${selectedProduct.name}, ${slot.hint}`}
-                            src={draft.previewUrl ?? buildBackendUrl(baseMediaEntry?.media.url ?? "")}
+                            src={draft.previewUrl ?? adminMediaPreviewUrl(baseMediaEntry?.media)}
                           />
                         ) : (
                           <div className={styles.photoPlaceholder}>
@@ -2457,7 +2468,7 @@ export default function AdminCatalogManager() {
                     const managedVariant = matchingVariant ?? storedVariant;
                     const baseFallback = baseFamilyMedia[slot.role] ?? null;
                     const visibleMedia = existing ?? managedVariant ?? baseFallback;
-                    const previewSrc = draft.previewUrl ?? (visibleMedia ? buildBackendUrl(visibleMedia.url) : null);
+                    const previewSrc = draft.previewUrl ?? (visibleMedia ? adminMediaPreviewUrl(visibleMedia) : null);
                     const inputId = `sku-photo-${skuForm.id ?? "new"}-${slot.role}`;
                     const usesSharedSkuMedia = !draft.file && !ownMedia && Boolean(existing);
                     const usesManagedVariant = !draft.file && !existing && Boolean(managedVariant);

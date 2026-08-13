@@ -53,7 +53,11 @@ function CategoryCard({ category }: { category: CategoryNode }) {
         {category.cover ? (
           <img
             alt={category.cover.alt ?? `${category.name} — ассортимент изделий`}
-            src={publicMediaUrl(category.cover.url)}
+            src={publicMediaUrl(category.cover.thumbnail_url ?? category.cover.url)}
+            width={category.cover.width ?? undefined}
+            height={category.cover.height ?? undefined}
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <span>Фото категории</span>

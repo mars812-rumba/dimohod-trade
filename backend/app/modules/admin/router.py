@@ -223,6 +223,7 @@ async def upload_admin_product_photo_file(
         content=content,
         alt=alt if isinstance(alt, str) else None,
         role=role if isinstance(role, str) else None,
+        scope="family",
     )
 
 

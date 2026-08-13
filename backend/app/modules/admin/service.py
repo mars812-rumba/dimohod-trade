@@ -17,6 +17,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.core.config import settings
+from app.media.images import (
+    CatalogImageError,
+    EncodedCatalogImage,
+    StoredCatalogImage,
+    encode_catalog_image,
+    store_encoded_catalog_image,
+)
 from app.modules.admin.schemas import (
     AdminMediaItem,
     AdminPhotoUpload,
@@ -32,6 +39,12 @@ from app.modules.admin.schemas import (
 from app.modules.catalog.models import Category
 from app.modules.compatibility.service import context_from_product_sku, list_active_rules, rule_matches
 from app.modules.products.models import Product, SKU
+from app.modules.products.content import (
+    is_single_wall_contour,
+    remove_single_wall_placement_rule,
+    sanitize_seo_knowledge_dict,
+    sanitize_sku_seo_dict,
+)
 from app.modules.products.service import (
     COMPATIBLE_PRODUCT_IDS_KEY,
     normalized_compatible_product_ids,
@@ -57,6 +70,7 @@ SKU_PHOTO_ROLE_FILENAMES = {
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 SEO_KNOWLEDGE_KEY = "seo_knowledge"
 LEGACY_CONTENT_MIGRATION_KEY = "legacy_admin_content_migrated"
+SEO_EXCLUDED_COMPATIBILITY_RULE_CODES = frozenset({"single_wall_indoor_only"})
 SEO_JSON_SCHEMA = {
     "type": "object",
     "properties": {
@@ -123,6 +137,55 @@ def normalize_seo_knowledge(value: Any) -> AdminSEOProductKnowledge:
         return AdminSEOProductKnowledge()
 
 
+def remove_single_wall_outdoor_seo_rule(
+    value: str | None,
+    *,
+    single_wall_context: bool = False,
+) -> str | None:
+    """Backward-compatible name for removal of the retired placement rule."""
+    return remove_single_wall_placement_rule(
+        value,
+        single_wall_context=single_wall_context,
+    )
+
+
+def sanitize_seo_knowledge_payload(
+    knowledge: AdminSEOProductKnowledge,
+    *,
+    single_wall_context: bool = False,
+) -> dict[str, Any]:
+    payload = knowledge.model_dump(by_alias=True)
+    return sanitize_seo_knowledge_dict(
+        payload,
+        single_wall_context=single_wall_context,
+    )
+
+
+def sanitize_sku_seo_attributes(
+    attributes: dict[str, Any],
+    *,
+    single_wall_context: bool = False,
+) -> dict[str, Any]:
+    sanitized = dict(attributes)
+    raw_seo = sanitized.get("sku_seo")
+    if not isinstance(raw_seo, dict):
+        return sanitized
+    sanitized["sku_seo"] = sanitize_sku_seo_dict(
+        raw_seo,
+        single_wall_context=single_wall_context,
+    )
+    return sanitized
+
+
+def product_has_single_wall_context(product: Product, selected_sku: SKU | None = None) -> bool:
+    if selected_sku is not None:
+        return is_single_wall_contour(getattr(selected_sku, "contour", None))
+    if is_single_wall_contour(getattr(product, "contour", None)):
+        return True
+    active_contours = [sku.contour for sku in product.skus if sku.is_active and sku.contour]
+    return bool(active_contours) and all(is_single_wall_contour(value) for value in active_contours)
+
+
 def _sku_facts(sku: SKU | None) -> dict[str, Any] | None:
     if sku is None:
         return None
@@ -149,8 +212,12 @@ def product_seo_facts(
     seo_knowledge: AdminSEOProductKnowledge | None = None,
 ) -> dict[str, Any]:
     skus = [sku for sku in product.skus if sku.is_active]
+    single_wall_context = product_has_single_wall_context(product, selected_sku)
     knowledge = seo_knowledge or normalize_seo_knowledge((product.extra_attributes or {}).get(SEO_KNOWLEDGE_KEY))
-    knowledge_payload = knowledge.model_dump(by_alias=True)
+    knowledge_payload = sanitize_seo_knowledge_payload(
+        knowledge,
+        single_wall_context=single_wall_context,
+    )
     missing_sections = []
     for key in (
         "purpose",
@@ -178,12 +245,28 @@ def product_seo_facts(
         "category": product.category.name,
         "product_kind": product.product_kind,
         "brand": product.brand,
-        "purpose": product.purpose,
+        "purpose": [
+            cleaned
+            for value in product.purpose
+            if (
+                cleaned := remove_single_wall_outdoor_seo_rule(
+                    value,
+                    single_wall_context=single_wall_context,
+                )
+            )
+        ],
         "application_tags": product.application_tags,
-        "compatibility_notes": product.compatibility_notes,
+        "compatibility_notes": remove_single_wall_outdoor_seo_rule(
+            product.compatibility_notes,
+            single_wall_context=single_wall_context,
+        ),
         "seo_knowledge": knowledge_payload,
         "selected_sku": _sku_facts(selected_sku),
-        "applicable_compatibility_rules": compatibility_rules or [],
+        "applicable_compatibility_rules": [
+            rule
+            for rule in (compatibility_rules or [])
+            if rule.get("code") not in SEO_EXCLUDED_COMPATIBILITY_RULE_CODES
+        ],
         "missing_confirmed_sections": missing_sections,
         "active_sku_count": len(skus),
         "family_ranges": {
@@ -217,6 +300,9 @@ def build_product_seo_prompt(facts_payload: dict[str, Any]) -> str:
 разрешением создавать пожарные нормы.
 Текст должен объяснять роль изделия в системе, помогать с выбором и вести к конфигуратору.
 Не перечисляй все диаметры и SKU. Подзаголовки пиши обычным текстом, без HTML.
+Не включай в SEO-тексты универсальное правило, будто одноконтурные элементы
+совместимы только с помещением, тёплой зоной или стартовым участком, либо запрещены на улице,
+в холодной зоне, на чердаке или кровле.
 
 Пиши естественно, как опытный специалист магазина в спокойной консультации покупателя:
 - сразу отвечай по существу, не начинай каждый раздел с названия или определения товара;
@@ -406,6 +492,12 @@ async def generate_product_seo(
             None,
         )
         generated["description"] = remove_dynamic_sku_section(generated["description"])
+        single_wall_context = product_has_single_wall_context(product, selected_sku)
+        for field in ("short_description", "description", "seo_description"):
+            generated[field] = remove_single_wall_outdoor_seo_rule(
+                generated[field],
+                single_wall_context=single_wall_context,
+            ) or ""
         generated["seo_title"] = parameterize_sku_meta(generated["seo_title"], selected_sku)
         generated["seo_description"] = parameterize_sku_meta(generated["seo_description"], selected_sku)
         return AdminSEOGenerateResponse(
@@ -450,7 +542,11 @@ def normalize_media_list(
             AdminMediaItem(
                 media_id=normalized_media_id(item),
                 content_sha256=item.get("content_sha256") if isinstance(item.get("content_sha256"), str) else None,
+                scope=normalized_media_scope(item),
                 url=item["url"],
+                thumbnail_url=item.get("thumbnail_url") if isinstance(item.get("thumbnail_url"), str) else None,
+                width=item.get("width") if isinstance(item.get("width"), int) else None,
+                height=item.get("height") if isinstance(item.get("height"), int) else None,
                 alt=item.get("alt") if isinstance(item.get("alt"), str) else None,
                 role=item.get("role") if isinstance(item.get("role"), str) else None,
                 file_name=item.get("file_name") if isinstance(item.get("file_name"), str) else None,
@@ -464,7 +560,7 @@ def normalize_media_list(
     for item in media:
         content_sha256 = stored_media_content_sha256(item) if inspect_content else item.content_sha256
         deduplication_key = (
-            f"{item.role}:{content_sha256}"
+            f"{item.scope}:{item.role}:{content_sha256}"
             if content_sha256
             else item.media_id or item.url
         )
@@ -482,7 +578,15 @@ def normalize_media_list(
                 "lengths_mm": merged_media_scope(existing.lengths_mm, item.lengths_mm),
             }
         )
-    return list(deduplicated.values())
+    normalized = list(deduplicated.values())
+    last_family_by_role: dict[str, AdminMediaItem] = {}
+    scoped_media: list[AdminMediaItem] = []
+    for item in normalized:
+        if item.scope == "family" and item.role:
+            last_family_by_role[item.role] = item
+        else:
+            scoped_media.append(item)
+    return [*last_family_by_role.values(), *scoped_media]
 
 
 def normalize_media_item(value: Any) -> AdminMediaItem | None:
@@ -491,7 +595,11 @@ def normalize_media_item(value: Any) -> AdminMediaItem | None:
     return AdminMediaItem(
         media_id=normalized_media_id(value),
         content_sha256=value.get("content_sha256") if isinstance(value.get("content_sha256"), str) else None,
+        scope=normalized_media_scope(value),
         url=value["url"],
+        thumbnail_url=value.get("thumbnail_url") if isinstance(value.get("thumbnail_url"), str) else None,
+        width=value.get("width") if isinstance(value.get("width"), int) else None,
+        height=value.get("height") if isinstance(value.get("height"), int) else None,
         alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
         role=value.get("role") if isinstance(value.get("role"), str) else None,
         file_name=value.get("file_name") if isinstance(value.get("file_name"), str) else None,
@@ -507,7 +615,17 @@ def normalized_media_id(value: dict[str, Any]) -> str:
     if isinstance(stored, str) and stored.strip():
         return stored.strip()
     role = value.get("role") if isinstance(value.get("role"), str) else ""
-    return str(uuid5(NAMESPACE_URL, f"dimohod-media:{role}:{value['url']}"))
+    scope = normalized_media_scope(value)
+    return str(uuid5(NAMESPACE_URL, f"dimohod-media:{scope}:{role}:{value['url']}"))
+
+
+def normalized_media_scope(value: dict[str, Any]) -> str:
+    stored = value.get("scope")
+    if stored in {"family", "variant", "sku"}:
+        return stored
+    has_diameters = bool(normalized_media_diameter_keys(value.get("diameter_keys")))
+    has_lengths = bool(normalized_media_lengths(value.get("lengths_mm")))
+    return "variant" if has_diameters or has_lengths else "family"
 
 
 def merged_media_scope[T](existing: list[T], incoming: list[T]) -> list[T]:
@@ -566,13 +684,14 @@ def normalize_sku_media(attributes: dict[str, Any] | None) -> list[AdminMediaIte
             item = normalize_media_item(value)
             if item is None or item.role not in SKU_PHOTO_ROLE_FILENAMES:
                 continue
+            item = item.model_copy(update={"scope": "sku", "sku_specific": True})
             media = [existing for existing in media if existing.role != item.role]
             media.append(item)
 
     if not any(item.role == "general" for item in media):
         legacy = normalize_media_item((attributes or {}).get(SKU_PHOTO_KEY))
         if legacy is not None:
-            media.insert(0, legacy.model_copy(update={"role": "general"}))
+            media.insert(0, legacy.model_copy(update={"role": "general", "scope": "sku", "sku_specific": True}))
 
     role_order = {role: index for index, role in enumerate(SKU_PHOTO_ROLE_FILENAMES)}
     return sorted(media, key=lambda item: role_order.get(item.role or "", len(role_order)))
@@ -663,6 +782,33 @@ def validate_photo_content(content: bytes) -> None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Photo payload is empty")
     if len(content) > MAX_PHOTO_BYTES:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Photo is too large")
+
+
+def encode_uploaded_photo(content: bytes) -> EncodedCatalogImage:
+    validate_photo_content(content)
+    try:
+        return encode_catalog_image(content)
+    except CatalogImageError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+
+def media_url(path: Path) -> str:
+    relative = path.relative_to(Path(settings.media_storage_dir))
+    return f"/media/{relative.as_posix()}?v={path.stat().st_mtime_ns}"
+
+
+def stored_image_fields(stored: StoredCatalogImage) -> dict[str, object]:
+    return {
+        "url": media_url(stored.path),
+        "thumbnail_url": media_url(stored.thumbnail_path),
+        "width": stored.width,
+        "height": stored.height,
+        "file_name": stored.path.name,
+        "content_sha256": stored.content_sha256,
+    }
 
 
 def product_to_admin_read(product: Product) -> AdminProductRead:
@@ -838,16 +984,27 @@ async def update_product(
     payload: AdminProductUpdate,
 ) -> AdminProductRead:
     product = await get_admin_product(session, product_id)
+    single_wall_context = product_has_single_wall_context(product)
     values = payload.model_dump(exclude_unset=True)
     for field in ("short_description", "description"):
         if field in values:
-            setattr(product, field, values[field])
+            setattr(
+                product,
+                field,
+                remove_single_wall_outdoor_seo_rule(
+                    values[field],
+                    single_wall_context=single_wall_context,
+                ),
+            )
 
     extra_attributes = dict(product.extra_attributes or {})
     for field in ("seo_title", "seo_description"):
         if field not in values:
             continue
-        value = values[field]
+        value = remove_single_wall_outdoor_seo_rule(
+            values[field],
+            single_wall_context=single_wall_context,
+        )
         if value:
             extra_attributes[field] = value
         else:
@@ -857,8 +1014,9 @@ async def update_product(
         if knowledge is None:
             extra_attributes.pop(SEO_KNOWLEDGE_KEY, None)
         else:
-            extra_attributes[SEO_KNOWLEDGE_KEY] = AdminSEOProductKnowledge.model_validate(knowledge).model_dump(
-                by_alias=True
+            extra_attributes[SEO_KNOWLEDGE_KEY] = sanitize_seo_knowledge_payload(
+                AdminSEOProductKnowledge.model_validate(knowledge),
+                single_wall_context=single_wall_context,
             )
     if "compatible_product_ids" in values:
         requested_ids = list(dict.fromkeys(values["compatible_product_ids"] or []))
@@ -891,7 +1049,12 @@ async def update_product(
 
 async def create_sku(session: AsyncSession, product_id: UUID, payload: AdminSKUCreate) -> SKU:
     await get_admin_product(session, product_id)
-    sku = SKU(product_id=product_id, **payload.model_dump())
+    values = payload.model_dump()
+    values["attributes"] = sanitize_sku_seo_attributes(
+        values["attributes"],
+        single_wall_context=is_single_wall_contour(values.get("contour")),
+    )
+    sku = SKU(product_id=product_id, **values)
     session.add(sku)
     try:
         await session.commit()
@@ -907,7 +1070,14 @@ async def update_sku(session: AsyncSession, sku_id: UUID, payload: AdminSKUUpdat
     if sku is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
 
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    values = payload.model_dump(exclude_unset=True)
+    resulting_contour = values.get("contour", sku.contour)
+    for field, value in values.items():
+        if field == "attributes" and isinstance(value, dict):
+            value = sanitize_sku_seo_attributes(
+                value,
+                single_wall_context=is_single_wall_contour(resulting_contour),
+            )
         setattr(sku, field, value)
     try:
         await session.commit()
@@ -936,6 +1106,7 @@ async def attach_product_photo(session: AsyncSession, product_id: UUID, payload:
         content=decode_photo_payload(payload.content_base64),
         alt=payload.alt,
         role=payload.role,
+        scope=payload.scope,
         diameter_keys=payload.diameter_keys,
         lengths_mm=payload.lengths_mm,
     )
@@ -949,11 +1120,12 @@ async def attach_product_photo_content(
     content: bytes,
     alt: str | None,
     role: str | None,
+    scope: str | None = None,
     diameter_keys: list[str] | None = None,
     lengths_mm: list[int] | None = None,
 ) -> AdminProductRead:
     product = await get_admin_product(session, product_id)
-    validate_photo_content(content)
+    encoded = encode_uploaded_photo(content)
 
     geometry_family = (product.extra_attributes or {}).get("geometry_family")
     storage_key = safe_storage_key(geometry_family if isinstance(geometry_family, str) else product.slug)
@@ -966,18 +1138,30 @@ async def attach_product_photo_content(
         product.category.extra_attributes,
         inspect_content=True,
     )
-    content_sha256 = hashlib.sha256(content).hexdigest()
+    normalized_scope = scope if scope in {"family", "variant"} else (
+        "variant" if diameter_keys or lengths_mm else "family"
+    )
+    if normalized_scope == "variant" and not (
+        normalized_media_diameter_keys(diameter_keys) or normalized_media_lengths(lengths_mm)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Variant photo requires at least one diameter or length",
+        )
+    content_sha256 = encoded.content_sha256
     duplicate_index = next(
         (
             index
             for index, item in enumerate(media)
-            if item.role == role and stored_media_content_sha256(item) == content_sha256
+            if item.scope == normalized_scope
+            and item.role == role
+            and stored_media_content_sha256(item) == content_sha256
         ),
         None,
     )
     if duplicate_index is not None:
         existing = media[duplicate_index]
-        media[duplicate_index] = existing.model_copy(
+        updated_media = existing.model_copy(
             update={
                 "alt": alt or existing.alt,
                 "content_sha256": content_sha256,
@@ -991,6 +1175,14 @@ async def attach_product_photo_content(
                 ),
             }
         )
+        if normalized_scope == "family":
+            media = [
+                item
+                for index, item in enumerate(media)
+                if index == duplicate_index or not (item.scope == "family" and item.role == role)
+            ]
+            duplicate_index = next(index for index, item in enumerate(media) if item.media_id == existing.media_id)
+        media[duplicate_index] = updated_media
         product.extra_attributes = {
             **(product.extra_attributes or {}),
             MEDIA_KEY: [item.model_dump(exclude_none=True) for item in media],
@@ -1000,20 +1192,19 @@ async def attach_product_photo_content(
 
     media_id = str(uuid4())
     file_name = canonical_photo_name(file_name, role, media_id)
-    target = product_dir / file_name
-    target.write_bytes(content)
-
-    relative = target.relative_to(Path(settings.media_storage_dir))
+    stored = store_encoded_catalog_image(encoded, product_dir, file_name)
+    stored_fields = stored_image_fields(stored)
     media_item = AdminMediaItem(
         media_id=media_id,
-        content_sha256=content_sha256,
-        url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
+        scope=normalized_scope,
         alt=alt,
         role=role,
-        file_name=file_name,
         diameter_keys=normalized_media_diameter_keys(diameter_keys),
         lengths_mm=normalized_media_lengths(lengths_mm),
+        **stored_fields,
     )
+    if normalized_scope == "family":
+        media = [item for item in media if not (item.scope == "family" and item.role == role)]
     media.append(media_item)
 
     product.extra_attributes = {
@@ -1072,19 +1263,15 @@ async def attach_category_cover(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
 
     content = decode_photo_payload(payload.content_base64)
-    safe_name = safe_asset_name(payload.file_name)
-    file_name = f"category-cover{Path(safe_name).suffix}"
+    encoded = encode_uploaded_photo(content)
+    file_name = "category-cover.webp"
     category_dir = Path(settings.media_storage_dir) / "catalog" / "category-covers" / safe_storage_key(category.slug)
     category_dir.mkdir(parents=True, exist_ok=True)
-    target = category_dir / file_name
-    target.write_bytes(content)
-
-    relative = target.relative_to(Path(settings.media_storage_dir))
+    stored = store_encoded_catalog_image(encoded, category_dir, file_name)
     media_item = AdminMediaItem(
-        url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
         alt=payload.alt,
         role="category-cover",
-        file_name=file_name,
+        **stored_image_fields(stored),
     )
     category.extra_attributes = {
         **(category.extra_attributes or {}),
@@ -1114,24 +1301,22 @@ async def attach_sku_photo(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
 
     content = decode_photo_payload(payload.content_base64)
+    encoded = encode_uploaded_photo(content)
     file_name, role = canonical_sku_photo_name(payload.file_name, payload.role)
     sku_dir = Path(settings.media_storage_dir) / "catalog" / "skus" / safe_storage_key(sku.article)
     sku_dir.mkdir(parents=True, exist_ok=True)
-    target = sku_dir / file_name
-    target.write_bytes(content)
-
-    relative = target.relative_to(Path(settings.media_storage_dir))
+    stored = store_encoded_catalog_image(encoded, sku_dir, file_name)
     lengths_mm = normalized_media_lengths(payload.lengths_mm)
     if not lengths_mm and sku.length_mm is not None:
         lengths_mm = [sku.length_mm]
     media_item = AdminMediaItem(
-        url=f"/media/{relative.as_posix()}?v={target.stat().st_mtime_ns}",
         alt=payload.alt,
         role=role,
-        file_name=file_name,
         diameter_specific=payload.diameter_specific,
         lengths_mm=lengths_mm,
         sku_specific=True,
+        scope="sku",
+        **stored_image_fields(stored),
     )
     media = [item for item in normalize_sku_media(sku.attributes) if item.role != role]
     media.append(media_item)

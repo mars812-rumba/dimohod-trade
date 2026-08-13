@@ -18,7 +18,7 @@ export function YandexRatingBadge() {
         aria-hidden="true"
       />
       <strong>{YANDEX_MAPS_RATING}</strong>
-      <span>Яндекс Карты</span>
+      <span>Я.Карты</span>
     </span>
   );
 }

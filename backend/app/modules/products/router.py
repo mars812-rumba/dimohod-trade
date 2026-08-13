@@ -26,6 +26,13 @@ from app.modules.products.schemas import (
     ProductVariantCombination,
 )
 from app.modules.products.models import Product, SKU
+from app.modules.products.content import (
+    RETIRED_SINGLE_WALL_RULE_CODE,
+    is_single_wall_contour,
+    remove_single_wall_placement_rule,
+    sanitize_seo_knowledge_dict,
+    sanitize_sku_seo_dict,
+)
 from app.modules.products.display_attributes import public_sku_display_attributes
 from app.modules.products.service import (
     compatible_product_matches,
@@ -90,7 +97,13 @@ def primary_product_image(
         return None
     return ProductMediaItem(
         media_id=value.get("media_id") if isinstance(value.get("media_id"), str) else None,
+        scope=value.get("scope") if isinstance(value.get("scope"), str) else None,
         url=value["url"],
+        thumbnail_url=value.get("thumbnail_url")
+        if isinstance(value.get("thumbnail_url"), str)
+        else None,
+        width=value.get("width") if isinstance(value.get("width"), int) else None,
+        height=value.get("height") if isinstance(value.get("height"), int) else None,
         alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
         role=value.get("role") if isinstance(value.get("role"), str) else None,
         diameter_specific=value.get("diameter_specific") is True,
@@ -117,7 +130,13 @@ def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem 
         if value is not None:
             return ProductMediaItem(
                 media_id=value.get("media_id") if isinstance(value.get("media_id"), str) else None,
+                scope=value.get("scope") if isinstance(value.get("scope"), str) else "sku",
                 url=value["url"],
+                thumbnail_url=value.get("thumbnail_url")
+                if isinstance(value.get("thumbnail_url"), str)
+                else None,
+                width=value.get("width") if isinstance(value.get("width"), int) else None,
+                height=value.get("height") if isinstance(value.get("height"), int) else None,
                 alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
                 role=value.get("role") if isinstance(value.get("role"), str) else "general",
                 diameter_specific=value.get("diameter_specific") is True,
@@ -132,7 +151,13 @@ def primary_sku_image(attributes: dict[str, object] | None) -> ProductMediaItem 
     if isinstance(legacy, dict) and isinstance(legacy.get("url"), str):
         return ProductMediaItem(
             media_id=legacy.get("media_id") if isinstance(legacy.get("media_id"), str) else None,
+            scope=legacy.get("scope") if isinstance(legacy.get("scope"), str) else "sku",
             url=legacy["url"],
+            thumbnail_url=legacy.get("thumbnail_url")
+            if isinstance(legacy.get("thumbnail_url"), str)
+            else None,
+            width=legacy.get("width") if isinstance(legacy.get("width"), int) else None,
+            height=legacy.get("height") if isinstance(legacy.get("height"), int) else None,
             alt=legacy.get("alt") if isinstance(legacy.get("alt"), str) else None,
             role="general",
             diameter_specific=legacy.get("diameter_specific") is True,
@@ -403,7 +428,10 @@ async def compatible_items_for_sku(
             product_slug=target_product.slug,
             product_kind=target_product.product_kind,
             purpose=target_product.purpose,
-            short_description=target_product.short_description,
+            short_description=remove_single_wall_placement_rule(
+                target_product.short_description,
+                single_wall_context=is_single_wall_contour(target_sku.contour),
+            ),
             sku_id=target_sku.id,
             sku_key=target_sku.article,
             article=target_sku.article,
@@ -722,6 +750,50 @@ async def read_product(
             **public_attributes_for_sku(product, sku_model),
             **public_sku_media_attributes(sku_model.attributes),
         }
+        raw_sku_seo = sku_read.attributes.get("sku_seo")
+        if isinstance(raw_sku_seo, dict):
+            sku_read.attributes["sku_seo"] = sanitize_sku_seo_dict(
+                raw_sku_seo,
+                single_wall_context=is_single_wall_contour(sku_model.contour),
+            )
+
+    single_wall_context = is_single_wall_contour(
+        source_sku.contour if source_sku is not None else product.contour
+    )
+    product_read.short_description = remove_single_wall_placement_rule(
+        product_read.short_description,
+        single_wall_context=single_wall_context,
+    )
+    product_read.description = remove_single_wall_placement_rule(
+        product_read.description,
+        single_wall_context=single_wall_context,
+    )
+    product_read.compatibility_notes = remove_single_wall_placement_rule(
+        product_read.compatibility_notes,
+        single_wall_context=single_wall_context,
+    )
+    product_read.purpose = [
+        cleaned
+        for value in product_read.purpose
+        if (
+            cleaned := remove_single_wall_placement_rule(
+                value,
+                single_wall_context=single_wall_context,
+            )
+        )
+    ]
+    extra_attributes = dict(product_read.extra_attributes)
+    if isinstance(extra_attributes.get("seo_description"), str):
+        extra_attributes["seo_description"] = remove_single_wall_placement_rule(
+            extra_attributes["seo_description"],
+            single_wall_context=single_wall_context,
+        )
+    if "seo_knowledge" in extra_attributes:
+        extra_attributes["seo_knowledge"] = sanitize_seo_knowledge_dict(
+            extra_attributes["seo_knowledge"],
+            single_wall_context=single_wall_context,
+        )
+    product_read.extra_attributes = extra_attributes
     product_built_at = perf_counter()
 
     product_read.compatible_products = (
@@ -740,6 +812,11 @@ async def read_product(
                 rules,
                 context_from_product_sku(product, source_sku),
             )
+            selected_read.compatibility_messages = [
+                message
+                for message in selected_read.compatibility_messages
+                if message.code != RETIRED_SINGLE_WALL_RULE_CODE
+            ]
     finished_at = perf_counter()
     response.headers["Server-Timing"] = ", ".join(
         [

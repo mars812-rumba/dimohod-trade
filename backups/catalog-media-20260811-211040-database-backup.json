@@ -1,0 +1,2623 @@
+[
+  {
+    "type": "category",
+    "id": "5e94d455-934f-40ce-80a0-c5cb0cbb2a70",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Одноконтурные трубы — ассортимент изделий",
+        "url": "/media/catalog/category-covers/odnokonturnye-truby/category-cover.png?v=1785750935653392626",
+        "role": "category-cover",
+        "file_name": "category-cover.png"
+      }
+    }
+  },
+  {
+    "type": "category",
+    "id": "46386096-168a-4469-8480-ac2beaa44bda",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Сэндвич-трубы — ассортимент изделий",
+        "url": "/media/catalog/category-covers/sendvich-truby/category-cover.png?v=1785760901157643426",
+        "role": "category-cover",
+        "file_name": "category-cover.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "category",
+    "id": "d23cbde3-5a5c-4bc1-b19d-e7816c98296d",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Шиберы — ассортимент изделий",
+        "url": "/media/catalog/category-covers/shibery/category-cover.png?v=1785763507594676981",
+        "role": "category-cover",
+        "file_name": "category-cover.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "category",
+    "id": "ddfe77b1-4608-4a7b-8c89-011c29f87f65",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Сэндвич-оголовки и дефлекторы — ассортимент изделий",
+        "url": "/media/catalog/category-covers/sendvich-ogolovki-i-deflektory/category-cover.png?v=1785763935241295200",
+        "role": "category-cover",
+        "file_name": "category-cover.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "category",
+    "id": "c5e810a4-68c4-4c76-9de3-e03168898b28",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Сэндвич-заглушки — ассортимент изделий",
+        "url": "/media/catalog/category-covers/sendvich-zaglushki/category-cover.png?v=1785859915625104814",
+        "role": "category-cover",
+        "file_name": "category-cover.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "category",
+    "id": "748ab5d6-ce53-4d65-b5c8-8e272a0b6d0d",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Хомуты и крепеж — ассортимент изделий",
+        "url": "/media/catalog/category-covers/homuty-i-krepezh/category-cover.png?v=1785844799966879844",
+        "role": "category-cover",
+        "file_name": "category-cover.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "category",
+    "id": "68edb968-d5ac-4e00-8bb8-0f3d8803a9f5",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Сэндвич-отводы — ассортимент изделий",
+        "url": "/media/catalog/category-covers/sendvich-otvody/category-cover.png?v=1785929367077372053",
+        "role": "category-cover",
+        "file_name": "category-cover.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "category",
+    "id": "2ebd2e94-e6d6-5198-b333-85d812adf435",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Фланцы — ассортимент изделий",
+        "url": "/media/catalog/category-covers/flantsy/category-cover.png?v=1785920431121505710",
+        "role": "category-cover",
+        "file_name": "category-cover.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "category",
+    "id": "03cee657-ebe3-40ae-990f-f5eeca0f1ec1",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Сэндвич-тройники — ассортимент изделий",
+        "url": "/media/catalog/category-covers/sendvich-troyniki/category-cover.png?v=1785933661947224361",
+        "role": "category-cover",
+        "file_name": "category-cover.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "category",
+    "id": "de5342de-97b5-5305-b262-aa0b05b71247",
+    "attribute": "extra_attributes",
+    "value": {
+      "category_cover": {
+        "alt": "Узлы прохода стен и перекрытий — ассортимент изделий",
+        "url": "/media/catalog/category-covers/uzly-prohoda-sten-i-perekrytiy/category-cover.png?v=1785949462346313676",
+        "role": "category-cover",
+        "file_name": "category-cover.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "product",
+    "id": "b314ca36-c48b-4f72-b6cd-f7b4f2bb5a00",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-1.png?v=1785593147936412466",
+          "role": "general",
+          "file_name": "photo-1.png"
+        },
+        {
+          "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-2.png?v=1785593197708696111",
+          "role": "top",
+          "file_name": "photo-2.png"
+        },
+        {
+          "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-3.png?v=1785593231943891336",
+          "role": "connection",
+          "file_name": "photo-3.png"
+        }
+      ],
+      "angle_deg": null,
+      "length_mm": null,
+      "seo_title": "Сэндвич-дефлектор-конус Дымоход Трейд для завершения дымохода",
+      "source_file": "/tmp/50mm.json",
+      "raw_diameter": "Ø 100/200",
+      "source_sheet": "Лист1",
+      "raw_item_name": "Дефлектор-конус",
+      "seo_knowledge": {
+        "purpose": [
+          "Защита от боковых и прямых осадков и задувание воздуха в систему"
+        ],
+        "fireSafety": [
+          "Частичное препятсвие вылетанию искр. Не превышать температуру заявленную для марки стали"
+        ],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "Сендвич трубы 50 мм изоляция тех же диаметров"
+        ],
+        "selectionRules": [
+          "Диаметры труб дымоходной системы и толщина изоляции"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "С изделиями другого диаметра и изделиями других производителей"
+        ],
+        "installationZones": [
+          "Завершающий элемент в дымоходе"
+        ],
+        "requiredInputData": [
+          "В конфигураторе укажите нужные параметры и получите полный расчет"
+        ],
+        "installationVariants": [
+          "Монтаж монтаж портов соединений на клепки или фирменные хомуты"
+        ],
+        "installationWarnings": [
+          "Использование в одноконтурных системах и с изделиями другого диаметра"
+        ]
+      },
+      "variant_model": "logical_product",
+      "outer_material": "нержавеющая сталь",
+      "source_section": "Внутренняя труба — Нержавеющая сталь AISI 304 (толщина 0,5мм) / Наружный кожух — Нержавеющая сталь AISI 430 (толщина 0,5мм) / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+      "seo_description": "Оголовок для верхнего участка сэндвич-дымохода: диаметры {d}/{D}, изоляция {insulation} мм. Проверьте совместимость и рассчитайте комплект.",
+      "outer_diameter_mm": 200,
+      "outer_steel_grade": "AISI 430",
+      "source_item_index": 15,
+      "source_block_index": 17,
+      "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+      "legacy_product_count": 1,
+      "compatible_product_ids": [
+        "6fff0717-4144-4560-9175-56081052d11d",
+        "d9b234fb-0a61-4312-b2fc-4974dfd79e49"
+      ],
+      "outer_wall_thickness_mm": "0.5",
+      "legacy_product_slugs_sample": [
+        "sendvich-ogolovok-deflektor-konus"
+      ],
+      "legacy_admin_content_migrated": true
+    }
+  },
+  {
+    "type": "product",
+    "id": "f9de962c-53ed-4eac-908e-8d58cb4f47a1",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Сэндвич-зонт-конус — общий вид",
+          "url": "/media/catalog/categories/sendvich-ogolovok-zont-konus/photo-1.png?v=1785847404940444060",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-зонт-конус — вид сверху",
+          "url": "/media/catalog/categories/sendvich-ogolovok-zont-konus/photo-2.png?v=1785847440039621990",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-зонт-конус — порты / присоединение",
+          "url": "/media/catalog/categories/sendvich-ogolovok-zont-konus/photo-3.png?v=1785847464218733101",
+          "role": "connection",
+          "file_name": "photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": null,
+      "length_mm": null,
+      "source_file": "/tmp/50mm.json",
+      "raw_diameter": "Ø 100/200",
+      "source_sheet": "Лист1",
+      "raw_item_name": "Зонт-конус",
+      "variant_model": "logical_product",
+      "outer_material": "оцинковка",
+      "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+      "outer_diameter_mm": 200,
+      "outer_steel_grade": null,
+      "source_item_index": 14,
+      "source_block_index": 1,
+      "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+      "legacy_product_count": 1,
+      "outer_wall_thickness_mm": null,
+      "legacy_product_slugs_sample": [
+        "sendvich-ogolovok-zont-konus"
+      ],
+      "legacy_admin_content_migrated": true
+    }
+  },
+  {
+    "type": "product",
+    "id": "aa58f093-0792-423a-a0a0-fb361f5d4349",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Одноконтурная труба — общий вид",
+          "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-1.png?v=1785840552771441980",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Одноконтурная труба — вид сверху",
+          "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-2.png?v=1785840560661488105",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Одноконтурная труба — порты / присоединение",
+          "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-3.png?v=1785840563625505440",
+          "role": "connection",
+          "file_name": "photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": null,
+      "length_mm": 750,
+      "seo_title": "Одноконтурная труба Дымоход Трейд для стартового участка",
+      "source_file": "/tmp/price_list.json",
+      "raw_diameter": "Ø 100",
+      "source_sheet": "голые",
+      "raw_item_name": "Труба L=750 мм",
+      "seo_knowledge": {
+        "purpose": [
+          "Разгонный участок дымохода"
+        ],
+        "fireSafety": [
+          "Не используется в проходе перекрытия и деревяных стенах"
+        ],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "С выходным патрубком печи"
+        ],
+        "selectionRules": [
+          "Диаметр стартового элемента делается больше на 2-4 мм от диаметра отверстия печи"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "Изделиями другого диаметра"
+        ],
+        "installationZones": [
+          "Первый элемент в вертикальной схеме монтажа дымохода"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Устанавливается на патрубок печи без крепления"
+        ],
+        "installationWarnings": [
+          "Не используется в проходе перекрытия и деревяных стенах"
+        ]
+      },
+      "variant_model": "logical_product",
+      "source_section": "Труба без изоляции — ОЦИНКОВКА",
+      "seo_description": "Одноконтурная труба Дымоход Трейд для стартового участка печи: диаметр {diameter}, длина {L}, материал {material}. Проверьте совместимость и рассчитайте комплект.",
+      "outer_diameter_mm": null,
+      "source_item_index": 1,
+      "source_block_index": 1,
+      "legacy_product_count": 1,
+      "compatible_product_ids": [
+        "7d1b1e40-59f4-40dd-87da-d86ca68d14bd",
+        "11b765ce-b3d8-433f-9325-ba3da64ef52f",
+        "794fcff4-10dd-449b-8a15-e9c5031e7a47",
+        "e4f9311d-2582-4b42-b0cd-81bf8f22f1a5"
+      ],
+      "_seo_public_slug_previous": "odnostennyi-truba-truba",
+      "legacy_product_slugs_sample": [
+        "odnostennyi-truba-truba"
+      ],
+      "legacy_admin_content_migrated": true,
+      "_single_wall_indoor_copy_previous": {
+        "description": "Назначение\n\nТруба предназначена для разгонного участка дымохода. В вертикальной схеме она используется как первый элемент после печи.\n\nГде применяется\n\nОдноконтурный элемент устанавливают на стартовом участке внутри помещения. Совместимость\n\nТруба соединяется с выходным патрубком печи. С изделиями другого диаметра её не используют.\n\nВарианты монтажа\n\nМонтаж выполняется как установка стартового элемента на патрубок печи без крепления.\n\nЧто учитывать при подборе\n\nДиаметр стартового элемента делают на 2–4 мм больше диаметра отверстия печи. В семействе доступны диаметры от 100 до 300 мм, длины от 150 до 1000 мм и толщина стенки от 0,50 до 0,80 мм.\n\nРасчёт комплекта\n\nПодберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе.",
+        "seo_knowledge": {
+          "purpose": [
+            "Разгонный участок дымохода"
+          ],
+          "fireSafety": [
+            "Не используется в проходе перекрытия и деревяных стенах"
+          ],
+          "sourceNotes": [],
+          "compatibleWith": [
+            "С выходным патрубком печи"
+          ],
+          "selectionRules": [
+            "Диаметр стартового элемента делается больше на 2-4 мм от диаметра отверстия печи"
+          ],
+          "configuratorCta": {
+            "href": "/#calculator",
+            "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+          },
+          "incompatibleWith": [
+            "Изделиями другого диаметра"
+          ],
+          "installationZones": [
+            "Первый элемент в вертикальной схеме монтажа дымохода"
+          ],
+          "requiredInputData": [],
+          "installationVariants": [
+            "Монтаж как стартовый элемент дымохода. Устанавливается на патрубок печи без крепления"
+          ],
+          "installationWarnings": [
+            "Не используется в проходе перекрытия и деревяных стенах"
+          ]
+        }
+      },
+      "_single_wall_outdoor_seo_previous": {
+        "description": "Назначение\n\nТруба предназначена для разгонного участка дымохода. В вертикальной схеме она используется как первый элемент после печи.\n\nГде применяется\n\nОдноконтурный элемент устанавливают на стартовом участке внутри помещения. Для улицы и холодных зон в подтверждённых правилах указаны только сэндвич-элементы.\n\nСовместимость\n\nТруба соединяется с выходным патрубком печи. С изделиями другого диаметра её не используют.\n\nВарианты монтажа\n\nМонтаж выполняется как установка стартового элемента на патрубок печи без крепления.\n\nЧто учитывать при подборе\n\nДиаметр стартового элемента делают на 2–4 мм больше диаметра отверстия печи. В семействе доступны диаметры от 100 до 300 мм, длины от 150 до 1000 мм и толщина стенки от 0,50 до 0,80 мм.\n\nРасчёт комплекта\n\nПодберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+      },
+      "_withdrawable_damper_previous_state": {
+        "name": "Одноконтурная труба",
+        "slug": "odnostennyi-truba-truba",
+        "is_active": true,
+        "attributes": {
+          "media": [
+            {
+              "alt": "Одноконтурная труба — общий вид",
+              "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-1.png?v=1785840552771441980",
+              "role": "general",
+              "file_name": "photo-1.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Одноконтурная труба — вид сверху",
+              "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-2.png?v=1785840560661488105",
+              "role": "top",
+              "file_name": "photo-2.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Одноконтурная труба — порты / присоединение",
+              "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-3.png?v=1785840563625505440",
+              "role": "connection",
+              "file_name": "photo-3.png",
+              "diameter_specific": false
+            }
+          ],
+          "angle_deg": null,
+          "length_mm": 750,
+          "seo_title": "Одноконтурная труба Дымоход Трейд для стартового участка",
+          "source_file": "/tmp/price_list.json",
+          "raw_diameter": "Ø 100",
+          "source_sheet": "голые",
+          "raw_item_name": "Труба L=750 мм",
+          "seo_knowledge": {
+            "purpose": [
+              "Разгонный участок дымохода"
+            ],
+            "fireSafety": [
+              "Не используется в проходе перекрытия и деревяных стенах"
+            ],
+            "sourceNotes": [],
+            "compatibleWith": [
+              "С выходным патрубком печи"
+            ],
+            "selectionRules": [
+              "Диаметр стартового элемента делается больше на 2-4 мм от диаметра отверстия печи"
+            ],
+            "configuratorCta": {
+              "href": "/#calculator",
+              "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+            },
+            "incompatibleWith": [
+              "Изделиями другого диаметра"
+            ],
+            "installationZones": [
+              "Первый элемент в вертикальной схеме монтажа дымохода"
+            ],
+            "requiredInputData": [],
+            "installationVariants": [
+              "Монтаж как стартовый элемент дымохода. Устанавливается на патрубок печи без крепления"
+            ],
+            "installationWarnings": [
+              "Не используется в проходе перекрытия и деревяных стенах"
+            ]
+          },
+          "variant_model": "logical_product",
+          "source_section": "Труба без изоляции — ОЦИНКОВКА",
+          "seo_description": "Одноконтурная труба Дымоход Трейд для стартового участка печи: диаметр {diameter}, длина {L}, материал {material}. Проверьте совместимость и рассчитайте комплект.",
+          "outer_diameter_mm": null,
+          "source_item_index": 1,
+          "source_block_index": 1,
+          "legacy_product_count": 1,
+          "compatible_product_ids": [
+            "7d1b1e40-59f4-40dd-87da-d86ca68d14bd",
+            "2a944639-873b-4599-b244-442b759821c1",
+            "11b765ce-b3d8-433f-9325-ba3da64ef52f",
+            "794fcff4-10dd-449b-8a15-e9c5031e7a47",
+            "e4f9311d-2582-4b42-b0cd-81bf8f22f1a5"
+          ],
+          "legacy_product_slugs_sample": [
+            "odnostennyi-truba-truba"
+          ],
+          "legacy_admin_content_migrated": true
+        }
+      }
+    }
+  },
+  {
+    "type": "product",
+    "id": "e13cb313-8cf7-4db2-90be-91cd0fe62c4e",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Сэндвич-отвод 90° — общий вид",
+          "url": "/media/catalog/categories/sendvich-otvod-otvod-90-gr-90gr/photo-1.png?v=1785929096864734636",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-отвод 90° — порты / присоединение",
+          "url": "/media/catalog/categories/sendvich-otvod-otvod-90-gr-90gr/photo-3.png?v=1785929100308755462",
+          "role": "connection",
+          "file_name": "photo-3.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-отвод 90° — вид сверху",
+          "url": "/media/catalog/categories/sendvich-otvod-otvod-90-gr-90gr/photo-2.png?v=1785929397125554481",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": 90,
+      "length_mm": null,
+      "seo_title": "Дымоход Трейд — сэндвич-отвод 90° для дымохода",
+      "source_file": "/tmp/50mm.json",
+      "raw_diameter": "Ø 100/200",
+      "source_sheet": "Лист1",
+      "raw_item_name": "Отвод 90 гр",
+      "seo_knowledge": {
+        "purpose": [
+          "Поворот системы дымохода на 90 градусов"
+        ],
+        "fireSafety": [],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "Смстема дымохода того же диаметра и производителя"
+        ],
+        "selectionRules": [
+          "Следить за совпадением диаметров всей системы"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "Сторонние производители и другие диаметры"
+        ],
+        "installationZones": [
+          "Внутри помещения и улица"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Монтаж соединений производится на клепки или на фирменые обжимные хомуты"
+        ],
+        "installationWarnings": [
+          "Не допускать стыковки соединений в перекрытиях"
+        ]
+      },
+      "variant_model": "logical_product",
+      "outer_material": "оцинковка",
+      "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+      "seo_description": "Сэндвич-отвод {angle}° Дымоход Трейд для поворота системы внутри помещения и на улице. Диаметры {d}/{D} мм, изоляция {insulation} мм — рассчитайте комплект.",
+      "outer_diameter_mm": 200,
+      "outer_steel_grade": null,
+      "source_item_index": 6,
+      "source_block_index": 1,
+      "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+      "legacy_product_count": 1,
+      "compatible_product_ids": [
+        "6fff0717-4144-4560-9175-56081052d11d",
+        "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b"
+      ],
+      "outer_wall_thickness_mm": null,
+      "_seo_public_slug_previous": "sendvich-otvod-otvod-90-gr-90gr",
+      "legacy_product_slugs_sample": [
+        "sendvich-otvod-otvod-90-gr-90gr"
+      ],
+      "legacy_admin_content_migrated": true
+    }
+  },
+  {
+    "type": "product",
+    "id": "11b765ce-b3d8-433f-9325-ba3da64ef52f",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Одноконтурный шибер поворотный — общий вид",
+          "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-1.png?v=1785834562496217947",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Одноконтурный шибер поворотный — вид сверху",
+          "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-2.png?v=1785763603871928000",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Одноконтурный шибер поворотный — порты / присоединение",
+          "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-3.png?v=1785763608495984315",
+          "role": "connection",
+          "file_name": "photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": null,
+      "length_mm": null,
+      "seo_title": "Одноконтурный шибер Дымоход Трейд для регулировки тяги",
+      "source_file": "/tmp/price_list.json",
+      "raw_diameter": "Ø 100",
+      "source_sheet": "голые",
+      "raw_item_name": "Шибер поворотный",
+      "seo_knowledge": {
+        "purpose": [
+          "Регулировка тяги"
+        ],
+        "fireSafety": [],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "Одноконтурные трубы того же диаметра и производитея"
+        ],
+        "selectionRules": [
+          "Подбор диаметра под одноконтурный участок дымохода"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "Сендвич элементы и элементы других производителей"
+        ],
+        "installationZones": [
+          "Усиановка после одноконтурной разгонной трубы"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Установка в дымоходной системе после разгонной трубы идущей от отопителя"
+        ],
+        "installationWarnings": [
+          "Не устанавливать сендвич систему"
+        ]
+      },
+      "variant_model": "logical_product",
+      "source_section": "Труба без изоляции — Нержавеющая сталь AISI 321 (толщина 0,8мм)",
+      "seo_description": "Поворотный одноконтурный шибер Дымоход Трейд для регулировки тяги: диаметр {diameter}, сталь {steel}, толщина {thickness}. Рассчитайте совместимый комплект.",
+      "outer_diameter_mm": null,
+      "source_item_index": 11,
+      "source_block_index": 13,
+      "legacy_product_count": 1,
+      "compatible_product_ids": [
+        "1a647e06-63c7-4689-b528-19069e025ce7",
+        "c90f48df-1bc3-414e-95a9-2294cb4ad1e3",
+        "aa58f093-0792-423a-a0a0-fb361f5d4349"
+      ],
+      "_seo_public_slug_previous": "odnostennyi-shiber-shiber-povorotnyi",
+      "legacy_product_slugs_sample": [
+        "odnostennyi-shiber-shiber-povorotnyi"
+      ],
+      "legacy_admin_content_migrated": true,
+      "_support_catalog_previous_state": {
+        "name": "Одноконтурный шибер поворотный",
+        "slug": "odnostennyi-shiber-shiber-povorotnyi",
+        "is_active": true,
+        "attributes": {
+          "media": [
+            {
+              "alt": "Одноконтурный шибер поворотный — общий вид",
+              "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-1.png?v=1785834562496217947",
+              "role": "general",
+              "file_name": "photo-1.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Одноконтурный шибер поворотный — вид сверху",
+              "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-2.png?v=1785763603871928000",
+              "role": "top",
+              "file_name": "photo-2.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Одноконтурный шибер поворотный — порты / присоединение",
+              "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-3.png?v=1785763608495984315",
+              "role": "connection",
+              "file_name": "photo-3.png",
+              "diameter_specific": false
+            }
+          ],
+          "angle_deg": null,
+          "length_mm": null,
+          "seo_title": "Одноконтурный шибер Дымоход Трейд для регулировки тяги",
+          "source_file": "/tmp/price_list.json",
+          "raw_diameter": "Ø 100",
+          "source_sheet": "голые",
+          "raw_item_name": "Шибер поворотный",
+          "seo_knowledge": {
+            "purpose": [
+              "Регулировка тяги"
+            ],
+            "fireSafety": [
+              "Установка внутри помещения"
+            ],
+            "sourceNotes": [],
+            "compatibleWith": [
+              "Одноконтурные трубы того же диаметра и производитея"
+            ],
+            "selectionRules": [
+              "Подбор диаметра под одноконтурный участок дымохода"
+            ],
+            "configuratorCta": {
+              "href": "/#calculator",
+              "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+            },
+            "incompatibleWith": [
+              "Сендвич элементы и элементы других производителей"
+            ],
+            "installationZones": [
+              "Усиановка после одноконтурной разгонной трубы"
+            ],
+            "requiredInputData": [],
+            "installationVariants": [
+              "Установка в дымоходной системе после разгонной трубы идущей от отопителя"
+            ],
+            "installationWarnings": [
+              "Не устанавливать сендвич систему"
+            ]
+          },
+          "variant_model": "logical_product",
+          "source_section": "Труба без изоляции — Нержавеющая сталь AISI 321 (толщина 0,8мм)",
+          "seo_description": "Поворотный одноконтурный шибер Дымоход Трейд для регулировки тяги: диаметр {diameter}, сталь {steel}, толщина {thickness}. Рассчитайте совместимый комплект.",
+          "outer_diameter_mm": null,
+          "source_item_index": 11,
+          "source_block_index": 13,
+          "legacy_product_count": 1,
+          "compatible_product_ids": [
+            "1a647e06-63c7-4689-b528-19069e025ce7",
+            "c90f48df-1bc3-414e-95a9-2294cb4ad1e3",
+            "d45638c4-9d9c-4a05-8ae3-071a70dbc92f",
+            "aa58f093-0792-423a-a0a0-fb361f5d4349"
+          ],
+          "legacy_product_slugs_sample": [
+            "odnostennyi-shiber-shiber-povorotnyi"
+          ],
+          "legacy_admin_content_migrated": true
+        }
+      },
+      "_single_wall_indoor_copy_previous": {
+        "description": "Назначение\n\nШибер используют для регулировки тяги в дымоходной системе.\n\nГде применяется\n\nВариант предназначен для одноконтурного участка после разгонной трубы, идущей от отопителя. Одноконтурные элементы используют внутри помещения или на стартовом участке; для улицы и холодных зон в пакете предусмотрены сэндвич-элементы.\n\nСовместимость\n\nШибер подходит к одноконтурным трубам того же диаметра и того же производителя. Совместимость с сэндвич-элементами и элементами других производителей не подтверждена.\n\nВарианты монтажа\n\nУстановка выполняется в дымоходной системе после разгонной трубы, идущей от отопителя. В сэндвич-систему этот одноконтурный вариант устанавливать нельзя.\n\nЧто учитывать при подборе\n\nПодберите диаметр шибера под одноконтурный участок дымохода. В семействе доступны диаметры от 100 до 300 мм; толщина стенки зафиксирована на уровне 0,80 мм. Проверьте, что выбранные трубы относятся к тому же производителю.\n\nРасчёт комплекта\n\nПодберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе.",
+        "seo_knowledge": {
+          "purpose": [
+            "Регулировка тяги"
+          ],
+          "fireSafety": [
+            "Установка внутри помещения"
+          ],
+          "sourceNotes": [],
+          "compatibleWith": [
+            "Одноконтурные трубы того же диаметра и производитея"
+          ],
+          "selectionRules": [
+            "Подбор диаметра под одноконтурный участок дымохода"
+          ],
+          "configuratorCta": {
+            "href": "/#calculator",
+            "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+          },
+          "incompatibleWith": [
+            "Сендвич элементы и элементы других производителей"
+          ],
+          "installationZones": [
+            "Усиановка после одноконтурной разгонной трубы"
+          ],
+          "requiredInputData": [],
+          "installationVariants": [
+            "Установка в дымоходной системе после разгонной трубы идущей от отопителя"
+          ],
+          "installationWarnings": [
+            "Не устанавливать сендвич систему"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "type": "product",
+    "id": "a4336fa2-6385-5fe5-83fb-d16fe7eb9d96",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Консоль универсальная — общий вид",
+          "url": "/media/catalog/categories/konsol-universalnaya/photo-1.png?v=1785927224246112619",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Консоль универсальная — вид сверху",
+          "url": "/media/catalog/categories/konsol-universalnaya/photo-2.png?v=1785927231829160705",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        }
+      ],
+      "seo_title": "Консоль универсальная Дымоход Трейд для крепления к стене",
+      "mounting_type": "настенная",
+      "seo_knowledge": {
+        "purpose": [
+          "Крепление дымохода"
+        ],
+        "fireSafety": [],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "С трубами диаметра попадающим в диапазон консоли"
+        ],
+        "selectionRules": [
+          "Подбор под диаметр дымохода"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "Дымодными трубами чей диаметр превышает диапазон консоли"
+        ],
+        "installationZones": [
+          "Вертикальные участки дымоходной системы"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Крепления к вертикальным поверхностя. Крепеж подбирать в зависимости от материала стен"
+        ],
+        "installationWarnings": [
+          "Следить за диаметром и диапазоном телескопической части как на ширину так и на длину"
+        ]
+      },
+      "variant_model": "logical_product",
+      "seo_description": "Консоль Дымоход Трейд для крепления дымохода к стене и вертикальным участкам. Проверьте диаметр {diameter}, совместимость и рассчитайте комплект.",
+      "price_source_sheet": "Фланцы",
+      "compatible_product_ids": [
+        "c75acd2b-f7f7-5e65-9a2a-dbd6a8bd33fe",
+        "13803b48-74a4-4622-ab41-5983cdf78bf3"
+      ],
+      "_support_catalog_previous_state": {
+        "name": "Консоль универсальная",
+        "slug": "konsol-universalnaya",
+        "is_active": true,
+        "attributes": {
+          "mounting_type": "настенная",
+          "variant_model": "logical_product",
+          "price_source_sheet": "Фланцы"
+        }
+      }
+    }
+  },
+  {
+    "type": "product",
+    "id": "c75acd2b-f7f7-5e65-9a2a-dbd6a8bd33fe",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Сэндвич-опорная площадка — общий вид",
+          "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-1.png?v=1785862947150573711",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-опорная площадка — вид сверху",
+          "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-2.png?v=1785862955164627947",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-опорная площадка — порты / присоединение",
+          "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-3.png?v=1785862963243682622",
+          "role": "connection",
+          "file_name": "photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "seo_title": "Сэндвич-опорная площадка Дымоход Трейд для консоли",
+      "seo_knowledge": {
+        "purpose": [
+          "Применяется как опора под универсальную консоль для крепления дымохода"
+        ],
+        "fireSafety": [],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "Сендвич системой дымохода того же диаметра и производителя"
+        ],
+        "selectionRules": [
+          "Убедитесь что диаметры сендвич дымохода совпадают, а так же консоль подходит под размер площадки"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "С продукцией сторонних производителей, одноконтурными дымоходами"
+        ],
+        "installationZones": [
+          "Нижняя часть основания системы дымохода"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Установка на унивесальную консоль и консоль-табуретку. Фиксация церез клепки на 4 точки по контуру. Кондесатоотвод идет в комплекте с четверником или тройникомюм, но монтаж конденсатоотвода производится на опорную площадку"
+        ],
+        "installationWarnings": [
+          "Площадка должна быть закреплена к консоле, а консоль в свою очередь должна быть хорошо закреплена к стене"
+        ]
+      },
+      "variant_model": "logical_product",
+      "seo_description": "Сэндвич-опорная площадка Дымоход Трейд для установки на консоль: проверьте диаметры {d}/{D}, совместимость по производителю и рассчитайте комплект в конфигураторе.",
+      "installation_role": "console_support_platform",
+      "price_source_sheet": "Фланцы",
+      "price_source_row_key": "raw_rows:Площадка",
+      "compatible_product_ids": [
+        "a4336fa2-6385-5fe5-83fb-d16fe7eb9d96",
+        "32f4d753-fde8-4da3-a669-8534d800af3a",
+        "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b"
+      ],
+      "_support_catalog_previous_state": {
+        "name": "Сэндвич-опорная площадка",
+        "slug": "sendvich-opornaya-ploschadka",
+        "is_active": true,
+        "attributes": {
+          "variant_model": "logical_product",
+          "installation_role": "console_support_platform",
+          "price_source_sheet": "Фланцы",
+          "price_source_row_key": "raw_rows:Площадка"
+        }
+      }
+    }
+  },
+  {
+    "type": "product",
+    "id": "6fff0717-4144-4560-9175-56081052d11d",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Сэндвич-труба — общий вид",
+          "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-труба — вид сверху",
+          "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-труба — порты / присоединение",
+          "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+          "role": "connection",
+          "file_name": "photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": null,
+      "length_mm": 1000,
+      "seo_title": "Сэндвич-трубы Дымоход Трейд для печей, каминов и котлов",
+      "source_file": "/tmp/50mm.json",
+      "raw_diameter": "Ø 100/200",
+      "source_sheet": "Лист1",
+      "raw_item_name": "Труба L=1000мм",
+      "seo_knowledge": {
+        "purpose": [
+          "Отвод дымовых газов из отопителя"
+        ],
+        "fireSafety": [
+          "Проход через перекрытия и стены осуществяется через ППУ(проходной стакан, каменная вата, изоляция)"
+        ],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "Комплектующими дымохода того же диаметра и производителя"
+        ],
+        "selectionRules": [
+          "Подходит для подключения банных печей, печей для дома, каминов и котлов"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "Комплектующими другого диаметра и других производителей"
+        ],
+        "installationZones": [
+          "Внутри и снаружи помещения"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Внутри помещения через перекрытия. Наружний монтаж. Крепления изделий на клепки и фирменные хомуты"
+        ],
+        "installationWarnings": [
+          "Не допускать соединения элементов внутри стен и внутри перекрытия"
+        ]
+      },
+      "variant_model": "logical_product",
+      "outer_material": "оцинковка",
+      "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+      "seo_description": "Сэндвич-трубы Дымоход Трейд для отвода дымовых газов. Выберите диаметр {d}, наружный диаметр {D} и длину {L}, затем рассчитайте комплект в конфигураторе.",
+      "outer_diameter_mm": 200,
+      "outer_steel_grade": null,
+      "source_item_index": 0,
+      "source_block_index": 1,
+      "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+      "legacy_product_count": 1,
+      "compatible_product_ids": [
+        "c8dfe531-f757-4511-803c-f91e1f72aec9",
+        "e13cb313-8cf7-4db2-90be-91cd0fe62c4e",
+        "32f4d753-fde8-4da3-a669-8534d800af3a",
+        "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+        "f6e0cb36-e8e4-466c-a063-6966ff2ae7f5",
+        "b99b947f-79ad-4ee5-82f6-2802aadfea3d",
+        "a3b7a81f-4dad-4540-9372-9c499b84f29b",
+        "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+        "13803b48-74a4-4622-ab41-5983cdf78bf3",
+        "d9b234fb-0a61-4312-b2fc-4974dfd79e49",
+        "b314ca36-c48b-4f72-b6cd-f7b4f2bb5a00",
+        "f9de962c-53ed-4eac-908e-8d58cb4f47a1",
+        "6f45bf89-fff7-4bdb-9062-b33bed391e90"
+      ],
+      "outer_wall_thickness_mm": null,
+      "_seo_public_slug_previous": "sendvich-truba-truba",
+      "_tee_angle_previous_state": {
+        "name": "Сэндвич-труба",
+        "slug": "sendvich-truba-truba",
+        "is_active": true,
+        "attributes": {
+          "media": [
+            {
+              "alt": "Сэндвич-труба — общий вид",
+              "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+              "role": "general",
+              "file_name": "photo-1.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Сэндвич-труба — вид сверху",
+              "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+              "role": "top",
+              "file_name": "photo-2.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Сэндвич-труба — порты / присоединение",
+              "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+              "role": "connection",
+              "file_name": "photo-3.png",
+              "diameter_specific": false
+            }
+          ],
+          "angle_deg": null,
+          "length_mm": 1000,
+          "seo_title": "Сэндвич-трубы Дымоход Трейд для печей, каминов и котлов",
+          "source_file": "/tmp/50mm.json",
+          "raw_diameter": "Ø 100/200",
+          "source_sheet": "Лист1",
+          "raw_item_name": "Труба L=1000мм",
+          "seo_knowledge": {
+            "purpose": [
+              "Отвод дымовых газов из отопителя"
+            ],
+            "fireSafety": [
+              "Проход через перекрытия и стены осуществяется через ППУ(проходной стакан, каменная вата, изоляция)"
+            ],
+            "sourceNotes": [],
+            "compatibleWith": [
+              "Комплектующими дымохода того же диаметра и производителя"
+            ],
+            "selectionRules": [
+              "Подходит для подключения банных печей, печей для дома, каминов и котлов"
+            ],
+            "configuratorCta": {
+              "href": "/#calculator",
+              "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+            },
+            "incompatibleWith": [
+              "Комплектующими другого диаметра и других производителей"
+            ],
+            "installationZones": [
+              "Внутри и снаружи помещения"
+            ],
+            "requiredInputData": [],
+            "installationVariants": [
+              "Внутри помещения через перекрытия. Наружний монтаж. Крепления изделий на клепки и фирменные хомуты"
+            ],
+            "installationWarnings": [
+              "Не допускать соединения элементов внутри стен и внутри перекрытия"
+            ]
+          },
+          "variant_model": "logical_product",
+          "outer_material": "оцинковка",
+          "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+          "seo_description": "Сэндвич-трубы Дымоход Трейд для отвода дымовых газов. Выберите диаметр {d}, наружный диаметр {D} и длину {L}, затем рассчитайте комплект в конфигураторе.",
+          "outer_diameter_mm": 200,
+          "outer_steel_grade": null,
+          "source_item_index": 0,
+          "source_block_index": 1,
+          "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+          "legacy_product_count": 1,
+          "compatible_product_ids": [
+            "c8dfe531-f757-4511-803c-f91e1f72aec9",
+            "e13cb313-8cf7-4db2-90be-91cd0fe62c4e",
+            "9c53115b-d0f5-4830-a373-ac842bbf855a",
+            "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+            "f6e0cb36-e8e4-466c-a063-6966ff2ae7f5",
+            "4d948c91-796d-4e7c-9b7a-a38703d890a2",
+            "50a2cb5f-c05c-4410-8651-875ca9ddb93d",
+            "b99b947f-79ad-4ee5-82f6-2802aadfea3d",
+            "a3b7a81f-4dad-4540-9372-9c499b84f29b",
+            "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+            "13803b48-74a4-4622-ab41-5983cdf78bf3",
+            "d9b234fb-0a61-4312-b2fc-4974dfd79e49",
+            "b314ca36-c48b-4f72-b6cd-f7b4f2bb5a00",
+            "f9de962c-53ed-4eac-908e-8d58cb4f47a1",
+            "6f45bf89-fff7-4bdb-9062-b33bed391e90"
+          ],
+          "outer_wall_thickness_mm": null,
+          "legacy_product_slugs_sample": [
+            "sendvich-truba-truba"
+          ],
+          "legacy_admin_content_migrated": true,
+          "_support_catalog_previous_state": {
+            "name": "Сэндвич-труба",
+            "slug": "sendvich-truba-truba",
+            "is_active": true,
+            "attributes": {
+              "media": [
+                {
+                  "alt": "Сэндвич-труба — общий вид",
+                  "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+                  "role": "general",
+                  "file_name": "photo-1.png",
+                  "diameter_specific": false
+                },
+                {
+                  "alt": "Сэндвич-труба — вид сверху",
+                  "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+                  "role": "top",
+                  "file_name": "photo-2.png",
+                  "diameter_specific": false
+                },
+                {
+                  "alt": "Сэндвич-труба — порты / присоединение",
+                  "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+                  "role": "connection",
+                  "file_name": "photo-3.png",
+                  "diameter_specific": false
+                }
+              ],
+              "angle_deg": null,
+              "length_mm": 1000,
+              "seo_title": "Сэндвич-трубы Дымоход Трейд для печей, каминов и котлов",
+              "source_file": "/tmp/50mm.json",
+              "raw_diameter": "Ø 100/200",
+              "source_sheet": "Лист1",
+              "raw_item_name": "Труба L=1000мм",
+              "seo_knowledge": {
+                "purpose": [
+                  "Отвод дымовых газов из отопителя"
+                ],
+                "fireSafety": [
+                  "Проход через перекрытия и стены осуществяется через ППУ(проходной стакан, каменная вата, изоляция)"
+                ],
+                "sourceNotes": [],
+                "compatibleWith": [
+                  "Комплектующими дымохода того же диаметра и производителя"
+                ],
+                "selectionRules": [
+                  "Подходит для подключения банных печей, печей для дома, каминов и котлов"
+                ],
+                "configuratorCta": {
+                  "href": "/#calculator",
+                  "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+                },
+                "incompatibleWith": [
+                  "Комплектующими другого диаметра и других производителей"
+                ],
+                "installationZones": [
+                  "Внутри и снаружи помещения"
+                ],
+                "requiredInputData": [],
+                "installationVariants": [
+                  "Внутри помещения через перекрытия. Наружний монтаж. Крепления изделий на клепки и фирменные хомуты"
+                ],
+                "installationWarnings": [
+                  "Не допускать соединения элементов внутри стен и внутри перекрытия"
+                ]
+              },
+              "variant_model": "logical_product",
+              "outer_material": "оцинковка",
+              "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+              "seo_description": "Сэндвич-трубы Дымоход Трейд для отвода дымовых газов. Выберите диаметр {d}, наружный диаметр {D} и длину {L}, затем рассчитайте комплект в конфигураторе.",
+              "outer_diameter_mm": 200,
+              "outer_steel_grade": null,
+              "source_item_index": 0,
+              "source_block_index": 1,
+              "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+              "legacy_product_count": 1,
+              "compatible_product_ids": [
+                "c8dfe531-f757-4511-803c-f91e1f72aec9",
+                "e13cb313-8cf7-4db2-90be-91cd0fe62c4e",
+                "9c53115b-d0f5-4830-a373-ac842bbf855a",
+                "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+                "f6e0cb36-e8e4-466c-a063-6966ff2ae7f5",
+                "4d948c91-796d-4e7c-9b7a-a38703d890a2",
+                "50a2cb5f-c05c-4410-8651-875ca9ddb93d",
+                "b99b947f-79ad-4ee5-82f6-2802aadfea3d",
+                "a3b7a81f-4dad-4540-9372-9c499b84f29b",
+                "6b4cb34e-cd59-4620-ab6a-3012bdba3a3d",
+                "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+                "13803b48-74a4-4622-ab41-5983cdf78bf3",
+                "d9b234fb-0a61-4312-b2fc-4974dfd79e49",
+                "b314ca36-c48b-4f72-b6cd-f7b4f2bb5a00",
+                "f9de962c-53ed-4eac-908e-8d58cb4f47a1",
+                "6f45bf89-fff7-4bdb-9062-b33bed391e90"
+              ],
+              "outer_wall_thickness_mm": null,
+              "legacy_product_slugs_sample": [
+                "sendvich-truba-truba"
+              ],
+              "legacy_admin_content_migrated": true
+            }
+          }
+        }
+      },
+      "legacy_product_slugs_sample": [
+        "sendvich-truba-truba"
+      ],
+      "legacy_admin_content_migrated": true,
+      "_support_catalog_previous_state": {
+        "name": "Сэндвич-труба",
+        "slug": "sendvich-truba-truba",
+        "is_active": true,
+        "attributes": {
+          "media": [
+            {
+              "alt": "Сэндвич-труба — общий вид",
+              "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+              "role": "general",
+              "file_name": "photo-1.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Сэндвич-труба — вид сверху",
+              "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+              "role": "top",
+              "file_name": "photo-2.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Сэндвич-труба — порты / присоединение",
+              "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+              "role": "connection",
+              "file_name": "photo-3.png",
+              "diameter_specific": false
+            }
+          ],
+          "angle_deg": null,
+          "length_mm": 1000,
+          "seo_title": "Сэндвич-трубы Дымоход Трейд для печей, каминов и котлов",
+          "source_file": "/tmp/50mm.json",
+          "raw_diameter": "Ø 100/200",
+          "source_sheet": "Лист1",
+          "raw_item_name": "Труба L=1000мм",
+          "seo_knowledge": {
+            "purpose": [
+              "Отвод дымовых газов из отопителя"
+            ],
+            "fireSafety": [
+              "Проход через перекрытия и стены осуществяется через ППУ(проходной стакан, каменная вата, изоляция)"
+            ],
+            "sourceNotes": [],
+            "compatibleWith": [
+              "Комплектующими дымохода того же диаметра и производителя"
+            ],
+            "selectionRules": [
+              "Подходит для подключения банных печей, печей для дома, каминов и котлов"
+            ],
+            "configuratorCta": {
+              "href": "/#calculator",
+              "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+            },
+            "incompatibleWith": [
+              "Комплектующими другого диаметра и других производителей"
+            ],
+            "installationZones": [
+              "Внутри и снаружи помещения"
+            ],
+            "requiredInputData": [],
+            "installationVariants": [
+              "Внутри помещения через перекрытия. Наружний монтаж. Крепления изделий на клепки и фирменные хомуты"
+            ],
+            "installationWarnings": [
+              "Не допускать соединения элементов внутри стен и внутри перекрытия"
+            ]
+          },
+          "variant_model": "logical_product",
+          "outer_material": "оцинковка",
+          "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+          "seo_description": "Сэндвич-трубы Дымоход Трейд для отвода дымовых газов. Выберите диаметр {d}, наружный диаметр {D} и длину {L}, затем рассчитайте комплект в конфигураторе.",
+          "outer_diameter_mm": 200,
+          "outer_steel_grade": null,
+          "source_item_index": 0,
+          "source_block_index": 1,
+          "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+          "legacy_product_count": 1,
+          "compatible_product_ids": [
+            "c8dfe531-f757-4511-803c-f91e1f72aec9",
+            "e13cb313-8cf7-4db2-90be-91cd0fe62c4e",
+            "9c53115b-d0f5-4830-a373-ac842bbf855a",
+            "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+            "f6e0cb36-e8e4-466c-a063-6966ff2ae7f5",
+            "4d948c91-796d-4e7c-9b7a-a38703d890a2",
+            "50a2cb5f-c05c-4410-8651-875ca9ddb93d",
+            "b99b947f-79ad-4ee5-82f6-2802aadfea3d",
+            "a3b7a81f-4dad-4540-9372-9c499b84f29b",
+            "6b4cb34e-cd59-4620-ab6a-3012bdba3a3d",
+            "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+            "13803b48-74a4-4622-ab41-5983cdf78bf3",
+            "d9b234fb-0a61-4312-b2fc-4974dfd79e49",
+            "b314ca36-c48b-4f72-b6cd-f7b4f2bb5a00",
+            "f9de962c-53ed-4eac-908e-8d58cb4f47a1",
+            "6f45bf89-fff7-4bdb-9062-b33bed391e90"
+          ],
+          "outer_wall_thickness_mm": null,
+          "legacy_product_slugs_sample": [
+            "sendvich-truba-truba"
+          ],
+          "legacy_admin_content_migrated": true
+        }
+      },
+      "_withdrawable_damper_previous_state": {
+        "name": "Сэндвич-труба",
+        "slug": "sendvich-truba-truba",
+        "is_active": true,
+        "attributes": {
+          "media": [
+            {
+              "alt": "Сэндвич-труба — общий вид",
+              "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+              "role": "general",
+              "file_name": "photo-1.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Сэндвич-труба — вид сверху",
+              "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+              "role": "top",
+              "file_name": "photo-2.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Сэндвич-труба — порты / присоединение",
+              "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+              "role": "connection",
+              "file_name": "photo-3.png",
+              "diameter_specific": false
+            }
+          ],
+          "angle_deg": null,
+          "length_mm": 1000,
+          "seo_title": "Сэндвич-трубы Дымоход Трейд для печей, каминов и котлов",
+          "source_file": "/tmp/50mm.json",
+          "raw_diameter": "Ø 100/200",
+          "source_sheet": "Лист1",
+          "raw_item_name": "Труба L=1000мм",
+          "seo_knowledge": {
+            "purpose": [
+              "Отвод дымовых газов из отопителя"
+            ],
+            "fireSafety": [
+              "Проход через перекрытия и стены осуществяется через ППУ(проходной стакан, каменная вата, изоляция)"
+            ],
+            "sourceNotes": [],
+            "compatibleWith": [
+              "Комплектующими дымохода того же диаметра и производителя"
+            ],
+            "selectionRules": [
+              "Подходит для подключения банных печей, печей для дома, каминов и котлов"
+            ],
+            "configuratorCta": {
+              "href": "/#calculator",
+              "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+            },
+            "incompatibleWith": [
+              "Комплектующими другого диаметра и других производителей"
+            ],
+            "installationZones": [
+              "Внутри и снаружи помещения"
+            ],
+            "requiredInputData": [],
+            "installationVariants": [
+              "Внутри помещения через перекрытия. Наружний монтаж. Крепления изделий на клепки и фирменные хомуты"
+            ],
+            "installationWarnings": [
+              "Не допускать соединения элементов внутри стен и внутри перекрытия"
+            ]
+          },
+          "variant_model": "logical_product",
+          "outer_material": "оцинковка",
+          "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+          "seo_description": "Сэндвич-трубы Дымоход Трейд для отвода дымовых газов. Выберите диаметр {d}, наружный диаметр {D} и длину {L}, затем рассчитайте комплект в конфигураторе.",
+          "outer_diameter_mm": 200,
+          "outer_steel_grade": null,
+          "source_item_index": 0,
+          "source_block_index": 1,
+          "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+          "legacy_product_count": 1,
+          "compatible_product_ids": [
+            "c8dfe531-f757-4511-803c-f91e1f72aec9",
+            "e13cb313-8cf7-4db2-90be-91cd0fe62c4e",
+            "32f4d753-fde8-4da3-a669-8534d800af3a",
+            "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+            "f6e0cb36-e8e4-466c-a063-6966ff2ae7f5",
+            "4d948c91-796d-4e7c-9b7a-a38703d890a2",
+            "50a2cb5f-c05c-4410-8651-875ca9ddb93d",
+            "b99b947f-79ad-4ee5-82f6-2802aadfea3d",
+            "a3b7a81f-4dad-4540-9372-9c499b84f29b",
+            "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+            "13803b48-74a4-4622-ab41-5983cdf78bf3",
+            "d9b234fb-0a61-4312-b2fc-4974dfd79e49",
+            "b314ca36-c48b-4f72-b6cd-f7b4f2bb5a00",
+            "f9de962c-53ed-4eac-908e-8d58cb4f47a1",
+            "6f45bf89-fff7-4bdb-9062-b33bed391e90"
+          ],
+          "outer_wall_thickness_mm": null,
+          "_tee_angle_previous_state": {
+            "name": "Сэндвич-труба",
+            "slug": "sendvich-truba-truba",
+            "is_active": true,
+            "attributes": {
+              "media": [
+                {
+                  "alt": "Сэндвич-труба — общий вид",
+                  "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+                  "role": "general",
+                  "file_name": "photo-1.png",
+                  "diameter_specific": false
+                },
+                {
+                  "alt": "Сэндвич-труба — вид сверху",
+                  "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+                  "role": "top",
+                  "file_name": "photo-2.png",
+                  "diameter_specific": false
+                },
+                {
+                  "alt": "Сэндвич-труба — порты / присоединение",
+                  "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+                  "role": "connection",
+                  "file_name": "photo-3.png",
+                  "diameter_specific": false
+                }
+              ],
+              "angle_deg": null,
+              "length_mm": 1000,
+              "seo_title": "Сэндвич-трубы Дымоход Трейд для печей, каминов и котлов",
+              "source_file": "/tmp/50mm.json",
+              "raw_diameter": "Ø 100/200",
+              "source_sheet": "Лист1",
+              "raw_item_name": "Труба L=1000мм",
+              "seo_knowledge": {
+                "purpose": [
+                  "Отвод дымовых газов из отопителя"
+                ],
+                "fireSafety": [
+                  "Проход через перекрытия и стены осуществяется через ППУ(проходной стакан, каменная вата, изоляция)"
+                ],
+                "sourceNotes": [],
+                "compatibleWith": [
+                  "Комплектующими дымохода того же диаметра и производителя"
+                ],
+                "selectionRules": [
+                  "Подходит для подключения банных печей, печей для дома, каминов и котлов"
+                ],
+                "configuratorCta": {
+                  "href": "/#calculator",
+                  "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+                },
+                "incompatibleWith": [
+                  "Комплектующими другого диаметра и других производителей"
+                ],
+                "installationZones": [
+                  "Внутри и снаружи помещения"
+                ],
+                "requiredInputData": [],
+                "installationVariants": [
+                  "Внутри помещения через перекрытия. Наружний монтаж. Крепления изделий на клепки и фирменные хомуты"
+                ],
+                "installationWarnings": [
+                  "Не допускать соединения элементов внутри стен и внутри перекрытия"
+                ]
+              },
+              "variant_model": "logical_product",
+              "outer_material": "оцинковка",
+              "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+              "seo_description": "Сэндвич-трубы Дымоход Трейд для отвода дымовых газов. Выберите диаметр {d}, наружный диаметр {D} и длину {L}, затем рассчитайте комплект в конфигураторе.",
+              "outer_diameter_mm": 200,
+              "outer_steel_grade": null,
+              "source_item_index": 0,
+              "source_block_index": 1,
+              "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+              "legacy_product_count": 1,
+              "compatible_product_ids": [
+                "c8dfe531-f757-4511-803c-f91e1f72aec9",
+                "e13cb313-8cf7-4db2-90be-91cd0fe62c4e",
+                "9c53115b-d0f5-4830-a373-ac842bbf855a",
+                "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+                "f6e0cb36-e8e4-466c-a063-6966ff2ae7f5",
+                "4d948c91-796d-4e7c-9b7a-a38703d890a2",
+                "50a2cb5f-c05c-4410-8651-875ca9ddb93d",
+                "b99b947f-79ad-4ee5-82f6-2802aadfea3d",
+                "a3b7a81f-4dad-4540-9372-9c499b84f29b",
+                "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+                "13803b48-74a4-4622-ab41-5983cdf78bf3",
+                "d9b234fb-0a61-4312-b2fc-4974dfd79e49",
+                "b314ca36-c48b-4f72-b6cd-f7b4f2bb5a00",
+                "f9de962c-53ed-4eac-908e-8d58cb4f47a1",
+                "6f45bf89-fff7-4bdb-9062-b33bed391e90"
+              ],
+              "outer_wall_thickness_mm": null,
+              "legacy_product_slugs_sample": [
+                "sendvich-truba-truba"
+              ],
+              "legacy_admin_content_migrated": true,
+              "_support_catalog_previous_state": {
+                "name": "Сэндвич-труба",
+                "slug": "sendvich-truba-truba",
+                "is_active": true,
+                "attributes": {
+                  "media": [
+                    {
+                      "alt": "Сэндвич-труба — общий вид",
+                      "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+                      "role": "general",
+                      "file_name": "photo-1.png",
+                      "diameter_specific": false
+                    },
+                    {
+                      "alt": "Сэндвич-труба — вид сверху",
+                      "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+                      "role": "top",
+                      "file_name": "photo-2.png",
+                      "diameter_specific": false
+                    },
+                    {
+                      "alt": "Сэндвич-труба — порты / присоединение",
+                      "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+                      "role": "connection",
+                      "file_name": "photo-3.png",
+                      "diameter_specific": false
+                    }
+                  ],
+                  "angle_deg": null,
+                  "length_mm": 1000,
+                  "seo_title": "Сэндвич-трубы Дымоход Трейд для печей, каминов и котлов",
+                  "source_file": "/tmp/50mm.json",
+                  "raw_diameter": "Ø 100/200",
+                  "source_sheet": "Лист1",
+                  "raw_item_name": "Труба L=1000мм",
+                  "seo_knowledge": {
+                    "purpose": [
+                      "Отвод дымовых газов из отопителя"
+                    ],
+                    "fireSafety": [
+                      "Проход через перекрытия и стены осуществяется через ППУ(проходной стакан, каменная вата, изоляция)"
+                    ],
+                    "sourceNotes": [],
+                    "compatibleWith": [
+                      "Комплектующими дымохода того же диаметра и производителя"
+                    ],
+                    "selectionRules": [
+                      "Подходит для подключения банных печей, печей для дома, каминов и котлов"
+                    ],
+                    "configuratorCta": {
+                      "href": "/#calculator",
+                      "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+                    },
+                    "incompatibleWith": [
+                      "Комплектующими другого диаметра и других производителей"
+                    ],
+                    "installationZones": [
+                      "Внутри и снаружи помещения"
+                    ],
+                    "requiredInputData": [],
+                    "installationVariants": [
+                      "Внутри помещения через перекрытия. Наружний монтаж. Крепления изделий на клепки и фирменные хомуты"
+                    ],
+                    "installationWarnings": [
+                      "Не допускать соединения элементов внутри стен и внутри перекрытия"
+                    ]
+                  },
+                  "variant_model": "logical_product",
+                  "outer_material": "оцинковка",
+                  "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+                  "seo_description": "Сэндвич-трубы Дымоход Трейд для отвода дымовых газов. Выберите диаметр {d}, наружный диаметр {D} и длину {L}, затем рассчитайте комплект в конфигураторе.",
+                  "outer_diameter_mm": 200,
+                  "outer_steel_grade": null,
+                  "source_item_index": 0,
+                  "source_block_index": 1,
+                  "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+                  "legacy_product_count": 1,
+                  "compatible_product_ids": [
+                    "c8dfe531-f757-4511-803c-f91e1f72aec9",
+                    "e13cb313-8cf7-4db2-90be-91cd0fe62c4e",
+                    "9c53115b-d0f5-4830-a373-ac842bbf855a",
+                    "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+                    "f6e0cb36-e8e4-466c-a063-6966ff2ae7f5",
+                    "4d948c91-796d-4e7c-9b7a-a38703d890a2",
+                    "50a2cb5f-c05c-4410-8651-875ca9ddb93d",
+                    "b99b947f-79ad-4ee5-82f6-2802aadfea3d",
+                    "a3b7a81f-4dad-4540-9372-9c499b84f29b",
+                    "6b4cb34e-cd59-4620-ab6a-3012bdba3a3d",
+                    "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+                    "13803b48-74a4-4622-ab41-5983cdf78bf3",
+                    "d9b234fb-0a61-4312-b2fc-4974dfd79e49",
+                    "b314ca36-c48b-4f72-b6cd-f7b4f2bb5a00",
+                    "f9de962c-53ed-4eac-908e-8d58cb4f47a1",
+                    "6f45bf89-fff7-4bdb-9062-b33bed391e90"
+                  ],
+                  "outer_wall_thickness_mm": null,
+                  "legacy_product_slugs_sample": [
+                    "sendvich-truba-truba"
+                  ],
+                  "legacy_admin_content_migrated": true
+                }
+              }
+            }
+          },
+          "legacy_product_slugs_sample": [
+            "sendvich-truba-truba"
+          ],
+          "legacy_admin_content_migrated": true,
+          "_support_catalog_previous_state": {
+            "name": "Сэндвич-труба",
+            "slug": "sendvich-truba-truba",
+            "is_active": true,
+            "attributes": {
+              "media": [
+                {
+                  "alt": "Сэндвич-труба — общий вид",
+                  "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+                  "role": "general",
+                  "file_name": "photo-1.png",
+                  "diameter_specific": false
+                },
+                {
+                  "alt": "Сэндвич-труба — вид сверху",
+                  "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+                  "role": "top",
+                  "file_name": "photo-2.png",
+                  "diameter_specific": false
+                },
+                {
+                  "alt": "Сэндвич-труба — порты / присоединение",
+                  "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+                  "role": "connection",
+                  "file_name": "photo-3.png",
+                  "diameter_specific": false
+                }
+              ],
+              "angle_deg": null,
+              "length_mm": 1000,
+              "seo_title": "Сэндвич-трубы Дымоход Трейд для печей, каминов и котлов",
+              "source_file": "/tmp/50mm.json",
+              "raw_diameter": "Ø 100/200",
+              "source_sheet": "Лист1",
+              "raw_item_name": "Труба L=1000мм",
+              "seo_knowledge": {
+                "purpose": [
+                  "Отвод дымовых газов из отопителя"
+                ],
+                "fireSafety": [
+                  "Проход через перекрытия и стены осуществяется через ППУ(проходной стакан, каменная вата, изоляция)"
+                ],
+                "sourceNotes": [],
+                "compatibleWith": [
+                  "Комплектующими дымохода того же диаметра и производителя"
+                ],
+                "selectionRules": [
+                  "Подходит для подключения банных печей, печей для дома, каминов и котлов"
+                ],
+                "configuratorCta": {
+                  "href": "/#calculator",
+                  "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+                },
+                "incompatibleWith": [
+                  "Комплектующими другого диаметра и других производителей"
+                ],
+                "installationZones": [
+                  "Внутри и снаружи помещения"
+                ],
+                "requiredInputData": [],
+                "installationVariants": [
+                  "Внутри помещения через перекрытия. Наружний монтаж. Крепления изделий на клепки и фирменные хомуты"
+                ],
+                "installationWarnings": [
+                  "Не допускать соединения элементов внутри стен и внутри перекрытия"
+                ]
+              },
+              "variant_model": "logical_product",
+              "outer_material": "оцинковка",
+              "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+              "seo_description": "Сэндвич-трубы Дымоход Трейд для отвода дымовых газов. Выберите диаметр {d}, наружный диаметр {D} и длину {L}, затем рассчитайте комплект в конфигураторе.",
+              "outer_diameter_mm": 200,
+              "outer_steel_grade": null,
+              "source_item_index": 0,
+              "source_block_index": 1,
+              "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+              "legacy_product_count": 1,
+              "compatible_product_ids": [
+                "c8dfe531-f757-4511-803c-f91e1f72aec9",
+                "e13cb313-8cf7-4db2-90be-91cd0fe62c4e",
+                "9c53115b-d0f5-4830-a373-ac842bbf855a",
+                "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+                "f6e0cb36-e8e4-466c-a063-6966ff2ae7f5",
+                "4d948c91-796d-4e7c-9b7a-a38703d890a2",
+                "50a2cb5f-c05c-4410-8651-875ca9ddb93d",
+                "b99b947f-79ad-4ee5-82f6-2802aadfea3d",
+                "a3b7a81f-4dad-4540-9372-9c499b84f29b",
+                "6b4cb34e-cd59-4620-ab6a-3012bdba3a3d",
+                "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+                "13803b48-74a4-4622-ab41-5983cdf78bf3",
+                "d9b234fb-0a61-4312-b2fc-4974dfd79e49",
+                "b314ca36-c48b-4f72-b6cd-f7b4f2bb5a00",
+                "f9de962c-53ed-4eac-908e-8d58cb4f47a1",
+                "6f45bf89-fff7-4bdb-9062-b33bed391e90"
+              ],
+              "outer_wall_thickness_mm": null,
+              "legacy_product_slugs_sample": [
+                "sendvich-truba-truba"
+              ],
+              "legacy_admin_content_migrated": true
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "product",
+    "id": "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Сэндвич-заглушка опорная — общий вид",
+          "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-1.png?v=1785858686084778410",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-заглушка опорная — вид сверху",
+          "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-2.png?v=1785858689717801525",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-заглушка опорная — порты / присоединение",
+          "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-3.png?v=1785860043040180270",
+          "role": "connection",
+          "file_name": "photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": null,
+      "length_mm": null,
+      "seo_title": "Сэндвич-заглушка «Дымоход Трейд» — адаптер основания дымохода",
+      "source_file": "/tmp/50mm.json",
+      "catalog_role": "sandwich_support_cap",
+      "raw_diameter": "Ø 100/200",
+      "source_sheet": "Лист1",
+      "raw_item_name": "Заглушка опорная",
+      "seo_knowledge": {
+        "purpose": [
+          "Применяется как адаптер от одноконтурного разгоночного участка дымохода на сендвич часть"
+        ],
+        "fireSafety": [
+          "Марка стали и тепловая нагрузка на изделие должны соответствовать характеристикам всей системы. Не допускается монтаж соединений в перекрытиях"
+        ],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "Сендвич система и одноконтурная  часть дымохода того же диаметра и производителя"
+        ],
+        "selectionRules": [
+          "Внимательно проверяйте диаметр одноконтурного участка дымохода и диаметр сендвич участка"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "С системами других производителей и диаметрами"
+        ],
+        "installationZones": [
+          "Нижняя часть основания системы дымохода"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Применяется в дымоходах  как снаружи так , внутри помещений. Применяется как в вертикальной так и горизонтальной схеме подключения"
+        ],
+        "installationWarnings": [
+          "Использование в дымоходных системах других производителей"
+        ]
+      },
+      "variant_model": "logical_product",
+      "outer_material": "оцинковка",
+      "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+      "seo_description": "Сэндвич-заглушка «Дымоход Трейд» для перехода с одноконтурного участка на сэндвич: Ø{d}/{D}, изоляция {insulation} мм. Проверьте производителя и рассчитайте комплект.",
+      "outer_diameter_mm": 200,
+      "outer_steel_grade": null,
+      "source_item_index": 11,
+      "source_block_index": 1,
+      "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+      "legacy_product_count": 1,
+      "compatible_product_ids": [
+        "c8dfe531-f757-4511-803c-f91e1f72aec9",
+        "6fff0717-4144-4560-9175-56081052d11d",
+        "aa58f093-0792-423a-a0a0-fb361f5d4349",
+        "11b765ce-b3d8-433f-9325-ba3da64ef52f"
+      ],
+      "outer_wall_thickness_mm": null,
+      "legacy_product_slugs_sample": [
+        "sendvich-zaglushka-zaglushka-opornaya"
+      ],
+      "legacy_admin_content_migrated": true,
+      "_support_catalog_previous_state": {
+        "name": "Сэндвич-заглушка опорная",
+        "slug": "sendvich-zaglushka-zaglushka-opornaya",
+        "is_active": true,
+        "attributes": {
+          "media": [
+            {
+              "alt": "Сэндвич-заглушка опорная — общий вид",
+              "url": "/media/catalog/categories/sendvich-zaglushka-zaglushka-opornaya/photo-1.png?v=1785838548056246368",
+              "role": "general",
+              "file_name": "photo-1.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Сэндвич-заглушка опорная — вид сверху",
+              "url": "/media/catalog/categories/sendvich-zaglushka-zaglushka-opornaya/photo-2.png?v=1785838630122804053",
+              "role": "top",
+              "file_name": "photo-2.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Сэндвич-заглушка опорная — порты / присоединение",
+              "url": "/media/catalog/categories/sendvich-zaglushka-zaglushka-opornaya/photo-3.png?v=1785839437523528165",
+              "role": "connection",
+              "file_name": "photo-3.png",
+              "diameter_specific": false
+            }
+          ],
+          "angle_deg": null,
+          "length_mm": null,
+          "seo_title": "Сэндвич-заглушка опорная Дымоход Трейд для дымохода",
+          "source_file": "/tmp/50mm.json",
+          "raw_diameter": "Ø 100/200",
+          "source_sheet": "Лист1",
+          "raw_item_name": "Заглушка опорная",
+          "seo_knowledge": {
+            "purpose": [
+              "Применяется как опора под телескопическую консоль для крепления дымохода"
+            ],
+            "fireSafety": [],
+            "sourceNotes": [],
+            "compatibleWith": [
+              "Сендвич система дымохода того же диаметра и производителя"
+            ],
+            "selectionRules": [
+              "Внимательно проверяйте диаметр и толщину утепления дымохода"
+            ],
+            "configuratorCta": {
+              "href": "/#calculator",
+              "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+            },
+            "incompatibleWith": [
+              "Одноконтурными элементами и изделиями других производителей"
+            ],
+            "installationZones": [
+              "Нижняя часть основания системы дымохода"
+            ],
+            "requiredInputData": [],
+            "installationVariants": [
+              "Монтаж дымохода по улице и внутри шахт"
+            ],
+            "installationWarnings": [
+              "Использование с другими производителями"
+            ]
+          },
+          "variant_model": "logical_product",
+          "outer_material": "оцинковка",
+          "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+          "seo_description": "Сэндвич-заглушка опорная Дымоход Трейд для основания дымохода: диаметр {d}/{D}, утепление {insulation} мм. Проверьте совместимость и рассчитайте комплект.",
+          "outer_diameter_mm": 200,
+          "outer_steel_grade": null,
+          "source_item_index": 11,
+          "source_block_index": 1,
+          "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+          "legacy_product_count": 1,
+          "compatible_product_ids": [
+            "32f4d753-fde8-4da3-a669-8534d800af3a",
+            "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+            "f6e0cb36-e8e4-466c-a063-6966ff2ae7f5",
+            "13803b48-74a4-4622-ab41-5983cdf78bf3"
+          ],
+          "outer_wall_thickness_mm": null,
+          "legacy_product_slugs_sample": [
+            "sendvich-zaglushka-zaglushka-opornaya"
+          ],
+          "legacy_admin_content_migrated": true
+        }
+      }
+    }
+  },
+  {
+    "type": "product",
+    "id": "13803b48-74a4-4622-ab41-5983cdf78bf3",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Хомут силовой для консоли — общий вид",
+          "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-1.png?v=1785845000554115406",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Хомут силовой для консоли — вид сверху",
+          "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-2.png?v=1785845034888326899",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Хомут силовой для консоли — порты / присоединение",
+          "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-3.png?v=1785845049820418882",
+          "role": "connection",
+          "file_name": "photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": null,
+      "length_mm": null,
+      "seo_title": "Хомут силовой для консоли Дымоход Трейд — Ø{diameter}",
+      "source_file": "/tmp/price_list.json",
+      "raw_diameter": "Ø 100",
+      "source_sheet": "голые",
+      "raw_item_name": "Хомут силовой",
+      "seo_knowledge": {
+        "purpose": [
+          "Используется для крепления дымохода к консоли универсальной"
+        ],
+        "fireSafety": [],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "Трубы того же диаметра и производителя"
+        ],
+        "selectionRules": [
+          "Обратите внимание на совпадение диаметров"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "Трубы отличного диаметра и производителя"
+        ],
+        "installationZones": [
+          "Установка сендвич трубу"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Крепление дымохода к консоле. Просверлить отверстие в ушке хомута и закрепить к консоли на клепки. Минимум по 2 коепке на одно ухо"
+        ],
+        "installationWarnings": []
+      },
+      "variant_model": "logical_product",
+      "source_section": "Труба без изоляции — ОЦИНКОВКА",
+      "seo_description": "Хомут силовой для консоли Дымоход Трейд для сэндвич-трубы, подбор по наружному диаметру {diameter} и производителю. Рассчитайте комплект в конфигураторе.",
+      "installation_role": "console_clamp",
+      "outer_diameter_mm": null,
+      "source_item_index": 16,
+      "source_block_index": 1,
+      "legacy_product_count": 1,
+      "compatible_product_ids": [
+        "a4336fa2-6385-5fe5-83fb-d16fe7eb9d96",
+        "aa58f093-0792-423a-a0a0-fb361f5d4349",
+        "6fff0717-4144-4560-9175-56081052d11d"
+      ],
+      "confirmed_wall_thickness_mm": "0.8",
+      "legacy_product_slugs_sample": [
+        "odnostennyi-krepezh-homut-silovoi"
+      ],
+      "legacy_admin_content_migrated": true,
+      "_single_wall_outdoor_seo_previous": {
+        "description": "Назначение\n\nХомут силовой для консоли нужен для крепления дымохода к универсальной консоли. Он помогает соединить элемент дымохода с консолью в составе системы.\n\nГде применяется\n\nХомут используется при установке на сэндвич-трубу.\n\nСовместимость\n\nПодбирайте хомут для труб того же диаметра и производителя. Элементы с отличающимся диаметром и производителя не совместимы.\n\nДля сэндвич-систем крепёж подбирается по наружному диаметру элемента. Проверьте этот параметр перед оформлением комплекта.\n\nВарианты монтажа\n\nДля крепления дымохода к консоли просверлите отверстие в ушке хомута и закрепите его к консоли заклёпками. На одно ушко требуется минимум две заклёпки.\n\nЧто учитывать при подборе\n\nВ семействе представлены диаметры от 100 до 300 мм. Толщина стенки указана как 0,80 мм для всех вариантов семейства. Контур — одностенный.\n\nДля одностенного исполнения в правилах совместимости указано применение внутри помещения или на стартовом участке; для улицы и холодных зон — только сэндвич.\n\nРасчёт комплекта\n\nПодберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+      }
+    }
+  },
+  {
+    "type": "product",
+    "id": "d9b234fb-0a61-4312-b2fc-4974dfd79e49",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Одноконтурный хомут широкий — общий вид",
+          "url": "/media/catalog/categories/odnostennyi-krepezh-homut-shirokii/photo-1.png?v=1785864515524285980",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Одноконтурный хомут широкий — вид сверху",
+          "url": "/media/catalog/categories/odnostennyi-krepezh-homut-shirokii/photo-2.png?v=1785864665061751880",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": null,
+      "length_mm": null,
+      "seo_title": "Одноконтурный хомут широкий — крепёж для дымохода",
+      "source_file": "/tmp/price_list.json",
+      "raw_diameter": "Ø 100",
+      "source_sheet": "голые",
+      "raw_item_name": "Хомут широкий",
+      "seo_knowledge": {
+        "purpose": [
+          "Применятся для крепления соединений дымохода. Фирменые хомуты придают системе эстетичный внешний вид и надежное соединение элементов системы. Упрощает сборку дымохода"
+        ],
+        "fireSafety": [
+          "Без ограничений"
+        ],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "Одноконтурные и сендвич элементы того же диаметра и производителя"
+        ],
+        "selectionRules": [
+          "Следить за совпадением диаметров хому тов м системы"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "Не подходит для соединения элементов системы дымоходов других производителей и не верно подобраных диаметроа"
+        ],
+        "installationZones": [
+          "Соединения дымохода"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Монтаж элементов ситем дымохода  как внутри помещения так и на улице. Простота и скорость монтажа"
+        ],
+        "installationWarnings": [
+          "Не правильный подбор диаметра"
+        ]
+      },
+      "variant_model": "logical_product",
+      "source_section": "Труба без изоляции — ОЦИНКОВКА",
+      "seo_description": "Крепёж для соединений дымохода Дымоход Трейд: подберите диаметр {diameter}, проверьте производителя и рассчитайте совместимый комплект в конфигураторе.",
+      "outer_diameter_mm": null,
+      "source_item_index": 17,
+      "source_block_index": 1,
+      "legacy_product_count": 1,
+      "compatible_product_ids": [
+        "6fff0717-4144-4560-9175-56081052d11d"
+      ],
+      "legacy_product_slugs_sample": [
+        "odnostennyi-krepezh-homut-shirokii"
+      ],
+      "legacy_admin_content_migrated": true,
+      "_single_wall_indoor_copy_previous": {
+        "description": "Назначение\n\nХомут используют для крепления соединений дымохода. Он помогает соединить элементы системы и упрощает её сборку.\n\nГде применяется\n\nКрепление выполняют в зоне соединений дымохода. В материалах семейства указана установка как внутри помещения, так и на улице.\n\nСовместимость\n\nХомут подходит для одноконтурных и сэндвич-элементов того же диаметра и производителя. Для сэндвич-систем крепёж подбирают по наружному диаметру элемента. Соединять элементы дымохода других производителей или элементы с неподходящим диаметром нельзя.\n\nВарианты монтажа\n\nСемейство рассчитано на монтаж элементов дымохода внутри помещения и на улице. Для одноконтурных элементов применяйте вариант внутри помещения или на стартовом участке; для улицы и холодных зон в правилах совместимости указан сэндвич.\n\nЧто учитывать при подборе\n\nПроверьте совпадение диаметра хомута и системы. Если выбираете крепёж для сэндвич-элемента, ориентируйтесь на его наружный диаметр. Также убедитесь, что элементы относятся к тому же производителю.\n\nРасчёт комплекта\n\nПодберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+      },
+      "_demo_sandwich_pipe_previous_state": {
+        "is_active": true,
+        "attributes": {
+          "media": [
+            {
+              "alt": "Одноконтурный хомут широкий — общий вид",
+              "url": "/media/catalog/categories/odnostennyi-krepezh-homut-shirokii/photo-1.png?v=1785864515524285980",
+              "role": "general",
+              "file_name": "photo-1.png",
+              "diameter_specific": false
+            },
+            {
+              "alt": "Одноконтурный хомут широкий — вид сверху",
+              "url": "/media/catalog/categories/odnostennyi-krepezh-homut-shirokii/photo-2.png?v=1785864665061751880",
+              "role": "top",
+              "file_name": "photo-2.png",
+              "diameter_specific": false
+            }
+          ],
+          "angle_deg": null,
+          "length_mm": null,
+          "seo_title": "Одноконтурный хомут широкий — крепёж для дымохода",
+          "source_file": "/tmp/price_list.json",
+          "raw_diameter": "Ø 100",
+          "source_sheet": "голые",
+          "raw_item_name": "Хомут широкий",
+          "seo_knowledge": {
+            "purpose": [
+              "Применятся для крепления соединений дымохода. Фирменые хомуты придают системе эстетичный внешний вид и надежное соединение элементов системы. Упрощает сборку дымохода"
+            ],
+            "fireSafety": [
+              "Без ограничений"
+            ],
+            "sourceNotes": [],
+            "compatibleWith": [
+              "Одноконтурные и сендвич элементы того же диаметра и производителя"
+            ],
+            "selectionRules": [
+              "Следить за совпадением диаметров хому тов м системы"
+            ],
+            "configuratorCta": {
+              "href": "/#calculator",
+              "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+            },
+            "incompatibleWith": [
+              "Не подходит для соединения элементов системы дымоходов других производителей и не верно подобраных диаметроа"
+            ],
+            "installationZones": [
+              "Соединения дымохода"
+            ],
+            "requiredInputData": [],
+            "installationVariants": [
+              "Монтаж элементов ситем дымохода  как внутри помещения так и на улице. Простота и скорость монтажа"
+            ],
+            "installationWarnings": [
+              "Не правильный подбор диаметра"
+            ]
+          },
+          "variant_model": "logical_product",
+          "source_section": "Труба без изоляции — ОЦИНКОВКА",
+          "seo_description": "Крепёж для соединений дымохода Дымоход Трейд: подберите диаметр {diameter}, проверьте производителя и рассчитайте совместимый комплект в конфигураторе.",
+          "outer_diameter_mm": null,
+          "source_item_index": 17,
+          "source_block_index": 1,
+          "legacy_product_count": 1,
+          "compatible_product_ids": [
+            "6fff0717-4144-4560-9175-56081052d11d",
+            "3930de55-9178-47ab-9a3a-5ff2a3cc7db0"
+          ],
+          "legacy_product_slugs_sample": [
+            "odnostennyi-krepezh-homut-shirokii"
+          ],
+          "legacy_admin_content_migrated": true
+        }
+      }
+    }
+  },
+  {
+    "type": "product",
+    "id": "d8adc904-82ff-5c1e-b418-1a41983fc236",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Фланец декоративный — общий вид",
+          "url": "/media/catalog/categories/flanets-dekorativnyy/photo-1.png?v=1785920527878125440",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Фланец декоративный — вид сверху",
+          "url": "/media/catalog/categories/flanets-dekorativnyy/photo-2.png?v=1785920096673320111",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        }
+      ],
+      "seo_title": "Фланец Дымоход Трейд для прохода стены и кровли",
+      "seo_knowledge": {
+        "purpose": [
+          "Закрывает узел прохода дымохода в стенах, перекрытиях и кровле"
+        ],
+        "fireSafety": [],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "Совместимо с трубами того же диаметра. В угловом исполнении отверстие делается в зависимости от угла кровли"
+        ],
+        "selectionRules": [
+          "Следить за ширирой узла прохода дымохода что бы фланец перекрыл отверстие"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "С трубами другого диаметра"
+        ],
+        "installationZones": [
+          "Внутри помещений, на улице"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Монтаж в узлах прохода стен, перекрытий и кровли на саморезы."
+        ],
+        "installationWarnings": [
+          "Не правильно замеренный угол кровли. Не правильно подобранный диаметр отверстия и габариты самого фланца относительно перекрываемого узла прохода лымохода"
+        ]
+      },
+      "variant_model": "logical_product",
+      "seo_description": "Декоративный фланец для узлов прохода дымохода через стену, перекрытие и кровлю. Подберите вариант по диаметру {diameter} и рассчитайте полный комплект в конфигураторе.",
+      "price_source_sheet": "Фланцы",
+      "compatible_product_ids": [
+        "6fff0717-4144-4560-9175-56081052d11d",
+        "aa58f093-0792-423a-a0a0-fb361f5d4349"
+      ]
+    }
+  },
+  {
+    "type": "product",
+    "id": "8516ec0f-252d-4eaa-a5e5-fa1ca58fc03b",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Сэндвич-тройник с К/О 90° — общий вид",
+          "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-1.png?v=1785933704637510506",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-тройник с К/О 90° — вид сверху",
+          "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-2.png?v=1785933718619603908",
+          "role": "top",
+          "file_name": "photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "alt": "Сэндвич-тройник с К/О 90° — порты / присоединение",
+          "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-3.png?v=1785933721724624629",
+          "role": "connection",
+          "file_name": "photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": 90,
+      "length_mm": null,
+      "source_file": "/tmp/50mm.json",
+      "raw_diameter": "Ø 100/200",
+      "source_sheet": "Лист1",
+      "raw_item_name": "Тройник с К/О  90гр",
+      "variant_model": "logical_product",
+      "outer_material": "оцинковка",
+      "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+      "catalog_angle_deg": 90,
+      "logical_item_name": "Тройник с К/О 90гр",
+      "outer_diameter_mm": 200,
+      "outer_steel_grade": null,
+      "source_item_index": 8,
+      "source_block_index": 1,
+      "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+      "legacy_product_count": 1,
+      "outer_wall_thickness_mm": null,
+      "_seo_public_slug_previous": "sendvich-troi-nik-troi-nik-s-k-o-90gr",
+      "_tee_angle_previous_state": {
+        "name": "Сэндвич-тройник с К/О 90°",
+        "slug": "sendvich-troi-nik-troi-nik-s-k-o-90gr",
+        "is_active": true,
+        "attributes": {
+          "angle_deg": 90,
+          "length_mm": null,
+          "source_file": "/tmp/50mm.json",
+          "raw_diameter": "Ø 100/200",
+          "source_sheet": "Лист1",
+          "raw_item_name": "Тройник с К/О  90гр",
+          "variant_model": "logical_product",
+          "outer_material": "оцинковка",
+          "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+          "outer_diameter_mm": 200,
+          "outer_steel_grade": null,
+          "source_item_index": 8,
+          "source_block_index": 1,
+          "insulation_material": "Rockwool Wired Mat 105 (толщина 50мм)",
+          "legacy_product_count": 1,
+          "outer_wall_thickness_mm": null,
+          "legacy_product_slugs_sample": [
+            "sendvich-troi-nik-troi-nik-s-k-o-90gr"
+          ]
+        }
+      },
+      "legacy_product_slugs_sample": [
+        "sendvich-troi-nik-troi-nik-s-k-o-90gr"
+      ],
+      "legacy_admin_content_migrated": true
+    }
+  },
+  {
+    "type": "product",
+    "id": "a53b7dad-2272-53d0-9af5-25a169c9ff68",
+    "attribute": "extra_attributes",
+    "value": {
+      "media": [
+        {
+          "alt": "Декоративная юбка — общий вид",
+          "url": "/media/catalog/categories/dekorativnaya-yubka/photo-1.png?v=1785948958665733793",
+          "role": "general",
+          "file_name": "photo-1.png",
+          "diameter_specific": false
+        }
+      ],
+      "angle_deg": null,
+      "length_mm": null,
+      "seo_title": "Дымоход Трейд — декоративная юбка для трубы Ø{diameter}",
+      "source_file": "/tmp/price_list.json",
+      "raw_diameter": "Ø 100",
+      "source_sheet": "голые",
+      "raw_item_name": "Прочистка/юбка",
+      "seo_knowledge": {
+        "purpose": [
+          "Декоративный элемент"
+        ],
+        "fireSafety": [],
+        "sourceNotes": [],
+        "compatibleWith": [
+          "С трубами того же диаметра"
+        ],
+        "selectionRules": [
+          "Следить за диаметром трубы"
+        ],
+        "configuratorCta": {
+          "href": "/#calculator",
+          "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+        },
+        "incompatibleWith": [
+          "Трубами другогоо диаметра"
+        ],
+        "installationZones": [
+          "Устанавливается на одноконтурную или сендвич трубу в местах прохода трассы через стены или перекрытие"
+        ],
+        "requiredInputData": [],
+        "installationVariants": [
+          "Открутите соединение болт/гайка. Наденьте юбку на трубу и закрутите соединение"
+        ],
+        "installationWarnings": [
+          "Крепится на ровный участок трубы, не допускать попадания порта соединения труб в место прохода перекрытия или стены"
+        ]
+      },
+      "variant_model": "logical_product",
+      "source_section": "Труба без изоляции — ОЦИНКОВКА",
+      "seo_description": "Декоративная юбка Дымоход Трейд для прохода трубы через стену или перекрытие. Диаметр {diameter} мм, совместимость с трубой того же диаметра. Рассчитайте комплект.",
+      "logical_item_name": "Декоративная юбка",
+      "outer_diameter_mm": null,
+      "source_item_index": 13,
+      "source_block_index": 1,
+      "legacy_product_count": 1,
+      "compatible_product_ids": [
+        "aa58f093-0792-423a-a0a0-fb361f5d4349",
+        "6fff0717-4144-4560-9175-56081052d11d"
+      ],
+      "source_price_item_name": "Прочистка/юбка",
+      "legacy_product_slugs_sample": [
+        "odnostennyi-reviziya-prochistka-yubka"
+      ],
+      "legacy_admin_content_migrated": true,
+      "owner_confirmed_price_row_split": true,
+      "_single_wall_indoor_copy_previous": {
+        "description": "Назначение\nДекоративная юбка используется для оформления места, где трасса дымохода проходит через стену или перекрытие.\n\nГде применяется\nЭлемент устанавливают на одноконтурную или сэндвич-трубу в местах прохода трассы через стены или перекрытия.\n\nСовместимость\nЮбка подходит для труб того же диаметра. С трубой другого диаметра её не используют. Одноконтурный элемент применяют внутри помещения или на стартовом участке; для улицы и холодных зон используют сэндвич.\n\nВарианты монтажа\nОткрутите соединение болт/гайка, наденьте юбку на трубу и закрутите соединение. Крепите её на ровный участок трубы. Не допускайте попадания порта соединения труб в место прохода перекрытия или стены.\n\nЧто учитывать при подборе\nВ семействе представлены диаметры от 100 до 300 мм. При выборе проверьте, совпадает ли диаметр юбки с диаметром трубы. Толщина стенки составляет 0,50 мм.\n\nРасчёт комплекта\nПодберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе."
+      }
+    }
+  },
+  {
+    "type": "sku",
+    "id": "d87561ab-9633-40b0-8162-3a779318405b",
+    "attribute": "attributes",
+    "value": {
+      "diameter_mm": 100,
+      "outer_diameter_mm": 200,
+      "length_mm": null,
+      "angle_deg": null,
+      "source_sheet": "Лист1",
+      "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+      "raw_item_name": "Заглушка опорная",
+      "raw_diameter": "Ø 100/200",
+      "material": "оцинковка",
+      "steel_grade": null,
+      "wall_thickness_mm": null,
+      "contour": "сэндвич",
+      "insulation_mm": 50,
+      "sku_media": [
+        {
+          "url": "/media/catalog/skus/dt-sw50-01-11-d100-200/sku-photo-3.png?v=1785860071102410404",
+          "alt": "Заглушка опорная, Ø100/200, оцинковка, изоляция 50 мм (DT-SW50-01-11-D100-200) — порты / присоединение",
+          "role": "connection",
+          "file_name": "sku-photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "_support_catalog_previous_state": {
+        "product_id": "cd8fec61-d46b-42d6-9372-b3f29db4b734",
+        "name": "Заглушка опорная, Ø100/200, оцинковка, изоляция 50 мм",
+        "slug": "d100-200",
+        "is_active": true,
+        "attributes": {
+          "diameter_mm": 100,
+          "outer_diameter_mm": 200,
+          "length_mm": null,
+          "angle_deg": null,
+          "source_sheet": "Лист1",
+          "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+          "raw_item_name": "Заглушка опорная",
+          "raw_diameter": "Ø 100/200",
+          "material": "оцинковка",
+          "steel_grade": null,
+          "wall_thickness_mm": null,
+          "contour": "сэндвич",
+          "insulation_mm": 50,
+          "sku_media": [
+            {
+              "url": "/media/catalog/skus/dt-sw50-01-11-d100-200/sku-photo-3.png?v=1785839037957517328",
+              "alt": "Заглушка опорная, Ø100/200, оцинковка, изоляция 50 мм (DT-SW50-01-11-D100-200) — порты / присоединение",
+              "role": "connection",
+              "file_name": "sku-photo-3.png",
+              "diameter_specific": false
+            }
+          ]
+        }
+      },
+      "_outer_pipe_attributes_previous_state": {
+        "outer_material": {
+          "present": false,
+          "value": null
+        },
+        "outer_steel_grade": {
+          "present": false,
+          "value": null
+        },
+        "outer_wall_thickness_mm": {
+          "present": false,
+          "value": null
+        }
+      },
+      "outer_material": "оцинковка",
+      "outer_steel_grade": null,
+      "outer_wall_thickness_mm": null
+    }
+  },
+  {
+    "type": "sku",
+    "id": "067fda48-5170-415f-807b-dd4f2e550240",
+    "attribute": "attributes",
+    "value": {
+      "diameter_mm": 100,
+      "outer_diameter_mm": null,
+      "length_mm": 1000,
+      "angle_deg": null,
+      "source_sheet": "голые",
+      "source_section": "Труба без изоляции — ОЦИНКОВКА",
+      "raw_item_name": "ТрубаL=1000 мм",
+      "raw_diameter": "Ø 100",
+      "material": "оцинковка",
+      "steel_grade": null,
+      "wall_thickness_mm": null,
+      "contour": "одностенный",
+      "insulation_mm": null,
+      "sku_media": [
+        {
+          "url": "/media/catalog/skus/dt-golye-01-00-d100/sku-photo-1.png?v=1785760211197343668",
+          "alt": "ТрубаL=1000 мм, Ø100, оцинковка (DT-GOLYE-01-00-D100) — общий вид",
+          "role": "general",
+          "file_name": "sku-photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "url": "/media/catalog/skus/dt-golye-01-00-d100/sku-photo-2.png?v=1785833883680612738",
+          "alt": "ТрубаL=1000 мм, Ø100, оцинковка (DT-GOLYE-01-00-D100) — вид сверху",
+          "role": "top",
+          "file_name": "sku-photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "url": "/media/catalog/skus/dt-golye-01-00-d100/sku-photo-3.png?v=1785833504669701381",
+          "alt": "ТрубаL=1000 мм, Ø100, оцинковка (DT-GOLYE-01-00-D100) — порты / присоединение",
+          "role": "connection",
+          "file_name": "sku-photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "sku_photo": {
+        "url": "/media/catalog/skus/dt-golye-01-00-d100/sku-photo-1.png?v=1785760211197343668",
+        "alt": "ТрубаL=1000 мм, Ø100, оцинковка (DT-GOLYE-01-00-D100) — общий вид",
+        "role": "general",
+        "file_name": "sku-photo-1.png",
+        "diameter_specific": false
+      }
+    }
+  },
+  {
+    "type": "sku",
+    "id": "97d751c5-7ff0-4fcb-8601-c94e24d418cc",
+    "attribute": "attributes",
+    "value": {
+      "diameter_mm": 100,
+      "outer_diameter_mm": 200,
+      "length_mm": 1000,
+      "angle_deg": null,
+      "source_sheet": "Лист1",
+      "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+      "raw_item_name": "Труба L=1000мм",
+      "raw_diameter": "Ø 100/200",
+      "material": "оцинковка",
+      "steel_grade": null,
+      "wall_thickness_mm": null,
+      "contour": "сэндвич",
+      "insulation_mm": 50,
+      "sku_media": [
+        {
+          "url": "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-1.png?v=1785788372184210075",
+          "alt": "Труба L=1000мм, Ø100/200, оцинковка, изоляция 50 мм (DT-SW50-01-00-D100-200) — общий вид",
+          "role": "general",
+          "file_name": "sku-photo-1.png",
+          "diameter_specific": false
+        },
+        {
+          "url": "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-2.png?v=1785788380735280240",
+          "alt": "Труба L=1000мм, Ø100/200, оцинковка, изоляция 50 мм (DT-SW50-01-00-D100-200) — вид сверху",
+          "role": "top",
+          "file_name": "sku-photo-2.png",
+          "diameter_specific": false
+        },
+        {
+          "url": "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-3.png?v=1785788386059323797",
+          "alt": "Труба L=1000мм, Ø100/200, оцинковка, изоляция 50 мм (DT-SW50-01-00-D100-200) — порты / присоединение",
+          "role": "connection",
+          "file_name": "sku-photo-3.png",
+          "diameter_specific": false
+        }
+      ],
+      "sku_photo": {
+        "url": "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-1.png?v=1785788372184210075",
+        "alt": "Труба L=1000мм, Ø100/200, оцинковка, изоляция 50 мм (DT-SW50-01-00-D100-200) — общий вид",
+        "role": "general",
+        "file_name": "sku-photo-1.png",
+        "diameter_specific": false
+      },
+      "_outer_pipe_attributes_previous_state": {
+        "outer_material": {
+          "present": false,
+          "value": null
+        },
+        "outer_steel_grade": {
+          "present": false,
+          "value": null
+        },
+        "outer_wall_thickness_mm": {
+          "present": false,
+          "value": null
+        }
+      },
+      "outer_material": "оцинковка",
+      "outer_steel_grade": null,
+      "outer_wall_thickness_mm": null
+    }
+  },
+  {
+    "type": "sku",
+    "id": "07fb4238-e2a8-42db-9ba5-5474f1ab5f6d",
+    "attribute": "attributes",
+    "value": {
+      "diameter_mm": 100,
+      "outer_diameter_mm": 200,
+      "length_mm": 500,
+      "angle_deg": null,
+      "source_sheet": "Лист1",
+      "source_section": "Внутренняя труба — ОЦИНКОВКА / Наружный кожух — ОЦИНКОВКА / Изоляция — Rockwool Wired Mat 105 (толщина 50мм)",
+      "raw_item_name": "Труба L=500 мм",
+      "raw_diameter": "Ø 100/200",
+      "material": "оцинковка",
+      "steel_grade": null,
+      "wall_thickness_mm": null,
+      "contour": "сэндвич",
+      "insulation_mm": 50,
+      "sku_media": [
+        {
+          "url": "/media/catalog/skus/dt-sw50-01-02-d100-200/sku-photo-1.png?v=1785832014302450605",
+          "alt": "Труба L=500 мм, Ø100/200, оцинковка, изоляция 50 мм (DT-SW50-01-02-D100-200) — общий вид",
+          "role": "general",
+          "file_name": "sku-photo-1.png",
+          "diameter_specific": false
+        }
+      ],
+      "sku_photo": {
+        "url": "/media/catalog/skus/dt-sw50-01-02-d100-200/sku-photo-1.png?v=1785832014302450605",
+        "alt": "Труба L=500 мм, Ø100/200, оцинковка, изоляция 50 мм (DT-SW50-01-02-D100-200) — общий вид",
+        "role": "general",
+        "file_name": "sku-photo-1.png",
+        "diameter_specific": false
+      },
+      "_outer_pipe_attributes_previous_state": {
+        "outer_material": {
+          "present": false,
+          "value": null
+        },
+        "outer_steel_grade": {
+          "present": false,
+          "value": null
+        },
+        "outer_wall_thickness_mm": {
+          "present": false,
+          "value": null
+        }
+      },
+      "outer_material": "оцинковка",
+      "outer_steel_grade": null,
+      "outer_wall_thickness_mm": null
+    }
+  }
+]

@@ -27,6 +27,34 @@ def test_verified_passage_products_have_expected_variant_counts() -> None:
     assert sum(len(item.skus) for item in PRODUCT_SEEDS) == 104
 
 
+def test_floor_passage_glass_is_galvanized_only() -> None:
+    passage_glass = product("prohodnoy-stakan")
+
+    assert passage_glass.extra_attributes["owner_confirmed_material"] == "оцинковка"
+    assert [item.article for item in passage_glass.skus] == [
+        "DT-PASSAGE-GLASS-GALV-D100-200",
+        "DT-PASSAGE-GLASS-GALV-D210-280",
+        "DT-PASSAGE-GLASS-GALV-D300-400",
+    ]
+    assert all(item.material == "оцинковка" for item in passage_glass.skus)
+    assert all(item.steel_grade is None for item in passage_glass.skus)
+    assert [item.price_rub for item in passage_glass.skus] == [
+        Decimal("1760"),
+        Decimal("2090"),
+        Decimal("2475"),
+    ]
+    assert [item.attributes["base_size"] for item in passage_glass.skus] == [
+        "500×500 мм",
+        "600×600 мм",
+        "700×700 мм",
+    ]
+    assert [item.attributes["sleeve_diameter_mm"] for item in passage_glass.skus] == [
+        400,
+        400,
+        450,
+    ]
+
+
 def test_upk_prices_and_dimensions_are_transcribed_from_json_table() -> None:
     first = sku("prohodnoy-uzel-krovli-upk-do-45", "DT-UPK-GALV-D100-125")
     angled_range = sku("prohodnoy-uzel-krovli-upk-do-45", "DT-UPK-430-D215-245")
@@ -62,4 +90,3 @@ def test_confirmed_mounting_products_keep_source_prices_and_roles() -> None:
     assert floor_console.price_rub == Decimal("2500")
     assert product("konsol-teleskopicheskaya").extra_attributes["mounting_type"] == "напольная"
     assert floor_clamp.extra_attributes["diameter_boundary_needs_review"] is True
-

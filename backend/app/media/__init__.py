@@ -1,0 +1,1 @@
+"""Catalog media processing helpers."""

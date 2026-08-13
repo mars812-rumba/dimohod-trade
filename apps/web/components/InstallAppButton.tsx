@@ -1,6 +1,7 @@
 "use client";
 
 import { Download } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type BeforeInstallPromptEvent = Event & {
@@ -15,10 +16,17 @@ type NavigatorWithStandalone = Navigator & {
 declare global {
   interface Window {
     __dimohodInstallPrompt?: BeforeInstallPromptEvent;
+    __dimohodInstallPromptPath?: string;
   }
 }
 
+function isAdminPath(pathname: string) {
+  return /(^|\/)admin(?:\/|$)/.test(pathname);
+}
+
 export function InstallAppButton() {
+  const pathname = usePathname();
+  const installsAdmin = isAdminPath(pathname);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
@@ -28,7 +36,9 @@ export function InstallAppButton() {
       setIsInstalled(standaloneMedia.matches || Boolean((navigator as NavigatorWithStandalone).standalone));
     };
     const captureInstallPrompt = () => {
-      setInstallPrompt(window.__dimohodInstallPrompt ?? null);
+      const prompt = window.__dimohodInstallPrompt ?? null;
+      const promptPath = window.__dimohodInstallPromptPath ?? window.location.pathname;
+      setInstallPrompt(prompt && isAdminPath(promptPath) === installsAdmin ? prompt : null);
     };
     const markInstalled = () => {
       setIsInstalled(true);
@@ -46,7 +56,7 @@ export function InstallAppButton() {
       window.removeEventListener("dimohod:pwa-install-ready", captureInstallPrompt);
       window.removeEventListener("appinstalled", markInstalled);
     };
-  }, []);
+  }, [installsAdmin]);
 
   if (isInstalled || !installPrompt) return null;
 
@@ -57,6 +67,7 @@ export function InstallAppButton() {
     const choice = await prompt.userChoice;
     if (choice.outcome === "accepted") setIsInstalled(true);
     window.__dimohodInstallPrompt = undefined;
+    window.__dimohodInstallPromptPath = undefined;
     setInstallPrompt(null);
   }
 
@@ -65,11 +76,13 @@ export function InstallAppButton() {
       <button
         className="install-app-button"
         onClick={installApp}
-        title="Установить веб-приложение"
+        title={installsAdmin ? "Установить админку" : "Установить веб-приложение"}
         type="button"
       >
         <Download aria-hidden size={16} />
-        <span className="install-app-label">Установить</span>
+        <span className="install-app-label">
+          {installsAdmin ? "Установить админку" : "Установить"}
+        </span>
       </button>
     </div>
   );

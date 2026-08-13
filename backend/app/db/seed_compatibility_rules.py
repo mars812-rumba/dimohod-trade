@@ -61,17 +61,6 @@ DEFAULT_RULES: list[dict[str, Any]] = [
         "message": "Сэндвич-вариант подходит для наружных и холодных участков дымохода.",
     },
     {
-        "code": "single_wall_indoor_only",
-        "name": "Одноконтурные элементы только для теплой зоны",
-        "description": "Одноконтурные элементы не должны применяться на улице без утепления.",
-        "rule_type": "variant",
-        "applies_to_product_kind": None,
-        "conditions": {"contour": "одностенный"},
-        "result": {"allowed_zones": ["indoor", "start_section"], "forbidden_zones": ["outdoor", "attic", "roof"]},
-        "severity": "warning",
-        "message": "Одноконтурный элемент использовать внутри помещения или на стартовом участке; улица и холодные зоны — только сэндвич.",
-    },
-    {
         "code": "sandwich_insulation_required",
         "name": "Сэндвич должен иметь толщину утепления",
         "description": "Для сэндвич-варианта нужна структурированная толщина изоляции.",
@@ -142,14 +131,14 @@ DEFAULT_RULES: list[dict[str, Any]] = [
     },
     {
         "code": "aisi_430_inner_pipe_limited",
-        "name": "AISI 430 имеет ограниченное применение во внутренней трубе",
+        "name": "AISI 430 имеет ограниченное применение во внутреннем дымовом канале",
         "description": (
             "Подтвержденный владельцем эконом-вариант без конденсата, который не следует "
-            "выбирать автоматически для внутреннего дымового канала."
+            "выбирать автоматически для внутреннего дымового канала сэндвич-элементов."
         ),
         "rule_type": "variant",
-        "applies_to_product_kind": "труба",
-        "conditions": {"steel_grade": "AISI 430"},
+        "applies_to_product_kind": None,
+        "conditions": {"contour": "сэндвич", "steel_grade": "AISI 430"},
         "result": {"autoselect_allowed": False, "needs_review": True},
         "severity": "warning",
         "message": (

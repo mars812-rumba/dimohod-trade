@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-chimney}
       POSTGRES_USER: ${POSTGRES_USER:-chimney}
@@ -15,6 +16,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -24,6 +26,7 @@ services:
   backend:
     build:
       context: ./backend
+    restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://chimney:chimney@postgres:5432/chimney}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
@@ -31,8 +34,16 @@ services:
       MEDIA_STORAGE_DIR: ${MEDIA_STORAGE_DIR:-/app/storage}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_SEO_MODEL: ${OPENAI_SEO_MODEL:-gpt-5.6-luna}
+      LEAD_RECIPIENT_EMAIL: ${LEAD_RECIPIENT_EMAIL:-office@dimohod-trade.pro}
+      LEAD_FROM_EMAIL: ${LEAD_FROM_EMAIL:-office@dimohod-trade.pro}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_USE_SSL: ${SMTP_USE_SSL:-false}
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,17 +60,18 @@ services:
       context: ./apps/web
       args:
         API_BASE_URL: ${API_BASE_URL:-http://backend:8000}
-        NEXT_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
+        NEXT_BASE_PATH: ${NEXT_BASE_PATH-/dimohod}
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
-        NEXT_PUBLIC_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
+        NEXT_PUBLIC_BASE_PATH: ${NEXT_BASE_PATH-/dimohod}
+    restart: unless-stopped
     environment:
       API_BASE_URL: ${API_BASE_URL:-http://backend:8000}
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
-      NEXT_PUBLIC_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
+      NEXT_PUBLIC_BASE_PATH: ${NEXT_BASE_PATH-/dimohod}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://sunny-rentals.online/dimohod}
-      NEXT_BASE_PATH: ${NEXT_BASE_PATH:-/dimohod}
+      NEXT_BASE_PATH: ${NEXT_BASE_PATH-/dimohod}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       - backend
 

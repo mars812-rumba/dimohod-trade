@@ -13,7 +13,12 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine import Connection
 
-from app.db.passage_catalog_data import CATEGORY_SEEDS, PRODUCT_SEEDS, SOURCE_NAME
+from app.db.passage_catalog_data import (
+    CATEGORY_SEEDS,
+    PASSAGE_GLASS_RETIRED_SKU_ARTICLES,
+    PRODUCT_SEEDS,
+    SOURCE_NAME,
+)
 
 
 revision: str = "202608040001"
@@ -293,6 +298,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     bind = op.get_bind()
     articles = [sku.article for product in PRODUCT_SEEDS for sku in product.skus]
+    articles.extend(PASSAGE_GLASS_RETIRED_SKU_ARTICLES)
     bind.execute(sa.delete(skus).where(skus.c.article.in_(articles)))
     bind.execute(sa.delete(products).where(products.c.slug.in_([seed.slug for seed in PRODUCT_SEEDS])))
     bind.execute(sa.delete(needs_review).where(needs_review.c.id == REVIEW_ID))

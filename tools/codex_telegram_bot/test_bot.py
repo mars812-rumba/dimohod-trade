@@ -4,11 +4,13 @@ import subprocess
 import tempfile
 import time
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
 from tools.codex_telegram_bot.bot import (
     CODEX_MODELS,
+    OpenAIQuotaError,
     PROJECT_INSTRUCTIONS,
     SUNNY_PROJECT_INSTRUCTIONS,
     BotApplication,
@@ -27,20 +29,51 @@ from tools.codex_telegram_bot.bot import (
     commit_message_from_prompt,
     detect_natural_confirmation,
     detect_natural_release_intent,
+    discover_openai_keys,
     extract_file_requests,
     extract_openai_output_text,
     graphify_query_context,
+    is_missing_rollout_error,
     is_protected_commit_path,
     load_dotenv,
     model_keyboard,
+    openai_key_keyboard,
+    recovery_context_prompt,
     natural_image_prompt,
     safe_project_file,
+    safe_markdown_filename,
     split_message,
     task_changed_paths,
 )
 
 
 class BotUtilitiesTest(unittest.TestCase):
+    def test_discovers_numbered_openai_keys_in_order(self) -> None:
+        keys = discover_openai_keys(
+            {
+                "OPENAI_API_KEY_3": "third",
+                "OPENAI_API_KEY": "first",
+                "OPENAI_API_KEY_2": "second",
+                "OPENAI_API_KEY_4": "",
+                "OPENAI_IMAGE_MODEL": "ignored",
+            }
+        )
+        self.assertEqual(
+            keys,
+            [
+                ("OPENAI_API_KEY", "first"),
+                ("OPENAI_API_KEY_2", "second"),
+                ("OPENAI_API_KEY_3", "third"),
+            ],
+        )
+
+    def test_openai_key_keyboard_marks_selected_key(self) -> None:
+        keyboard = openai_key_keyboard([("one", "a"), ("two", "b")], 1)
+        buttons = keyboard["inline_keyboard"][0]
+        self.assertEqual([button["callback_data"] for button in buttons], ["openai_key:0", "openai_key:1"])
+        self.assertNotIn("✅", buttons[0]["text"])
+        self.assertIn("✅", buttons[1]["text"])
+
     def test_split_message_preserves_content(self) -> None:
         text = "первая строка\n" + "слово " * 100
         chunks = split_message(text, limit=80)
@@ -61,6 +94,12 @@ class BotUtilitiesTest(unittest.TestCase):
             self.assertEqual(safe_project_file(root, "ok.txt"), allowed.resolve())
             with self.assertRaises(ValueError):
                 safe_project_file(root, "../secret.txt")
+
+    def test_safe_markdown_filename_accepts_markdown_and_blocks_other_files(self) -> None:
+        self.assertEqual(safe_markdown_filename("docs/ТЗ проекта.md"), "ТЗ проекта.md")
+        self.assertEqual(safe_markdown_filename("NOTES.MARKDOWN"), "NOTES.MARKDOWN")
+        with self.assertRaises(ValueError):
+            safe_markdown_filename("secrets.env")
 
     def test_extract_openai_output_text_supports_responses_shape(self) -> None:
         result = {
@@ -209,6 +248,30 @@ class BotUtilitiesTest(unittest.TestCase):
         self.assertIn("commit skipped", output)
         self.assertIn("deploy ok", output)
 
+    def test_remote_deploy_syncs_code_storage_and_runs_fixed_script(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "storage").mkdir()
+            key = root / "deploy-key"
+            key.write_text("private key placeholder", encoding="utf-8")
+            config = replace(
+                build_project_configs(root)["dimohod"],
+                remote_deploy_host="deploy@example.test",
+                remote_deploy_root="/opt/dimohod-trade",
+                remote_deploy_key=key,
+            )
+            manager = ReleaseManager(root, config=config)
+            with patch(
+                "tools.codex_telegram_bot.bot.run_host_command",
+                return_value="ok",
+            ) as mocked:
+                output = manager.deploy_remote()
+            commands = [call.args[0] for call in mocked.call_args_list]
+            self.assertEqual([command[0] for command in commands], ["rsync", "ssh"])
+            self.assertIn("--exclude=/.env", commands[0])
+            self.assertEqual(commands[-1][-1], "/opt/dimohod-trade/deploy/remote-deploy.sh")
+            self.assertIn("ok", output)
+
     def test_load_dotenv_does_not_override_environment(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             env_file = Path(temp_dir) / ".env"
@@ -265,6 +328,22 @@ class BotUtilitiesTest(unittest.TestCase):
             self.assertIn(str(sunny), sunny_command)
             self.assertEqual(dim_command[-3:], ["resume", "dim-thread", "задача"])
             self.assertEqual(sunny_command[-3:], ["resume", "sun-thread", "задача"])
+            self.assertEqual(
+                dim_command[dim_command.index("--sandbox") + 1],
+                "danger-full-access",
+            )
+            self.assertEqual(
+                dim_command[dim_command.index("--ask-for-approval") + 1],
+                "on-request",
+            )
+            self.assertLess(
+                dim_command.index("--ask-for-approval"), dim_command.index("exec")
+            )
+            self.assertEqual(
+                sunny_command[sunny_command.index("--sandbox") + 1],
+                "workspace-write",
+            )
+            self.assertNotIn("--ask-for-approval", sunny_command)
 
     def test_new_sunny_session_uses_sunny_instructions(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -292,6 +371,40 @@ class BotUtilitiesTest(unittest.TestCase):
             self.assertEqual(state.get_active_project(10), "dimohod")
             state.set_active_project(10, "sunny")
             self.assertEqual(state.get_active_project(10), "sunny")
+
+    def test_context_history_is_scoped_and_bounded(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            state = StateStore(Path(temp_dir) / "state.json")
+            for index in range(7):
+                state.add_context_history(10, "dimohod", f"task {index}", f"answer {index}")
+            state.add_context_history(10, "sunny", "sunny task", "sunny answer")
+            history = state.get_context_history(10, "dimohod")
+            self.assertEqual(len(history), 5)
+            self.assertEqual(history[0]["prompt"], "task 2")
+            self.assertEqual(
+                state.get_context_history(10, "sunny")[0]["response"],
+                "sunny answer",
+            )
+
+    def test_recovery_prompt_contains_history_and_current_request(self) -> None:
+        prompt = recovery_context_prompt(
+            "продолжай",
+            [{"prompt": "исправь меню", "response": "меню исправлено"}],
+        )
+        self.assertIn("исправь меню", prompt)
+        self.assertIn("меню исправлено", prompt)
+        self.assertTrue(prompt.endswith("продолжай"))
+
+    def test_missing_rollout_error_is_detected_from_codex_event(self) -> None:
+        summary = StatusSummary()
+        consume_codex_event(
+            {
+                "type": "turn.failed",
+                "error": "thread/resume failed: no rollout found for thread id abc",
+            },
+            summary,
+        )
+        self.assertTrue(is_missing_rollout_error(summary, ""))
 
     def test_model_selection_changes_command_and_keeps_project_thread(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -354,6 +467,63 @@ class BotUtilitiesTest(unittest.TestCase):
             self.assertTrue(app.has_pending_album(1))
             assert album.timer is not None
             album.timer.cancel()
+
+    def test_openai_quota_falls_back_and_persists_next_key(self) -> None:
+        class FakeAPI:
+            def __init__(self):
+                self.messages = []
+
+            def send_message(self, chat_id, message, *args, **kwargs):
+                self.messages.append((chat_id, message))
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            state = StateStore(root / "state.json")
+            api = FakeAPI()
+            app = BotApplication(
+                api,
+                state,
+                object(),
+                root,
+                [("OPENAI_API_KEY", "exhausted"), ("OPENAI_API_KEY_2", "working")],
+                "transcribe",
+                "vision",
+                "image",
+                "1024x1024",
+                "medium",
+            )
+            calls = []
+
+            def operation(key):
+                calls.append(key)
+                if key == "exhausted":
+                    raise OpenAIQuotaError("insufficient_quota")
+                return "ok"
+
+            self.assertEqual(app.run_openai_with_fallback(7, operation), "ok")
+            self.assertEqual(calls, ["exhausted", "working"])
+            self.assertEqual(state.get_openai_key_index(7, 2), 1)
+            self.assertIn("Переключаюсь на API 2", api.messages[0][1])
+
+    def test_non_quota_openai_error_does_not_switch_key(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            state = StateStore(root / "state.json")
+            app = BotApplication(
+                object(),
+                state,
+                object(),
+                root,
+                [("OPENAI_API_KEY", "first"), ("OPENAI_API_KEY_2", "second")],
+                "transcribe",
+                "vision",
+                "image",
+                "1024x1024",
+                "medium",
+            )
+            with self.assertRaisesRegex(RuntimeError, "network"):
+                app.run_openai_with_fallback(7, lambda key: (_ for _ in ()).throw(RuntimeError("network")))
+            self.assertEqual(state.get_openai_key_index(7, 2), 0)
 
     def test_codex_events_update_status(self) -> None:
         summary = StatusSummary(started_at=time.monotonic())

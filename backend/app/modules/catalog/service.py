@@ -17,6 +17,11 @@ def category_cover(extra_attributes: dict[str, object] | None) -> CatalogMediaIt
         return None
     return CatalogMediaItem(
         url=value["url"],
+        thumbnail_url=value.get("thumbnail_url")
+        if isinstance(value.get("thumbnail_url"), str)
+        else None,
+        width=value.get("width") if isinstance(value.get("width"), int) else None,
+        height=value.get("height") if isinstance(value.get("height"), int) else None,
         alt=value.get("alt") if isinstance(value.get("alt"), str) else None,
         role=value.get("role") if isinstance(value.get("role"), str) else None,
     )

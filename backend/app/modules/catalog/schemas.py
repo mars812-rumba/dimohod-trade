@@ -5,6 +5,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class CatalogMediaItem(BaseModel):
     url: str
+    thumbnail_url: str | None = None
+    width: int | None = None
+    height: int | None = None
     alt: str | None = None
     role: str | None = None
 

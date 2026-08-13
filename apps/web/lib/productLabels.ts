@@ -19,3 +19,22 @@ export function steelWithThicknessLabel(
   const thicknessLabel = compactMillimeterValue(thickness);
   return thicknessLabel ? `${steel} · ${thicknessLabel} мм` : steel;
 }
+
+type ProductKindSource = {
+  product_kind: string | null;
+  category: {
+    slug: string;
+  };
+};
+
+const laserWeldedPipeCategorySlugs = new Set([
+  "odnokonturnye-truby",
+  "sendvich-truby",
+]);
+
+export function isLaserWeldedPipe(product: ProductKindSource) {
+  return (
+    product.product_kind?.trim().toLocaleLowerCase("ru-RU") === "труба" &&
+    laserWeldedPipeCategorySlugs.has(product.category.slug)
+  );
+}
