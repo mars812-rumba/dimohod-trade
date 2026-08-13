@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro"),
   title: "Dimohod Trade",
   description: "Каталог и калькулятор дымоходных систем.",
+  verification: {
+    yandex: "a3fb57efea3419b2",
+  },
   manifest: `${basePath}/manifest.webmanifest`,
   icons: {
     icon: [
