@@ -22,6 +22,7 @@ import {
   type ScenarioIconName,
   type ScenarioPageContent,
 } from "@/lib/scenarioPages";
+import { BanyaIntakeFlow } from "./BanyaIntakeFlow";
 import styles from "./ScenarioPageTemplate.module.css";
 
 const iconByName: Record<ScenarioIconName, LucideIcon> = {
@@ -66,14 +67,21 @@ export function ScenarioPageTemplate({
             <h1>{content.title}</h1>
             <p className={styles.heroSummary}>{content.summary}</p>
             <div className={styles.heroActions}>
-              <Link className={styles.primaryButton} href={configuratorHref}>
-                Подобрать комплект
+              <Link
+                className={styles.primaryButton}
+                href={content.interactiveIntake ? "#scenario-intake" : configuratorHref}
+              >
+                {content.heroPrimaryLabel ?? "Подобрать комплект"}
                 <ArrowRight size={18} aria-hidden />
               </Link>
-              <a className={styles.secondaryButton} href="#source-data">
-                Что подготовить
+              <a
+                className={styles.secondaryButton}
+                href="#source-data"
+              >
+                {content.heroSecondaryLabel ?? "Что подготовить"}
               </a>
             </div>
+            {content.heroNote ? <p className={styles.heroNote}>{content.heroNote}</p> : null}
           </div>
 
           <div className={styles.heroMedia}>
@@ -89,6 +97,10 @@ export function ScenarioPageTemplate({
           </div>
         </div>
       </section>
+
+      {content.interactiveIntake ? (
+        <BanyaIntakeFlow content={content} assetBasePath={assetBasePath} />
+      ) : null}
 
       {content.diameterGuide || content.guidance ? (
         <section className={styles.guideSection} aria-labelledby="scenario-guide-title">
@@ -198,6 +210,8 @@ export function ScenarioPageTemplate({
         </section>
       ) : null}
 
+      {!content.interactiveIntake ? (
+      <>
       <section className={styles.section} id="source-data">
         <div className={styles.shell}>
           <div className={styles.sectionIntro}>
@@ -285,6 +299,8 @@ export function ScenarioPageTemplate({
           </div>
         </div>
       </section>
+      </>
+      ) : null}
 
       <section className={styles.section}>
         <div className={`${styles.shell} ${styles.selectionLayout}`}>

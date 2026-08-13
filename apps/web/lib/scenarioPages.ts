@@ -73,6 +73,10 @@ export type ScenarioPageContent = {
   eyebrow: string;
   title: string;
   summary: string;
+  interactiveIntake?: boolean;
+  heroPrimaryLabel?: string;
+  heroSecondaryLabel?: string;
+  heroNote?: string;
   heroImage: string;
   heroImageAlt: string;
   diameterGuide?: ScenarioDiameterGuide;
@@ -99,9 +103,13 @@ export const banyaScenario: ScenarioPageContent = {
   slug: "banya",
   kind: "object",
   eyebrow: "Для бани и сауны",
-  title: "Дымоход для бани под вашу печь и трассу",
+  title: "Дымоход для банной печи — по вашей печи и размерам бани",
   summary:
-    "Соберём исходные данные, покажем варианты трассы и сформируем комплект в конфигураторе для проверки специалистом.",
+    "Укажите модель печи, маршрут и известные размеры. Поможем собрать исходные данные и подготовить состав дымохода для проверки специалистом.",
+  interactiveIntake: true,
+  heroPrimaryLabel: "Начать подбор",
+  heroSecondaryLabel: "Что нужно подготовить",
+  heroNote: "Не знаете всех размеров сейчас — начните с известных. Остальное можно добавить позже.",
   heroImage: "/images/home/scenario-banya.webp",
   heroImageAlt: "Банная печь с металлическим дымоходом в деревянной парной",
   diameterGuide: {
@@ -189,14 +197,14 @@ export const banyaScenario: ScenarioPageContent = {
       slug: "through-roof",
       title: "Через перекрытие и кровлю",
       description:
-        "Вертикальный маршрут от печи вверх. Для расчёта фиксируем все помещения и конструкции на пути.",
+        "Дымоход поднимается от печи внутри здания, проходит перекрытия и выходит через кровлю.",
       image: "/images/home/scenario-banya.webp",
     },
     {
       slug: "through-wall",
       title: "Через стену и по фасаду",
       description:
-        "Маршрут выходит наружу через стену и продолжается по фасаду. Проверяем точку выхода и способ размещения системы.",
+        "Дымоход выходит через стену и далее поднимается снаружи по фасаду.",
       image: "/images/home/hero-chimney-system.webp",
     },
   ],

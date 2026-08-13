@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Download, Mail } from "lucide-react";
+import { parseBanyaDraft } from "@/lib/configuratorDraft";
 import { LeadForm } from "./LeadForm";
 
 type RouteType = "ceiling" | "wall";
@@ -167,6 +168,20 @@ const ROOF_OPTIONS: Array<{ id: RoofType; label: string }> = [
   { id: "pitched", label: "Скатная" },
   { id: "flat", label: "Плоская" },
 ];
+
+function banyaDraftSummary(serializedDraft: string | null): string[] {
+  const draft = parseBanyaDraft(serializedDraft);
+  if (!draft) return [];
+  const values = [
+    draft.ceilingHeight ? `До потолка: ${draft.ceilingHeight} м` : "",
+    draft.floorThickness ? `Толщина перекрытия: ${draft.floorThickness} мм` : "",
+    draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
+    draft.wallExitHeight ? `Точка выхода через стену: ${draft.wallExitHeight} м` : "",
+    draft.photosReady ? "Фотографии места установки: подготовлены" : "",
+  ].filter(Boolean);
+  if (draft.deferredFields.length) values.push(`Уточнить позже: ${draft.deferredFields.join(", ")}`);
+  return values;
+}
 
 function pushBom(bom: BomItem[], type: BomType, qty: number) {
   const current = bom.find((item) => item.type === type);
@@ -512,15 +527,23 @@ function renderBackground(item: BgItem, index: number) {
 export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorProps) {
   const searchParams = useSearchParams();
   const scenario = searchParams.get("scenario");
+  const serializedDraft = searchParams.get("draft");
+  const transferredDraft = useMemo(() => parseBanyaDraft(serializedDraft), [serializedDraft]);
   const initialStove = scenario ? SCENARIO_STOVE_PRESETS[scenario] : undefined;
-  const [route, setRoute] = useState<RouteType>("ceiling");
+  const initialRoute = searchParams.get("route");
+  const initialOutlet = searchParams.get("outlet");
+  const initialHeight = Number(searchParams.get("heightM"));
+  const initialDistance = Number(searchParams.get("distanceM"));
+  const initialFloors = Number(searchParams.get("floors"));
+  const transferredDetails = useMemo(() => banyaDraftSummary(serializedDraft), [serializedDraft]);
+  const [route, setRoute] = useState<RouteType>(initialRoute === "wall" ? "wall" : "ceiling");
   const [stove, setStove] = useState<StoveType>(initialStove ?? "bania");
-  const [outlet, setOutlet] = useState<OutletType>("vertical");
-  const [distanceM, setDistanceM] = useState(1.5);
-  const [floors, setFloors] = useState(1);
+  const [outlet, setOutlet] = useState<OutletType>(initialOutlet === "horizontal" ? "horizontal" : "vertical");
+  const [distanceM, setDistanceM] = useState(Number.isFinite(initialDistance) && initialDistance >= 0.5 && initialDistance <= 3 ? initialDistance : 1.5);
+  const [floors, setFloors] = useState(Number.isFinite(initialFloors) && initialFloors >= 1 && initialFloors <= 3 ? initialFloors : 1);
   const [roof, setRoof] = useState<RoofType>("pitched");
-  const [heightM, setHeightM] = useState(5);
-  const [stoveModel, setStoveModel] = useState("");
+  const [heightM, setHeightM] = useState(Number.isFinite(initialHeight) && initialHeight >= 3 && initialHeight <= 9 ? initialHeight : 5);
+  const [stoveModel, setStoveModel] = useState(searchParams.get("stoveModel") ?? "");
 
   const scene = useMemo(
     () =>
@@ -543,10 +566,11 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         `Модель отопителя / патрубок: ${stoveModel.trim() || "не указаны"}`,
         route === "ceiling" ? `Этажность: ${floors}; кровля: ${roof === "pitched" ? "скатная" : "плоская"}` : `Выход: ${outlet === "vertical" ? "вертикальный" : "горизонтальный"}; до стены: ${distanceM.toFixed(1)} м`,
         `Высота: ${heightM.toFixed(1)} м`,
+        ...transferredDetails,
         "Позиции:",
         ...scene.bom.map((part) => `${BOM_LABELS[part.type][0]} — ${part.qty} шт.`),
       ].join("\n"),
-    [distanceM, floors, heightM, outlet, roof, route, scene.bom, stoveLabel, stoveModel],
+    [distanceM, floors, heightM, outlet, roof, route, scene.bom, stoveLabel, stoveModel, transferredDetails],
   );
 
   function savePdf() {
@@ -580,6 +604,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           {initialStove ? (
             <p className="configurator-preset" role="status">
               Сценарий страницы: <strong>{stoveLabel}</strong>
+              {transferredDraft ? " · исходные данные перенесены" : ""}
             </p>
           ) : null}
         </div>
