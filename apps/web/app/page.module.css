@@ -76,49 +76,10 @@
   left: 50%;
   width: 164px;
   height: 108px;
-  border-radius: 50%;
   opacity: 0;
-  background: radial-gradient(
-    ellipse at 50% 58%,
-    rgba(215, 224, 221, 0.7) 0 24%,
-    rgba(205, 216, 212, 0.46) 42%,
-    transparent 72%
-  );
+  background: var(--hero-smoke-image) center / contain no-repeat;
   animation: hero-smoke-rise 8s linear infinite;
   animation-play-state: paused;
-}
-
-.heroSmoke span::before,
-.heroSmoke span::after {
-  position: absolute;
-  border-radius: 50%;
-  content: "";
-}
-
-.heroSmoke span::before {
-  top: 16%;
-  left: 5%;
-  width: 58%;
-  height: 64%;
-  background: radial-gradient(
-    circle,
-    rgba(226, 233, 230, 0.72) 0 24%,
-    rgba(205, 216, 212, 0.42) 45%,
-    transparent 73%
-  );
-}
-
-.heroSmoke span::after {
-  top: 4%;
-  right: 3%;
-  width: 52%;
-  height: 68%;
-  background: radial-gradient(
-    circle,
-    rgba(234, 239, 237, 0.76) 0 22%,
-    rgba(198, 210, 206, 0.4) 46%,
-    transparent 74%
-  );
 }
 
 .heroSmoke[data-active="true"] span {

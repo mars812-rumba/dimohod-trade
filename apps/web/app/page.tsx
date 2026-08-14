@@ -318,6 +318,7 @@ export default async function HomePage() {
   const heroStyle = {
     "--hero-image": `url("${assetUrl("/images/home/hero-chimney-clean-v4-1600.webp")}")`,
     "--hero-image-mobile": `url("${assetUrl("/images/home/hero-chimney-clean-v4-720.webp")}")`,
+    "--hero-smoke-image": `url("${assetUrl("/images/home/smoke-cloud.svg")}")`,
   } as CSSProperties;
 
   return (
