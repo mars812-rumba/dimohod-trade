@@ -173,8 +173,10 @@ function banyaDraftSummary(serializedDraft: string | null): string[] {
   const draft = parseBanyaDraft(serializedDraft);
   if (!draft) return [];
   const values = [
-    draft.ceilingHeight ? `До потолка: ${draft.ceilingHeight} м` : "",
-    draft.floorThickness ? `Толщина перекрытия: ${draft.floorThickness} мм` : "",
+    draft.levels ? `Количество этажей: ${draft.levels === "3" ? "3 и более" : draft.levels}` : "",
+    draft.ceilingHeight ? `До потолка: ${draft.ceilingHeight} мм` : "",
+    draft.floorThickness ? `Высота перекрытия: ${draft.floorThickness} мм` : "",
+    `Чердак: ${draft.hasAttic ? "есть" : "нет"}`,
     draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
     draft.wallExitHeight ? `Точка выхода через стену: ${draft.wallExitHeight} м` : "",
     draft.photosReady ? "Фотографии места установки: подготовлены" : "",

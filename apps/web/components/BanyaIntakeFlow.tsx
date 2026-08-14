@@ -95,7 +95,15 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
   useEffect(() => {
     try {
       const saved = window.sessionStorage.getItem(storageKey);
-      if (saved) setIntake({ ...emptyDraft, ...JSON.parse(saved), scenario });
+      if (saved) {
+        const savedDraft = JSON.parse(saved) as Partial<ScenarioConfiguratorDraft>;
+        setIntake({
+          ...emptyDraft,
+          ...savedDraft,
+          floorThickness: savedDraft.floorThickness || emptyDraft.floorThickness,
+          scenario,
+        });
+      }
     } catch {
       // The form remains usable when browser storage is unavailable.
     }
@@ -230,67 +238,108 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
             </details>
           </section>
 
-          <section className={styles.intakeStep} aria-labelledby="outlet-step-title">
+          <section className={styles.intakeStep} aria-labelledby="building-step-title">
             <div className={styles.stepHeading}>
               <span>Шаг 2</span>
               <div>
-                <h3 id="outlet-step-title">Как расположен выход дымохода?</h3>
-                <p>Укажите известные параметры патрубка и положение точки подключения.</p>
+                <h3 id="building-step-title">Параметры здания</h3>
+                <p>Укажите этажность и основные высоты по предполагаемому пути дымохода.</p>
               </div>
             </div>
 
             <fieldset className={styles.choiceFieldset}>
-              <legend>Направление выхода</legend>
+              <legend>Количество этажей</legend>
               <div className={styles.choiceRow}>
-                <label>
-                  <input
-                    checked={intake.outlet === "top"}
-                    name="banya-outlet"
-                    onChange={() => update("outlet", "top")}
-                    type="radio"
-                  />
-                  <span>Сверху</span>
-                </label>
-                <label>
-                  <input
-                    checked={intake.outlet === "rear"}
-                    name="banya-outlet"
-                    onChange={() => update("outlet", "rear")}
-                    type="radio"
-                  />
-                  <span>Сзади / сбоку</span>
-                </label>
+                {[
+                  ["1", "1 этаж"],
+                  ["2", "2 этажа"],
+                  ["3", "3 и более"],
+                ].map(([value, label]) => (
+                  <label key={value}>
+                    <input
+                      checked={intake.levels === value}
+                      name={`${scenario}-levels`}
+                      onChange={() => updateMeasurement("levels", value)}
+                      type="radio"
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
               </div>
+              <MeasurementHelp title="Как определить этажность?">
+                <p>Схему подсчёта этажей по пути дымохода добавим сюда после загрузки и проверки изображения.</p>
+              </MeasurementHelp>
             </fieldset>
 
             <div className={styles.fieldGrid}>
-              <MeasurementField draft={intake} field="diameter" label="Диаметр патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По паспорту оборудования" unit="мм" />
-              <MeasurementField draft={intake} field="connectionHeight" label={isHome ? "Высота отопителя или точки подключения" : "Высота печи или точки подключения"} onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если известна" unit="мм" />
-              <label className={`${styles.field} ${styles.fieldWide}`}>
-                <span>Форма и особенности соединения</span>
-                <input
-                  onChange={(event) => update("connectionDetails", event.target.value)}
-                  placeholder="Например, овальный выход или переход — если известно"
-                  value={intake.connectionDetails}
-                />
-              </label>
+              <MeasurementField draft={intake} field="ceilingHeight" label="Высота от пола до потолка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 2400" unit="мм">
+                <MeasurementHelp><p>Схему замера высоты помещения добавим сюда после загрузки и проверки изображения.</p></MeasurementHelp>
+              </MeasurementField>
+              <MeasurementField draft={intake} field="floorThickness" label="Высота перекрытия" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="200" unit="мм">
+                <MeasurementHelp><p>Сейчас подставлено начальное значение 200 мм. После загрузки схемы здесь будет показано, между какими точками снимать фактический размер.</p></MeasurementHelp>
+              </MeasurementField>
+              <div className={`${styles.measurementField} ${styles.fieldWide}`}>
+                <label className={styles.checkField}>
+                  <input
+                    checked={intake.hasAttic}
+                    onChange={(event) => update("hasAttic", event.target.checked)}
+                    type="checkbox"
+                  />
+                  <span>
+                    <strong>Есть чердак</strong>
+                    <small>Отметьте, если над помещением есть чердачное пространство.</small>
+                  </span>
+                </label>
+                <MeasurementHelp title="Как определить наличие чердака?">
+                  <p>Схему с вариантами здания добавим сюда после загрузки и проверки изображения.</p>
+                </MeasurementHelp>
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.intakeStep} aria-labelledby="outlet-step-title">
+            <div className={styles.stepHeading}>
+              <span>Шаг 3</span>
+              <div>
+                <h3 id="outlet-step-title">Печь и подключение дымохода</h3>
+                <p>Укажите положение патрубка и контрольные размеры отопителя.</p>
+              </div>
             </div>
 
-            <details className={styles.inlineHelp}>
-              <summary>
-                <span>Как узнать диаметр?</span>
-                <ChevronDown size={19} aria-hidden />
-              </summary>
-              <div>
-                <p>Сначала найдите присоединительный размер в паспорте оборудования. Если его нет под рукой, зафиксируйте маркировку и измерьте доступные внутренний и наружный размеры на остывшем, неработающем оборудовании.</p>
-                <p>Не уменьшайте сечение только ради подключения к существующим трубам. Размер и допустимость перехода проверяет специалист по документации отопителя и выбранной системе.</p>
+            <fieldset className={styles.choiceFieldset}>
+              <legend>Положение патрубка отопителя</legend>
+              <div className={styles.choiceRow}>
+                <label>
+                  <input checked={intake.outlet === "top"} name={`${scenario}-outlet`} onChange={() => update("outlet", "top")} type="radio" />
+                  <span>Сверху</span>
+                </label>
+                <label>
+                  <input checked={intake.outlet === "rear"} name={`${scenario}-outlet`} onChange={() => update("outlet", "rear")} type="radio" />
+                  <span>Сзади / сбоку</span>
+                </label>
               </div>
-            </details>
+              <MeasurementHelp title="Как определить положение патрубка?">
+                <p>Схему верхнего, заднего и бокового подключения добавим сюда после загрузки и проверки изображения.</p>
+              </MeasurementHelp>
+            </fieldset>
+
+            <div className={styles.fieldGrid}>
+              <MeasurementField draft={intake} field="connectionHeight" label={isHome ? "Высота отопителя или точки подключения" : "Высота печи или точки подключения"} onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Укажите контрольный размер" unit="мм">
+                <MeasurementHelp><p>Схему замера высоты печи и точки подключения добавим сюда после загрузки и проверки изображения.</p></MeasurementHelp>
+              </MeasurementField>
+              <MeasurementField draft={intake} field="diameter" label="Контрольный замер диаметра патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Фактический диаметр" unit="мм">
+                <MeasurementHelp><p>Схему контрольного замера диаметра патрубка добавим сюда после загрузки и проверки изображения.</p></MeasurementHelp>
+              </MeasurementField>
+              <label className={`${styles.field} ${styles.fieldWide}`}>
+                <span>Форма и особенности соединения</span>
+                <input onChange={(event) => update("connectionDetails", event.target.value)} placeholder="Например, овальный выход или переход — если известно" value={intake.connectionDetails} />
+              </label>
+            </div>
           </section>
 
           <section className={styles.intakeStep} aria-labelledby="route-step-title">
             <div className={styles.stepHeading}>
-              <span>Шаг 3</span>
+              <span>Шаг 4</span>
               <div>
                 <h3 id="route-step-title">Как пойдёт дымоход?</h3>
                 <p>Выберите наиболее похожий вариант. Его можно изменить позже.</p>
@@ -342,7 +391,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
           {intake.route !== "unknown" ? (
             <section className={styles.intakeStep} aria-labelledby="measurements-step-title">
               <div className={styles.stepHeading}>
-                <span>Шаг 4</span>
+                <span>Шаг 5</span>
                 <div>
                   <h3 id="measurements-step-title">Размеры выбранного маршрута</h3>
                   <p>Показываем только те замеры, которые относятся к выбранному варианту.</p>
@@ -351,13 +400,6 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
 
               {intake.route === "ceiling" ? (
                 <div className={styles.fieldGrid}>
-                  <MeasurementField draft={intake} field="ceilingHeight" label="От пола до потолка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Измерьте по вертикали" unit="м">
-                    <MeasurementHelp><p>Зафиксируйте высоту помещения по предполагаемой оси дымохода. Если пол или потолок имеют перепад, отметьте это отдельно.</p></MeasurementHelp>
-                  </MeasurementField>
-                  <MeasurementField draft={intake} field="floorThickness" label="Толщина перекрытия" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если доступна" unit="мм">
-                    <MeasurementHelp><p>Укажите фактическую толщину конструкции в месте предполагаемого прохода. Состав конструкции и допустимый узел затем проверяет специалист.</p></MeasurementHelp>
-                  </MeasurementField>
-                  <MeasurementField draft={intake} field="levels" label="Этажи, перекрытия и чердак на пути" numeric={false} onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 1 этаж и холодный чердак" />
                   <MeasurementField draft={intake} field="routeHeight" label="Ориентировочная высота всей трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Можно уточнить позже" unit="м">
                     <MeasurementHelp><p>Сложите известные вертикальные участки от точки подключения до предполагаемого завершения трассы. Это исходный размер, не окончательная высота системы.</p></MeasurementHelp>
                   </MeasurementField>
@@ -383,7 +425,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
 
           <section className={styles.intakeStep} aria-labelledby="photos-step-title">
             <div className={styles.stepHeading}>
-              <span>{intake.route === "unknown" ? "Шаг 4" : "Шаг 5"}</span>
+              <span>{intake.route === "unknown" ? "Шаг 5" : "Шаг 6"}</span>
               <div>
                 <h3 id="photos-step-title">Фото места установки</h3>
                 <p>Желательно подготовить общий вид отопителя, патрубка и предполагаемых мест прохода. Это не обязательно для продолжения.</p>

@@ -14,6 +14,7 @@ export type ScenarioConfiguratorDraft = {
   ceilingHeight: string;
   floorThickness: string;
   levels: string;
+  hasAttic: boolean;
   routeHeight: string;
   roofAngle: string;
   wallExitHeight: string;
@@ -37,8 +38,9 @@ export function createEmptyScenarioDraft(
     connectionDetails: "",
     route: "unknown",
     ceilingHeight: "",
-    floorThickness: "",
+    floorThickness: "200",
     levels: "",
+    hasAttic: false,
     routeHeight: "",
     roofAngle: "",
     wallExitHeight: "",

@@ -295,6 +295,7 @@
 .routeChoice input:focus-visible + .routeChoiceImage,
 .routeChoice input:focus-visible + .routeChoiceBody,
 .photoReady input:focus-visible + span,
+.checkField input:focus-visible + span,
 .fieldMeta button:focus-visible,
 .inlineHelp summary:focus-visible,
 .measureHelp summary:focus-visible {
@@ -558,6 +559,41 @@
   gap: 12px;
   align-items: flex-start;
   cursor: pointer;
+}
+
+.checkField {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-height: 74px;
+  padding: 16px;
+  border: 1px solid var(--scenario-line);
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.checkField input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--scenario-signal);
+}
+
+.checkField span {
+  display: grid;
+  gap: 5px;
+}
+
+.checkField strong {
+  font-size: 14px;
+}
+
+.checkField small {
+  color: var(--scenario-muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .photoReady input {
