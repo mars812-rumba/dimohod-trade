@@ -69,6 +69,15 @@ export type ScenarioGuidance = {
   mistakes: string[];
 };
 
+export type ScenarioReviewContent = {
+  label?: string;
+  title: string;
+  readyTitle: string;
+  readyItems: string[];
+  specialistTitle: string;
+  specialistItems: string[];
+};
+
 export type ScenarioPageContent = {
   slug: string;
   kind: ScenarioKind;
@@ -90,8 +99,11 @@ export type ScenarioPageContent = {
   routeOptions: ScenarioRouteOption[];
   routeSectionTitle?: string;
   routeSectionDescription?: string;
+  sourceSectionTitle?: string;
+  sourceSectionDescription?: string;
   selectionQuestions: ScenarioQuestion[];
   relatedGroups: ScenarioRelatedGroup[];
+  review?: ScenarioReviewContent;
   technicalFactKeys: string[];
   faq: ScenarioFaqItem[];
   configuratorPreset: Record<string, string>;
@@ -110,69 +122,15 @@ export const banyaScenario: ScenarioPageContent = {
   eyebrow: "Для бани и сауны",
   title: "Дымоход для банной печи — по вашей печи и размерам бани",
   summary:
-    "Укажите модель печи, маршрут и известные размеры. Поможем собрать исходные данные и подготовить состав дымохода для проверки специалистом.",
+    "Сравните три варианта трассы, посмотрите, какие данные понадобятся, и перейдите к сохранению замеров.",
   heroPrimaryLabel: "Подготовить замеры",
-  heroPrimaryHref: "/solutions/banya/zamery",
+  heroPrimaryHref: "/zamery?edit=1&object=banya",
   heroSecondaryLabel: "Что нужно подготовить",
   heroSecondaryHref: "#source-data",
-  finalCtaHref: "/solutions/banya/zamery",
+  finalCtaHref: "/zamery?edit=1&object=banya",
   heroNote: "Не знаете всех размеров сейчас — начните с известных. Остальное можно добавить позже.",
   heroImage: "/images/home/scenario-banya-winter-user.webp",
   heroImageAlt: "Баня с наружным металлическим дымоходом зимой",
-  diameterGuide: {
-    title: "Диаметр для банной печи: начинаем с паспорта",
-    description:
-      "Число в таблице — пример паспортного значения, а не готовый размер для любой бани. Конфигуратор не подставляет его вместо модели печи.",
-    rows: [
-      {
-        equipment: "TMF «Скоропарка 2017»",
-        diameter: "115 мм",
-        explanation: "Значение указано производителем для этой модели банной печи.",
-      },
-      {
-        equipment: "Другая банная печь",
-        diameter: "По паспорту",
-        explanation:
-          "Проверьте присоединительный размер и требования изготовителя; мощность сама по себе диаметр не определяет.",
-      },
-      {
-        equipment: "Модель ещё не выбрана",
-        diameter: "Не назначаем",
-        explanation:
-          "Можно построить маршрут, но соединительный размер останется вопросом до выбора оборудования.",
-      },
-    ],
-    note:
-      "Не заужайте сечение и не выбирайте переход только ради совпадения с имеющимися трубами. Любое изменение размера проверяется по документации печи и проекту трассы.",
-    sources: [
-      {
-        label: "TMF: Скоропарка 2017 — диаметр дымохода 115 мм",
-        href: "https://tmf-shop.ru/collection/skoroparka-2017-12-24-kubm/product/pech-skoroparka-2017-inox-dns-b-antratsit",
-      },
-    ],
-  },
-  guidance: {
-    passport: [
-      "точная модель и разрешённое топливо",
-      "размер, форма и направление выходного патрубка",
-      "требования производителя к дымовому каналу и его обслуживанию",
-    ],
-    material: [
-      "Марку и толщину внутренней трубы не выбираем по одному слову «баня».",
-      "Сверяем документацию печи, режим эксплуатации и данные конкретной дымоходной системы.",
-      "Условия влажной парной и холодных участков фиксируем отдельно в исходных данных.",
-    ],
-    safety: [
-      "Отметьте, находится топка в парной или вынесена в предбанник.",
-      "Разделите на схеме отапливаемые, холодные и наружные участки.",
-      "Материалы стен, перекрытия и кровли передайте специалисту; размеры проходов берутся только из применимой документации.",
-    ],
-    mistakes: [
-      "выбрать диаметр по мощности или типу бани без паспорта печи",
-      "заузить подключение, чтобы использовать уже купленные элементы",
-      "не показать на схеме холодный наружный участок или место прохода конструкции",
-    ],
-  },
   requiredInputs: [
     {
       title: "Модель и паспорт печи",
@@ -199,6 +157,10 @@ export const banyaScenario: ScenarioPageContent = {
       icon: "camera",
     },
   ],
+  sourceSectionTitle: "Что подготовить перед замерами",
+  sourceSectionDescription: "Достаточно начать с известных данных. Остальное можно сохранить для уточнения.",
+  routeSectionTitle: "Выберите, как пойдёт дымоход",
+  routeSectionDescription: "Схема определит, какие размеры помещения и трассы понадобится указать на следующем шаге.",
   routeOptions: [
     {
       slug: "through-roof",
@@ -207,7 +169,7 @@ export const banyaScenario: ScenarioPageContent = {
         "Дымоход поднимается от печи внутри здания, проходит перекрытия и выходит через кровлю.",
       image: "/images/home/banya-route-through-roof.webp",
       imagePresentation: "portrait-scheme",
-      href: "/solutions/banya/zamery?route=ceiling",
+      href: "/zamery?edit=1&object=banya&route=ceiling",
       linkLabel: "Выбрать этот вариант",
     },
     {
@@ -217,7 +179,7 @@ export const banyaScenario: ScenarioPageContent = {
         "От верхнего патрубка трасса меняет направление, выходит через стену и поднимается по фасаду.",
       image: "/images/home/banya-route-through-wall.webp",
       imagePresentation: "portrait-scheme",
-      href: "/solutions/banya/zamery?route=wall",
+      href: "/zamery?edit=1&object=banya&route=wall",
       linkLabel: "Выбрать этот вариант",
     },
     {
@@ -227,74 +189,54 @@ export const banyaScenario: ScenarioPageContent = {
         "Задний или боковой патрубок соединяется с проходом стены, затем трасса поднимается снаружи.",
       image: "/images/home/banya-route-through-wall-direct.webp",
       imagePresentation: "portrait-scheme",
-      href: "/solutions/banya/zamery?route=wall-direct",
+      href: "/zamery?edit=1&object=banya&route=wall-direct",
       linkLabel: "Выбрать этот вариант",
     },
   ],
   selectionQuestions: [
     {
-      title: "Какая печь будет подключена?",
+      title: "Какая модель печи будет подключена?",
       description:
-        "Точная модель важнее общего названия. Если модель ещё не выбрана, расчёт останется предварительным.",
+        "Если модель уже выбрана, подготовьте паспорт или инструкцию. Если нет — маршрут и размеры можно сохранить предварительно.",
     },
     {
-      title: "Где находится выходной патрубок?",
+      title: "Где расположен патрубок и какой у него размер?",
       description:
-        "Его положение влияет на старт маршрута и на то, какие размеры нужно проверить перед подбором.",
+        "Нужно выбрать положение сверху или сзади и указать паспортный либо измеренный наружный диаметр.",
     },
     {
-      title: "Куда направлена трасса?",
+      title: "Как пройдёт трасса?",
       description:
-        "Отдельно рассматриваем выход вверх, через стену и подключение к существующему каналу.",
+        "От выбранной схемы зависит набор вопросов: через перекрытия и кровлю, через стену от верхнего патрубка или напрямую от заднего.",
     },
     {
-      title: "Какие конструкции находятся на пути?",
+      title: "Какие конструкции встретятся на пути?",
       description:
-        "Материалы стены, перекрытия, чердака и кровли нужны для проверки проходов по документации.",
-    },
-    {
-      title: "Какие данные пока неизвестны?",
-      description:
-        "Их сохраняем в списке уточнений и не заменяем типовыми значениями.",
+        "В замерах фиксируются стены, перекрытия, чердак, кровля и неизвестные параметры, которые потребуется уточнить.",
     },
   ],
-  relatedGroups: [
-    {
-      title: "Подключение к печи",
-      description:
-        "Стартовые элементы подбираются после проверки патрубка и требований конкретной модели.",
-      categorySlug: "odnokonturnye-truby",
-    },
-    {
-      title: "Основные участки трассы",
-      description:
-        "Трубы и фасонные элементы связываются в систему с учётом выбранного маршрута.",
-      categorySlug: "sendvich-truby",
-    },
-    {
-      title: "Места прохода",
-      description:
-        "Состав узла определяется по конструкциям объекта и подтверждённым требованиям.",
-      categorySlug: "uzly-prohoda-sten-i-perekrytiy",
-    },
-    {
-      title: "Опоры и крепление",
-      description:
-        "Количество и расположение элементов уточняются после построения полной трассы.",
-      categorySlug: "homuty-i-krepezh",
-    },
-  ],
+  relatedGroups: [],
+  review: {
+    title: "Что вы получите после замеров",
+    readyTitle: "В вашем расчёте",
+    readyItems: [
+      "сохранённый профиль с выбранным маршрутом и размерами;",
+      "предварительный список реальных позиций каталога;",
+      "возможность вернуться к данным и создать другой вариант трассы.",
+    ],
+    specialistTitle: "Перед заказом проверим",
+    specialistItems: [
+      "совместимость печи и элементов подключения;",
+      "проходы конструкций и условия крепления;",
+      "финальный состав комплекта.",
+    ],
+  },
   technicalFactKeys: [],
   faq: [
     {
       question: "Можно вывести дымоход через стену, а не через кровлю?",
       answer:
         "Такой маршрут можно рассчитать как отдельный вариант. До выбора элементов нужно проверить документацию печи, точку прохода стены, наружную трассу и возможность её обслуживания.",
-    },
-    {
-      question: "Как понять, что дымоход нужно прекратить использовать и проверить?",
-      answer:
-        "Не продолжайте эксплуатацию при сквозном повреждении, разгерметизации соединений или заметной деформации элементов. Состояние скрытых участков и пригодность системы должен оценить специалист.",
     },
     {
       question: "Нужны ли ревизия и отвод конденсата в бане?",

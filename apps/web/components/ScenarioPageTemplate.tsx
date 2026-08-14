@@ -43,11 +43,82 @@ type ScenarioPageTemplateProps = {
   assetBasePath?: string;
 };
 
+function ScenarioRouteSection({
+  content,
+  assetBasePath,
+}: {
+  content: ScenarioPageContent;
+  assetBasePath: string;
+}) {
+  return (
+    <section className={styles.routeSection}>
+      <div className={styles.shell}>
+        <div className={styles.sectionIntro}>
+          <h2>{content.routeSectionTitle ?? "Выберите вариант трассы"}</h2>
+          <p>
+            {content.routeSectionDescription ??
+              "Это отправная точка. Точный состав появится после проверки размеров и маршрута."}
+          </p>
+        </div>
+        <div className={styles.routeGrid}>
+          {content.routeOptions.map((option) => (
+            <article className={styles.routeOption} key={option.slug}>
+              {option.image ? (
+                <RouteImageViewer
+                  alt={`Схема маршрута: ${option.title}`}
+                  previewClassName={`${styles.routeImage} ${
+                    option.imagePresentation === "portrait-scheme"
+                      ? styles.routeImagePortrait
+                      : ""
+                  }`}
+                  previewSizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
+                  quality={72}
+                  src={`${assetBasePath}${option.image}`}
+                  title={option.title}
+                />
+              ) : (
+                <Map className={styles.routeIcon} size={30} strokeWidth={1.5} aria-hidden />
+              )}
+              <div>
+                <h3>{option.title}</h3>
+                <p>{option.description}</p>
+                {option.href ? (
+                  <Link className={styles.routeOptionAction} href={option.href}>
+                    {option.linkLabel ?? "Открыть сценарий"}
+                    <ArrowRight size={15} aria-hidden />
+                  </Link>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function ScenarioPageTemplate({
   content,
   assetBasePath = "",
 }: ScenarioPageTemplateProps) {
   const configuratorHref = scenarioConfiguratorHref(content);
+  const isBanyaScenario = content.slug === "banya";
+  const review = content.review ?? {
+    label: "Граница ответственности",
+    title: "Что видно сразу, а что требует проверки",
+    readyTitle: "Можем собрать сразу",
+    readyItems: [
+      "паспортные параметры и фотографии объекта;",
+      "геометрию трассы по указанным параметрам;",
+      "предварительный список реальных позиций.",
+    ],
+    specialistTitle: "Проверяет специалист",
+    specialistItems: [
+      "совместимость оборудования и элементов;",
+      "проходы, крепление и условия монтажа;",
+      "финальный состав перед заказом.",
+    ],
+  };
 
   return (
     <main className={styles.main}>
@@ -225,11 +296,14 @@ export function ScenarioPageTemplate({
 
       {!content.interactiveIntake ? (
       <>
+      {isBanyaScenario ? (
+        <ScenarioRouteSection content={content} assetBasePath={assetBasePath} />
+      ) : null}
       <section className={styles.section} id="source-data">
         <div className={styles.shell}>
           <div className={styles.sectionIntro}>
-            <h2>С чего начать расчёт</h2>
-            <p>Подготовьте исходные данные. Если части информации нет, отметим её для уточнения.</p>
+            <h2>{content.sourceSectionTitle ?? "С чего начать расчёт"}</h2>
+            <p>{content.sourceSectionDescription ?? "Подготовьте исходные данные. Если части информации нет, отметим её для уточнения."}</p>
           </div>
           <div className={styles.inputGrid}>
             {content.requiredInputs.map((item) => {
@@ -245,7 +319,7 @@ export function ScenarioPageTemplate({
               );
             })}
           </div>
-          <aside className={styles.measureNote}>
+          {!isBanyaScenario ? <aside className={styles.measureNote}>
             <Ruler size={23} strokeWidth={1.7} aria-hidden />
             <div>
               <h3>Как зафиксировать размер патрубка</h3>
@@ -256,55 +330,13 @@ export function ScenarioPageTemplate({
                 оборудование — тип соединения и окончательный размер проверит специалист.
               </p>
             </div>
-          </aside>
+          </aside> : null}
         </div>
       </section>
 
-      <section className={styles.routeSection}>
-        <div className={styles.shell}>
-          <div className={styles.sectionIntro}>
-            <h2>{content.routeSectionTitle ?? "Выберите вариант трассы"}</h2>
-            <p>
-              {content.routeSectionDescription ??
-                "Это отправная точка. Точный состав появится после проверки размеров и маршрута."}
-            </p>
-          </div>
-          <div className={styles.routeGrid}>
-            {content.routeOptions.map((option) => {
-              return (
-                <article className={styles.routeOption} key={option.slug}>
-                  {option.image ? (
-                    <RouteImageViewer
-                      alt={`Схема маршрута: ${option.title}`}
-                      previewClassName={`${styles.routeImage} ${
-                        option.imagePresentation === "portrait-scheme"
-                          ? styles.routeImagePortrait
-                          : ""
-                      }`}
-                      previewSizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
-                      quality={72}
-                      src={`${assetBasePath}${option.image}`}
-                      title={option.title}
-                    />
-                  ) : (
-                    <Map className={styles.routeIcon} size={30} strokeWidth={1.5} aria-hidden />
-                  )}
-                  <div>
-                    <h3>{option.title}</h3>
-                    <p>{option.description}</p>
-                    {option.href ? (
-                      <Link className={styles.routeOptionAction} href={option.href}>
-                        {option.linkLabel ?? "Открыть сценарий"}
-                        <ArrowRight size={15} aria-hidden />
-                      </Link>
-                    ) : null}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      {!isBanyaScenario ? (
+        <ScenarioRouteSection content={content} assetBasePath={assetBasePath} />
+      ) : null}
       </>
       ) : null}
 
@@ -330,7 +362,7 @@ export function ScenarioPageTemplate({
         </div>
       </section>
 
-      <section className={styles.systemSection}>
+      {content.relatedGroups.length ? <section className={styles.systemSection}>
         <div className={styles.shell}>
           <div className={styles.sectionIntro}>
             <h2>Из чего складывается система</h2>
@@ -366,29 +398,29 @@ export function ScenarioPageTemplate({
             })}
           </div>
         </div>
-      </section>
+      </section> : null}
 
       <section className={styles.reviewSection}>
         <div className={`${styles.shell} ${styles.reviewLayout}`}>
           <div>
-            <p className={styles.reviewLabel}>Граница ответственности</p>
-            <h2>Что видно сразу, а что требует проверки</h2>
+            {review.label ? <p className={styles.reviewLabel}>{review.label}</p> : null}
+            <h2>{review.title}</h2>
           </div>
           <div className={styles.reviewColumns}>
             <div>
-              <h3>Можем собрать сразу</h3>
+              <h3>{review.readyTitle}</h3>
               <ul>
-                <li><Check size={16} aria-hidden /><span>паспортные параметры и фотографии объекта;</span></li>
-                <li><Check size={16} aria-hidden /><span>геометрию трассы по указанным параметрам;</span></li>
-                <li><Check size={16} aria-hidden /><span>предварительный список реальных позиций.</span></li>
+                {review.readyItems.map((item) => (
+                  <li key={item}><Check size={16} aria-hidden /><span>{item}</span></li>
+                ))}
               </ul>
             </div>
             <div>
-              <h3>Проверяет специалист</h3>
+              <h3>{review.specialistTitle}</h3>
               <ul>
-                <li><ShieldCheck size={16} aria-hidden /><span>совместимость оборудования и элементов;</span></li>
-                <li><ShieldCheck size={16} aria-hidden /><span>проходы, крепление и условия монтажа;</span></li>
-                <li><ShieldCheck size={16} aria-hidden /><span>финальный состав перед заказом.</span></li>
+                {review.specialistItems.map((item) => (
+                  <li key={item}><ShieldCheck size={16} aria-hidden /><span>{item}</span></li>
+                ))}
               </ul>
             </div>
           </div>
