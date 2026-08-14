@@ -75,14 +75,25 @@ type MeasurementScheme = {
   title: string;
 };
 
-function MeasurementHelp({ title, children, scheme }: { title?: string; children: ReactNode; scheme?: MeasurementScheme }) {
+function MeasurementHelp({
+  title,
+  children,
+  scheme,
+  showSchemePlaceholder = true,
+}: {
+  title?: string;
+  children: ReactNode;
+  scheme?: MeasurementScheme;
+  showSchemePlaceholder?: boolean;
+}) {
+  const singleColumn = Boolean(scheme) || !showSchemePlaceholder;
   return (
     <details className={styles.measureHelp}>
       <summary>
         <span>{title ?? "Как измерить?"}</span>
         <ChevronDown size={17} aria-hidden />
       </summary>
-      <div className={`${styles.measureHelpBody} ${scheme ? styles.measureHelpBodyWithScheme : ""}`}>
+      <div className={`${styles.measureHelpBody} ${singleColumn ? styles.measureHelpBodyWithScheme : ""}`}>
         <div>{children}</div>
         {scheme ? (
           <RouteImageViewer
@@ -93,12 +104,12 @@ function MeasurementHelp({ title, children, scheme }: { title?: string; children
             src={scheme.src}
             title={scheme.title}
           />
-        ) : (
+        ) : showSchemePlaceholder ? (
           <div className={styles.schemePlaceholder} aria-label="Место для схемы замера">
             <span>Схема замера</span>
             <small>будет добавлена после проверки специалистом</small>
           </div>
-        )}
+        ) : null}
       </div>
     </details>
   );
@@ -424,7 +435,16 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                       </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="floorThickness" label="Высота перекрытия" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="200" unit="мм">
-                      <MeasurementHelp><p>Сейчас подставлено начальное значение 200 мм. После загрузки схемы здесь будет показано, между какими точками снимать фактический размер.</p></MeasurementHelp>
+                      <MeasurementHelp showSchemePlaceholder={false}>
+                        {isHome ? (
+                          <p>Уточните фактическую толщину перекрытия по проекту или доступному открытому участку конструкции.</p>
+                        ) : (
+                          <>
+                            <p>Обычно перекрытие принимают равным 200 мм, поэтому это значение указано в поле по умолчанию.</p>
+                            <p>Для точного размера измерьте видимую толщину перекрытия в проёме лестницы между первым и вторым этажами. Если над первым этажом находится чердак и есть люк, снимите этот размер в проёме люка.</p>
+                          </>
+                        )}
+                      </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="routeHeight" label="Ориентировочная высота всей трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Можно уточнить позже" unit="м">
                       <MeasurementHelp><p>Сложите известные вертикальные участки от точки подключения до предполагаемого завершения трассы. Это исходный размер, не окончательная высота системы.</p></MeasurementHelp>
