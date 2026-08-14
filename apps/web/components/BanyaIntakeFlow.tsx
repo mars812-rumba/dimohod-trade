@@ -447,7 +447,17 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                       </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="routeHeight" label="Ориентировочная высота всей трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Можно уточнить позже" unit="м">
-                      <MeasurementHelp><p>Сложите известные вертикальные участки от точки подключения до предполагаемого завершения трассы. Это исходный размер, не окончательная высота системы.</p></MeasurementHelp>
+                      <MeasurementHelp showSchemePlaceholder={false}>
+                        {isHome ? (
+                          <p>Сложите известные вертикальные участки от точки подключения до предполагаемого завершения трассы. Это исходный размер, не окончательная высота системы.</p>
+                        ) : (
+                          <>
+                            <p>Лазерной рулеткой измерьте общую вертикальную высоту от удобной нижней точки — например, от доступного участка фундамента или балки — до предполагаемого конца трассы.</p>
+                            <p>Приведите замер к уровню чистового пола, затем вычтите высоту печи или точки подключения. Получится примерная высота трассы.</p>
+                            <p>Это ориентировочное значение для первичного подбора. Его можно уточнить после контрольного замера.</p>
+                          </>
+                        )}
+                      </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="roofAngle" label="Угол кровли" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если известен" unit="°">
                       <MeasurementHelp><p>Если угол указан в проекте дома, используйте это значение. Иначе оставьте поле для последующего замера — нормативные выводы по углу здесь не делаются.</p></MeasurementHelp>
