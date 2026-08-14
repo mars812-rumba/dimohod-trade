@@ -351,6 +351,38 @@ export default async function HomePage() {
               <p className={styles.heroLead}>
                 Подберём комплект по вашей трассе и параметрам отопителя.
               </p>
+              <div className={styles.heroInfo}>
+                <dl className={styles.proof}>
+                  <div>
+                    <dt>
+                      <Timer size={20} strokeWidth={1.65} aria-hidden />
+                      <span>≈ 2 минуты</span>
+                    </dt>
+                    <dd>на пошаговый подбор совместимого комплекта</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <ReceiptText size={20} strokeWidth={1.65} aria-hidden />
+                      <span>Состав на экране</span>
+                    </dt>
+                    <dd>увидите элементы и их количество в одной смете</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <MessageCircleQuestion size={20} strokeWidth={1.65} aria-hidden />
+                      <span>Помощь специалиста</span>
+                    </dt>
+                    <dd>менеджер подключится к сложным вопросам</dd>
+                  </div>
+                </dl>
+                <div className={styles.systemRule}>
+                  <ShieldCheck size={22} aria-hidden />
+                  <div>
+                    <span>Результат конфигуратора</span>
+                    <strong>Комплект собран в конфигураторе по вашим параметрам</strong>
+                  </div>
+                </div>
+              </div>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#calculator">
                   <SlidersHorizontal size={18} strokeWidth={1.7} aria-hidden />
@@ -360,39 +392,6 @@ export default async function HomePage() {
                   <LayoutGrid size={17} strokeWidth={1.7} aria-hidden />
                   Открыть каталог
                 </Link>
-              </div>
-            </div>
-
-            <div className={styles.heroSystem}>
-              <dl className={styles.proof}>
-                <div>
-                  <dt>
-                    <Timer size={20} strokeWidth={1.65} aria-hidden />
-                    <span>≈ 2 минуты</span>
-                  </dt>
-                  <dd>на пошаговый подбор совместимого комплекта</dd>
-                </div>
-                <div>
-                  <dt>
-                    <ReceiptText size={20} strokeWidth={1.65} aria-hidden />
-                    <span>Состав на экране</span>
-                  </dt>
-                  <dd>увидите элементы и их количество в одной смете</dd>
-                </div>
-                <div>
-                  <dt>
-                    <MessageCircleQuestion size={20} strokeWidth={1.65} aria-hidden />
-                    <span>Помощь специалиста</span>
-                  </dt>
-                  <dd>менеджер подключится к сложным вопросам</dd>
-                </div>
-              </dl>
-              <div className={styles.systemRule}>
-                <ShieldCheck size={22} aria-hidden />
-                <div>
-                  <span>Результат конфигуратора</span>
-                  <strong>Комплект собран в конфигураторе по вашим параметрам</strong>
-                </div>
               </div>
             </div>
           </div>
