@@ -337,6 +337,83 @@
   color: var(--signal);
 }
 
+@media (min-width: 1120px) {
+  .hero {
+    min-height: min(680px, calc(100svh - 62px));
+    padding-top: 0;
+  }
+
+  .heroGrid {
+    position: relative;
+    min-height: inherit;
+  }
+
+  .heroCopy {
+    align-self: center;
+    padding: 18px 0 30px;
+  }
+
+  .heroCopy h1 {
+    font-size: clamp(62px, 6vw, 86px);
+  }
+
+  .heroLead {
+    margin-top: 24px;
+  }
+
+  .heroActions {
+    margin-top: 24px;
+  }
+
+  .proof {
+    position: absolute;
+    right: 18px;
+    bottom: 156px;
+    left: calc(54% + 16px);
+    z-index: 4;
+    max-width: none;
+    margin: 0;
+    padding: 0 14px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-bottom-color: rgba(50, 98, 118, 0.28);
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(8px);
+  }
+
+  .proof div {
+    padding: 16px 12px 0 0;
+  }
+
+  .proof div + div {
+    padding-left: 12px;
+  }
+
+  .proof dt {
+    gap: 7px;
+    font-size: clamp(16px, 1.45vw, 20px);
+  }
+
+  .proof dt svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .proof dd {
+    margin-top: 7px;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .heroSystem {
+    min-height: inherit;
+  }
+
+  .systemRule {
+    right: 18px;
+    bottom: 30px;
+  }
+}
+
 .systemRule span,
 .systemRule strong {
   display: block;
