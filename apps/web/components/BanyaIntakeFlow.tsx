@@ -312,7 +312,23 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                 </MeasurementHelp>
               </MeasurementField>
               <MeasurementField draft={intake} field="diameter" label="Контрольный замер диаметра патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Фактический диаметр" unit="мм">
-                <MeasurementHelp><p>Схему контрольного замера диаметра патрубка добавим сюда после загрузки и проверки изображения.</p></MeasurementHelp>
+                <MeasurementHelp
+                  scheme={isHome ? undefined : {
+                    src: `${assetBasePath}/images/measurements/stove-outlet-diameter.webp`,
+                    alt: "Схема наружного замера патрубка печи по осям X и Y",
+                    title: "Как замерять наружный диаметр патрубка",
+                  }}
+                >
+                  {isHome ? (
+                    <p>Схему контрольного замера диаметра патрубка добавим сюда после загрузки и проверки изображения.</p>
+                  ) : (
+                    <>
+                      <p>Измерьте наружный диаметр патрубка от внешней стенки до внешней стенки. Замер должен проходить через центр.</p>
+                      <p>Сделайте два замера: по горизонтальной оси X и по вертикальной оси Y. Запишите оба значения в миллиметрах.</p>
+                      <p>Если X и Y отличаются, укажите оба размера и овальность в поле «Форма и особенности соединения» ниже.</p>
+                    </>
+                  )}
+                </MeasurementHelp>
               </MeasurementField>
               <label className={`${styles.field} ${styles.fieldWide}`}>
                 <span>Форма и особенности соединения</span>
