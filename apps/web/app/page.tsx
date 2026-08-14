@@ -74,7 +74,7 @@ const scenarios = [
     slug: "dom",
     title: "Частный дом",
     text: "Выберите печь, камин или котёл и перейдите к подходящему сценарию.",
-    image: "/images/home/scenario-dom-card-user.webp",
+    image: "/images/home/scenario-dom-dark-user.webp",
     href: "/solutions/dom",
   },
   {
