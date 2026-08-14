@@ -82,7 +82,7 @@ const scenarios = [
     slug: "pech",
     title: "Отопительная печь",
     text: "Паспорт отопителя, точка подключения и маршрут через помещения дома.",
-    image: "/images/home/scenario-kamin.webp",
+    image: "/images/home/scenario-pech-user.webp",
     href: "/solutions/pech",
   },
   {

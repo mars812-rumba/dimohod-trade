@@ -308,7 +308,7 @@ export const pechScenario: ScenarioPageContent = {
   title: "Дымоход для печи по паспорту отопителя",
   summary:
     "Уточним подключение и маршрут, затем сформируем состав системы в конфигураторе для проверки специалистом.",
-  heroImage: "/images/home/scenario-kamin.webp",
+  heroImage: "/images/home/scenario-pech-user.webp",
   heroImageAlt: "Отопительная печь с металлическим дымоходом в жилом помещении",
   diameterGuide: {
     title: "У отопительных печей нет одного стандартного диаметра",
