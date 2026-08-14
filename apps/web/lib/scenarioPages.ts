@@ -504,7 +504,7 @@ export const kaminScenario: ScenarioPageContent = {
   title: "Дымоход для камина с учётом топки и дома",
   summary:
     "Сопоставим документацию топки, место подключения и маршрут, не подменяя расчёт готовым шаблоном.",
-  heroImage: "/images/home/scenario-kamin.webp",
+  heroImage: "/images/home/scenario-kamin-user.webp",
   heroImageAlt: "Каминная топка с металлическим дымоходом в интерьере дома",
   diameterGuide: {
     title: "Размер топки не заменяет диаметр из паспорта",

@@ -90,7 +90,7 @@ const scenarios = [
     slug: "kamin",
     title: "Камин",
     text: "Модель топки, место подключения, новая трасса или существующий канал.",
-    image: "/images/home/scenario-kamin.webp",
+    image: "/images/home/scenario-kamin-user.webp",
     href: "/solutions/kamin",
   },
   {
