@@ -1,5 +1,5 @@
 export type DraftFieldStatus = "known" | "measure" | "later";
-export type DraftRoute = "ceiling" | "wall" | "unknown";
+export type DraftRoute = "ceiling" | "wall" | "wall-direct" | "unknown";
 
 export type ScenarioConfiguratorDraft = {
   scenario: "banya" | "dom";
@@ -70,7 +70,9 @@ export function scenarioDraftConfiguratorHref(draft: ScenarioConfiguratorDraft):
   const params = new URLSearchParams({
     scenario: draft.equipmentType || draft.scenario,
   });
-  if (draft.route !== "unknown") params.set("route", draft.route);
+  if (draft.route !== "unknown") {
+    params.set("route", draft.route === "wall-direct" ? "wall" : draft.route);
+  }
   if (draft.outlet) params.set("outlet", draft.outlet === "top" ? "vertical" : "horizontal");
 
   const connection = [
@@ -82,7 +84,7 @@ export function scenarioDraftConfiguratorHref(draft: ScenarioConfiguratorDraft):
   ].filter(Boolean);
   if (connection.length) params.set("stoveModel", connection.join(" · "));
 
-  const height = draft.route === "wall" ? draft.outdoorHeight : draft.routeHeight;
+  const height = draft.route === "ceiling" ? draft.routeHeight : draft.outdoorHeight;
   if (height && Number.isFinite(Number(height))) params.set("heightM", height);
   if (draft.wallDistance && Number.isFinite(Number(draft.wallDistance))) {
     params.set("distanceM", draft.wallDistance);

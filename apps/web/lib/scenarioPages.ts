@@ -204,8 +204,15 @@ export const banyaScenario: ScenarioPageContent = {
       slug: "through-wall",
       title: "Через стену и по фасаду",
       description:
-        "Дымоход выходит через стену и далее поднимается снаружи по фасаду.",
+        "От верхнего патрубка трасса меняет направление, выходит через стену и поднимается по фасаду.",
       image: "/images/home/banya-route-through-wall.webp",
+    },
+    {
+      slug: "through-wall-direct",
+      title: "Прямо через стену",
+      description:
+        "Задний или боковой патрубок соединяется с проходом стены, затем трасса поднимается снаружи.",
+      image: "/images/home/banya-route-through-wall-direct.webp",
     },
   ],
   selectionQuestions: [

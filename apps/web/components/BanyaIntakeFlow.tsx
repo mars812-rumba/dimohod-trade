@@ -296,14 +296,22 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
             <fieldset className={styles.routeChoices}>
               <legend className={styles.visuallyHidden}>Маршрут дымохода</legend>
               {content.routeOptions.map((option, index) => {
-                const value = index === 0 ? "ceiling" as const : "wall" as const;
+                const value = option.slug === "through-wall-direct"
+                  ? "wall-direct" as const
+                  : index === 0
+                    ? "ceiling" as const
+                    : "wall" as const;
                 const selected = intake.route === value;
                 return (
                   <label className={styles.routeChoice} data-selected={selected || undefined} key={option.slug}>
                     <input
                       checked={selected}
                       name={`${scenario}-route`}
-                      onChange={() => update("route", value)}
+                      onChange={() => setIntake((current) => ({
+                        ...current,
+                        route: value,
+                        outlet: value === "wall-direct" ? "rear" : current.outlet,
+                      }))}
                       type="radio"
                       value={value}
                     />

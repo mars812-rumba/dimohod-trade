@@ -574,7 +574,9 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   useEffect(() => {
     if (!transferredDraft) return;
 
-    if (transferredDraft.route !== "unknown") setRoute(transferredDraft.route);
+    if (transferredDraft.route !== "unknown") {
+      setRoute(transferredDraft.route === "wall-direct" ? "wall" : transferredDraft.route);
+    }
     if (transferredDraft.outlet) setOutlet(transferredDraft.outlet === "top" ? "vertical" : "horizontal");
 
     const draftStove = transferredDraft.scenario === "banya"
@@ -586,7 +588,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     if (Number.isFinite(draftFloors) && draftFloors >= 1 && draftFloors <= 3) setFloors(draftFloors);
 
     const draftHeight = Number(
-      transferredDraft.route === "wall"
+      transferredDraft.route !== "ceiling"
         ? transferredDraft.outdoorHeight
         : transferredDraft.routeHeight,
     );
@@ -614,10 +616,15 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     const baseDraft = transferredDraft?.scenario === draftScenario
       ? transferredDraft
       : createEmptyScenarioDraft(draftScenario);
+    const draftRoute = route === "wall"
+      && outlet === "horizontal"
+      && transferredDraft?.route === "wall-direct"
+      ? "wall-direct"
+      : route;
     const updatedDraft = mergeConfiguratorDraft(baseDraft, {
       scenario: draftScenario,
       equipmentType,
-      route,
+      route: draftRoute,
       outlet: outlet === "vertical" ? "top" : "rear",
       levels: String(floors),
       routeHeight: route === "ceiling" ? String(heightM) : baseDraft.routeHeight,
