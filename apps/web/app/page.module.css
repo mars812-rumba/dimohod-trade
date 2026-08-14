@@ -1983,6 +1983,7 @@
   }
 
   .hero {
+    min-height: calc(100dvh - 72px);
     padding-top: 0;
     background:
       linear-gradient(
