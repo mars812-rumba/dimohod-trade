@@ -43,7 +43,7 @@
     linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
   background-position:
     center,
-    center top,
+    center 58px,
     center;
   background-repeat: no-repeat, no-repeat, no-repeat;
   background-size:
@@ -60,12 +60,12 @@
 .heroSmoke {
   position: absolute;
   z-index: 1;
-  top: -70px;
+  top: -136px;
   left: 50%;
   width: 140px;
   height: 240px;
   pointer-events: none;
-  transform: translateX(calc(-50% + 10px));
+  transform: translateX(-50%);
 }
 
 .heroSmoke span {
