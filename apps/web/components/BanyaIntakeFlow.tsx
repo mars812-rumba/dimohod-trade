@@ -291,12 +291,9 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                 </label>
                 <label>
                   <input checked={intake.outlet === "rear"} name={`${scenario}-outlet`} onChange={() => update("outlet", "rear")} type="radio" />
-                  <span>Сзади / сбоку</span>
+                  <span>Сзади</span>
                 </label>
               </div>
-              <MeasurementHelp title="Как определить положение патрубка?">
-                <p>Схему верхнего, заднего и бокового подключения добавим сюда после загрузки и проверки изображения.</p>
-              </MeasurementHelp>
             </fieldset>
 
             <div className={styles.fieldGrid}>
