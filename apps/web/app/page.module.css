@@ -8,7 +8,7 @@
   --signal: #ed5b2a;
   --signal-dark: #bd3d16;
   --line: #ccd5d7;
-  overflow: hidden;
+  overflow: visible;
   color: var(--ink);
   background: var(--paper);
   font-family: "Segoe UI", Inter, system-ui, sans-serif;
@@ -28,7 +28,7 @@
 
 .hero {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   padding: 76px 0 0;
   border-bottom: 1px solid var(--line);
   background:
@@ -59,7 +59,7 @@
 
 .heroSmoke {
   position: absolute;
-  z-index: 1;
+  z-index: 11;
   top: -196px;
   left: 52.5%;
   width: 140px;
@@ -73,15 +73,15 @@
   position: absolute;
   bottom: 0;
   left: 50%;
-  width: 118px;
-  height: 112px;
+  width: 138px;
+  height: 126px;
   opacity: 0;
   background:
     radial-gradient(circle at 31% 63%, rgba(207, 216, 213, 0.72) 0 18%, transparent 48%),
     radial-gradient(circle at 57% 38%, rgba(237, 241, 239, 0.82) 0 23%, transparent 53%),
     radial-gradient(circle at 75% 66%, rgba(197, 208, 204, 0.67) 0 19%, transparent 48%),
     radial-gradient(ellipse at 49% 72%, rgba(225, 232, 229, 0.76) 0 30%, transparent 64%);
-  filter: blur(5px);
+  filter: blur(7px);
   animation: hero-smoke-rise 5.5s ease-out infinite;
   animation-play-state: paused;
 }
@@ -126,7 +126,7 @@
 
   100% {
     opacity: 0;
-    transform: translate3d(calc(-50% + var(--smoke-drift)), -205px, 0) scale(1.45, 1.7);
+    transform: translate3d(calc(-50% + var(--smoke-drift)), -260px, 0) scale(1.55, 1.85);
   }
 }
 
@@ -263,10 +263,10 @@
   max-width: none;
   margin: 0;
   padding: 0 14px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.66);
   border-bottom-color: rgba(50, 98, 118, 0.28);
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(4px);
 }
 
 .proof div {
@@ -323,11 +323,11 @@
   margin-top: -1px;
   padding: 20px 22px;
   color: var(--ink);
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.62);
   border-right-color: rgba(50, 98, 118, 0.28);
   border-bottom: 2px solid rgba(237, 91, 42, 0.58);
-  background: rgba(255, 255, 255, 0.84);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.64);
+  backdrop-filter: blur(4px);
 }
 
 .systemRule svg {
