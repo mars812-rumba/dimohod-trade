@@ -351,6 +351,19 @@ export default async function HomePage() {
               <p className={styles.heroLead}>
                 Подберём комплект по вашей трассе и параметрам отопителя.
               </p>
+              <div className={styles.heroActions}>
+                <a className={styles.primaryButton} href="#calculator">
+                  <SlidersHorizontal size={18} strokeWidth={1.7} aria-hidden />
+                  Подобрать за 2 минуты
+                </a>
+                <Link className={styles.secondaryButton} href="/catalog">
+                  <LayoutGrid size={17} strokeWidth={1.7} aria-hidden />
+                  Открыть каталог
+                </Link>
+              </div>
+            </div>
+
+            <div className={styles.heroSystem}>
               <dl className={styles.proof}>
                 <div>
                   <dt>
@@ -374,19 +387,6 @@ export default async function HomePage() {
                   <dd>менеджер подключится к сложным вопросам</dd>
                 </div>
               </dl>
-              <div className={styles.heroActions}>
-                <a className={styles.primaryButton} href="#calculator">
-                  <SlidersHorizontal size={18} strokeWidth={1.7} aria-hidden />
-                  Подобрать за 2 минуты
-                </a>
-                <Link className={styles.secondaryButton} href="/catalog">
-                  <LayoutGrid size={17} strokeWidth={1.7} aria-hidden />
-                  Открыть каталог
-                </Link>
-              </div>
-            </div>
-
-            <div className={styles.heroSystem}>
               <div className={styles.systemRule}>
                 <ShieldCheck size={22} aria-hidden />
                 <div>

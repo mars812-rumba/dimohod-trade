@@ -35,9 +35,9 @@
     linear-gradient(
       90deg,
       rgba(248, 250, 249, 0.99) 0%,
-      rgba(248, 250, 249, 0.96) 40%,
-      rgba(248, 250, 249, 0.7) 57%,
-      rgba(248, 250, 249, 0.06) 82%
+      rgba(248, 250, 249, 0.98) 44%,
+      rgba(248, 250, 249, 0.72) 60%,
+      rgba(248, 250, 249, 0.08) 80%
     ),
     var(--hero-image),
     linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
@@ -145,8 +145,8 @@
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  grid-template-columns: minmax(0, 0.92fr) minmax(440px, 0.78fr);
-  gap: clamp(44px, 7vw, 104px);
+  grid-template-columns: minmax(0, 1.06fr) minmax(440px, 0.84fr);
+  gap: clamp(36px, 5vw, 72px);
   align-items: center;
 }
 
@@ -181,7 +181,7 @@
 }
 
 .heroCopy h1 {
-  max-width: 780px;
+  max-width: 680px;
   margin: 0;
   font-size: clamp(58px, 7.2vw, 105px);
   font-weight: 650;
@@ -263,9 +263,14 @@
 .proof {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  max-width: 700px;
-  margin: 26px 0 0;
-  border-top: 1px solid var(--line);
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 14px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-bottom-color: rgba(50, 98, 118, 0.28);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
 }
 
 .proof div {
@@ -306,24 +311,26 @@
 }
 
 .heroSystem {
-  position: relative;
+  display: flex;
   min-width: 0;
   max-width: 100%;
+  flex-direction: column;
+  justify-content: center;
   align-self: stretch;
   min-height: 620px;
+  padding: 64px 18px 48px 0;
 }
 
 .systemRule {
-  position: absolute;
-  right: 30px;
-  bottom: 62px;
-  left: -46px;
+  position: relative;
   z-index: 3;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 14px;
   align-items: center;
+  width: 100%;
   min-height: 96px;
+  margin-top: -1px;
   padding: 20px 22px;
   color: var(--ink);
   border: 1px solid rgba(255, 255, 255, 0.72);
@@ -339,7 +346,7 @@
 
 @media (min-width: 1120px) {
   .hero {
-    min-height: min(680px, calc(100svh - 62px));
+    min-height: min(600px, calc(100svh - 62px));
     padding-top: 0;
   }
 
@@ -354,7 +361,8 @@
   }
 
   .heroCopy h1 {
-    font-size: clamp(62px, 6vw, 86px);
+    font-size: clamp(60px, 5.3vw, 76px);
+    line-height: 0.92;
   }
 
   .heroLead {
@@ -363,21 +371,6 @@
 
   .heroActions {
     margin-top: 24px;
-  }
-
-  .proof {
-    position: absolute;
-    right: 18px;
-    bottom: 156px;
-    left: calc(54% + 16px);
-    z-index: 4;
-    max-width: none;
-    margin: 0;
-    padding: 0 14px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.72);
-    border-bottom-color: rgba(50, 98, 118, 0.28);
-    background: rgba(255, 255, 255, 0.86);
-    backdrop-filter: blur(8px);
   }
 
   .proof div {
@@ -406,11 +399,7 @@
 
   .heroSystem {
     min-height: inherit;
-  }
-
-  .systemRule {
-    right: 18px;
-    bottom: 30px;
+    padding-left: 0;
   }
 }
 
@@ -1957,7 +1946,8 @@
   }
 
   .heroSystem {
-    min-height: 520px;
+    min-height: 0;
+    padding: 0 0 48px;
   }
 
   .scenarioGrid {
@@ -2025,7 +2015,7 @@
 
   .heroCopy {
     margin-inline: 0;
-    padding: 24px 0 100px;
+    padding: 24px 0 28px;
     background: none;
   }
 
@@ -2125,8 +2115,8 @@
   .heroSystem {
     z-index: 2;
     min-height: 0;
-    margin-top: -66px;
-    padding: 0 8px 30px;
+    margin-top: 0;
+    padding: 0 0 30px;
   }
 
   .systemRule {
@@ -2139,8 +2129,7 @@
     min-width: 0;
     max-width: 100%;
     min-height: 92px;
-    margin-bottom: -56px;
-    transform: translateY(-56px);
+    margin-top: -1px;
   }
 
   .scenarioSection,
