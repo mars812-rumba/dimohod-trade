@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Sparkles } from "lucide-react";
 import { useState } from "react";
 import type { MediaItem } from "@/lib/api";
 import type { SteelBadge } from "@/lib/steelSelection";
@@ -11,6 +12,7 @@ type ProductGalleryPreviewProps = {
   media: MediaItem[];
   productName: string;
   badges: SteelBadge[];
+  connectionTechnology?: string;
 };
 
 const roleLabels: Record<string, string> = {
@@ -25,7 +27,12 @@ function roleLabel(role: string | null, index: number) {
   return role ? roleLabels[role] ?? role : `Фото ${index + 1}`;
 }
 
-export function ProductGalleryPreview({ media, productName, badges }: ProductGalleryPreviewProps) {
+export function ProductGalleryPreview({
+  media,
+  productName,
+  badges,
+  connectionTechnology,
+}: ProductGalleryPreviewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selected = media[selectedIndex] ?? media[0];
 
@@ -46,6 +53,12 @@ export function ProductGalleryPreview({ media, productName, badges }: ProductGal
           unoptimized
           sizes="(max-width: 720px) calc(100vw - 30px), 480px"
         />
+        {selected.role === "connection" && connectionTechnology ? (
+          <div className="product-image-technology-badge">
+            <Sparkles aria-hidden="true" size={13} strokeWidth={1.8} />
+            <span>{connectionTechnology}</span>
+          </div>
+        ) : null}
         {badges.length > 0 ? (
           <div className="product-image-badges" aria-label="Характеристики выбранного варианта">
             {badges.map((badge) => (

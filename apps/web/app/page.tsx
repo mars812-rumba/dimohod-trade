@@ -186,6 +186,7 @@ const catalogGroups = [
 const featuredProductCard = {
   name: "Сэндвич-труба Ø150/250",
   variant: "L=1000 мм · AISI 304 · 0,8 мм · изоляция 50 мм",
+  connectionTechnology: "Лазерная сварка в стык",
   media: [
     {
       url: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-1.webp",
@@ -484,6 +485,7 @@ export default async function HomePage() {
                 media={previewMedia}
                 productName={featuredProductCard.name}
                 badges={previewBadges}
+                connectionTechnology={featuredProductCard.connectionTechnology}
               />
               <div className={styles.productCardSummaryBody}>
                 <span className={styles.productCardEyebrow}>Фрагмент карточки товара</span>
