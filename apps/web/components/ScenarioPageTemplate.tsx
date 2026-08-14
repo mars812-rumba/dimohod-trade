@@ -23,6 +23,7 @@ import {
   type ScenarioPageContent,
 } from "@/lib/scenarioPages";
 import { BanyaIntakeFlow } from "./BanyaIntakeFlow";
+import { RouteImageViewer } from "./RouteImageViewer";
 import styles from "./ScenarioPageTemplate.module.css";
 
 const iconByName: Record<ScenarioIconName, LucideIcon> = {
@@ -158,9 +159,12 @@ export function ScenarioPageTemplate({
                   <p>Сначала собираем проверяемые исходные данные, затем переходим к конкретным изделиям.</p>
                 </div>
               ) : null}
-              <div className={styles.guidanceGrid}>
-                <article className={styles.guidanceItem}>
-                  <h3>Что проверить в паспорте</h3>
+              <div className={styles.guidanceAccordion}>
+                <details className={styles.guidanceItem}>
+                  <summary>
+                    <span>Что проверить в паспорте</span>
+                    <ChevronDown size={20} strokeWidth={1.7} aria-hidden />
+                  </summary>
                   <ul>
                     {content.guidance.passport.map((item) => (
                       <li key={item}>
@@ -169,9 +173,12 @@ export function ScenarioPageTemplate({
                       </li>
                     ))}
                   </ul>
-                </article>
-                <article className={styles.guidanceItem}>
-                  <h3>Материал и исполнение</h3>
+                </details>
+                <details className={styles.guidanceItem}>
+                  <summary>
+                    <span>Материал и исполнение</span>
+                    <ChevronDown size={20} strokeWidth={1.7} aria-hidden />
+                  </summary>
                   <ul>
                     {content.guidance.material.map((item) => (
                       <li key={item}>
@@ -180,9 +187,12 @@ export function ScenarioPageTemplate({
                       </li>
                     ))}
                   </ul>
-                </article>
-                <article className={styles.guidanceItem}>
-                  <h3>Что проверить по безопасности</h3>
+                </details>
+                <details className={styles.guidanceItem}>
+                  <summary>
+                    <span>Что проверить по безопасности</span>
+                    <ChevronDown size={20} strokeWidth={1.7} aria-hidden />
+                  </summary>
                   <ul>
                     {content.guidance.safety.map((item) => (
                       <li key={item}>
@@ -191,9 +201,12 @@ export function ScenarioPageTemplate({
                       </li>
                     ))}
                   </ul>
-                </article>
-                <article className={`${styles.guidanceItem} ${styles.mistakeItem}`}>
-                  <h3>Типовые ошибки</h3>
+                </details>
+                <details className={`${styles.guidanceItem} ${styles.mistakeItem}`}>
+                  <summary>
+                    <span>Типовые ошибки</span>
+                    <ChevronDown size={20} strokeWidth={1.7} aria-hidden />
+                  </summary>
                   <ul>
                     {content.guidance.mistakes.map((item) => (
                       <li key={item}>
@@ -202,7 +215,7 @@ export function ScenarioPageTemplate({
                       </li>
                     ))}
                   </ul>
-                </article>
+                </details>
               </div>
               </>
             ) : null}
@@ -261,16 +274,27 @@ export function ScenarioPageTemplate({
               const body = (
                 <>
                 {option.image ? (
-                  <div className={styles.routeImage}>
-                    <Image
-                      src={`${assetBasePath}${option.image}`}
-                      alt=""
-                      fill
-                      loading="lazy"
+                  option.href ? (
+                    <div className={styles.routeImage}>
+                      <Image
+                        src={`${assetBasePath}${option.image}`}
+                        alt=""
+                        fill
+                        loading="lazy"
+                        quality={72}
+                        sizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
+                      />
+                    </div>
+                  ) : (
+                    <RouteImageViewer
+                      alt={`Схема маршрута: ${option.title}`}
+                      previewClassName={styles.routeImage}
+                      previewSizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
                       quality={72}
-                      sizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
+                      src={`${assetBasePath}${option.image}`}
+                      title={option.title}
                     />
-                  </div>
+                  )
                 ) : (
                   <Map className={styles.routeIcon} size={30} strokeWidth={1.5} aria-hidden />
                 )}
@@ -311,13 +335,14 @@ export function ScenarioPageTemplate({
           </div>
           <div className={styles.questionList}>
             {content.selectionQuestions.map((item) => (
-              <article key={item.title}>
-                <Check size={18} aria-hidden />
-                <div>
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
-                </div>
-              </article>
+              <details key={item.title}>
+                <summary>
+                  <Check size={18} aria-hidden />
+                  <span>{item.title}</span>
+                  <ChevronDown size={19} strokeWidth={1.7} aria-hidden />
+                </summary>
+                <p>{item.description}</p>
+              </details>
             ))}
           </div>
         </div>

@@ -471,7 +471,7 @@
   border: 1px solid var(--scenario-line);
   border-radius: 8px;
   background: #fff;
-  cursor: pointer;
+  cursor: default;
 }
 
 .routeChoice[data-selected] {
@@ -497,6 +497,12 @@
   display: grid;
   gap: 8px;
   padding: 18px;
+  cursor: pointer;
+}
+
+.routeChoiceBody input:focus-visible ~ strong {
+  outline: 3px solid rgba(237, 91, 42, 0.3);
+  outline-offset: 3px;
 }
 
 .routeChoiceBody strong {
@@ -755,25 +761,53 @@
   text-underline-offset: 3px;
 }
 
-.guidanceGrid {
+.guidanceAccordion {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  border-top: 1px solid var(--scenario-line);
 }
 
 .guidanceItem {
-  min-height: 260px;
-  padding: 28px;
-  border: 1px solid var(--scenario-line);
-  border-radius: 8px;
-  background: var(--scenario-surface);
+  border-bottom: 1px solid var(--scenario-line);
+}
+
+.guidanceItem summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  gap: 18px;
+  align-items: center;
+  min-height: 76px;
+  padding: 18px 4px;
+  font-size: var(--scenario-card-heading-size);
+  font-weight: var(--scenario-card-heading-weight);
+  line-height: 1.3;
+  cursor: pointer;
+  list-style: none;
+}
+
+.guidanceItem summary::-webkit-details-marker {
+  display: none;
+}
+
+.guidanceItem summary svg {
+  color: var(--scenario-signal);
+  transition: transform 160ms ease-out;
+}
+
+.guidanceItem[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.guidanceItem summary:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.3);
+  outline-offset: 3px;
 }
 
 .guidanceItem ul {
   display: grid;
   gap: 14px;
-  margin: 18px 0 0;
-  padding: 0;
+  max-width: 820px;
+  margin: 0;
+  padding: 0 4px 24px;
   color: var(--scenario-muted);
   font-size: 14px;
   line-height: 1.55;
@@ -793,7 +827,7 @@
 }
 
 .mistakeItem {
-  border-color: rgba(189, 61, 22, 0.3);
+  border-bottom-color: rgba(189, 61, 22, 0.35);
 }
 
 .routeSection {
@@ -1220,16 +1254,44 @@ a.routeOption:focus-visible {
   margin-bottom: 24px;
 }
 
-.questionList article {
-  display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 12px;
-  padding: 24px 0;
+.questionList details {
   border-bottom: 1px solid var(--scenario-line);
 }
 
-.questionList article:first-child {
-  padding-top: 0;
+.questionList summary {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 24px;
+  gap: 12px;
+  align-items: center;
+  padding: 24px 0;
+  font-size: var(--scenario-card-heading-size);
+  font-weight: var(--scenario-card-heading-weight);
+  line-height: 1.3;
+  cursor: pointer;
+  list-style: none;
+}
+
+.questionList summary::-webkit-details-marker {
+  display: none;
+}
+
+.questionList summary svg:last-child {
+  transition: transform 160ms ease-out;
+}
+
+.questionList details[open] summary svg:last-child {
+  transform: rotate(180deg);
+}
+
+.questionList summary:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.3);
+  outline-offset: 3px;
+}
+
+.questionList details > p {
+  max-width: 680px;
+  margin: -8px 36px 0 40px;
+  padding-bottom: 24px;
 }
 
 .groupGrid {
@@ -1502,18 +1564,12 @@ a.groupItem:hover {
   .inputGrid,
   .fieldGrid,
   .routeGrid,
-  .groupGrid,
-  .guidanceGrid {
+  .groupGrid {
     grid-template-columns: 1fr;
   }
 
   .diameterTable {
     min-width: 660px;
-  }
-
-  .guidanceItem {
-    min-height: auto;
-    padding: 22px;
   }
 
   .guidanceItem ul {
@@ -1578,7 +1634,9 @@ a.groupItem:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .faqList summary svg {
+  .faqList summary svg,
+  .guidanceItem summary svg,
+  .questionList summary svg:last-child {
     transition: none;
   }
 

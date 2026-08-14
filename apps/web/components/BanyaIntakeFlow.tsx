@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
@@ -15,6 +14,7 @@ import {
   type DraftFieldStatus,
 } from "@/lib/configuratorDraft";
 import type { ScenarioPageContent } from "@/lib/scenarioPages";
+import { RouteImageViewer } from "./RouteImageViewer";
 import styles from "./ScenarioPageTemplate.module.css";
 
 type BanyaIntakeFlowProps = {
@@ -303,35 +303,33 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                     : "wall" as const;
                 const selected = intake.route === value;
                 return (
-                  <label className={styles.routeChoice} data-selected={selected || undefined} key={option.slug}>
-                    <input
-                      checked={selected}
-                      name={`${scenario}-route`}
-                      onChange={() => setIntake((current) => ({
-                        ...current,
-                        route: value,
-                        outlet: value === "wall-direct" ? "rear" : current.outlet,
-                      }))}
-                      type="radio"
-                      value={value}
-                    />
+                  <div className={styles.routeChoice} data-selected={selected || undefined} key={option.slug}>
                     {option.image ? (
-                      <span className={styles.routeChoiceImage}>
-                        <Image
-                          alt={`Схема маршрута: ${option.title}`}
-                          fill
-                          loading="lazy"
-                          quality={72}
-                          sizes="(max-width: 620px) calc(100vw - 64px), 50vw"
-                          src={`${assetBasePath}${option.image}`}
-                        />
-                      </span>
+                      <RouteImageViewer
+                        alt={`Схема маршрута: ${option.title}`}
+                        previewClassName={styles.routeChoiceImage}
+                        previewSizes="(max-width: 620px) calc(100vw - 64px), 33vw"
+                        quality={72}
+                        src={`${assetBasePath}${option.image}`}
+                        title={option.title}
+                      />
                     ) : null}
-                    <span className={styles.routeChoiceBody}>
+                    <label className={styles.routeChoiceBody}>
+                      <input
+                        checked={selected}
+                        name={`${scenario}-route`}
+                        onChange={() => setIntake((current) => ({
+                          ...current,
+                          route: value,
+                          outlet: value === "wall-direct" ? "rear" : current.outlet,
+                        }))}
+                        type="radio"
+                        value={value}
+                      />
                       <strong>{option.title}</strong>
                       <small>{option.description}</small>
-                    </span>
-                  </label>
+                    </label>
+                  </div>
                 );
               })}
               <label className={`${styles.routeChoice} ${styles.routeChoiceUnknown}`} data-selected={intake.route === "unknown" || undefined}>
