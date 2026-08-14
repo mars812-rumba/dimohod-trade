@@ -699,7 +699,7 @@ export const solidFuelBoilerScenario: ScenarioPageContent = {
   title: "Дымоход для котла по требованиям оборудования",
   summary:
     "Начинаем с точной модели и документации, затем связываем подключение с маршрутом котельной.",
-  heroImage: "/images/home/scenario-tt-kotel.webp",
+  heroImage: "/images/home/scenario-tt-kotel-user.webp",
   heroImageAlt: "Твердотопливный котёл с металлическим дымоходом в котельной",
   diameterGuide: {
     title: "Диаметр ТТ-котла зависит от конкретной модели",

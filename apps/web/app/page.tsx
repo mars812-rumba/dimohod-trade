@@ -98,7 +98,7 @@ const scenarios = [
     slug: "tt-kotel",
     title: "Твердотопливный котёл",
     text: "Точная модель котла, параметры патрубка и полный маршрут котельной.",
-    image: "/images/home/scenario-tt-kotel.webp",
+    image: "/images/home/scenario-tt-kotel-user.webp",
     href: "/solutions/tverdotoplivny-kotel",
   },
   {
