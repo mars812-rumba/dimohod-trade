@@ -1,41 +1,94 @@
 import type { ScenarioConfiguratorDraft } from "./configuratorDraft";
 
-export const NOMINAL_PIPE_LENGTH_MM = 1000;
-export const EFFECTIVE_PIPE_LENGTH_MM = 950;
+export const PIPE_SOCKET_OVERLAP_MM = 50;
+
+export const PIPE_LENGTHS = [
+  { nominalMm: 1000, effectiveMm: 950 },
+  { nominalMm: 500, effectiveMm: 450 },
+  { nominalMm: 350, effectiveMm: 300 },
+  { nominalMm: 250, effectiveMm: 200 },
+] as const;
 
 export type ChimneyRouteKind = "ceiling" | "wall-top" | "wall-rear";
+export type RouteAxis = "vertical" | "horizontal";
 
-export type ChimneyLengthPart = {
-  id: "vertical" | "horizontal" | "outdoor";
+export type ForbiddenJointZone = {
+  id: string;
   label: string;
-  requiredMm: number;
-  pipeQty: number;
-  coveredMm: number;
+  axis: RouteAxis;
+  startMm: number;
+  endMm: number;
+  kind: "floor" | "wall" | "roof";
+};
+
+export type PlacedPipe = {
+  id: string;
+  axis: RouteAxis;
+  nominalMm: number;
+  effectiveMm: number;
+  startMm: number;
+  endMm: number;
+  zone: "indoor_warm" | "wall_or_ceiling_pass" | "attic_or_cold_zone" | "outdoor";
+  contour: "одностенный" | "сэндвич";
+};
+
+export type FixedRoutePart = {
+  id: "warmup" | "support_cap";
+  label: string;
+  axis: RouteAxis;
+  lengthMm: number;
+  startMm: number;
+  endMm: number;
+};
+
+export type PipeLayoutVariant = {
+  id: string;
+  label: string;
+  pipes: PlacedPipe[];
+  coveredEndMm: number;
+  reserveMm: number;
+  jointPositionsMm: number[];
+};
+
+export type ChimneyBomLine = {
+  key: string;
+  productKind: string;
+  label: string;
+  quantity: number;
+  nominalLengthMm?: number;
+  contour?: "одностенный" | "сэндвич";
+  zone: string;
+  selectionReason: string;
+  requiresSku: boolean;
 };
 
 export type ChimneyCalculation = {
   routeKind: ChimneyRouteKind;
   floors: number;
   hasAttic: boolean;
-  passageQty: number;
   diameterMm: number | null;
   diameterStatus: "known" | "oval" | "missing";
-  lengthParts: ChimneyLengthPart[];
-  pipeQty: number;
-  requiredMm: number;
-  coveredMm: number;
-  reserveMm: number;
-  source: "profile-total" | "profile-parts" | "configurator";
+  routeStartMm: number;
+  routeTargetMm: number;
+  fixedParts: FixedRoutePart[];
+  forbiddenZones: ForbiddenJointZone[];
+  variants: PipeLayoutVariant[];
+  selectedVariant: PipeLayoutVariant | null;
+  bom: ChimneyBomLine[];
+  status: "automatic_draft" | "needs_review" | "invalid";
+  errors: string[];
   notes: string[];
   reviewItems: string[];
 };
 
-type CalculationInput = {
+export type CalculationInput = {
   route: "ceiling" | "wall";
   outlet: "vertical" | "horizontal";
   floors: number;
   heightM: number;
   distanceM: number;
+  warmupLengthMm?: number;
+  supportCapLengthMm?: number;
   draft: ScenarioConfiguratorDraft | null;
 };
 
@@ -44,18 +97,6 @@ function positiveNumber(value: string | number | null | undefined): number | nul
   if (normalized === "" || normalized === null || normalized === undefined) return null;
   const parsed = Number(normalized);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-}
-
-function pipePart(id: ChimneyLengthPart["id"], label: string, requiredMm: number): ChimneyLengthPart {
-  const safeRequiredMm = Math.max(0, Math.round(requiredMm));
-  const pipeQty = safeRequiredMm > 0 ? Math.ceil(safeRequiredMm / EFFECTIVE_PIPE_LENGTH_MM) : 0;
-  return {
-    id,
-    label,
-    requiredMm: safeRequiredMm,
-    pipeQty,
-    coveredMm: pipeQty * EFFECTIVE_PIPE_LENGTH_MM,
-  };
 }
 
 function measuredDiameter(draft: ScenarioConfiguratorDraft | null): Pick<ChimneyCalculation, "diameterMm" | "diameterStatus"> {
@@ -72,39 +113,240 @@ function measuredDiameter(draft: ScenarioConfiguratorDraft | null): Pick<Chimney
     : { diameterMm: null, diameterStatus: "missing" };
 }
 
-function resolveCeilingHeightMm(
-  draft: ScenarioConfiguratorDraft | null,
-  floors: number,
-  fallbackHeightM: number,
-): { value: number; source: ChimneyCalculation["source"]; note?: string } {
-  const totalM = positiveNumber(draft?.routeHeight);
-  if (totalM) return { value: totalM * 1000, source: "profile-total" };
-
-  const roomHeight = positiveNumber(draft?.ceilingHeight);
-  const floorThickness = positiveNumber(draft?.floorThickness);
-  const atticHeight = draft?.hasAttic ? positiveNumber(draft.atticHeight) : null;
-  const connectionHeight = positiveNumber(draft?.connectionHeight);
-  if (roomHeight && floorThickness) {
-    const firstRoom = Math.max(0, roomHeight - (connectionHeight ?? 0));
-    const remainingRooms = Math.max(0, floors - 1) * roomHeight;
-    const construction = floors * floorThickness;
-    const knownHeight = firstRoom + remainingRooms + construction + (atticHeight ?? 0);
-    return {
-      value: knownHeight,
-      source: "profile-parts",
-      note: "Высота собрана из замеров помещений, перекрытий и чердака; участок над кровлей нужно уточнить.",
-    };
-  }
-
-  return { value: fallbackHeightM * 1000, source: "configurator" };
+export function jointInsideForbiddenZone(positionMm: number, zones: ForbiddenJointZone[]): ForbiddenJointZone | null {
+  return zones.find((zone) => positionMm > zone.startMm && positionMm < zone.endMm) ?? null;
 }
 
-function resolveHorizontalLengthMm(draft: ScenarioConfiguratorDraft | null, fallbackDistanceM: number): number {
-  const inside = positiveNumber(draft?.wallDistance);
-  const wall = positiveNumber(draft?.wallThickness);
-  const facade = positiveNumber(draft?.facadeOffset);
-  if (inside || wall || facade) return (inside ?? 0) + (wall ?? 0) + (facade ?? 0);
-  return fallbackDistanceM * 1000;
+function pipeZone(startMm: number, endMm: number, zones: ForbiddenJointZone[], fallback: PlacedPipe["zone"]): PlacedPipe["zone"] {
+  return zones.some((zone) => startMm < zone.endMm && endMm > zone.startMm)
+    ? "wall_or_ceiling_pass"
+    : fallback;
+}
+
+export function solvePipeLayouts({
+  axis,
+  startMm,
+  targetMm,
+  forbiddenZones,
+  fallbackZone,
+  contour = "сэндвич",
+  maxVariants = 3,
+}: {
+  axis: RouteAxis;
+  startMm: number;
+  targetMm: number;
+  forbiddenZones: ForbiddenJointZone[];
+  fallbackZone: PlacedPipe["zone"];
+  contour?: PlacedPipe["contour"];
+  maxVariants?: number;
+}): PipeLayoutVariant[] {
+  if (targetMm <= startMm) return [];
+  const maximumEnd = targetMm + PIPE_LENGTHS[0].effectiveMm;
+  const queue: Array<{ endMm: number; lengths: Array<(typeof PIPE_LENGTHS)[number]> }> = [
+    { endMm: startMm, lengths: [] },
+  ];
+  const results: PipeLayoutVariant[] = [];
+  const bestDepthAtEnd = new Map<number, number>();
+
+  while (queue.length && results.length < 120) {
+    const current = queue.shift()!;
+    if (current.lengths.length >= 48) continue;
+    for (const length of PIPE_LENGTHS) {
+      const endMm = current.endMm + length.effectiveMm;
+      if (endMm > maximumEnd) continue;
+      if (jointInsideForbiddenZone(endMm, forbiddenZones)) continue;
+      const lengths = [...current.lengths, length];
+      if (endMm >= targetMm) {
+        let cursor = startMm;
+        const pipes = lengths.map((item, index) => {
+          const pipeStart = cursor;
+          cursor += item.effectiveMm;
+          return {
+            id: `${axis}-pipe-${index + 1}`,
+            axis,
+            nominalMm: item.nominalMm,
+            effectiveMm: item.effectiveMm,
+            startMm: pipeStart,
+            endMm: cursor,
+            zone: pipeZone(pipeStart, cursor, forbiddenZones, fallbackZone),
+            contour,
+          } satisfies PlacedPipe;
+        });
+        results.push({
+          id: lengths.map((item) => item.nominalMm).join("-"),
+          label: lengths.map((item) => item.nominalMm).join(" + "),
+          pipes,
+          coveredEndMm: endMm,
+          reserveMm: endMm - targetMm,
+          jointPositionsMm: pipes.map((pipe) => pipe.endMm),
+        });
+        continue;
+      }
+
+      const knownDepth = bestDepthAtEnd.get(endMm);
+      if (knownDepth !== undefined && knownDepth < lengths.length - 1) continue;
+      bestDepthAtEnd.set(endMm, lengths.length);
+      queue.push({ endMm, lengths });
+    }
+  }
+
+  return results
+    .sort((left, right) => {
+      if (left.reserveMm !== right.reserveMm) return left.reserveMm - right.reserveMm;
+      if (left.pipes.length !== right.pipes.length) return left.pipes.length - right.pipes.length;
+      const leftShort = left.pipes.filter((pipe) => pipe.nominalMm < 1000).length;
+      const rightShort = right.pipes.filter((pipe) => pipe.nominalMm < 1000).length;
+      return leftShort - rightShort;
+    })
+    .filter((variant, index, all) => all.findIndex((item) => item.id === variant.id) === index)
+    .slice(0, maxVariants);
+}
+
+function ceilingForbiddenZones(draft: ScenarioConfiguratorDraft | null, floors: number): ForbiddenJointZone[] {
+  const levelMeasurements = [
+    [positiveNumber(draft?.ceilingHeight), positiveNumber(draft?.floorThickness)],
+    [positiveNumber(draft?.secondCeilingHeight), positiveNumber(draft?.secondFloorThickness)],
+    [positiveNumber(draft?.thirdCeilingHeight), positiveNumber(draft?.thirdFloorThickness)],
+  ];
+  const zones: ForbiddenJointZone[] = [];
+  let floorLevel = 0;
+  for (let index = 0; index < floors; index += 1) {
+    const fallback = levelMeasurements[0];
+    const roomHeight = levelMeasurements[index]?.[0] ?? fallback[0];
+    const floorThickness = levelMeasurements[index]?.[1] ?? fallback[1];
+    if (!roomHeight || !floorThickness) break;
+    const startMm = floorLevel + roomHeight;
+    const endMm = startMm + floorThickness;
+    zones.push({
+      id: `floor-${index + 1}`,
+      label: index === floors - 1 && draft?.hasAttic ? `Перекрытие ${index + 1} перед чердаком` : `Перекрытие ${index + 1}`,
+      axis: "vertical",
+      startMm,
+      endMm,
+      kind: "floor",
+    });
+    floorLevel = endMm;
+  }
+  const atticHeight = draft?.hasAttic ? positiveNumber(draft.atticHeight) : null;
+  const roofThickness = positiveNumber(draft?.roofThickness);
+  if (draft?.hasAttic && atticHeight && roofThickness) {
+    const startMm = floorLevel + atticHeight;
+    zones.push({
+      id: "roof-pass",
+      label: "Проход через кровлю",
+      axis: "vertical",
+      startMm,
+      endMm: startMm + roofThickness,
+      kind: "roof",
+    });
+  }
+  return zones;
+}
+
+function wallForbiddenZones(draft: ScenarioConfiguratorDraft | null, fallbackDistanceM: number): ForbiddenJointZone[] {
+  const inside = positiveNumber(draft?.wallDistance) ?? fallbackDistanceM * 1000;
+  const thickness = positiveNumber(draft?.wallThickness);
+  if (!thickness) return [];
+  return [{
+    id: "wall-pass",
+    label: "Проход через стену",
+    axis: "horizontal",
+    startMm: inside,
+    endMm: inside + thickness,
+    kind: "wall",
+  }];
+}
+
+function summarizePipeBom(variants: PipeLayoutVariant[], routeKind: ChimneyRouteKind): ChimneyBomLine[] {
+  const selected = variants[0];
+  if (!selected) return [];
+  const counts = new Map<string, { nominalLengthMm: number; contour: PlacedPipe["contour"]; quantity: number }>();
+  selected.pipes.forEach((pipe) => {
+    const key = `${pipe.contour}-${pipe.nominalMm}`;
+    const current = counts.get(key);
+    counts.set(key, { nominalLengthMm: pipe.nominalMm, contour: pipe.contour, quantity: (current?.quantity ?? 0) + 1 });
+  });
+  return [...counts.entries()]
+    .sort(([, left], [, right]) => right.nominalLengthMm - left.nominalLengthMm)
+    .map(([, { nominalLengthMm, contour, quantity }]) => ({
+      key: `${contour === "сэндвич" ? "sandwich" : "single-layout"}-pipe-${nominalLengthMm}`,
+      productKind: "труба",
+      label: `${contour === "сэндвич" ? "Сэндвич-труба" : "Одностенная труба"} ${nominalLengthMm} мм`,
+      quantity,
+      nominalLengthMm,
+      contour,
+      zone: routeKind === "ceiling" ? "indoor/cold/pass" : "wall/outdoor",
+      selectionReason: "Длина выбрана так, чтобы соединения не попадали внутрь проходных зон.",
+      requiresSku: true,
+    }));
+}
+
+function addRouteNodes(bom: ChimneyBomLine[], routeKind: ChimneyRouteKind, passageQty: number, warmupLengthMm: number) {
+  if (warmupLengthMm > 0 && routeKind === "ceiling") {
+    bom.unshift({
+      key: `single-pipe-${warmupLengthMm}`,
+      productKind: "труба",
+      label: `Одностенная труба-разгон ${warmupLengthMm} мм`,
+      quantity: 1,
+      nominalLengthMm: warmupLengthMm,
+      contour: "одностенный",
+      zone: "indoor_warm",
+      selectionReason: "Исходная длина разгона указана в расчёте.",
+      requiresSku: true,
+    });
+    bom.splice(1, 0, {
+      key: "support-cap",
+      productKind: "заглушка",
+      label: "Сэндвич-заглушка опорная",
+      quantity: 1,
+      contour: "сэндвич",
+      zone: "transition",
+      selectionReason: "Опорный переход перед сэндвич-участком задан схемой.",
+      requiresSku: true,
+    });
+  }
+  bom.push({
+    key: routeKind === "ceiling" ? "ceiling-passage" : "wall-passage",
+    productKind: "проходной_узел",
+    label: routeKind === "ceiling" ? "Проходной узел перекрытия" : "Проходной узел стены",
+    quantity: passageQty,
+    zone: "wall_or_ceiling_pass",
+    selectionReason: "Добавлен для каждой рассчитанной проходной зоны.",
+    requiresSku: true,
+  });
+  bom.push({
+    key: "passage-insulation",
+    productKind: "изоляция",
+    label: "Комплект ваты для проходного узла",
+    quantity: passageQty,
+    zone: "wall_or_ceiling_pass",
+    selectionReason: "Добавлен как часть предварительного состава каждого проходного узла.",
+    requiresSku: true,
+  });
+  bom.push({
+    key: "passage-flange",
+    productKind: "фланец",
+    label: "Фланец проходного узла",
+    quantity: passageQty,
+    zone: "wall_or_ceiling_pass",
+    selectionReason: "Предварительно один на проход; исполнение и количество сторон требуют проверки.",
+    requiresSku: true,
+  });
+  if (routeKind === "ceiling") {
+    bom.push({
+      key: "floor-clamp",
+      productKind: "крепеж",
+      label: "Хомут в перекрытие",
+      quantity: passageQty,
+      zone: "wall_or_ceiling_pass",
+      selectionReason: "Добавлен по числу перекрытий; граница исполнения по наружному диаметру требует проверки.",
+      requiresSku: true,
+    });
+    bom.push({ key: "roof-passage", productKind: "проходной_узел", label: "Кровельный проходной узел", quantity: 1, zone: "roof", selectionReason: "Вертикальная трасса пересекает кровлю.", requiresSku: true });
+  } else {
+    bom.push({ key: "outside-elbow", productKind: "отвод", label: "Сэндвич-отвод 90°", quantity: routeKind === "wall-top" ? 2 : 1, zone: "wall/outdoor", selectionReason: "Количество определяется поворотами выбранного маршрута.", requiresSku: true });
+  }
+  bom.push({ key: "termination", productKind: "оголовок", label: "Оголовок", quantity: 1, zone: "termination", selectionReason: "Завершает рассчитанную трассу.", requiresSku: true });
 }
 
 export function calculateChimney(input: CalculationInput): ChimneyCalculation {
@@ -112,69 +354,128 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const floors = Math.max(1, Math.min(3, Math.round(draftFloors ?? input.floors)));
   const hasAttic = Boolean(input.route === "ceiling" && input.draft?.hasAttic);
   const diameter = measuredDiameter(input.draft);
-  const notes: string[] = [
-    `Труба считается по ${EFFECTIVE_PIPE_LENGTH_MM} мм полезной длины после соединения (номинал ${NOMINAL_PIPE_LENGTH_MM} мм).`,
-    "Габариты фасонных и проходных элементов не вычитаются из длины труб без подтверждённых монтажных размеров.",
+  const routeKind: ChimneyRouteKind = input.route === "ceiling"
+    ? "ceiling"
+    : input.outlet === "horizontal" ? "wall-rear" : "wall-top";
+  const errors: string[] = [];
+  const notes = [
+    "Каждый стык проверяется по абсолютной координате трассы.",
+    `Расчётные полезные длины учитывают соединение ${PIPE_SOCKET_OVERLAP_MM} мм.`,
   ];
   const reviewItems = [
-    "Исполнение проходных узлов и фланцев проверить по конструкции перекрытия или стены.",
-    "Тип, количество и шаг креплений определить после проверки основания и геометрии трассы.",
-    "Необходимость тройника, ревизии и отвода конденсата подтвердить для выбранного отопителя и маршрута.",
+    "Подтвердить полезную длину соединения для труб 500, 350 и 250 мм.",
+    "Подобрать конкретные исполнения проходных узлов и фланцев по конструкции и наружному диаметру.",
+    "Тип и количество креплений подтвердить после проверки основания.",
   ];
 
-  let routeKind: ChimneyRouteKind;
-  let source: ChimneyCalculation["source"] = "configurator";
-  let lengthParts: ChimneyLengthPart[];
-  let passageQty: number;
+  const connectionHeightMm = routeKind === "wall-rear"
+    ? positiveNumber(input.draft?.rearOutletBottomHeight) ?? 0
+    : positiveNumber(input.draft?.connectionHeight) ?? 0;
+  const routeLengthMm = input.heightM * 1000;
+  const routeTargetMm = routeKind === "ceiling" ? connectionHeightMm + routeLengthMm : routeLengthMm;
+  const warmupLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.warmupLengthMm ?? 500)) : 0;
+  const supportCapLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.supportCapLengthMm ?? 70)) : 0;
+  const fixedParts: FixedRoutePart[] = [];
+  let pipeStartMm = routeKind === "ceiling" ? connectionHeightMm : 0;
+  if (warmupLengthMm > 0) {
+    fixedParts.push({ id: "warmup", label: "Одностенный разгон", axis: "vertical", lengthMm: warmupLengthMm, startMm: pipeStartMm, endMm: pipeStartMm + warmupLengthMm });
+    pipeStartMm += warmupLengthMm;
+  }
+  if (supportCapLengthMm > 0) {
+    fixedParts.push({ id: "support_cap", label: "Опорная заглушка", axis: "vertical", lengthMm: supportCapLengthMm, startMm: pipeStartMm, endMm: pipeStartMm + supportCapLengthMm });
+    pipeStartMm += supportCapLengthMm;
+  }
 
-  if (input.route === "ceiling") {
-    routeKind = "ceiling";
-    passageQty = floors;
-    const resolved = resolveCeilingHeightMm(input.draft, floors, input.heightM);
-    source = resolved.source;
-    if (resolved.note) notes.push(resolved.note);
-    if (hasAttic) notes.push("Чердак выделен отдельной холодной зоной на схеме.");
-    lengthParts = [pipePart("vertical", "Вертикальная трасса", resolved.value)];
-  } else {
-    routeKind = input.outlet === "horizontal" ? "wall-rear" : "wall-top";
-    passageQty = 1;
-    const horizontalMm = resolveHorizontalLengthMm(input.draft, input.distanceM);
-    const outdoorM = positiveNumber(input.draft?.outdoorHeight) ?? input.heightM;
-    const parts = [pipePart("horizontal", "Горизонтальный участок через стену", horizontalMm)];
-    if (routeKind === "wall-top") {
-      const rise = positiveNumber(input.draft?.verticalRise);
-      if (rise) parts.unshift(pipePart("vertical", "Подъём от отопителя до поворота", rise));
+  const forbiddenZones = routeKind === "ceiling"
+    ? ceilingForbiddenZones(input.draft, floors)
+    : wallForbiddenZones(input.draft, input.distanceM);
+  if (routeKind === "ceiling" && floors > 1) {
+    const missingSecond = !positiveNumber(input.draft?.secondCeilingHeight) || !positiveNumber(input.draft?.secondFloorThickness);
+    const missingThird = floors > 2 && (!positiveNumber(input.draft?.thirdCeilingHeight) || !positiveNumber(input.draft?.thirdFloorThickness));
+    if (missingSecond || missingThird) {
+      reviewItems.unshift("Для незаполненных этажей повторены размеры первого этажа; внесите отдельные высоты и толщины перекрытий.");
     }
-    parts.push(pipePart("outdoor", "Наружный вертикальный участок", outdoorM * 1000));
-    lengthParts = parts;
-    source = input.draft && (positiveNumber(input.draft.wallDistance) || positiveNumber(input.draft.outdoorHeight))
-      ? "profile-parts"
-      : "configurator";
+  }
+  if (routeKind === "ceiling" && hasAttic && (!positiveNumber(input.draft?.atticHeight) || !positiveNumber(input.draft?.roofThickness))) {
+    reviewItems.unshift("Заполнить высоту чердака и толщину кровли, чтобы проверить стыки в кровельном проходе.");
+  }
+  fixedParts.forEach((part) => {
+    const forbidden = jointInsideForbiddenZone(part.endMm, forbiddenZones);
+    if (forbidden) errors.push(`Стык после «${part.label}» попадает внутрь зоны «${forbidden.label}».`);
+  });
+  if (!forbiddenZones.length) {
+    reviewItems.unshift(routeKind === "ceiling"
+      ? "Заполнить высоту помещения и толщину перекрытия: без них нельзя проверить координаты стыков."
+      : "Заполнить толщину стены: без неё нельзя проверить стыки в стеновом проходе.");
   }
 
-  if (diameter.diameterStatus === "missing") {
-    reviewItems.unshift("Указать наружный диаметр патрубка, чтобы подобрать конкретные SKU.");
-  } else if (diameter.diameterStatus === "oval") {
-    reviewItems.unshift("Замеры X и Y отличаются: овальность патрубка нужно проверить до подбора SKU.");
+  let variants: PipeLayoutVariant[] = [];
+  if (!errors.length) {
+    if (routeKind === "ceiling") {
+      variants = solvePipeLayouts({ axis: "vertical", startMm: pipeStartMm, targetMm: routeTargetMm, forbiddenZones, fallbackZone: hasAttic ? "attic_or_cold_zone" : "indoor_warm" });
+    } else {
+      const wallEndMm = (positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000)
+        + (positiveNumber(input.draft?.wallThickness) ?? 0)
+        + (positiveNumber(input.draft?.facadeOffset) ?? 0);
+      const horizontal = solvePipeLayouts({ axis: "horizontal", startMm: 0, targetMm: wallEndMm, forbiddenZones, fallbackZone: "indoor_warm", maxVariants: 1 })[0];
+      const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
+      const outdoor = solvePipeLayouts({ axis: "vertical", startMm: 0, targetMm: outdoorHeightMm, forbiddenZones: [], fallbackZone: "outdoor", maxVariants: 1 })[0];
+      if (horizontal && outdoor) {
+        const indoorRiseMm = routeKind === "wall-top" ? positiveNumber(input.draft?.verticalRise) ?? 0 : 0;
+        const indoor = indoorRiseMm > 0
+          ? solvePipeLayouts({ axis: "vertical", startMm: 0, targetMm: indoorRiseMm, forbiddenZones: [], fallbackZone: "indoor_warm", contour: "одностенный", maxVariants: 1 })[0]
+          : null;
+        variants = [{
+          id: `${indoor?.id ?? "no-rise"}--${horizontal.id}--${outdoor.id}`,
+          label: `${indoor ? `${indoor.label} / ` : ""}${horizontal.label} / ${outdoor.label}`,
+          pipes: [
+            ...(indoor?.pipes.map((pipe, index) => ({ ...pipe, id: `indoor-pipe-${index + 1}` })) ?? []),
+            ...horizontal.pipes,
+            ...outdoor.pipes.map((pipe, index) => ({ ...pipe, id: `outdoor-pipe-${index + 1}` })),
+          ],
+          coveredEndMm: (indoor?.coveredEndMm ?? 0) + horizontal.coveredEndMm + outdoor.coveredEndMm,
+          reserveMm: (indoor?.reserveMm ?? 0) + horizontal.reserveMm + outdoor.reserveMm,
+          jointPositionsMm: [...(indoor?.jointPositionsMm ?? []), ...horizontal.jointPositionsMm, ...outdoor.jointPositionsMm],
+        }];
+      }
+    }
   }
+  if (!variants.length && !errors.length) errors.push("Не найдена раскладка труб без стыков внутри проходных зон.");
 
-  const pipeQty = lengthParts.reduce((sum, part) => sum + part.pipeQty, 0);
-  const requiredMm = lengthParts.reduce((sum, part) => sum + part.requiredMm, 0);
-  const coveredMm = lengthParts.reduce((sum, part) => sum + part.coveredMm, 0);
+  const bom = summarizePipeBom(variants, routeKind);
+  addRouteNodes(bom, routeKind, routeKind === "ceiling" ? floors : 1, warmupLengthMm);
+  if (diameter.diameterStatus === "missing") reviewItems.unshift("Указать наружный диаметр патрубка для подбора SKU.");
+  if (diameter.diameterStatus === "oval") reviewItems.unshift("Замеры X и Y отличаются: соединение нужно проверить до подбора SKU.");
 
   return {
     routeKind,
     floors,
     hasAttic,
-    passageQty,
     ...diameter,
-    lengthParts,
-    pipeQty,
-    requiredMm,
-    coveredMm,
-    reserveMm: coveredMm - requiredMm,
-    source,
+    routeStartMm: connectionHeightMm,
+    routeTargetMm,
+    fixedParts,
+    forbiddenZones,
+    variants,
+    selectedVariant: variants[0] ?? null,
+    bom,
+    status: errors.length ? "invalid" : reviewItems.length ? "needs_review" : "automatic_draft",
+    errors,
     notes,
     reviewItems,
   };
+}
+
+export function bomForVariant(calculation: ChimneyCalculation, variant: PipeLayoutVariant | null): ChimneyBomLine[] {
+  const isLayoutPipe = (line: ChimneyBomLine) => line.key.startsWith("sandwich-pipe-") || line.key.startsWith("single-layout-pipe-");
+  if (!variant) return calculation.bom.filter((line) => !isLayoutPipe(line));
+  const pipeLines = summarizePipeBom([variant], calculation.routeKind);
+  const fixedAndNodes = calculation.bom.filter((line) => !isLayoutPipe(line));
+  const insertionIndex = fixedAndNodes.findIndex((line) => line.key === "ceiling-passage" || line.key === "wall-passage");
+  if (insertionIndex < 0) return [...fixedAndNodes, ...pipeLines];
+  return [
+    ...fixedAndNodes.slice(0, insertionIndex),
+    ...pipeLines,
+    ...fixedAndNodes.slice(insertionIndex),
+  ];
 }

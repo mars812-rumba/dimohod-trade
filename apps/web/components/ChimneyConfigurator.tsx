@@ -18,9 +18,11 @@ import {
   type ScenarioConfiguratorDraft,
 } from "@/lib/configuratorDraft";
 import {
+  bomForVariant,
   calculateChimney,
-  EFFECTIVE_PIPE_LENGTH_MM,
+  PIPE_SOCKET_OVERLAP_MM,
   type ChimneyCalculation,
+  type PipeLayoutVariant,
 } from "@/lib/chimneyCalculation";
 import { productSelectionPath } from "@/lib/productUrls";
 import type { ProductListItem, ProductListResponse } from "@/lib/api";
@@ -31,123 +33,13 @@ type StoveType = "bania" | "pech" | "kamin" | "tt-kotel" | "gaz";
 type OutletType = "vertical" | "horizontal";
 type RoofType = "pitched" | "flat";
 
-type AssetName =
-  | "adapter_h"
-  | "cap"
-  | "ceiling_passage"
-  | "elbow_side_to_up"
-  | "elbow_up_to_side"
-  | "pipe"
-  | "pipe_h"
-  | "pipe_short"
-  | "pipe_short_h"
-  | "roof_flashing_flat"
-  | "roof_flashing_pitch"
-  | "start_cap"
-  | "start_cap_h"
-  | "storm_collar"
-  | "tee"
-  | "wall_bracket"
-  | "wall_passage_h";
-
-type BomType =
-  | "start_cap"
-  | "tee"
-  | "adapter"
-  | "elbow"
-  | "pipe"
-  | "pipe_short"
-  | "wall_bracket"
-  | "ceiling_passage"
-  | "wall_passage"
-  | "roof_flashing_pitch"
-  | "roof_flashing_flat"
-  | "storm_collar"
-  | "cap";
-
-type SceneImage = {
-  asset: AssetName;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
-
-type BomItem = {
-  type: BomType;
-  qty: number;
-};
-
-type BgItem =
-  | {
-      t: "rect";
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-      fill: string;
-      stroke?: string;
-      dash?: string;
-      opacity?: number;
-    }
-  | { t: "line"; x1: number; y1: number; x2: number; y2: number; stroke: string; dash?: string }
-  | { t: "path"; d: string; fill: string; stroke: string }
-  | { t: "label"; x: number; y: number; text: string; anchor?: "start" | "middle" };
-
-type Scene = {
-  svgW: number;
-  svgH: number;
-  viewBox: string;
-  images: SceneImage[];
-  bg: BgItem[];
-  bom: BomItem[];
-  badge: string;
-};
-
 type ChimneyConfiguratorProps = {
   assetBasePath?: string;
 };
 
-const VERT: Record<string, number> = {
-  start_cap: 92,
-  pipe: 180,
-  pipe_short: 100,
-  tee: 140,
-  ceiling_passage: 56,
-  roof_flashing_pitch: 60,
-  roof_flashing_flat: 50,
-  storm_collar: 30,
-  wall_bracket: 24,
-  cap: 88,
-  elbow_side_to_up: 72,
-};
-
-const HORIZ: Record<string, number> = {
-  pipe_h: 180,
-  pipe_short_h: 100,
-  adapter_h: 50,
-  start_cap_h: 66,
-  wall_passage_h: 50,
-  elbow_up_to_side: 80,
-};
-
-const V_W = 200;
-const H_H = 80;
-
-const BOM_LABELS: Record<BomType, [string, string]> = {
-  start_cap: ["Стартовый элемент", "тип уточняется"],
-  tee: ["Тройник с ревизией", "исполнение уточняется"],
-  adapter: ["Переходник", "соединение участков"],
-  elbow: ["Отвод 90°", "смена направления"],
-  pipe: ["Труба 1000 мм", `полезная длина после соединения — ${EFFECTIVE_PIPE_LENGTH_MM} мм`],
-  pipe_short: ["Труба 500 мм", "исполнение и диаметр уточняются"],
-  wall_bracket: ["Кронштейн стеновой", "расположение по схеме"],
-  ceiling_passage: ["Потолочно-проходной узел", "состав требует проверки"],
-  wall_passage: ["Стеновой проходной узел", "состав требует проверки"],
-  roof_flashing_pitch: ["Кровельный узел для ската", "исполнение уточняется"],
-  roof_flashing_flat: ["Кровельный узел для плоскости", "исполнение уточняется"],
-  storm_collar: ["Юбка / стакан", "гидроизоляция"],
-  cap: ["Оголовок", "исполнение уточняется"],
+type CatalogBomMatch = {
+  item: ProductListItem;
+  exactByFields: boolean;
 };
 
 const ROUTE_OPTIONS: Array<{ id: RouteType; label: string }> = [
@@ -195,6 +87,10 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
     draft.route === "ceiling" && draft.levels ? `Количество этажей: ${draft.levels === "3" ? "3 и более" : draft.levels}` : "",
     draft.route === "ceiling" && draft.ceilingHeight ? `До потолка: ${draft.ceilingHeight} мм` : "",
     draft.route === "ceiling" && draft.floorThickness ? `Высота перекрытия: ${draft.floorThickness} мм` : "",
+    draft.route === "ceiling" && draft.secondCeilingHeight ? `Высота 2 этажа: ${draft.secondCeilingHeight} мм` : "",
+    draft.route === "ceiling" && draft.secondFloorThickness ? `Перекрытие над 2 этажом: ${draft.secondFloorThickness} мм` : "",
+    draft.route === "ceiling" && draft.thirdCeilingHeight ? `Высота 3 этажа: ${draft.thirdCeilingHeight} мм` : "",
+    draft.route === "ceiling" && draft.thirdFloorThickness ? `Перекрытие над 3 этажом: ${draft.thirdFloorThickness} мм` : "",
     draft.route === "ceiling" ? `Чердак: ${draft.hasAttic ? "есть" : "нет"}` : "",
     draft.route === "ceiling" && draft.atticHeight ? `Высота чердака: ${draft.atticHeight} мм` : "",
     draft.route === "ceiling" && draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
@@ -210,303 +106,105 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
   return values;
 }
 
-function pushBom(bom: BomItem[], type: BomType, qty: number) {
-  const current = bom.find((item) => item.type === type);
-
-  if (current) {
-    current.qty += qty;
-  } else {
-    bom.push({ type, qty });
-  }
-}
-
-function buildCeilingScene({
-  roof,
-  calculation,
-}: {
-  roof: RoofType;
-  calculation: ChimneyCalculation;
-}): Scene {
-  const bom: BomItem[] = [];
-  const cx = V_W / 2;
-  const order: AssetName[] = [];
-
-  order.push("start_cap");
-  pushBom(bom, "start_cap", 1);
-
-  pushBom(bom, "adapter", 1);
-  const passageIndexes = Array.from({ length: calculation.passageQty }, (_, index) =>
-    Math.min(
-      Math.max(0, calculation.pipeQty - 1),
-      Math.max(0, Math.round(((index + 1) / (calculation.passageQty + 1)) * calculation.pipeQty) - 1),
-    ),
+function GeneratedChimneyScheme({ calculation, variant }: { calculation: ChimneyCalculation; variant: PipeLayoutVariant | null }) {
+  const ceiling = calculation.routeKind === "ceiling";
+  const pipes = variant?.pipes ?? [];
+  const maximumMm = Math.max(
+    calculation.routeTargetMm,
+    variant?.coveredEndMm ?? 0,
+    ...calculation.forbiddenZones.map((zone) => zone.endMm),
+    1000,
   );
+  const floorY = 700;
+  const topY = 56;
+  const verticalY = (millimeters: number) => floorY - (millimeters / maximumMm) * (floorY - topY);
 
-  for (let index = 0; index < calculation.pipeQty; index += 1) {
-    order.push("pipe");
-    pushBom(bom, "pipe", 1);
-
-    passageIndexes.forEach((passageIndex) => {
-      if (passageIndex === index) {
-        order.push("ceiling_passage");
-        pushBom(bom, "ceiling_passage", 1);
-      }
-    });
-  }
-
-  const roofAsset: AssetName = roof === "pitched" ? "roof_flashing_pitch" : "roof_flashing_flat";
-  order.push(roofAsset);
-  pushBom(bom, roofAsset, 1);
-  order.push("storm_collar");
-  pushBom(bom, "storm_collar", 1);
-  order.push("cap");
-  pushBom(bom, "cap", 1);
-
-  const marginTop = 26;
-  const marginBottom = 26;
-  const totalH = order.reduce((sum, asset) => sum + VERT[asset], 0) + marginTop + marginBottom;
-  let cursor = totalH - marginBottom;
-  const images = order.map((asset) => {
-    const h = VERT[asset];
-    cursor -= h;
-    return { asset, x: 0, y: cursor, w: V_W, h };
-  });
-
-  const ceilingParts = images.filter((item) => item.asset === "ceiling_passage");
-  const roofPart = images.find((item) => item.asset.startsWith("roof_flashing"));
-  const groundY = totalH - marginBottom;
-  const topCeiling = ceilingParts[ceilingParts.length - 1];
-  const roomTop = topCeiling ? topCeiling.y + topCeiling.h + 6 : groundY - 180;
-  const atticTop = roofPart ? roofPart.y + roofPart.h : 80;
-
-  const bg: BgItem[] = [
-    { t: "rect", x: 0, y: 0, w: V_W, h: atticTop, fill: "#e9e4d6", opacity: 0.5 },
-    {
-      t: "rect",
-      x: 14,
-      y: atticTop,
-      w: V_W - 28,
-      h: calculation.hasAttic ? Math.max(0, roomTop - atticTop - 2) : 0,
-      fill: "none",
-      stroke: "#8a8272",
-      dash: "3,3",
-    },
-    { t: "rect", x: 0, y: roomTop, w: V_W, h: groundY - roomTop, fill: "#dcd6c4", opacity: 0.55 },
-    { t: "line", x1: 8, y1: groundY, x2: V_W - 8, y2: groundY, stroke: "#8a8272", dash: "3,3" },
-    { t: "rect", x: cx - 22, y: groundY - 30, w: 44, h: 30, fill: "none", stroke: "#b5602f" },
-    { t: "label", x: 10, y: 16, text: "НАД КРОВЛЕЙ" },
-    { t: "label", x: 10, y: groundY - 8, text: "ПОМЕЩЕНИЕ" },
-  ];
-
-  if (calculation.hasAttic) {
-    bg.push({ t: "label", x: 10, y: atticTop + 14, text: "ЧЕРДАК" });
-  }
-
-  ceilingParts.forEach((part, index) => {
-    bg.push({
-      t: "label",
-      x: 10,
-      y: part.y - 4,
-      text: index === 0 ? "ПЕРЕКРЫТИЕ" : `ПЕРЕКРЫТИЕ ${index + 1}`,
-    });
-  });
-
-  return {
-    svgW: V_W,
-    svgH: totalH,
-    viewBox: `0 0 ${V_W} ${totalH}`,
-    images,
-    bg,
-    bom,
-    badge: `${(calculation.requiredMm / 1000).toFixed(2)} м · ${calculation.pipeQty} труб · ${calculation.floors} эт.${calculation.hasAttic ? " · чердак" : ""}`,
-  };
-}
-
-function buildWallScene({
-  outlet,
-  calculation,
-}: {
-  outlet: OutletType;
-  calculation: ChimneyCalculation;
-}): Scene {
-  const bom: BomItem[] = [];
-  const images: SceneImage[] = [];
-  const groundY = 260;
-  const stoveX = 90;
-  const horizYFixed = groundY - 90;
-  let horizY: number;
-  let rowStartX: number;
-
-  if (outlet === "vertical") {
-    pushBom(bom, "start_cap", 1);
-    pushBom(bom, "elbow", 1);
-
-    let cursor = groundY - 30;
-    const stack: AssetName[] = ["start_cap"];
-    const insideRiseQty = calculation.lengthParts.find((part) => part.id === "vertical")?.pipeQty ?? 0;
-    for (let index = 0; index < insideRiseQty; index += 1) {
-      stack.push("pipe");
-      pushBom(bom, "pipe", 1);
-    }
-    stack.push("elbow_up_to_side");
-
-    let lastImage!: SceneImage;
-    stack.forEach((asset) => {
-      const isElbow = asset === "elbow_up_to_side";
-      const h = isElbow ? HORIZ.elbow_up_to_side : VERT[asset];
-      cursor -= h;
-      const w = isElbow ? HORIZ.elbow_up_to_side : V_W;
-      const x = isElbow ? stoveX - w / 2 : stoveX - V_W / 2;
-      lastImage = { asset, x, y: cursor, w, h };
-      images.push(lastImage);
-    });
-
-    horizY = lastImage.y + lastImage.h / 2;
-    rowStartX = lastImage.x + lastImage.w;
-  } else {
-    pushBom(bom, "start_cap", 1);
-    horizY = horizYFixed;
-    rowStartX = stoveX;
-    images.push({ asset: "start_cap_h", x: rowStartX, y: horizY - H_H / 2, w: HORIZ.start_cap_h, h: H_H });
-    rowStartX += HORIZ.start_cap_h;
-  }
-
-  pushBom(bom, "adapter", 1);
-  const rowAssets: AssetName[] = ["adapter_h"];
-  const horizontalPipeQty = calculation.lengthParts.find((part) => part.id === "horizontal")?.pipeQty ?? 0;
-
-  for (let index = 0; index < horizontalPipeQty; index += 1) {
-    rowAssets.push("pipe_h");
-    pushBom(bom, "pipe", 1);
-  }
-
-  rowAssets.push("wall_passage_h");
-  pushBom(bom, "wall_passage", 1);
-
-  let cx = rowStartX;
-  const rowY = horizY - H_H / 2;
-  let wallX = rowStartX;
-
-  rowAssets.forEach((asset) => {
-    const w = HORIZ[asset];
-    images.push({ asset, x: cx, y: rowY, w, h: H_H });
-
-    if (asset === "wall_passage_h") {
-      wallX = cx + w / 2;
-    }
-
-    cx += w;
-  });
-
-  const rowEndX = cx;
-  pushBom(bom, "elbow", 1);
-  const esuH = VERT.elbow_side_to_up;
-  const esuX = rowEndX;
-  const esuY = horizY - esuH / 2;
-  images.push({ asset: "elbow_side_to_up", x: esuX, y: esuY, w: 200, h: esuH });
-  const exteriorX = esuX + 100;
-
-  const vertOrder: AssetName[] = [];
-  const exteriorPipeQty = calculation.lengthParts.find((part) => part.id === "outdoor")?.pipeQty ?? 0;
-
-  for (let index = 0; index < exteriorPipeQty; index += 1) {
-    vertOrder.push("pipe");
-    pushBom(bom, "pipe", 1);
-  }
-  vertOrder.push("cap");
-  pushBom(bom, "cap", 1);
-
-  let cursor2 = esuY;
-  vertOrder.forEach((asset) => {
-    const h = VERT[asset];
-    cursor2 -= h;
-    images.push({ asset, x: exteriorX - V_W / 2, y: cursor2, w: V_W, h });
-  });
-
-  const topY = cursor2;
-  const svgW = exteriorX + V_W / 2 + 20;
-  const marginTop = 24;
-  const imageTopY = images.reduce((minimum, image) => Math.min(minimum, image.y), topY);
-  const canvasTop = Math.min(marginTop, topY - 20, imageTopY - 20);
-  const svgH = groundY + 40 - canvasTop;
-  const roomTopY = horizY - 34;
-  const eaveX = wallX + 16;
-
-  const bg: BgItem[] = [
-    { t: "rect", x: wallX, y: canvasTop, w: svgW - wallX, h: groundY - canvasTop, fill: "#e9e4d6", opacity: 0.45 },
-    { t: "rect", x: 20, y: roomTopY, w: wallX - 28, h: groundY - roomTopY, fill: "#dcd6c4", opacity: 0.6 },
-    {
-      t: "path",
-      d: `M 8 ${roomTopY} L ${eaveX} ${roomTopY} L ${(20 + wallX - 8) / 2} ${roomTopY - 30} L 8 ${roomTopY - 2} Z`,
-      fill: "#c9a877",
-      stroke: "#8a6a3a",
-    },
-    { t: "rect", x: 0, y: groundY, w: svgW, h: svgH - (groundY - canvasTop), fill: "#cfc4ab", opacity: 0.5 },
-    { t: "line", x1: 6, y1: groundY, x2: svgW - 6, y2: groundY, stroke: "#8a8272", dash: "3,3" },
-    { t: "rect", x: wallX - 8, y: roomTopY - 34, w: 16, h: groundY - (roomTopY - 34), fill: "#cbb385", stroke: "#8a6a3a" },
-    { t: "rect", x: stoveX - 20, y: groundY - 30, w: 40, h: 30, fill: "none", stroke: "#b5602f" },
-    { t: "label", x: 26, y: groundY - 8, text: "ПОМЕЩЕНИЕ" },
-    { t: "label", x: exteriorX - 10, y: canvasTop + 14, text: "НАРУЖНАЯ ЧАСТЬ", anchor: "middle" },
-  ];
-
-  return {
-    svgW,
-    svgH,
-    viewBox: `0 ${canvasTop} ${svgW} ${svgH}`,
-    images,
-    bg,
-    bom,
-    badge: `${(calculation.requiredMm / 1000).toFixed(2)} м трассы · ${calculation.pipeQty} труб по ${EFFECTIVE_PIPE_LENGTH_MM} мм`,
-  };
-}
-
-function renderBackground(item: BgItem, index: number) {
-  if (item.t === "rect") {
+  if (!ceiling) {
+    const horizontalPipes = pipes.filter((pipe) => pipe.axis === "horizontal");
+    const indoorPipes = pipes.filter((pipe) => pipe.axis === "vertical" && pipe.contour === "одностенный");
+    const outdoorPipes = pipes.filter((pipe) => pipe.axis === "vertical" && pipe.contour === "сэндвич");
+    const topRoute = calculation.routeKind === "wall-top";
+    const horizontalY = topRoute ? 390 : 560;
+    const horizontalMax = Math.max(...horizontalPipes.map((pipe) => pipe.endMm), 1000);
+    const outdoorMax = Math.max(...outdoorPipes.map((pipe) => pipe.endMm), 1000);
+    const indoorMax = Math.max(...indoorPipes.map((pipe) => pipe.endMm), 1000);
+    const horizontalX = (millimeters: number) => 70 + (millimeters / horizontalMax) * 210;
+    const outdoorY = (millimeters: number) => horizontalY - (millimeters / outdoorMax) * (horizontalY - 92);
+    const indoorY = (millimeters: number) => 520 - (millimeters / indoorMax) * (520 - horizontalY);
+    const wall = calculation.forbiddenZones.find((zone) => zone.kind === "wall");
     return (
-      <rect
-        key={index}
-        x={item.x}
-        y={item.y}
-        width={item.w}
-        height={Math.max(0, item.h)}
-        fill={item.fill}
-        stroke={item.stroke ?? "none"}
-        strokeDasharray={item.dash ?? undefined}
-        opacity={item.opacity ?? 1}
-      />
+      <svg className="configurator-generated-svg" viewBox="0 0 360 740" role="img" aria-label="Расчётная схема дымохода через стену со стыками">
+        <rect width="360" height="740" fill="#f3efe4" />
+        <rect x="24" y="520" width="60" height="80" rx="4" fill="#d9cbb7" stroke="#173d4c" strokeWidth="2" />
+        <text x="54" y="618" textAnchor="middle">ОТОПИТЕЛЬ</text>
+        {wall ? <>
+          <rect x={horizontalX(wall.startMm)} y="70" width={Math.max(12, horizontalX(wall.endMm) - horizontalX(wall.startMm))} height="590" fill="#e2c99f" opacity="0.75" />
+          <text x={(horizontalX(wall.startMm) + horizontalX(wall.endMm)) / 2} y="684" textAnchor="middle">СТЕНА</text>
+        </> : null}
+        {indoorPipes.map((pipe, index) => (
+          <g key={pipe.id}>
+            <rect x="42" y={indoorY(pipe.endMm)} width="24" height={indoorY(pipe.startMm) - indoorY(pipe.endMm)} fill="#e7ece9" stroke="#173d4c" strokeWidth="2" />
+            <text x="72" y={(indoorY(pipe.startMm) + indoorY(pipe.endMm)) / 2 + 3}>Р{index + 1} · {pipe.nominalMm}</text>
+            <circle cx="54" cy={indoorY(pipe.endMm)} r="4" fill="#b13f20" />
+          </g>
+        ))}
+        {topRoute ? <path d={`M54 ${horizontalY} Q54 ${horizontalY - 18} 72 ${horizontalY - 18} L84 ${horizontalY - 18}`} fill="none" stroke="#173d4c" strokeWidth="24" /> : null}
+        {horizontalPipes.map((pipe, index) => (
+          <g key={pipe.id}>
+            <rect x={horizontalX(pipe.startMm)} y={horizontalY - 12} width={horizontalX(pipe.endMm) - horizontalX(pipe.startMm)} height="24" fill="#dce7e4" stroke="#173d4c" strokeWidth="2" />
+            <text x={(horizontalX(pipe.startMm) + horizontalX(pipe.endMm)) / 2} y={horizontalY - 18} textAnchor="middle">Т{index + 1} · {pipe.nominalMm}</text>
+            <circle cx={horizontalX(pipe.endMm)} cy={horizontalY} r="4" fill="#b13f20" />
+          </g>
+        ))}
+        <path d={`M280 ${horizontalY} Q300 ${horizontalY} 300 ${horizontalY - 20} L300 ${horizontalY - 40}`} fill="none" stroke="#173d4c" strokeWidth="24" />
+        {outdoorPipes.map((pipe, index) => (
+          <g key={pipe.id}>
+            <rect x="288" y={outdoorY(pipe.endMm)} width="24" height={outdoorY(pipe.startMm) - outdoorY(pipe.endMm)} fill="#dce7e4" stroke="#173d4c" strokeWidth="2" />
+            <text x="320" y={(outdoorY(pipe.startMm) + outdoorY(pipe.endMm)) / 2 + 3}>Н{index + 1} · {pipe.nominalMm}</text>
+            <circle cx="300" cy={outdoorY(pipe.endMm)} r="4" fill="#b13f20" />
+          </g>
+        ))}
+        <path d="M286 100 L300 78 L314 100 Z" fill="#b13f20" />
+        <text x="300" y="42" textAnchor="middle">НАРУЖНЫЙ СТОЯК</text>
+        <text x="180" y="722" textAnchor="middle">Красная точка — координата стыка</text>
+      </svg>
     );
-  }
-
-  if (item.t === "line") {
-    return (
-      <line
-        key={index}
-        x1={item.x1}
-        y1={item.y1}
-        x2={item.x2}
-        y2={item.y2}
-        stroke={item.stroke}
-        strokeDasharray={item.dash ?? undefined}
-      />
-    );
-  }
-
-  if (item.t === "path") {
-    return <path key={index} d={item.d} fill={item.fill} stroke={item.stroke} />;
   }
 
   return (
-    <text
-      key={index}
-      x={item.x}
-      y={item.y}
-      fill="#7a715e"
-      fontSize="9"
-      letterSpacing="0.05em"
-      textAnchor={item.anchor ?? "start"}
-    >
-      {item.text}
-    </text>
+    <svg className="configurator-generated-svg" viewBox="0 0 360 740" role="img" aria-label="Расчётная вертикальная схема дымохода со стыками и перекрытиями">
+      <rect width="360" height="740" fill="#f3efe4" />
+      <line x1="22" y1={floorY} x2="338" y2={floorY} stroke="#8a8272" strokeDasharray="5 4" />
+      {calculation.forbiddenZones.map((zone) => (
+        <g key={zone.id}>
+          <rect x="30" y={verticalY(zone.endMm)} width="300" height={Math.max(8, verticalY(zone.startMm) - verticalY(zone.endMm))} fill="#e2c99f" opacity="0.82" stroke="#8a6a3a" />
+          <text x="38" y={verticalY(zone.endMm) - 6}>{zone.label.toUpperCase()} · {zone.startMm}–{zone.endMm} мм</text>
+        </g>
+      ))}
+      <rect x="142" y={verticalY(calculation.routeStartMm)} width="76" height={Math.max(36, floorY - verticalY(calculation.routeStartMm))} rx="4" fill="#d9cbb7" stroke="#173d4c" strokeWidth="2" />
+      <text x="180" y={floorY - 12} textAnchor="middle">ОТОПИТЕЛЬ</text>
+      {calculation.fixedParts.map((part) => (
+        <g key={part.id}>
+          <rect x="166" y={verticalY(part.endMm)} width="28" height={Math.max(6, verticalY(part.startMm) - verticalY(part.endMm))} fill={part.id === "support_cap" ? "#c6825f" : "#e7ece9"} stroke="#173d4c" strokeWidth="2" />
+          <line x1="194" y1={(verticalY(part.startMm) + verticalY(part.endMm)) / 2} x2="226" y2={(verticalY(part.startMm) + verticalY(part.endMm)) / 2} stroke="#b13f20" />
+          <text x="232" y={(verticalY(part.startMm) + verticalY(part.endMm)) / 2 + 4}>{part.label} · {part.lengthMm} мм</text>
+          <circle cx="180" cy={verticalY(part.endMm)} r="4" fill="#b13f20" />
+        </g>
+      ))}
+      {pipes.map((pipe, index) => (
+        <g key={pipe.id}>
+          <rect x="162" y={verticalY(pipe.endMm)} width="36" height={Math.max(5, verticalY(pipe.startMm) - verticalY(pipe.endMm))} fill={pipe.zone === "wall_or_ceiling_pass" ? "#cfddd8" : "#e7ece9"} stroke="#173d4c" strokeWidth="2" />
+          <line x1="198" y1={(verticalY(pipe.startMm) + verticalY(pipe.endMm)) / 2} x2="226" y2={(verticalY(pipe.startMm) + verticalY(pipe.endMm)) / 2} stroke="#b13f20" />
+          <text x="232" y={(verticalY(pipe.startMm) + verticalY(pipe.endMm)) / 2 + 4}>Т{index + 1} · {pipe.nominalMm} мм</text>
+          <circle cx="180" cy={verticalY(pipe.endMm)} r="4" fill="#b13f20" />
+        </g>
+      ))}
+      <line x1="100" y1={verticalY(calculation.routeTargetMm)} x2="260" y2={verticalY(calculation.routeTargetMm)} stroke="#b13f20" strokeDasharray="5 4" />
+      <path d={`M164 ${Math.max(34, verticalY(calculation.routeTargetMm) - 18)} L180 ${Math.max(12, verticalY(calculation.routeTargetMm) - 42)} L196 ${Math.max(34, verticalY(calculation.routeTargetMm) - 18)} Z`} fill="#b13f20" />
+      <line x1="24" y1={floorY} x2="24" y2={verticalY(calculation.routeTargetMm)} stroke="#b13f20" />
+      <text x="14" y={(floorY + verticalY(calculation.routeTargetMm)) / 2} transform={`rotate(-90 14 ${(floorY + verticalY(calculation.routeTargetMm)) / 2})`} textAnchor="middle">До завершения · {calculation.routeTargetMm} мм от чистого пола</text>
+      <text x="180" y="724" textAnchor="middle">Красная точка — координата стыка</text>
+    </svg>
   );
 }
 
@@ -536,9 +234,12 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const [hasAttic, setHasAttic] = useState(false);
   const [roof, setRoof] = useState<RoofType>("pitched");
   const [heightM, setHeightM] = useState(Number.isFinite(initialHeight) && initialHeight >= 1 && initialHeight <= 20 ? initialHeight : 5);
+  const [warmupLengthMm, setWarmupLengthMm] = useState(500);
+  const [supportCapLengthMm, setSupportCapLengthMm] = useState(70);
+  const [selectedVariantId, setSelectedVariantId] = useState("");
   const [stoveModel, setStoveModel] = useState(searchParams.get("stoveModel") ?? "");
-  const [pipeMatch, setPipeMatch] = useState<ProductListItem | null>(null);
-  const [pipeMatchStatus, setPipeMatchStatus] = useState<"idle" | "loading" | "ready" | "empty" | "error">("idle");
+  const [catalogMatches, setCatalogMatches] = useState<Record<string, CatalogBomMatch>>({});
+  const [catalogMatchStatus, setCatalogMatchStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
 
   useEffect(() => {
     try {
@@ -583,6 +284,10 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     const draftFloors = Number(transferredDraft.levels);
     if (Number.isFinite(draftFloors) && draftFloors >= 1 && draftFloors <= 3) setFloors(draftFloors);
     setHasAttic(Boolean(transferredDraft.hasAttic));
+    const draftWarmup = Number(transferredDraft.warmupLength);
+    if (Number.isFinite(draftWarmup) && draftWarmup >= 0) setWarmupLengthMm(draftWarmup);
+    const draftSupportCap = Number(transferredDraft.supportCapHeight);
+    if (Number.isFinite(draftSupportCap) && draftSupportCap >= 0) setSupportCapLengthMm(draftSupportCap);
 
     const draftHeight = Number(
       transferredDraft.route !== "ceiling"
@@ -630,6 +335,8 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       outlet: outlet === "vertical" ? "top" : "rear",
       levels: String(floors),
       hasAttic,
+      warmupLength: String(warmupLengthMm),
+      supportCapHeight: String(supportCapLengthMm),
       routeHeight: route === "ceiling" ? String(heightM) : baseDraft.routeHeight,
       outdoorHeight: route === "wall" ? String(heightM) : baseDraft.outdoorHeight,
       wallDistance: route === "wall" ? String(Math.round(distanceM * 1000)) : baseDraft.wallDistance,
@@ -639,7 +346,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     } catch {
       // The configurator remains usable without browser storage.
     }
-  }, [distanceM, draftHydrated, floors, hasAttic, heightM, outlet, route, stove, transferredDraft]);
+  }, [distanceM, draftHydrated, floors, hasAttic, heightM, outlet, route, stove, supportCapLengthMm, transferredDraft, warmupLengthMm]);
 
   const calculationDraft = useMemo<ScenarioConfiguratorDraft | null>(() => {
     if (!transferredDraft) return null;
@@ -649,65 +356,76 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       outlet: outlet === "vertical" ? "top" : "rear",
       levels: String(floors),
       hasAttic,
+      warmupLength: String(warmupLengthMm),
+      supportCapHeight: String(supportCapLengthMm),
       routeHeight: route === "ceiling" ? String(heightM) : transferredDraft.routeHeight,
       outdoorHeight: route === "wall" ? String(heightM) : transferredDraft.outdoorHeight,
       wallDistance: route === "wall" ? String(Math.round(distanceM * 1000)) : transferredDraft.wallDistance,
     };
-  }, [distanceM, floors, hasAttic, heightM, outlet, route, transferredDraft]);
+  }, [distanceM, floors, hasAttic, heightM, outlet, route, supportCapLengthMm, transferredDraft, warmupLengthMm]);
 
   const calculation = useMemo(
-    () => calculateChimney({ route, outlet, floors, heightM, distanceM, draft: calculationDraft }),
-    [calculationDraft, distanceM, floors, heightM, outlet, route],
+    () => calculateChimney({
+      route,
+      outlet,
+      floors,
+      heightM,
+      distanceM,
+      warmupLengthMm,
+      supportCapLengthMm,
+      draft: calculationDraft,
+    }),
+    [calculationDraft, distanceM, floors, heightM, outlet, route, supportCapLengthMm, warmupLengthMm],
   );
-
-  const scene = useMemo(
-    () =>
-      route === "ceiling"
-        ? buildCeilingScene({ roof, calculation })
-        : buildWallScene({ outlet, calculation }),
-    [calculation, outlet, roof, route],
+  const selectedVariant = calculation.variants.find((variant) => variant.id === selectedVariantId)
+    ?? calculation.selectedVariant;
+  const selectedBom = useMemo(
+    () => bomForVariant(calculation, selectedVariant),
+    [calculation, selectedVariant],
   );
-
+  const selectedPipeQuantity = selectedVariant?.pipes.length ?? 0;
+  const selectedCoveredMm = selectedVariant
+    ? selectedVariant.pipes.reduce((sum, pipe) => sum + pipe.effectiveMm, 0)
+    : 0;
   useEffect(() => {
     const diameter = calculation.diameterMm;
     if (!diameter || calculation.diameterStatus !== "known") {
-      setPipeMatch(null);
-      setPipeMatchStatus("idle");
+      setCatalogMatches({});
+      setCatalogMatchStatus("idle");
       return;
     }
 
     const controller = new AbortController();
-    const params = new URLSearchParams({
-      limit: "12",
-      offset: "0",
-      product_kind: "труба",
-      diameter: `${diameter}:`,
-      length_mm: "1000",
-      contour: "сэндвич",
-    });
-    setPipeMatchStatus("loading");
-    fetch(`${assetBasePath}/api/v1/products?${params.toString()}`, { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error("catalog request failed");
-        return response.json() as Promise<ProductListResponse>;
-      })
-      .then((payload) => {
-        setPipeMatch(payload.items[0] ?? null);
-        setPipeMatchStatus(payload.items.length ? "ready" : "empty");
+    const diameterKinds = new Set(["труба", "отвод", "заглушка", "оголовок"]);
+    setCatalogMatchStatus("loading");
+    Promise.all(selectedBom.filter((line) => line.requiresSku).map(async (line) => {
+      const params = new URLSearchParams({ limit: "24", offset: "0", product_kind: line.productKind });
+      const exactByFields = diameterKinds.has(line.productKind);
+      if (exactByFields) params.set("diameter", `${diameter}:`);
+      if (line.nominalLengthMm) params.set("length_mm", String(line.nominalLengthMm));
+      if (line.contour) params.set("contour", line.contour);
+      if (line.productKind === "отвод") params.set("angle_deg", "90");
+      const response = await fetch(`${assetBasePath}/api/v1/products?${params.toString()}`, { signal: controller.signal });
+      if (!response.ok) throw new Error("catalog request failed");
+      const payload = await response.json() as ProductListResponse;
+      return payload.items[0] ? [line.key, { item: payload.items[0], exactByFields }] as const : null;
+    }))
+      .then((entries) => {
+        setCatalogMatches(Object.fromEntries(entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))));
+        setCatalogMatchStatus("ready");
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        setPipeMatch(null);
-        setPipeMatchStatus("error");
+        setCatalogMatches({});
+        setCatalogMatchStatus("error");
       });
     return () => controller.abort();
-  }, [assetBasePath, calculation.diameterMm, calculation.diameterStatus]);
+  }, [assetBasePath, calculation.diameterMm, calculation.diameterStatus, selectedBom]);
 
-  const totalQty = scene.bom.reduce((sum, item) => sum + item.qty, 0);
+  const totalQty = selectedBom.reduce((sum, item) => sum + item.quantity, 0);
   const stoveLabel = STOVE_OPTIONS.find((option) => option.id === stove)?.label ?? "Источник";
   const sceneTitle =
     route === "ceiling" ? "Схема: через перекрытие и кровлю" : "Схема: наружный монтаж по стене";
-  const assetUrl = (asset: AssetName) => `${assetBasePath}/images/configurator/${asset}.png`;
   const activeProfile = calculationProfiles.find((profile) => profile.id === activeProfileId);
   const measurementsHref = activeProfile
     ? calculationProfileMeasurementsHref(activeProfile.id)
@@ -741,16 +459,18 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         `Источник: ${stoveLabel}`,
         `Модель отопителя / патрубок: ${stoveModel.trim() || "не указаны"}`,
         route === "ceiling" ? `Этажность: ${floors}; кровля: ${roof === "pitched" ? "скатная" : "плоская"}` : `Выход: ${outlet === "vertical" ? "вертикальный" : "горизонтальный"}; до стены: ${distanceM.toFixed(1)} м`,
-        `Расчётная длина трассы: ${(calculation.requiredMm / 1000).toFixed(2)} м`,
-        `Труба 1000 мм: ${calculation.pipeQty} шт. по ${EFFECTIVE_PIPE_LENGTH_MM} мм полезной длины`,
-        `Закрываемая длина: ${(calculation.coveredMm / 1000).toFixed(2)} м; остаток на подрезку/уточнение: ${calculation.reserveMm} мм`,
+        `Расчётная отметка завершения: ${calculation.routeTargetMm} мм`,
+        `Раскладка труб: ${selectedVariant?.label || "не найдена"}`,
+        `Соединения: ${selectedVariant?.jointPositionsMm.join(", ") || "нет"} мм`,
+        `Запас раскладки: ${selectedVariant?.reserveMm ?? 0} мм`,
         ...transferredDetails,
         "Позиции:",
-        ...scene.bom.map((part) => `${BOM_LABELS[part.type][0]} — ${part.qty} шт.`),
+        ...selectedBom.map((part) => `${part.label} — ${part.quantity} шт. (${part.selectionReason})`),
+        ...(calculation.errors.length ? ["Ошибки:", ...calculation.errors] : []),
         "Требует проверки:",
         ...calculation.reviewItems,
       ].join("\n"),
-    [calculation, distanceM, floors, outlet, roof, route, scene.bom, stoveLabel, stoveModel, transferredDetails],
+    [calculation, distanceM, floors, outlet, roof, route, selectedBom, selectedVariant, stoveLabel, stoveModel, transferredDetails],
   );
 
   function savePdf() {
@@ -762,12 +482,12 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         '"': "&quot;",
         "'": "&#039;",
       })[character] ?? character);
-    const rows = scene.bom.map((part) => `<tr><td>${BOM_LABELS[part.type][0]}</td><td>${part.qty}</td></tr>`).join("");
+    const rows = selectedBom.map((part) => `<tr><td>${part.label}</td><td>${part.quantity}</td></tr>`).join("");
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
     printWindow.opener = null;
     const summary = escapeHtml(configuration.split("\nПозиции:")[0]).replaceAll("\n", "<br>");
-    printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Комплект из конфигуратора — Дымоход Трейд</title><style>body{font:15px Arial,sans-serif;color:#102127;margin:40px}h1{font-size:28px}p{line-height:1.55}table{width:100%;border-collapse:collapse;margin:24px 0}td,th{padding:10px;border:1px solid #ccd5d7;text-align:left}.note{padding:16px;background:#eef2f2} @page{size:A4;margin:18mm}</style></head><body><h1>Комплект дымохода из конфигуратора</h1><p>${summary}</p><table><thead><tr><th>Позиция</th><th>Количество</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Количество метровых труб рассчитано по 950 мм полезной длины после соединения. Конкретные SKU, исполнение проходов, фланцы и крепления проверяются перед заказом.</p><p>Дымоход Трейд · +7 (965) 075-65-55 · office@dimohod-trade.pro</p><script>window.onload=()=>window.print()<\/script></body></html>`);
+    printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Комплект из конфигуратора — Дымоход Трейд</title><style>body{font:15px Arial,sans-serif;color:#102127;margin:40px}h1{font-size:28px}p{line-height:1.55}table{width:100%;border-collapse:collapse;margin:24px 0}td,th{padding:10px;border:1px solid #ccd5d7;text-align:left}.note{padding:16px;background:#eef2f2} @page{size:A4;margin:18mm}</style></head><body><h1>Комплект дымохода из конфигуратора</h1><p>${summary}</p><table><thead><tr><th>Позиция</th><th>Количество</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Раскладка проверяет координаты стыков и исключает соединения внутри известных проходных зон. Полезные длины коротких труб и конкретные SKU требуют подтверждения.</p><p>Дымоход Трейд · +7 (965) 075-65-55 · office@dimohod-trade.pro</p><script>window.onload=()=>window.print()<\/script></body></html>`);
     printWindow.document.close();
   }
 
@@ -938,6 +658,29 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                 </span>
               </label>
 
+              <div className="configurator-inline-inputs">
+                <label className="configurator-text-field">
+                  <span className="configurator-label">Разгон, мм</span>
+                  <input
+                    inputMode="numeric"
+                    min="0"
+                    onChange={(event) => setWarmupLengthMm(Math.max(0, Number(event.target.value) || 0))}
+                    type="number"
+                    value={warmupLengthMm}
+                  />
+                </label>
+                <label className="configurator-text-field">
+                  <span className="configurator-label">Опорная заглушка, мм</span>
+                  <input
+                    inputMode="numeric"
+                    min="0"
+                    onChange={(event) => setSupportCapLengthMm(Math.max(0, Number(event.target.value) || 0))}
+                    type="number"
+                    value={supportCapLengthMm}
+                  />
+                </label>
+              </div>
+
               <div className="configurator-field">
                 <div className="configurator-label">Кровля</div>
                 <div className="configurator-segmented" role="group" aria-label="Тип кровли">
@@ -980,8 +723,8 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           <div className="configurator-note">
             <strong>{sceneTitle}</strong>
             <span>
-              Метровые трубы считаются по {EFFECTIVE_PIPE_LENGTH_MM} мм полезной длины после соединения.
-              Исполнение проходов и креплений подтверждается после проверки объекта.
+              Каждый стык проверяется относительно стены и перекрытий. Для расчёта соединения труб
+              используется нахлёст {PIPE_SOCKET_OVERLAP_MM} мм.
             </span>
           </div>
         </div>
@@ -989,89 +732,91 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         <div className="configurator-schematic-pane">
           <div className="configurator-schematic-top">
             <span>{sceneTitle}</span>
-            <strong>{(calculation.requiredMm / 1000).toFixed(2)} м</strong>
+            <strong>{calculation.status === "invalid" ? "Есть конфликт" : `${selectedPipeQuantity} труб`}</strong>
           </div>
           <div className="configurator-svg-wrap">
-            <svg
-              className="configurator-svg"
-              viewBox={scene.viewBox}
-              style={{ height: `${Math.min(560, scene.svgH * 1.4)}px` }}
-              role="img"
-              aria-label={sceneTitle}
-            >
-              <rect x={scene.viewBox.split(" ")[0]} y={scene.viewBox.split(" ")[1]} width={scene.svgW} height={scene.svgH} fill="#f3efe4" />
-              {scene.bg.map(renderBackground)}
-              {scene.images.map((image, index) => (
-                <image
-                  key={`${image.asset}-${index}`}
-                  href={assetUrl(image.asset)}
-                  x={image.x}
-                  y={image.y}
-                  width={image.w}
-                  height={image.h}
-                  imageRendering="optimizeQuality"
-                />
-              ))}
-            </svg>
+            <GeneratedChimneyScheme calculation={calculation} variant={selectedVariant} />
           </div>
-          <div className="configurator-height-badge">{scene.badge}</div>
-          <div className="configurator-length-breakdown" aria-label="Расчёт длины труб">
-            {calculation.lengthParts.map((part) => (
+          <div className="configurator-height-badge">
+            Отметка завершения {calculation.routeTargetMm} мм · раскладка {selectedVariant?.label ?? "не найдена"}
+          </div>
+          {calculation.variants.length > 1 ? (
+            <fieldset className="configurator-variants">
+              <legend>Допустимые раскладки без стыков в проходах</legend>
+              {calculation.variants.map((variant, index) => (
+                <label key={variant.id}>
+                  <input
+                    checked={(selectedVariant?.id ?? calculation.variants[0]?.id) === variant.id}
+                    name="pipe-layout-variant"
+                    onChange={() => setSelectedVariantId(variant.id)}
+                    type="radio"
+                  />
+                  <span><strong>Вариант {index + 1}</strong>{variant.label} мм · запас {variant.reserveMm} мм</span>
+                </label>
+              ))}
+            </fieldset>
+          ) : null}
+          <div className="configurator-length-breakdown" aria-label="Координаты узлов дымохода">
+            {calculation.fixedParts.map((part) => (
               <div key={part.id}>
                 <span>{part.label}</span>
-                <strong>{(part.requiredMm / 1000).toFixed(2)} м → {part.pipeQty} шт.</strong>
+                <strong>{part.startMm}–{part.endMm} мм</strong>
+              </div>
+            ))}
+            {selectedVariant?.pipes.map((pipe, index) => (
+              <div key={pipe.id}>
+                <span>Т{index + 1} · труба {pipe.nominalMm} мм</span>
+                <strong>{pipe.startMm}–{pipe.endMm} мм</strong>
               </div>
             ))}
             <div className="is-total">
-              <span>Перекрываем трубами</span>
-              <strong>{(calculation.coveredMm / 1000).toFixed(2)} м</strong>
+              <span>Полезная длина труб</span>
+              <strong>{selectedCoveredMm} мм</strong>
             </div>
           </div>
+          {calculation.errors.length ? (
+            <div className="configurator-calculation-errors" role="alert">
+              <strong>Схему нужно изменить</strong>
+              {calculation.errors.map((error) => <p key={error}>{error}</p>)}
+            </div>
+          ) : null}
         </div>
 
         <div className="configurator-spec">
           <div className="configurator-spec-head">
             <span>Спецификация</span>
-            <strong>{scene.bom.length} типов деталей</strong>
+            <strong>{selectedBom.length} типов деталей</strong>
           </div>
           <div className="configurator-spec-list">
-            {scene.bom.map((part) => {
-              const [label, note] = BOM_LABELS[part.type];
-
+            {selectedBom.map((part) => {
+              const catalogMatch = catalogMatches[part.key];
               return (
-                <div key={part.type} className="configurator-spec-row">
+                <div key={part.key} className="configurator-spec-row">
                   <span className="configurator-spec-dot" />
                   <div>
-                    <strong>{label}</strong>
-                    <small>{note}</small>
+                    <strong>{part.label}</strong>
+                    <small>{part.selectionReason}</small>
+                    {catalogMatch ? (
+                      <Link className="configurator-spec-sku" href={productSelectionPath(catalogMatch.item.slug, catalogMatch.item, catalogMatch.item.selected_sku)}>
+                        {catalogMatch.item.article || catalogMatch.item.name}
+                        {!catalogMatch.exactByFields ? " · кандидат по типу, проверить размер" : " · совпадение по полям"}
+                      </Link>
+                    ) : null}
                   </div>
-                  <em>×{part.qty}</em>
+                  <em>×{part.quantity}</em>
                 </div>
               );
             })}
           </div>
-          <div className="configurator-catalog-match" data-status={pipeMatchStatus}>
+          <div className="configurator-catalog-match" data-status={catalogMatchStatus}>
             <div className="configurator-catalog-match-title">
               <PackageCheck aria-hidden size={18} />
-              <strong>Труба из каталога</strong>
+              <strong>Каталожные позиции</strong>
             </div>
-            {pipeMatchStatus === "loading" ? <p>Ищем вариант по диаметру и длине…</p> : null}
-            {pipeMatchStatus === "ready" && pipeMatch ? (
-              <>
-                <p>
-                  Найден вариант с совпадением по диаметру, длине 1000 мм и контуру «сэндвич».
-                  Полную совместимость нужно подтвердить вместе с остальными элементами.
-                </p>
-                <Link href={productSelectionPath(pipeMatch.slug, pipeMatch, pipeMatch.selected_sku)}>
-                  {pipeMatch.name} · {calculation.pipeQty} шт.
-                </Link>
-              </>
-            ) : null}
-            {pipeMatchStatus === "idle" ? (
-              <p>Укажите одинаковые значения X и Y наружного диаметра патрубка для подбора SKU.</p>
-            ) : null}
-            {pipeMatchStatus === "empty" ? <p>Точного варианта по заданным параметрам в каталоге не найдено.</p> : null}
-            {pipeMatchStatus === "error" ? <p>Каталог временно недоступен; количественный расчёт сохранён.</p> : null}
+            {catalogMatchStatus === "loading" ? <p>Сопоставляем строки BOM со структурированными полями каталога…</p> : null}
+            {catalogMatchStatus === "ready" ? <p>Найдено {Object.keys(catalogMatches).length} из {selectedBom.length} позиций. Совпадения только по типу помечены для проверки.</p> : null}
+            {catalogMatchStatus === "idle" ? <p>Укажите одинаковые значения X и Y наружного диаметра патрубка для подбора SKU.</p> : null}
+            {catalogMatchStatus === "error" ? <p>Каталог временно недоступен; геометрический расчёт и BOM сохранены.</p> : null}
           </div>
           <div className="configurator-review-list">
             <div className="configurator-review-title">

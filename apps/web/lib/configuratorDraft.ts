@@ -1,25 +1,50 @@
 export type DraftFieldStatus = "known" | "measure" | "later";
 export type DraftRoute = "ceiling" | "wall" | "wall-direct" | "unknown";
+export type MeasurementObjectType = "banya" | "house" | "boiler-room" | "other";
+export type EquipmentStatus = "installed" | "selected" | "not-selected";
+export type PassportStatus = "yes" | "no" | "unknown";
+export type DiameterSource = "passport" | "measured" | "unknown";
 
 export type ScenarioConfiguratorDraft = {
   scenario: "banya" | "dom";
+  objectType: MeasurementObjectType;
+  equipmentStatus: EquipmentStatus;
+  passportStatus: PassportStatus;
   equipmentType: "" | "pech" | "kamin" | "tt-kotel" | "gaz";
   manufacturer: string;
   model: string;
   outlet: "" | "top" | "rear";
   diameter: string;
+  diameterX: string;
+  diameterY: string;
+  diameterSource: DiameterSource;
   connectionHeight: string;
+  rearOutletBottomHeight: string;
+  warmupLength: string;
+  supportCapHeight: string;
   connectionDetails: string;
   route: DraftRoute;
   ceilingHeight: string;
   floorThickness: string;
+  secondCeilingHeight: string;
+  secondFloorThickness: string;
+  thirdCeilingHeight: string;
+  thirdFloorThickness: string;
   levels: string;
   hasAttic: boolean;
   routeHeight: string;
   roofAngle: string;
+  roofThickness: string;
+  atticHeight: string;
   wallExitHeight: string;
   wallDistance: string;
+  wallThickness: string;
+  wallMaterial: string;
+  verticalRise: string;
+  facadeOffset: string;
+  roofOverhang: string;
   outdoorHeight: string;
+  routeNotes: string;
   photosReady: boolean;
   deferredFields: string[];
 };
@@ -33,23 +58,44 @@ export function createEmptyScenarioDraft(
 ): ScenarioConfiguratorDraft {
   return {
     scenario,
+    objectType: scenario === "banya" ? "banya" : "house",
+    equipmentStatus: "installed",
+    passportStatus: "unknown",
     equipmentType: "",
     manufacturer: "",
     model: "",
     outlet: "",
     diameter: "",
+    diameterX: "",
+    diameterY: "",
+    diameterSource: "unknown",
     connectionHeight: "",
+    rearOutletBottomHeight: "",
+    warmupLength: "500",
+    supportCapHeight: "70",
     connectionDetails: "",
     route: "unknown",
     ceilingHeight: "",
     floorThickness: "200",
+    secondCeilingHeight: "",
+    secondFloorThickness: "",
+    thirdCeilingHeight: "",
+    thirdFloorThickness: "",
     levels: "",
     hasAttic: false,
     routeHeight: "",
     roofAngle: "",
+    roofThickness: "",
+    atticHeight: "",
     wallExitHeight: "",
     wallDistance: "",
+    wallThickness: "",
+    wallMaterial: "",
+    verticalRise: "",
+    facadeOffset: "",
+    roofOverhang: "",
     outdoorHeight: "",
+    routeNotes: "",
     photosReady: false,
     deferredFields: [],
   };
@@ -78,16 +124,21 @@ export function scenarioDraftConfiguratorHref(draft: ScenarioConfiguratorDraft):
   const connection = [
     draft.manufacturer.trim(),
     draft.model.trim(),
-    draft.diameter ? `патрубок ${draft.diameter} мм` : "",
-    draft.connectionHeight ? `точка подключения ${draft.connectionHeight} мм` : "",
+    draft.diameterX || draft.diameterY
+      ? `патрубок X ${draft.diameterX || "?"} / Y ${draft.diameterY || "?"} мм`
+      : draft.diameter ? `патрубок ${draft.diameter} мм` : "",
+    draft.outlet === "rear" && draft.rearOutletBottomHeight
+      ? `нижняя кромка патрубка ${draft.rearOutletBottomHeight} мм от пола`
+      : draft.connectionHeight ? `верх отопителя ${draft.connectionHeight} мм от пола` : "",
     draft.connectionDetails.trim(),
   ].filter(Boolean);
   if (connection.length) params.set("stoveModel", connection.join(" · "));
 
   const height = draft.route === "ceiling" ? draft.routeHeight : draft.outdoorHeight;
   if (height && Number.isFinite(Number(height))) params.set("heightM", height);
-  if (draft.wallDistance && Number.isFinite(Number(draft.wallDistance))) {
-    params.set("distanceM", draft.wallDistance);
+  const wallDistance = Number(draft.wallDistance);
+  if (draft.wallDistance && Number.isFinite(wallDistance)) {
+    params.set("distanceM", String(wallDistance > 20 ? wallDistance / 1000 : wallDistance));
   }
   const levelsCount = draft.levels.match(/\d+/)?.[0];
   if (levelsCount) params.set("floors", levelsCount);
@@ -101,7 +152,11 @@ export function parseScenarioDraft(value: string | null): ScenarioConfiguratorDr
   try {
     const parsed = JSON.parse(value) as Partial<ScenarioConfiguratorDraft>;
     if (parsed.scenario !== "banya" && parsed.scenario !== "dom") return null;
-    return { ...createEmptyScenarioDraft(parsed.scenario), ...parsed };
+    const draft = { ...createEmptyScenarioDraft(parsed.scenario), ...parsed };
+    // Older profiles stored one diameter field. Keep it visible after migration.
+    if (!draft.diameterX && draft.diameter) draft.diameterX = draft.diameter;
+    if (!draft.diameterY && draft.diameter) draft.diameterY = draft.diameter;
+    return draft;
   } catch {
     return null;
   }
