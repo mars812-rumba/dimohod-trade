@@ -187,7 +187,8 @@ const catalogGroups = [
 const featuredProductCard = {
   name: "Сэндвич-труба Ø150/250",
   variant: "L=1000 мм · AISI 304 · 0,8 мм · изоляция 50 мм",
-  image: "/media/catalog/categories/sendvich-truba-truba/photo-1.webp",
+  image: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-1.webp",
+  imageThumbnail: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-1.thumb.webp",
   href: productSelectionPath(
     "sendvich-truba",
     { diameter_mm: 150, outer_diameter_mm: 250 },
@@ -306,11 +307,21 @@ export default async function HomePage() {
     previewBadges: [],
     previewMedia: [],
   }));
-  const previewMedia = homeProductDemo.previewMedia.map((item) => ({
-    ...item,
-    url: assetUrl(item.url),
-    thumbnail_url: item.thumbnail_url ? assetUrl(item.thumbnail_url) : null,
-  }));
+  const previewMedia = [
+    {
+      url: assetUrl(featuredProductCard.image),
+      thumbnail_url: assetUrl(featuredProductCard.imageThumbnail),
+      alt: "Сэндвич-труба длиной 1000 мм — общий вид",
+      role: "general",
+    },
+    ...homeProductDemo.previewMedia
+      .filter((item) => item.role !== "general")
+      .map((item) => ({
+        ...item,
+        url: assetUrl(item.url),
+        thumbnail_url: item.thumbnail_url ? assetUrl(item.thumbnail_url) : null,
+      })),
+  ];
   const { compatibleProducts, previewBadges } = homeProductDemo;
   const heroStyle = {
     "--hero-image": `url("${assetUrl("/images/home/hero-chimney-clean-v4-1600.webp")}")`,
