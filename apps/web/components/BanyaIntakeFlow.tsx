@@ -405,7 +405,23 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
 
                   <div className={styles.fieldGrid}>
                     <MeasurementField draft={intake} field="ceilingHeight" label="Высота от пола до потолка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 2400" unit="мм">
-                      <MeasurementHelp><p>Схему замера высоты помещения добавим сюда после загрузки и проверки изображения.</p></MeasurementHelp>
+                      <MeasurementHelp
+                        scheme={isHome ? undefined : {
+                          src: `${assetBasePath}/images/measurements/finished-room-height.webp`,
+                          alt: "Схема замера чистовой высоты от пола до нижней поверхности потолка",
+                          title: "Как замерять чистовую высоту помещения",
+                        }}
+                      >
+                        {isHome ? (
+                          <p>Измерьте расстояние от чистового пола до нижней поверхности чистового потолка.</p>
+                        ) : (
+                          <>
+                            <p>Измерьте расстояние от чистового пола до нижней поверхности чистового потолка.</p>
+                            <p>Если пол или потолок ещё будут подшиваться либо облицовываться, вычтите толщину будущей отделки из общей высоты.</p>
+                            <p><strong>Чистовая высота = общая высота − отделка пола − отделка потолка.</strong></p>
+                          </>
+                        )}
+                      </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="floorThickness" label="Высота перекрытия" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="200" unit="мм">
                       <MeasurementHelp><p>Сейчас подставлено начальное значение 200 мм. После загрузки схемы здесь будет показано, между какими точками снимать фактический размер.</p></MeasurementHelp>
