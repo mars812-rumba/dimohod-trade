@@ -25,9 +25,11 @@ export function RouteImageViewer({
   const [isOpen, setIsOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const backButtonRef = useRef<HTMLButtonElement>(null);
   const historyPushedRef = useRef(false);
+  const previousScaleRef = useRef(1);
   const titleId = useId();
 
   useEffect(() => {
@@ -57,6 +59,25 @@ export function RouteImageViewer({
       document.body.style.overflow = previousOverflow;
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    const nextScale = isZoomed ? 1.75 : 1;
+    if (!isOpen) {
+      previousScaleRef.current = nextScale;
+      return;
+    }
+
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const previousScale = previousScaleRef.current;
+    const centerX = (viewport.scrollLeft + viewport.clientWidth / 2) / previousScale;
+    const centerY = (viewport.scrollTop + viewport.clientHeight / 2) / previousScale;
+
+    viewport.scrollLeft = centerX * nextScale - viewport.clientWidth / 2;
+    viewport.scrollTop = centerY * nextScale - viewport.clientHeight / 2;
+    previousScaleRef.current = nextScale;
+  }, [isOpen, isZoomed]);
 
   const closeViewer = () => {
     if (historyPushedRef.current && window.history.state?.routeImageViewer) {
@@ -139,7 +160,7 @@ export function RouteImageViewer({
               {isZoomed ? <ZoomOut size={21} aria-hidden /> : <ZoomIn size={21} aria-hidden />}
             </button>
           </header>
-          <div className={styles.viewport}>
+          <div className={styles.viewport} ref={viewportRef}>
             <button
               aria-label={isZoomed ? "Уменьшить схему" : "Увеличить схему"}
               className={styles.imageCanvas}
