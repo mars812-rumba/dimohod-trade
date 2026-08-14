@@ -1048,6 +1048,69 @@
   text-wrap: pretty;
 }
 
+.productCardSelectionFacts {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.productCardSelectionHeading small {
+  display: block;
+  color: #9fb7c0;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.productCardSelectionHeading h4 {
+  margin: 6px 0 0;
+  color: var(--white);
+  font-size: 18px;
+  font-weight: 720;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.productCardSelectionFacts dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 18px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.productCardSelectionFacts dl > div {
+  min-width: 0;
+  padding: 13px 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.productCardSelectionFacts dt {
+  color: #9fb7c0;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.productCardSelectionFacts dd {
+  margin: 5px 0 0;
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 720;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.productCardSelectionFacts > p {
+  margin: 14px 0 0;
+  color: #c1d0d5;
+  font-size: 11px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .installationAccordion summary svg {
     transition: none;

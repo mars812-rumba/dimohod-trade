@@ -198,6 +198,12 @@ const featuredProductCard = {
     ["Наружный диаметр", "250 мм"],
     ["Длина", "1000 мм"],
   ],
+  selectionFacts: [
+    ["Диаметры", "150 / 250 мм"],
+    ["Длина секции", "1000 мм"],
+    ["Сталь", "AISI 304 · 0,8 мм"],
+    ["Изоляция", "50 мм"],
+  ],
   skuReference: "d150-250-l1000-aisi304-t080-ins50",
   installation: [
     {
@@ -516,6 +522,24 @@ export default async function HomePage() {
                 Рекомендации помогают разобраться в применении изделия, но не заменяют проект и
                 проверку специалиста.
               </p>
+              <div className={styles.productCardSelectionFacts}>
+                <div className={styles.productCardSelectionHeading}>
+                  <small>Выбранный вариант</small>
+                  <h4>Параметры для сверки</h4>
+                </div>
+                <dl>
+                  {featuredProductCard.selectionFacts.map(([label, value]) => (
+                    <div key={label}>
+                      <dt>{label}</dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p>
+                  Эти значения понадобятся при проверке соединения с соседними элементами и
+                  составлении полной трассы.
+                </p>
+              </div>
             </section>
 
             {compatibleProducts.length > 0 ? (
