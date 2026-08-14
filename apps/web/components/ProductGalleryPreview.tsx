@@ -38,8 +38,8 @@ export function ProductGalleryPreview({ media, productName, badges }: ProductGal
       <div className={styles.productCardImage} aria-live="polite">
         <YandexRatingBadge />
         <Image
-          key={selected.url}
-          src={selected.url}
+          key={selected.thumbnail_url ?? selected.url}
+          src={selected.thumbnail_url ?? selected.url}
           alt={selected.alt ?? `${productName} — ${roleLabel(selected.role, selectedIndex)}`}
           fill
           loading="lazy"
