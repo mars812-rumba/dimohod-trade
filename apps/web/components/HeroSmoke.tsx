@@ -31,6 +31,9 @@ export function HeroSmoke() {
       <span />
       <span />
       <span />
+      <span />
+      <span />
+      <span />
     </div>
   );
 }
