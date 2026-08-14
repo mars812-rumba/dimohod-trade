@@ -1051,7 +1051,7 @@ export const gasBoilerScenario: ScenarioPageContent = {
   title: "Система отвода для конкретной модели котла",
   summary:
     "Проверим документацию оборудования и допустимую конфигурацию, прежде чем связывать её с товарами каталога.",
-  heroImage: "/images/home/scenario-gaz.webp",
+  heroImage: "/images/home/scenario-gaz-user.webp",
   heroImageAlt: "Газовый котёл с металлическим участком системы отвода",
   diameterGuide: {
     title: "Для газового котла сначала определяется тип системы",

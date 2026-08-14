@@ -106,7 +106,7 @@ const scenarios = [
     slug: "gaz",
     title: "Газовый котёл",
     text: "Документация модели и разрешённая производителем конфигурация системы.",
-    image: "/images/home/scenario-gaz.webp",
+    image: "/images/home/scenario-gaz-user.webp",
     href: "/solutions/gazovyy-kotel",
   },
 ];
