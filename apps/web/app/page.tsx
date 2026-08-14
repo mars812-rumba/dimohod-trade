@@ -41,7 +41,6 @@ import {
   getCompatibleProducts,
   getProductPreview,
   type CompatibleProduct,
-  type MediaItem,
 } from "@/lib/api";
 import {
   cookiePolicyPath,
@@ -187,8 +186,26 @@ const catalogGroups = [
 const featuredProductCard = {
   name: "Сэндвич-труба Ø150/250",
   variant: "L=1000 мм · AISI 304 · 0,8 мм · изоляция 50 мм",
-  image: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-1.webp",
-  imageThumbnail: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-1.thumb.webp",
+  media: [
+    {
+      url: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-1.webp",
+      thumbnailUrl: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-1.thumb.webp",
+      alt: "Метровая сэндвич-труба — общий вид",
+      role: "general",
+    },
+    {
+      url: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-2.webp",
+      thumbnailUrl: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-2.thumb.webp",
+      alt: "Метровая сэндвич-труба — вид сверху",
+      role: "top",
+    },
+    {
+      url: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-3.webp",
+      thumbnailUrl: "/media/catalog/skus/dt-sw50-01-00-d100-200/sku-photo-3.thumb.webp",
+      alt: "Метровая сэндвич-труба — соединительный край",
+      role: "connection",
+    },
+  ],
   href: productSelectionPath(
     "sendvich-truba",
     { diameter_mm: 150, outer_diameter_mm: 250 },
@@ -267,20 +284,6 @@ function compatiblePrice(value: string) {
   return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Number(value))} ₽`;
 }
 
-function productPreviewMedia(value: unknown): MediaItem[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  const media = value.filter(
-    (item): item is MediaItem =>
-      Boolean(item && typeof item === "object" && "url" in item && typeof item.url === "string"),
-  );
-  const roles = ["general", "top", "connection"];
-  return roles
-    .map((role) => media.find((item) => item.role === role))
-    .filter((item): item is MediaItem => Boolean(item));
-}
-
 const getCachedHomeProductDemo = unstable_cache(
   async () => {
     const [compatibleProducts, previewProduct] = await Promise.all([
@@ -294,7 +297,6 @@ const getCachedHomeProductDemo = unstable_cache(
     return {
       compatibleProducts: completeCompatibleProducts(compatibleProducts),
       previewBadges: steelSelectionBadges(previewSku),
-      previewMedia: productPreviewMedia(previewProduct?.extra_attributes.media),
     };
   },
   ["home-product-demo-v1"],
@@ -305,23 +307,13 @@ export default async function HomePage() {
   const homeProductDemo = await getCachedHomeProductDemo().catch(() => ({
     compatibleProducts: [],
     previewBadges: [],
-    previewMedia: [],
   }));
-  const previewMedia = [
-    {
-      url: assetUrl(featuredProductCard.image),
-      thumbnail_url: assetUrl(featuredProductCard.imageThumbnail),
-      alt: "Сэндвич-труба длиной 1000 мм — общий вид",
-      role: "general",
-    },
-    ...homeProductDemo.previewMedia
-      .filter((item) => item.role !== "general")
-      .map((item) => ({
-        ...item,
-        url: assetUrl(item.url),
-        thumbnail_url: item.thumbnail_url ? assetUrl(item.thumbnail_url) : null,
-      })),
-  ];
+  const previewMedia = featuredProductCard.media.map((item) => ({
+    url: assetUrl(item.url),
+    thumbnail_url: assetUrl(item.thumbnailUrl),
+    alt: item.alt,
+    role: item.role,
+  }));
   const { compatibleProducts, previewBadges } = homeProductDemo;
   const heroStyle = {
     "--hero-image": `url("${assetUrl("/images/home/hero-chimney-clean-v4-1600.webp")}")`,
@@ -485,11 +477,7 @@ export default async function HomePage() {
           <div className={styles.productCardPreview}>
             <article className={styles.productCardSummary}>
               <ProductGalleryPreview
-                media={previewMedia.length ? previewMedia : [{
-                  url: assetUrl(featuredProductCard.image),
-                  alt: "Сэндвич-труба Ø150/250 — общий вид",
-                  role: "general",
-                }]}
+                media={previewMedia}
                 productName={featuredProductCard.name}
                 badges={previewBadges}
               />
