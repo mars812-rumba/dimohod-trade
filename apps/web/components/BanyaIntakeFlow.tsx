@@ -153,7 +153,7 @@ export function BanyaIntakeFlow({
   const isHome = intake.objectType !== "banya";
   const schemes = {
     stoveHeight: {
-      src: `${assetBasePath}/images/measurements/stove-height-mobile.webp`,
+      src: `${assetBasePath}/images/measurements/stove-height-top-mobile.webp`,
       alt: "Вертикальная схема замера от чистового пола до верхней грани отопителя",
       title: "Как измерить высоту отопителя",
     },
@@ -568,15 +568,17 @@ export function BanyaIntakeFlow({
             </div>
             <fieldset className={styles.routeChoices}>
               <legend className={styles.visuallyHidden}>Маршрут дымохода</legend>
-              {content.routeOptions.map((option, index) => {
-                const value = option.slug === "through-wall-direct"
-                  ? "wall-direct" as const
-                  : index === 0
-                    ? "ceiling" as const
-                    : "wall" as const;
-                const selected = intake.route === value;
-                return (
-                  <div className={styles.routeChoice} data-selected={selected || undefined} key={option.slug}>
+              {content.routeOptions
+                .filter((option) => intake.outlet !== "top" || option.slug !== "through-wall-direct")
+                .map((option, index) => {
+                  const value = option.slug === "through-wall-direct"
+                    ? "wall-direct" as const
+                    : index === 0
+                      ? "ceiling" as const
+                      : "wall" as const;
+                  const selected = intake.route === value;
+                  return (
+                    <div className={styles.routeChoice} data-selected={selected || undefined} key={option.slug}>
                     {option.image ? (
                       <RouteImageViewer
                         alt={`Схема маршрута: ${option.title}`}
@@ -605,9 +607,9 @@ export function BanyaIntakeFlow({
                       <strong>{option.title}</strong>
                       <small>{option.description}</small>
                     </label>
-                  </div>
-                );
-              })}
+                    </div>
+                  );
+                })}
               <label className={`${styles.routeChoice} ${styles.routeChoiceUnknown}`} data-selected={intake.route === "unknown" || undefined}>
                 <input checked={intake.route === "unknown"} name={`${scenario}-route`} onChange={() => update("route", "unknown")} type="radio" value="unknown" />
                 <span className={styles.routeChoiceBody}>
