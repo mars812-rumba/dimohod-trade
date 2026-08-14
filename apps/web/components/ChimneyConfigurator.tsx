@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Download, Mail } from "lucide-react";
+import { AlertTriangle, Download, Mail, PackageCheck } from "lucide-react";
 import {
+  calculationProfileMeasurementsHref,
   readCalculationProfiles,
   type CalculationProfile,
 } from "@/lib/calculationProfiles";
@@ -16,6 +17,13 @@ import {
   saveConfiguratorDraft,
   type ScenarioConfiguratorDraft,
 } from "@/lib/configuratorDraft";
+import {
+  calculateChimney,
+  EFFECTIVE_PIPE_LENGTH_MM,
+  type ChimneyCalculation,
+} from "@/lib/chimneyCalculation";
+import { productSelectionPath } from "@/lib/productUrls";
+import type { ProductListItem, ProductListResponse } from "@/lib/api";
 import { LeadForm } from "./LeadForm";
 
 type RouteType = "ceiling" | "wall";
@@ -131,7 +139,7 @@ const BOM_LABELS: Record<BomType, [string, string]> = {
   tee: ["Тройник с ревизией", "исполнение уточняется"],
   adapter: ["Переходник", "соединение участков"],
   elbow: ["Отвод 90°", "смена направления"],
-  pipe: ["Труба 1000 мм", "исполнение и диаметр уточняются"],
+  pipe: ["Труба 1000 мм", `полезная длина после соединения — ${EFFECTIVE_PIPE_LENGTH_MM} мм`],
   pipe_short: ["Труба 500 мм", "исполнение и диаметр уточняются"],
   wall_bracket: ["Кронштейн стеновой", "расположение по схеме"],
   ceiling_passage: ["Потолочно-проходной узел", "состав требует проверки"],
@@ -188,8 +196,14 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
     draft.route === "ceiling" && draft.ceilingHeight ? `До потолка: ${draft.ceilingHeight} мм` : "",
     draft.route === "ceiling" && draft.floorThickness ? `Высота перекрытия: ${draft.floorThickness} мм` : "",
     draft.route === "ceiling" ? `Чердак: ${draft.hasAttic ? "есть" : "нет"}` : "",
+    draft.route === "ceiling" && draft.atticHeight ? `Высота чердака: ${draft.atticHeight} мм` : "",
     draft.route === "ceiling" && draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
-    draft.wallExitHeight ? `Точка выхода через стену: ${draft.wallExitHeight} м` : "",
+    draft.route !== "ceiling" && draft.wallExitHeight ? `Точка выхода через стену: ${draft.wallExitHeight} м` : "",
+    draft.route !== "ceiling" && draft.wallThickness ? `Толщина стены: ${draft.wallThickness} мм` : "",
+    draft.route !== "ceiling" && draft.wallMaterial ? `Материал стены: ${draft.wallMaterial}` : "",
+    draft.route !== "ceiling" && draft.facadeOffset ? `От фасада до оси трубы: ${draft.facadeOffset} мм` : "",
+    draft.route !== "ceiling" && draft.roofOverhang ? `Вынос кровли: ${draft.roofOverhang} мм` : "",
+    draft.routeNotes ? `Особенности маршрута: ${draft.routeNotes}` : "",
     draft.photosReady ? "Фотографии места установки: подготовлены" : "",
   ].filter(Boolean);
   if (draft.deferredFields.length) values.push(`Уточнить позже: ${draft.deferredFields.join(", ")}`);
@@ -206,23 +220,12 @@ function pushBom(bom: BomItem[], type: BomType, qty: number) {
   }
 }
 
-function segments(lengthM: number) {
-  const n1 = Math.floor(lengthM);
-  const half = lengthM - n1 >= 0.4 ? 1 : 0;
-
-  return { n1, half };
-}
-
 function buildCeilingScene({
-  stove,
-  floors,
   roof,
-  heightM,
+  calculation,
 }: {
-  stove: StoveType;
-  floors: number;
   roof: RoofType;
-  heightM: number;
+  calculation: ChimneyCalculation;
 }): Scene {
   const bom: BomItem[] = [];
   const cx = V_W / 2;
@@ -231,35 +234,24 @@ function buildCeilingScene({
   order.push("start_cap");
   pushBom(bom, "start_cap", 1);
 
-  if (stove === "kamin") {
-    order.push("tee");
-    pushBom(bom, "tee", 1);
-  }
+  pushBom(bom, "adapter", 1);
+  const passageIndexes = Array.from({ length: calculation.passageQty }, (_, index) =>
+    Math.min(
+      Math.max(0, calculation.pipeQty - 1),
+      Math.max(0, Math.round(((index + 1) / (calculation.passageQty + 1)) * calculation.pipeQty) - 1),
+    ),
+  );
 
-  const used = (VERT.start_cap + (stove === "kamin" ? VERT.tee : 0)) / 100;
-  const remaining = Math.max(heightM - used, 1);
-  const { n1, half } = segments(remaining);
-
-  const floorFractions = [];
-  for (let floor = 1; floor <= floors; floor += 1) {
-    floorFractions.push(floor / (floors + 1));
-  }
-
-  for (let index = 0; index < n1; index += 1) {
+  for (let index = 0; index < calculation.pipeQty; index += 1) {
     order.push("pipe");
     pushBom(bom, "pipe", 1);
 
-    floorFractions.forEach((fraction) => {
-      if (Math.floor(n1 * fraction) === index) {
+    passageIndexes.forEach((passageIndex) => {
+      if (passageIndex === index) {
         order.push("ceiling_passage");
         pushBom(bom, "ceiling_passage", 1);
       }
     });
-  }
-
-  if (half) {
-    order.push("pipe_short");
-    pushBom(bom, "pipe_short", 1);
   }
 
   const roofAsset: AssetName = roof === "pitched" ? "roof_flashing_pitch" : "roof_flashing_flat";
@@ -294,7 +286,7 @@ function buildCeilingScene({
       x: 14,
       y: atticTop,
       w: V_W - 28,
-      h: Math.max(0, roomTop - atticTop - 2),
+      h: calculation.hasAttic ? Math.max(0, roomTop - atticTop - 2) : 0,
       fill: "none",
       stroke: "#8a8272",
       dash: "3,3",
@@ -302,10 +294,13 @@ function buildCeilingScene({
     { t: "rect", x: 0, y: roomTop, w: V_W, h: groundY - roomTop, fill: "#dcd6c4", opacity: 0.55 },
     { t: "line", x1: 8, y1: groundY, x2: V_W - 8, y2: groundY, stroke: "#8a8272", dash: "3,3" },
     { t: "rect", x: cx - 22, y: groundY - 30, w: 44, h: 30, fill: "none", stroke: "#b5602f" },
-    { t: "label", x: 10, y: atticTop + 14, text: "ЧЕРДАК" },
     { t: "label", x: 10, y: 16, text: "НАД КРОВЛЕЙ" },
     { t: "label", x: 10, y: groundY - 8, text: "ПОМЕЩЕНИЕ" },
   ];
+
+  if (calculation.hasAttic) {
+    bg.push({ t: "label", x: 10, y: atticTop + 14, text: "ЧЕРДАК" });
+  }
 
   ceilingParts.forEach((part, index) => {
     bg.push({
@@ -323,20 +318,16 @@ function buildCeilingScene({
     images,
     bg,
     bom,
-    badge: `${heightM.toFixed(1)} м от печи до оголовка · ${floors} эт.`,
+    badge: `${(calculation.requiredMm / 1000).toFixed(2)} м · ${calculation.pipeQty} труб · ${calculation.floors} эт.${calculation.hasAttic ? " · чердак" : ""}`,
   };
 }
 
 function buildWallScene({
-  stove,
   outlet,
-  distanceM,
-  heightM,
+  calculation,
 }: {
-  stove: StoveType;
   outlet: OutletType;
-  distanceM: number;
-  heightM: number;
+  calculation: ChimneyCalculation;
 }): Scene {
   const bom: BomItem[] = [];
   const images: SceneImage[] = [];
@@ -348,15 +339,14 @@ function buildWallScene({
 
   if (outlet === "vertical") {
     pushBom(bom, "start_cap", 1);
-    if (stove === "kamin") {
-      pushBom(bom, "tee", 1);
-    }
     pushBom(bom, "elbow", 1);
 
     let cursor = groundY - 30;
     const stack: AssetName[] = ["start_cap"];
-    if (stove === "kamin") {
-      stack.push("tee");
+    const insideRiseQty = calculation.lengthParts.find((part) => part.id === "vertical")?.pipeQty ?? 0;
+    for (let index = 0; index < insideRiseQty; index += 1) {
+      stack.push("pipe");
+      pushBom(bom, "pipe", 1);
     }
     stack.push("elbow_up_to_side");
 
@@ -383,16 +373,11 @@ function buildWallScene({
 
   pushBom(bom, "adapter", 1);
   const rowAssets: AssetName[] = ["adapter_h"];
-  const { n1, half } = segments(distanceM);
+  const horizontalPipeQty = calculation.lengthParts.find((part) => part.id === "horizontal")?.pipeQty ?? 0;
 
-  for (let index = 0; index < n1; index += 1) {
+  for (let index = 0; index < horizontalPipeQty; index += 1) {
     rowAssets.push("pipe_h");
     pushBom(bom, "pipe", 1);
-  }
-
-  if (half) {
-    rowAssets.push("pipe_short_h");
-    pushBom(bom, "pipe_short", 1);
   }
 
   rowAssets.push("wall_passage_h");
@@ -422,25 +407,12 @@ function buildWallScene({
   const exteriorX = esuX + 100;
 
   const vertOrder: AssetName[] = [];
-  const { n1: vn1, half: vhalf } = segments(heightM);
+  const exteriorPipeQty = calculation.lengthParts.find((part) => part.id === "outdoor")?.pipeQty ?? 0;
 
-  for (let index = 0; index < vn1; index += 1) {
+  for (let index = 0; index < exteriorPipeQty; index += 1) {
     vertOrder.push("pipe");
     pushBom(bom, "pipe", 1);
-
-    if ((index + 1) % 2 === 0) {
-      vertOrder.push("wall_bracket");
-      pushBom(bom, "wall_bracket", 1);
-    }
   }
-
-  if (vhalf) {
-    vertOrder.push("pipe_short");
-    pushBom(bom, "pipe_short", 1);
-  }
-
-  vertOrder.push("wall_bracket");
-  pushBom(bom, "wall_bracket", 1);
   vertOrder.push("cap");
   pushBom(bom, "cap", 1);
 
@@ -454,7 +426,8 @@ function buildWallScene({
   const topY = cursor2;
   const svgW = exteriorX + V_W / 2 + 20;
   const marginTop = 24;
-  const canvasTop = Math.min(marginTop, topY - 20);
+  const imageTopY = images.reduce((minimum, image) => Math.min(minimum, image.y), topY);
+  const canvasTop = Math.min(marginTop, topY - 20, imageTopY - 20);
   const svgH = groundY + 40 - canvasTop;
   const roomTopY = horizY - 34;
   const eaveX = wallX + 16;
@@ -483,7 +456,7 @@ function buildWallScene({
     images,
     bg,
     bom,
-    badge: `${distanceM.toFixed(1)} м от печи до стены · ${heightM.toFixed(1)} м наружного участка`,
+    badge: `${(calculation.requiredMm / 1000).toFixed(2)} м трассы · ${calculation.pipeQty} труб по ${EFFECTIVE_PIPE_LENGTH_MM} мм`,
   };
 }
 
@@ -558,11 +531,14 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const [route, setRoute] = useState<RouteType>(initialRoute === "wall" ? "wall" : "ceiling");
   const [stove, setStove] = useState<StoveType>(initialStove ?? "bania");
   const [outlet, setOutlet] = useState<OutletType>(initialOutlet === "horizontal" ? "horizontal" : "vertical");
-  const [distanceM, setDistanceM] = useState(Number.isFinite(initialDistance) && initialDistance >= 0.5 && initialDistance <= 3 ? initialDistance : 1.5);
+  const [distanceM, setDistanceM] = useState(Number.isFinite(initialDistance) && initialDistance >= 0.1 && initialDistance <= 6 ? initialDistance : 1.5);
   const [floors, setFloors] = useState(Number.isFinite(initialFloors) && initialFloors >= 1 && initialFloors <= 3 ? initialFloors : 1);
+  const [hasAttic, setHasAttic] = useState(false);
   const [roof, setRoof] = useState<RoofType>("pitched");
-  const [heightM, setHeightM] = useState(Number.isFinite(initialHeight) && initialHeight >= 3 && initialHeight <= 9 ? initialHeight : 5);
+  const [heightM, setHeightM] = useState(Number.isFinite(initialHeight) && initialHeight >= 1 && initialHeight <= 20 ? initialHeight : 5);
   const [stoveModel, setStoveModel] = useState(searchParams.get("stoveModel") ?? "");
+  const [pipeMatch, setPipeMatch] = useState<ProductListItem | null>(null);
+  const [pipeMatchStatus, setPipeMatchStatus] = useState<"idle" | "loading" | "ready" | "empty" | "error">("idle");
 
   useEffect(() => {
     try {
@@ -606,23 +582,29 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
 
     const draftFloors = Number(transferredDraft.levels);
     if (Number.isFinite(draftFloors) && draftFloors >= 1 && draftFloors <= 3) setFloors(draftFloors);
+    setHasAttic(Boolean(transferredDraft.hasAttic));
 
     const draftHeight = Number(
       transferredDraft.route !== "ceiling"
         ? transferredDraft.outdoorHeight
         : transferredDraft.routeHeight,
     );
-    if (Number.isFinite(draftHeight) && draftHeight >= 3 && draftHeight <= 9) setHeightM(draftHeight);
+    if (Number.isFinite(draftHeight) && draftHeight >= 1 && draftHeight <= 20) setHeightM(draftHeight);
 
-    const draftDistance = Number(transferredDraft.wallDistance);
-    if (Number.isFinite(draftDistance) && draftDistance >= 0.5 && draftDistance <= 3) setDistanceM(draftDistance);
+    const rawDraftDistance = Number(transferredDraft.wallDistance);
+    const draftDistance = rawDraftDistance > 20 ? rawDraftDistance / 1000 : rawDraftDistance;
+    if (Number.isFinite(draftDistance) && draftDistance >= 0.1 && draftDistance <= 6) setDistanceM(draftDistance);
 
     if (!searchParams.get("stoveModel")) {
       const connection = [
         transferredDraft.manufacturer.trim(),
         transferredDraft.model.trim(),
-        transferredDraft.diameter ? `патрубок ${transferredDraft.diameter} мм` : "",
-        transferredDraft.connectionHeight ? `точка подключения ${transferredDraft.connectionHeight} мм` : "",
+        transferredDraft.diameterX || transferredDraft.diameterY
+          ? `патрубок X ${transferredDraft.diameterX || "?"} / Y ${transferredDraft.diameterY || "?"} мм`
+          : transferredDraft.diameter ? `патрубок ${transferredDraft.diameter} мм` : "",
+        transferredDraft.outlet === "rear" && transferredDraft.rearOutletBottomHeight
+          ? `нижняя кромка патрубка ${transferredDraft.rearOutletBottomHeight} мм от пола`
+          : transferredDraft.connectionHeight ? `верх отопителя ${transferredDraft.connectionHeight} мм от пола` : "",
         transferredDraft.connectionDetails.trim(),
       ].filter(Boolean);
       if (connection.length) setStoveModel(connection.join(" · "));
@@ -647,24 +629,79 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       route: draftRoute,
       outlet: outlet === "vertical" ? "top" : "rear",
       levels: String(floors),
+      hasAttic,
       routeHeight: route === "ceiling" ? String(heightM) : baseDraft.routeHeight,
       outdoorHeight: route === "wall" ? String(heightM) : baseDraft.outdoorHeight,
-      wallDistance: route === "wall" ? String(distanceM) : baseDraft.wallDistance,
+      wallDistance: route === "wall" ? String(Math.round(distanceM * 1000)) : baseDraft.wallDistance,
     });
     try {
       saveConfiguratorDraft(window.sessionStorage, updatedDraft);
     } catch {
       // The configurator remains usable without browser storage.
     }
-  }, [distanceM, draftHydrated, floors, heightM, outlet, route, stove, transferredDraft]);
+  }, [distanceM, draftHydrated, floors, hasAttic, heightM, outlet, route, stove, transferredDraft]);
+
+  const calculationDraft = useMemo<ScenarioConfiguratorDraft | null>(() => {
+    if (!transferredDraft) return null;
+    return {
+      ...transferredDraft,
+      route: route === "wall" && outlet === "horizontal" ? "wall-direct" : route,
+      outlet: outlet === "vertical" ? "top" : "rear",
+      levels: String(floors),
+      hasAttic,
+      routeHeight: route === "ceiling" ? String(heightM) : transferredDraft.routeHeight,
+      outdoorHeight: route === "wall" ? String(heightM) : transferredDraft.outdoorHeight,
+      wallDistance: route === "wall" ? String(Math.round(distanceM * 1000)) : transferredDraft.wallDistance,
+    };
+  }, [distanceM, floors, hasAttic, heightM, outlet, route, transferredDraft]);
+
+  const calculation = useMemo(
+    () => calculateChimney({ route, outlet, floors, heightM, distanceM, draft: calculationDraft }),
+    [calculationDraft, distanceM, floors, heightM, outlet, route],
+  );
 
   const scene = useMemo(
     () =>
       route === "ceiling"
-        ? buildCeilingScene({ stove, floors, roof, heightM })
-        : buildWallScene({ stove, outlet, distanceM, heightM }),
-    [distanceM, floors, heightM, outlet, roof, route, stove],
+        ? buildCeilingScene({ roof, calculation })
+        : buildWallScene({ outlet, calculation }),
+    [calculation, outlet, roof, route],
   );
+
+  useEffect(() => {
+    const diameter = calculation.diameterMm;
+    if (!diameter || calculation.diameterStatus !== "known") {
+      setPipeMatch(null);
+      setPipeMatchStatus("idle");
+      return;
+    }
+
+    const controller = new AbortController();
+    const params = new URLSearchParams({
+      limit: "12",
+      offset: "0",
+      product_kind: "труба",
+      diameter: `${diameter}:`,
+      length_mm: "1000",
+      contour: "сэндвич",
+    });
+    setPipeMatchStatus("loading");
+    fetch(`${assetBasePath}/api/v1/products?${params.toString()}`, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("catalog request failed");
+        return response.json() as Promise<ProductListResponse>;
+      })
+      .then((payload) => {
+        setPipeMatch(payload.items[0] ?? null);
+        setPipeMatchStatus(payload.items.length ? "ready" : "empty");
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setPipeMatch(null);
+        setPipeMatchStatus("error");
+      });
+    return () => controller.abort();
+  }, [assetBasePath, calculation.diameterMm, calculation.diameterStatus]);
 
   const totalQty = scene.bom.reduce((sum, item) => sum + item.qty, 0);
   const stoveLabel = STOVE_OPTIONS.find((option) => option.id === stove)?.label ?? "Источник";
@@ -672,9 +709,9 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     route === "ceiling" ? "Схема: через перекрытие и кровлю" : "Схема: наружный монтаж по стене";
   const assetUrl = (asset: AssetName) => `${assetBasePath}/images/configurator/${asset}.png`;
   const activeProfile = calculationProfiles.find((profile) => profile.id === activeProfileId);
-  const measurementsHref = activeProfile?.draft.scenario === "banya"
-    ? `/solutions/banya/zamery?profile=${encodeURIComponent(activeProfile.id)}`
-    : "/solutions/banya/zamery";
+  const measurementsHref = activeProfile
+    ? calculationProfileMeasurementsHref(activeProfile.id)
+    : "/zamery?edit=1";
 
   const loadCalculationProfile = (profileId: string) => {
     setActiveProfileId(profileId);
@@ -704,12 +741,16 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         `Источник: ${stoveLabel}`,
         `Модель отопителя / патрубок: ${stoveModel.trim() || "не указаны"}`,
         route === "ceiling" ? `Этажность: ${floors}; кровля: ${roof === "pitched" ? "скатная" : "плоская"}` : `Выход: ${outlet === "vertical" ? "вертикальный" : "горизонтальный"}; до стены: ${distanceM.toFixed(1)} м`,
-        `Высота: ${heightM.toFixed(1)} м`,
+        `Расчётная длина трассы: ${(calculation.requiredMm / 1000).toFixed(2)} м`,
+        `Труба 1000 мм: ${calculation.pipeQty} шт. по ${EFFECTIVE_PIPE_LENGTH_MM} мм полезной длины`,
+        `Закрываемая длина: ${(calculation.coveredMm / 1000).toFixed(2)} м; остаток на подрезку/уточнение: ${calculation.reserveMm} мм`,
         ...transferredDetails,
         "Позиции:",
         ...scene.bom.map((part) => `${BOM_LABELS[part.type][0]} — ${part.qty} шт.`),
+        "Требует проверки:",
+        ...calculation.reviewItems,
       ].join("\n"),
-    [distanceM, floors, heightM, outlet, roof, route, scene.bom, stoveLabel, stoveModel, transferredDetails],
+    [calculation, distanceM, floors, outlet, roof, route, scene.bom, stoveLabel, stoveModel, transferredDetails],
   );
 
   function savePdf() {
@@ -726,7 +767,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     if (!printWindow) return;
     printWindow.opener = null;
     const summary = escapeHtml(configuration.split("\nПозиции:")[0]).replaceAll("\n", "<br>");
-    printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Комплект из конфигуратора — Дымоход Трейд</title><style>body{font:15px Arial,sans-serif;color:#102127;margin:40px}h1{font-size:28px}p{line-height:1.55}table{width:100%;border-collapse:collapse;margin:24px 0}td,th{padding:10px;border:1px solid #ccd5d7;text-align:left}.note{padding:16px;background:#eef2f2} @page{size:A4;margin:18mm}</style></head><body><h1>Комплект дымохода из конфигуратора</h1><p>${summary}</p><table><thead><tr><th>Позиция</th><th>Количество</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Комплект собран по указанным параметрам без цены и конкретных SKU. Перед заказом инженер проверит диаметр, сталь, проходные узлы и совместимость.</p><p>Дымоход Трейд · +7 (965) 075-65-55 · office@dimohod-trade.pro</p><script>window.onload=()=>window.print()<\/script></body></html>`);
+    printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Комплект из конфигуратора — Дымоход Трейд</title><style>body{font:15px Arial,sans-serif;color:#102127;margin:40px}h1{font-size:28px}p{line-height:1.55}table{width:100%;border-collapse:collapse;margin:24px 0}td,th{padding:10px;border:1px solid #ccd5d7;text-align:left}.note{padding:16px;background:#eef2f2} @page{size:A4;margin:18mm}</style></head><body><h1>Комплект дымохода из конфигуратора</h1><p>${summary}</p><table><thead><tr><th>Позиция</th><th>Количество</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Количество метровых труб рассчитано по 950 мм полезной длины после соединения. Конкретные SKU, исполнение проходов, фланцы и крепления проверяются перед заказом.</p><p>Дымоход Трейд · +7 (965) 075-65-55 · office@dimohod-trade.pro</p><script>window.onload=()=>window.print()<\/script></body></html>`);
     printWindow.document.close();
   }
 
@@ -755,7 +796,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
 
       <div className="configurator-profile-bar">
         <label className="configurator-profile-select">
-          <span>Расчётный профиль</span>
+          <span>Замеры объекта</span>
           <select value={activeProfileId} onChange={(event) => loadCalculationProfile(event.target.value)}>
             <option value="">Текущий несохранённый расчёт</option>
             {calculationProfiles.map((profile) => (
@@ -768,11 +809,11 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         <div className="configurator-profile-meta">
           <p role="status">
             {profileNotice || (calculationProfiles.length
-              ? "Выберите сохранённые замеры. Изменения в конфигураторе не перезаписывают профиль автоматически."
+              ? "Выберите сохранённые замеры. Изменения в конфигураторе не перезаписывают их автоматически."
               : "Сохранённых профилей в этом браузере пока нет.")}
           </p>
           <Link href={measurementsHref}>
-            {activeProfile ? "Изменить замеры" : "Создать профиль замеров"}
+            {activeProfile ? "Изменить замеры" : "Открыть мои замеры"}
           </Link>
         </div>
       </div>
@@ -854,15 +895,15 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                   aria-label="Удалённость от стены"
                   className="configurator-range"
                   type="range"
-                  min="0.5"
-                  max="3"
-                  step="0.5"
+                  min="0.1"
+                  max="6"
+                  step="0.1"
                   value={distanceM}
                   onChange={(event) => setDistanceM(Number(event.target.value))}
                 />
                 <div className="configurator-ticks">
-                  <span>0.5 м</span>
-                  <span>3 м</span>
+                  <span>0.1 м</span>
+                  <span>6 м</span>
                 </div>
               </div>
             </>
@@ -884,6 +925,18 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                   ))}
                 </div>
               </div>
+
+              <label className="configurator-check-field">
+                <input
+                  checked={hasAttic}
+                  onChange={(event) => setHasAttic(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>
+                  <strong>Есть чердак</strong>
+                  <small>Добавим отдельную холодную зону в расчётную схему.</small>
+                </span>
+              </label>
 
               <div className="configurator-field">
                 <div className="configurator-label">Кровля</div>
@@ -912,23 +965,23 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               aria-label="Высота дымохода"
               className="configurator-range"
               type="range"
-              min="3"
-              max="9"
-              step="0.5"
+              min="1"
+              max="20"
+              step="0.1"
               value={heightM}
               onChange={(event) => setHeightM(Number(event.target.value))}
             />
             <div className="configurator-ticks">
-              <span>3 м</span>
-              <span>9 м</span>
+              <span>1 м</span>
+              <span>20 м</span>
             </div>
           </div>
 
           <div className="configurator-note">
             <strong>{sceneTitle}</strong>
             <span>
-              Исполнение участков, диаметр, сталь и конкретные SKU подтверждаются после проверки
-              исходных данных и применимых правил.
+              Метровые трубы считаются по {EFFECTIVE_PIPE_LENGTH_MM} мм полезной длины после соединения.
+              Исполнение проходов и креплений подтверждается после проверки объекта.
             </span>
           </div>
         </div>
@@ -936,7 +989,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         <div className="configurator-schematic-pane">
           <div className="configurator-schematic-top">
             <span>{sceneTitle}</span>
-            <strong>{heightM.toFixed(1)} м</strong>
+            <strong>{(calculation.requiredMm / 1000).toFixed(2)} м</strong>
           </div>
           <div className="configurator-svg-wrap">
             <svg
@@ -962,6 +1015,18 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             </svg>
           </div>
           <div className="configurator-height-badge">{scene.badge}</div>
+          <div className="configurator-length-breakdown" aria-label="Расчёт длины труб">
+            {calculation.lengthParts.map((part) => (
+              <div key={part.id}>
+                <span>{part.label}</span>
+                <strong>{(part.requiredMm / 1000).toFixed(2)} м → {part.pipeQty} шт.</strong>
+              </div>
+            ))}
+            <div className="is-total">
+              <span>Перекрываем трубами</span>
+              <strong>{(calculation.coveredMm / 1000).toFixed(2)} м</strong>
+            </div>
+          </div>
         </div>
 
         <div className="configurator-spec">
@@ -984,6 +1049,38 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                 </div>
               );
             })}
+          </div>
+          <div className="configurator-catalog-match" data-status={pipeMatchStatus}>
+            <div className="configurator-catalog-match-title">
+              <PackageCheck aria-hidden size={18} />
+              <strong>Труба из каталога</strong>
+            </div>
+            {pipeMatchStatus === "loading" ? <p>Ищем вариант по диаметру и длине…</p> : null}
+            {pipeMatchStatus === "ready" && pipeMatch ? (
+              <>
+                <p>
+                  Найден вариант с совпадением по диаметру, длине 1000 мм и контуру «сэндвич».
+                  Полную совместимость нужно подтвердить вместе с остальными элементами.
+                </p>
+                <Link href={productSelectionPath(pipeMatch.slug, pipeMatch, pipeMatch.selected_sku)}>
+                  {pipeMatch.name} · {calculation.pipeQty} шт.
+                </Link>
+              </>
+            ) : null}
+            {pipeMatchStatus === "idle" ? (
+              <p>Укажите одинаковые значения X и Y наружного диаметра патрубка для подбора SKU.</p>
+            ) : null}
+            {pipeMatchStatus === "empty" ? <p>Точного варианта по заданным параметрам в каталоге не найдено.</p> : null}
+            {pipeMatchStatus === "error" ? <p>Каталог временно недоступен; количественный расчёт сохранён.</p> : null}
+          </div>
+          <div className="configurator-review-list">
+            <div className="configurator-review-title">
+              <AlertTriangle aria-hidden size={18} />
+              <strong>Проверить перед заказом</strong>
+            </div>
+            {calculation.reviewItems.map((item) => (
+              <p key={item}>{item}</p>
+            ))}
           </div>
         </div>
       </div>
