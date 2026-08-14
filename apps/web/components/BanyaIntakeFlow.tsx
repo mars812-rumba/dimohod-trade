@@ -27,6 +27,8 @@ type BanyaIntakeFlowProps = {
   assetBasePath?: string;
   initialProfileId?: string;
   initialRoute?: string;
+  initialObjectType?: ScenarioConfiguratorDraft["objectType"];
+  onProfileSaved?: () => void;
 };
 
 const statusLabels: Record<DraftFieldStatus, string> = {
@@ -106,7 +108,7 @@ function MeasurementHelp({
           <RouteImageViewer
             alt={scheme.alt}
             previewClassName={styles.measureScheme}
-            previewSizes="(max-width: 720px) calc(100vw - 48px), 760px"
+            previewSizes="(max-width: 720px) calc(100vw - 48px), 520px"
             quality={86}
             src={scheme.src}
             title={scheme.title}
@@ -127,11 +129,17 @@ export function BanyaIntakeFlow({
   assetBasePath = "",
   initialProfileId = "",
   initialRoute = "",
+  initialObjectType,
+  onProfileSaved,
 }: BanyaIntakeFlowProps) {
-  const scenario = content.slug === "dom" ? "dom" : "banya";
-  const emptyDraft = createEmptyScenarioDraft(scenario);
-  const isHome = scenario === "dom";
-  const storageKey = `dimohod-trade:${scenario}-intake`;
+  const initialScenario = initialObjectType && initialObjectType !== "banya"
+    ? "dom"
+    : content.slug === "dom" ? "dom" : "banya";
+  const emptyDraft = {
+    ...createEmptyScenarioDraft(initialScenario),
+    ...(initialObjectType ? { objectType: initialObjectType } : {}),
+  };
+  const storageKey = "dimohod-trade:measurements-intake:v2";
   const requestedProfileId = initialProfileId;
   const requestedRoute = initialRoute;
   const [intake, setIntake] = useState<ScenarioConfiguratorDraft>(emptyDraft);
@@ -141,6 +149,60 @@ export function BanyaIntakeFlow({
   const [profileError, setProfileError] = useState("");
   const [profileStatus, setProfileStatus] = useState("");
   const [profileDirty, setProfileDirty] = useState(true);
+  const scenario = intake.scenario;
+  const isHome = intake.objectType !== "banya";
+  const schemes = {
+    stoveHeight: {
+      src: `${assetBasePath}/images/measurements/stove-height-mobile.webp`,
+      alt: "Вертикальная схема замера от чистового пола до верхней грани отопителя",
+      title: "Как измерить высоту отопителя",
+    },
+    rearOutletHeight: {
+      src: `${assetBasePath}/images/measurements/rear-outlet-bottom-height-mobile.webp`,
+      alt: "Вертикальная схема замера от чистового пола до нижней наружной кромки заднего патрубка",
+      title: "Как измерить высоту заднего патрубка",
+    },
+    outletDiameter: {
+      src: `${assetBasePath}/images/measurements/stove-outlet-diameter-mobile.webp`,
+      alt: "Вертикальная схема наружного замера патрубка по осям X и Y",
+      title: "Как измерить наружный диаметр патрубка",
+    },
+    roomHeight: {
+      src: `${assetBasePath}/images/measurements/finished-room-height-mobile.webp`,
+      alt: "Вертикальная схема замера чистовой высоты от пола до потолка",
+      title: "Как измерить чистовую высоту помещения",
+    },
+    floorThickness: {
+      src: `${assetBasePath}/images/measurements/floor-thickness-mobile.webp`,
+      alt: "Вертикальная схема замера полной толщины межэтажного перекрытия",
+      title: "Как измерить толщину перекрытия",
+    },
+    routeHeight: {
+      src: `${assetBasePath}/images/measurements/route-total-height-mobile.webp`,
+      alt: "Вертикальная схема ориентировочного замера всей трассы лазерной рулеткой",
+      title: "Как измерить ориентировочную высоту трассы",
+    },
+    atticRoof: {
+      src: `${assetBasePath}/images/measurements/attic-roof-angle-mobile.webp`,
+      alt: "Вертикальная схема замера высоты чердака и угла кровли",
+      title: "Как измерить чердак и угол кровли",
+    },
+    topOutletWall: {
+      src: `${assetBasePath}/images/measurements/top-outlet-wall-measurements-mobile.webp`,
+      alt: "Вертикальная схема замеров при верхнем патрубке и выводе через стену",
+      title: "Замеры при верхнем патрубке и выводе через стену",
+    },
+    rearOutletWall: {
+      src: `${assetBasePath}/images/measurements/rear-outlet-wall-measurements-mobile.webp`,
+      alt: "Вертикальная схема замеров при заднем патрубке и прямом выводе через стену",
+      title: "Замеры при заднем патрубке и выводе через стену",
+    },
+    exteriorRoute: {
+      src: `${assetBasePath}/images/measurements/exterior-route-measurements-mobile.webp`,
+      alt: "Вертикальная схема замеров наружной части дымохода вдоль фасада",
+      title: "Как измерить наружную часть трассы",
+    },
+  } satisfies Record<string, MeasurementScheme>;
 
   useEffect(() => {
     try {
@@ -155,7 +217,8 @@ export function BanyaIntakeFlow({
       const sharedDraft = readConfiguratorDraft(window.sessionStorage);
       const mergedDraft = requestedProfile?.draft ?? mergeConfiguratorDraft(sharedDraft, {
           ...savedDraft,
-          scenario,
+          scenario: initialScenario,
+          ...(initialObjectType ? { objectType: initialObjectType } : {}),
         });
       const route = requestedRoute === "ceiling" || requestedRoute === "wall" || requestedRoute === "wall-direct"
         ? requestedRoute
@@ -177,7 +240,7 @@ export function BanyaIntakeFlow({
       // The form remains usable when browser storage is unavailable.
     }
     setIsReady(true);
-  }, [requestedProfileId, requestedRoute]);
+  }, [initialObjectType, initialScenario, requestedProfileId, requestedRoute]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -241,6 +304,7 @@ export function BanyaIntakeFlow({
       setProfileError("");
       setProfileStatus(`Профиль «${profile.name}» сохранён в этом браузере.`);
       setProfileDirty(false);
+      onProfileSaved?.();
     } catch {
       setProfileError("Не удалось сохранить профиль в браузере. Проверьте настройки хранения данных и повторите попытку.");
     }
@@ -268,25 +332,72 @@ export function BanyaIntakeFlow({
               <span>Шаг 1</span>
               <div>
                 <h3 id="stove-step-title">
-                  {isHome ? "Какой у вас отопитель?" : "Какая у вас печь?"}
+                  Объект и отопитель
                 </h3>
                 <p>
-                  {isHome
-                    ? "Тип, модель и паспорт отопителя дают исходные требования производителя к подключению дымохода."
-                    : "Модель и паспорт печи дают исходные требования производителя к подключению дымохода."}
+                  Сначала укажите объект и то, насколько точно уже известен отопитель.
                 </p>
               </div>
             </div>
-            {isHome ? (
+            <fieldset className={styles.choiceFieldset}>
+              <legend>Какой объект измеряем?</legend>
+              <div className={styles.choiceRow}>
+                {[
+                  ["banya", "Баня"],
+                  ["house", "Дом"],
+                  ["boiler-room", "Котельная"],
+                  ["other", "Другое"],
+                ].map(([value, label]) => (
+                  <label key={value}>
+                    <input
+                      checked={intake.objectType === value}
+                      name="measurement-object"
+                      onChange={() => {
+                        markProfileDirty();
+                        setIntake((current) => ({
+                          ...current,
+                          objectType: value as ScenarioConfiguratorDraft["objectType"],
+                          scenario: value === "banya" ? "banya" : "dom",
+                        }));
+                      }}
+                      type="radio"
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className={styles.choiceFieldset}>
+              <legend>Отопитель</legend>
+              <div className={styles.choiceRow}>
+                {[
+                  ["installed", "Уже установлен"],
+                  ["selected", "Выбран, но не установлен"],
+                  ["not-selected", "Пока не выбран"],
+                ].map(([value, label]) => (
+                  <label key={value}>
+                    <input
+                      checked={intake.equipmentStatus === value}
+                      name="equipment-status"
+                      onChange={() => update("equipmentStatus", value as ScenarioConfiguratorDraft["equipmentStatus"])}
+                      type="radio"
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            {intake.equipmentStatus !== "not-selected" ? (
               <fieldset className={styles.choiceFieldset}>
                 <legend>Тип отопителя</legend>
                 <div className={styles.choiceRow}>
                   {[
-                    ["pech", "Отопительная печь"],
+                    ["pech", isHome ? "Отопительная печь" : "Банная печь"],
                     ["kamin", "Камин"],
                     ["tt-kotel", "Твердотопливный котёл"],
                     ["gaz", "Газовый котёл"],
-                    ["", "Пока не выбран"],
                   ].map(([value, label]) => (
                     <label key={label}>
                       <input
@@ -299,7 +410,7 @@ export function BanyaIntakeFlow({
                     </label>
                   ))}
                 </div>
-                <p className={styles.choiceContext}>
+                {isHome ? <p className={styles.choiceContext}>
                   {intake.equipmentType === "gaz" ? (
                     <>
                       Для газового котла сначала откройте{" "}
@@ -313,9 +424,26 @@ export function BanyaIntakeFlow({
                       <Link href="/solutions/tverdotoplivny-kotel">твердотопливный котёл</Link>.
                     </>
                   )}
-                </p>
+                </p> : null}
               </fieldset>
             ) : null}
+            {intake.equipmentStatus !== "not-selected" ? <>
+            <fieldset className={styles.choiceFieldset}>
+              <legend>Есть паспорт или инструкция отопителя?</legend>
+              <div className={styles.choiceRow}>
+                {[["yes", "Да"], ["no", "Нет"], ["unknown", "Пока не знаю"]].map(([value, label]) => (
+                  <label key={value}>
+                    <input
+                      checked={intake.passportStatus === value}
+                      name="passport-status"
+                      onChange={() => update("passportStatus", value as ScenarioConfiguratorDraft["passportStatus"])}
+                      type="radio"
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             <div className={styles.fieldGrid}>
               <div className={styles.measurementField}>
                 <label className={styles.field}>
@@ -347,9 +475,12 @@ export function BanyaIntakeFlow({
                 <p>Если модель ещё не выбрана, маршрут можно начать собирать сейчас, а соединительные параметры оставить для уточнения.</p>
               </div>
             </details>
+            </> : (
+              <p className={styles.choiceContext}>Можно продолжить с замерами здания. Данные отопителя добавите после выбора оборудования.</p>
+            )}
           </section>
 
-          <section className={styles.intakeStep} aria-labelledby="outlet-step-title">
+          {intake.equipmentStatus !== "not-selected" ? <section className={styles.intakeStep} aria-labelledby="outlet-step-title">
             <div className={styles.stepHeading}>
               <span>Шаг 2</span>
               <div>
@@ -362,53 +493,70 @@ export function BanyaIntakeFlow({
               <legend>Положение патрубка отопителя</legend>
               <div className={styles.choiceRow}>
                 <label>
-                  <input checked={intake.outlet === "top"} name={`${scenario}-outlet`} onChange={() => update("outlet", "top")} type="radio" />
+                  <input checked={intake.outlet === "top"} name={`${scenario}-outlet`} onChange={() => {
+                    markProfileDirty();
+                    setIntake((current) => ({
+                      ...current,
+                      outlet: "top",
+                      route: current.route === "wall-direct" ? "wall" : current.route,
+                    }));
+                  }} type="radio" />
                   <span>Сверху</span>
                 </label>
                 <label>
-                  <input checked={intake.outlet === "rear"} name={`${scenario}-outlet`} onChange={() => update("outlet", "rear")} type="radio" />
+                  <input checked={intake.outlet === "rear"} name={`${scenario}-outlet`} onChange={() => {
+                    markProfileDirty();
+                    setIntake((current) => ({
+                      ...current,
+                      outlet: "rear",
+                      route: current.route === "unknown" ? "unknown" : "wall-direct",
+                    }));
+                  }} type="radio" />
                   <span>Сзади</span>
                 </label>
               </div>
             </fieldset>
 
             <div className={styles.fieldGrid}>
-              <MeasurementField draft={intake} field="connectionHeight" label={isHome ? "Высота отопителя или точки подключения" : "Высота печи или точки подключения"} onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Укажите контрольный размер" unit="мм">
-                <MeasurementHelp
-                  scheme={isHome ? undefined : {
-                    src: `${assetBasePath}/images/measurements/stove-height.webp`,
-                    alt: "Схема правильного и неправильного замера высоты печи от пола",
-                    title: "Как замерять высоту печи от пола",
-                  }}
-                >
-                  <p>{isHome ? "Схему замера высоты отопителя и точки подключения добавим сюда после загрузки и проверки изображения." : "Измерьте расстояние от чистого пола до самой высокой точки печи, не включая дымоход."}</p>
+              {intake.outlet === "top" ? <MeasurementField draft={intake} field="connectionHeight" label="Высота до верхней грани отопителя" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От чистового пола" unit="мм">
+                <MeasurementHelp scheme={schemes.stoveHeight}>
+                  <p>Измерьте расстояние от чистового пола до верхней грани печи или другого отопителя. Патрубок и элементы дымохода в этот размер не включайте.</p>
+                </MeasurementHelp>
+              </MeasurementField> : null}
+              {intake.outlet === "rear" ? <MeasurementField draft={intake} field="rearOutletBottomHeight" label="Высота нижней кромки патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От чистового пола" unit="мм">
+                <MeasurementHelp scheme={schemes.rearOutletHeight}>
+                  <p>Измерьте вертикально от чистового пола до самой нижней точки наружной кромки заднего патрубка.</p>
+                </MeasurementHelp>
+              </MeasurementField> : null}
+              <fieldset className={`${styles.choiceFieldset} ${styles.fieldWide}`}>
+                <legend>Откуда известен диаметр?</legend>
+                <div className={styles.choiceRow}>
+                  {[["passport", "Из паспорта"], ["measured", "Измерен"], ["unknown", "Пока неизвестен"]].map(([value, label]) => (
+                    <label key={value}>
+                      <input checked={intake.diameterSource === value} name="diameter-source" onChange={() => update("diameterSource", value as ScenarioConfiguratorDraft["diameterSource"])} type="radio" />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              {intake.diameterSource !== "unknown" ? <>
+              <MeasurementField draft={intake} field="diameterX" label="Наружный диаметр по оси X" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По горизонтали" unit="мм">
+                <MeasurementHelp scheme={schemes.outletDiameter}>
+                  <p>Измерьте патрубок от внешней стенки до внешней стенки строго через центр по горизонтали.</p>
                 </MeasurementHelp>
               </MeasurementField>
-              <MeasurementField draft={intake} field="diameter" label="Контрольный замер диаметра патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Фактический диаметр" unit="мм">
-                <MeasurementHelp
-                  scheme={isHome ? undefined : {
-                    src: `${assetBasePath}/images/measurements/stove-outlet-diameter.webp`,
-                    alt: "Схема наружного замера патрубка печи по осям X и Y",
-                    title: "Как замерять наружный диаметр патрубка",
-                  }}
-                >
-                  {isHome ? (
-                    <p>Схему контрольного замера диаметра патрубка добавим сюда после загрузки и проверки изображения.</p>
-                  ) : (
-                    <>
-                      <p>Измерьте наружный диаметр патрубка от внешней стенки до внешней стенки. Замер должен проходить через центр.</p>
-                      <p>Сделайте два замера: по горизонтальной оси X и по вертикальной оси Y. Запишите оба значения в миллиметрах.</p>
-                      <p>Если X и Y отличаются, укажите оба размера и овальность в поле «Форма и особенности соединения» ниже.</p>
-                    </>
-                  )}
+              <MeasurementField draft={intake} field="diameterY" label="Наружный диаметр по оси Y" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По вертикали" unit="мм">
+                <MeasurementHelp scheme={schemes.outletDiameter}>
+                  <p>Повторите наружный замер через центр по вертикали. Разница между X и Y покажет овальность патрубка.</p>
                 </MeasurementHelp>
               </MeasurementField>
+              </> : null}
               <label className={`${styles.field} ${styles.fieldWide}`}>
                 <span>Форма и особенности соединения</span>
                 <input onChange={(event) => update("connectionDetails", event.target.value)} placeholder="Например, овальный выход или переход — если известно" value={intake.connectionDetails} />
               </label>
             </div>
-          </section>
+          </section> : null}
 
           <section className={styles.intakeStep} aria-labelledby="route-step-title">
             <div className={styles.stepHeading}>
@@ -448,7 +596,7 @@ export function BanyaIntakeFlow({
                           setIntake((current) => ({
                             ...current,
                             route: value,
-                            outlet: value === "wall-direct" ? "rear" : current.outlet,
+                            outlet: value === "wall-direct" ? "rear" : "top",
                           }));
                         }}
                         type="radio"
@@ -501,20 +649,14 @@ export function BanyaIntakeFlow({
                         </label>
                       ))}
                     </div>
-                    <MeasurementHelp title="Как определить этажность?">
-                      <p>Схему подсчёта этажей по пути дымохода добавим сюда после загрузки и проверки изображения.</p>
+                    <MeasurementHelp showSchemePlaceholder={false} title="Как определить этажность?">
+                      <p>Считайте только уровни здания, через которые фактически пройдёт вертикальная трасса. Чердак отметьте отдельно ниже.</p>
                     </MeasurementHelp>
                   </fieldset>
 
                   <div className={styles.fieldGrid}>
                     <MeasurementField draft={intake} field="ceilingHeight" label="Высота от пола до потолка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 2400" unit="мм">
-                      <MeasurementHelp
-                        scheme={isHome ? undefined : {
-                          src: `${assetBasePath}/images/measurements/finished-room-height.webp`,
-                          alt: "Схема замера чистовой высоты от пола до нижней поверхности потолка",
-                          title: "Как замерять чистовую высоту помещения",
-                        }}
-                      >
+                      <MeasurementHelp scheme={schemes.roomHeight}>
                         {isHome ? (
                           <p>Измерьте расстояние от чистового пола до нижней поверхности чистового потолка.</p>
                         ) : (
@@ -527,7 +669,7 @@ export function BanyaIntakeFlow({
                       </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="floorThickness" label="Высота перекрытия" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="200" unit="мм">
-                      <MeasurementHelp showSchemePlaceholder={false}>
+                      <MeasurementHelp scheme={schemes.floorThickness}>
                         {isHome ? (
                           <p>Уточните фактическую толщину перекрытия по проекту или доступному открытому участку конструкции.</p>
                         ) : (
@@ -539,7 +681,7 @@ export function BanyaIntakeFlow({
                       </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="routeHeight" label="Ориентировочная высота всей трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Можно уточнить позже" unit="м">
-                      <MeasurementHelp showSchemePlaceholder={false}>
+                      <MeasurementHelp scheme={schemes.routeHeight}>
                         {isHome ? (
                           <p>Сложите известные вертикальные участки от точки подключения до предполагаемого завершения трассы. Это исходный размер, не окончательная высота системы.</p>
                         ) : (
@@ -552,8 +694,11 @@ export function BanyaIntakeFlow({
                       </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="roofAngle" label="Угол кровли" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если известен" unit="°">
-                      <MeasurementHelp><p>Если угол указан в проекте дома, используйте это значение. Иначе оставьте поле для последующего замера — нормативные выводы по углу здесь не делаются.</p></MeasurementHelp>
+                      <MeasurementHelp scheme={schemes.atticRoof}><p>Если угол указан в проекте дома, используйте это значение. Иначе оставьте поле для последующего замера — нормативные выводы по углу здесь не делаются.</p></MeasurementHelp>
                     </MeasurementField>
+                    {intake.hasAttic ? <MeasurementField draft={intake} field="atticHeight" label="Высота чердака по пути трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По вертикали" unit="мм">
+                      <MeasurementHelp scheme={schemes.atticRoof}><p>Измерьте вертикальное расстояние внутри чердака в предполагаемом месте прохождения дымохода.</p></MeasurementHelp>
+                    </MeasurementField> : null}
                     <div className={`${styles.measurementField} ${styles.fieldWide}`}>
                       <label className={styles.checkField}>
                         <input
@@ -566,25 +711,69 @@ export function BanyaIntakeFlow({
                           <small>Отметьте, если трасса проходит через чердачное пространство.</small>
                         </span>
                       </label>
-                      <MeasurementHelp title="Как определить наличие чердака?">
-                        <p>Схему с вариантами здания добавим сюда после загрузки и проверки изображения.</p>
+                      <MeasurementHelp scheme={schemes.atticRoof} title="Как определить наличие чердака?">
+                        <p>Отметьте чердак, если между потолком верхнего помещения и кровлей есть отдельное пространство, через которое пройдёт трасса.</p>
                       </MeasurementHelp>
                     </div>
                   </div>
                 </>
-              ) : (
+              ) : intake.route === "wall" ? (
                 <div className={styles.fieldGrid}>
-                  <MeasurementField draft={intake} field="wallExitHeight" label="Высота точки выхода через стену" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От уровня пола" unit="м">
-                    <MeasurementHelp><p>Измерьте предполагаемую точку центра прохода от понятного уровня пола и зафиксируйте материал стены для последующей проверки.</p></MeasurementHelp>
+                  <MeasurementField draft={intake} field="verticalRise" label="Подъём от печи до поворота" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Вертикальный участок" unit="мм">
+                    <MeasurementHelp scheme={schemes.topOutletWall}><p>Измерьте вертикальный участок от верхней грани печи до предполагаемого поворота в сторону стены.</p></MeasurementHelp>
                   </MeasurementField>
-                  <MeasurementField draft={intake} field="wallDistance" label="Расстояние от печи до стены" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По предполагаемой оси" unit="м">
-                    <MeasurementHelp><p>Измерьте горизонтальный участок от точки подключения до предполагаемого выхода. Повороты и особенности соединения отметьте в поле патрубка.</p></MeasurementHelp>
+                  <MeasurementField draft={intake} field="wallExitHeight" label="Высота точки выхода через стену" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От уровня пола" unit="м">
+                    <MeasurementHelp scheme={schemes.topOutletWall}><p>Измерьте предполагаемую точку центра прохода от чистового пола и зафиксируйте материал стены для последующей проверки.</p></MeasurementHelp>
+                  </MeasurementField>
+                  <MeasurementField draft={intake} field="wallDistance" label="От оси патрубка до внутренней стены" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По горизонтали" unit="мм">
+                    <MeasurementHelp scheme={schemes.topOutletWall}><p>Измерьте горизонтально от оси патрубка до внутренней поверхности стены по предполагаемой линии дымохода.</p></MeasurementHelp>
+                  </MeasurementField>
+                  <MeasurementField draft={intake} field="wallThickness" label="Толщина стены" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Полная толщина" unit="мм">
+                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте полную толщину стены от внутренней до наружной поверхности в месте предполагаемого прохода.</p></MeasurementHelp>
+                  </MeasurementField>
+                  <MeasurementField draft={intake} field="facadeOffset" label="От фасада до оси наружной трубы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Вынос трубы" unit="мм">
+                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте горизонтальный вынос от плоскости фасада до оси предполагаемой наружной трубы.</p></MeasurementHelp>
+                  </MeasurementField>
+                  <MeasurementField draft={intake} field="roofOverhang" label="Вынос кровли от фасада" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если есть" unit="мм">
+                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте горизонтально от плоскости фасада до наружного края свеса кровли.</p></MeasurementHelp>
                   </MeasurementField>
                   <MeasurementField draft={intake} field="outdoorHeight" label="Высота наружной трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Ориентировочно" unit="м">
-                    <MeasurementHelp><p>Укажите известную вертикальную длину наружного участка. Окончательную геометрию и условия крепления проверяет специалист.</p></MeasurementHelp>
+                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Укажите известную вертикальную длину наружного участка. Окончательную геометрию и условия крепления проверяет специалист.</p></MeasurementHelp>
                   </MeasurementField>
+                  <label className={`${styles.field} ${styles.fieldWide}`}>
+                    <span>Материал стены</span>
+                    <input onChange={(event) => updateMeasurement("wallMaterial", event.target.value)} placeholder="Например, дерево, кирпич или газобетон" value={intake.wallMaterial} />
+                  </label>
+                </div>
+              ) : (
+                <div className={styles.fieldGrid}>
+                  <MeasurementField draft={intake} field="wallDistance" label="От края патрубка до внутренней стены" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По оси выхода" unit="мм">
+                    <MeasurementHelp scheme={schemes.rearOutletWall}><p>Измерьте по оси выхода от наружной кромки заднего патрубка до внутренней поверхности стены.</p></MeasurementHelp>
+                  </MeasurementField>
+                  <MeasurementField draft={intake} field="wallThickness" label="Толщина стены" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Полная толщина" unit="мм">
+                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте полную толщину стены от внутренней до наружной поверхности в месте предполагаемого прохода.</p></MeasurementHelp>
+                  </MeasurementField>
+                  <MeasurementField draft={intake} field="facadeOffset" label="От фасада до оси наружной трубы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Вынос трубы" unit="мм">
+                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте горизонтальный вынос от плоскости фасада до оси предполагаемой наружной трубы.</p></MeasurementHelp>
+                  </MeasurementField>
+                  <MeasurementField draft={intake} field="roofOverhang" label="Вынос кровли от фасада" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если есть" unit="мм">
+                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте горизонтально от плоскости фасада до наружного края свеса кровли.</p></MeasurementHelp>
+                  </MeasurementField>
+                  <MeasurementField draft={intake} field="outdoorHeight" label="Высота наружной трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Ориентировочно" unit="м">
+                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте вертикальную длину наружной части трассы. Окончательную геометрию и крепления проверяет специалист.</p></MeasurementHelp>
+                  </MeasurementField>
+                  <label className={`${styles.field} ${styles.fieldWide}`}>
+                    <span>Материал стены</span>
+                    <input onChange={(event) => updateMeasurement("wallMaterial", event.target.value)} placeholder="Например, дерево, кирпич или газобетон" value={intake.wallMaterial} />
+                  </label>
                 </div>
               )}
+              <div className={styles.fieldGrid}>
+                <label className={`${styles.field} ${styles.fieldWide}`}>
+                  <span>Особенности маршрута</span>
+                  <input onChange={(event) => updateMeasurement("routeNotes", event.target.value)} placeholder="Балки, обходы, выступы или другие важные детали" value={intake.routeNotes} />
+                </label>
+              </div>
             </section>
           ) : null}
 
@@ -609,8 +798,8 @@ export function BanyaIntakeFlow({
         <div className={styles.intakeHandoff}>
           <div className={styles.profileSavePanel}>
             <div>
-              <h3>Сохраните расчётный профиль</h3>
-              <p>Профиль останется только в этом браузере. На другом устройстве список профилей будет пустым.</p>
+              <h3>{activeProfileId ? "Сохраните изменения" : "Сохраните замеры"}</h3>
+              <p>Замеры останутся только в этом браузере. На другом устройстве список будет пустым.</p>
             </div>
             <label className={styles.profileNameField}>
               <span>Название профиля</span>
@@ -623,14 +812,14 @@ export function BanyaIntakeFlow({
                   setProfileError("");
                   markProfileDirty();
                 }}
-                placeholder="Например, Баня — через перекрытие"
+                placeholder="Например, Баня — через перекрытия"
                 required
                 value={profileName}
               />
             </label>
             <div className={styles.profileActions}>
               <button className={styles.primaryButton} onClick={saveProfile} type="button">
-                Сохранить замеры
+                {activeProfileId ? "Сохранить изменения" : "Сохранить замеры"}
               </button>
               {activeProfileId ? (
                 <button className={styles.profileCopyButton} onClick={startProfileCopy} type="button">
@@ -643,7 +832,7 @@ export function BanyaIntakeFlow({
               id="profile-save-message"
               role={profileError ? "alert" : "status"}
             >
-              {profileError || profileStatus || "Введите понятное название, чтобы позже выбрать этот профиль в конфигураторе."}
+              {profileError || profileStatus || "Введите понятное название, чтобы позже выбрать эти замеры в конфигураторе."}
             </p>
           </div>
           <div className={styles.profileContinue}>

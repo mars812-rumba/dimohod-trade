@@ -590,10 +590,12 @@
 
 .measureScheme {
   width: 100%;
-  aspect-ratio: 1280 / 854;
+  max-width: 520px;
+  aspect-ratio: 2 / 3;
+  margin-inline: auto;
   border: 1px solid var(--scenario-line);
   border-radius: 6px;
-  background: #fff;
+  background: #f4efe7;
 }
 
 .measureScheme img {
