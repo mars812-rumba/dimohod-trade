@@ -383,7 +383,10 @@ export default async function HomePage() {
                   <ShieldCheck size={22} aria-hidden />
                   <div>
                     <span>Результат конфигуратора</span>
-                    <strong>Комплект собран в конфигураторе по вашим параметрам</strong>
+                    <strong>
+                      Готовый расчёт дымохода под ваш индивидуальный случай с возможностью
+                      скачать PDF
+                    </strong>
                   </div>
                 </div>
               </div>

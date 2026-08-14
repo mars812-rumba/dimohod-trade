@@ -8,6 +8,8 @@
   --signal: #ed5b2a;
   --signal-dark: #bd3d16;
   --line: #ccd5d7;
+  --warm-panel: #f2e3d2;
+  --warm-panel-line: #dfc3aa;
   overflow: visible;
   color: var(--ink);
   background: var(--paper);
@@ -336,10 +338,9 @@
   margin-top: -1px;
   padding: 20px 22px;
   color: var(--ink);
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  border-right-color: rgba(50, 98, 118, 0.28);
+  border: 1px solid var(--warm-panel-line);
   border-bottom: 2px solid rgba(237, 91, 42, 0.58);
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--warm-panel);
   backdrop-filter: blur(4px);
 }
 
