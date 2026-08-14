@@ -43,12 +43,12 @@
     linear-gradient(135deg, #f8faf9 0%, #e8edef 100%);
   background-position:
     center,
-    18% 58px,
+    6% top,
     center;
   background-repeat: no-repeat, no-repeat, no-repeat;
   background-size:
     100% 100%,
-    112% auto,
+    106% auto,
     auto;
 }
 
@@ -60,8 +60,8 @@
 .heroSmoke {
   position: absolute;
   z-index: 1;
-  top: -136px;
-  left: 54%;
+  top: -196px;
+  left: 52.5%;
   width: 140px;
   height: 240px;
   pointer-events: none;
@@ -1984,7 +1984,7 @@
       ),
       var(--hero-image-mobile),
       #eef2f2;
-    background-position: center, 40% 64px, center;
+    background-position: center, 35% top, center;
     background-repeat: no-repeat;
     background-size: 100% 100%, cover, auto;
   }
@@ -1996,8 +1996,8 @@
   }
 
   .heroSmoke {
-    top: -138px;
-    left: 83%;
+    top: -204px;
+    left: 78.5%;
     width: 126px;
     height: 250px;
     transform: translateX(-50%) scale(0.9);
