@@ -535,6 +535,22 @@
   padding-bottom: 8px;
 }
 
+.measureHelpBodyWithScheme {
+  grid-template-columns: 1fr;
+}
+
+.measureScheme {
+  width: 100%;
+  aspect-ratio: 1280 / 854;
+  border: 1px solid var(--scenario-line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.measureScheme img {
+  object-fit: contain;
+}
+
 .schemePlaceholder {
   display: grid;
   min-height: 88px;

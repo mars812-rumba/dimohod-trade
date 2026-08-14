@@ -69,19 +69,36 @@ function MeasurementField({ draft, field, label, placeholder, unit, numeric = tr
   );
 }
 
-function MeasurementHelp({ title, children }: { title?: string; children: ReactNode }) {
+type MeasurementScheme = {
+  src: string;
+  alt: string;
+  title: string;
+};
+
+function MeasurementHelp({ title, children, scheme }: { title?: string; children: ReactNode; scheme?: MeasurementScheme }) {
   return (
     <details className={styles.measureHelp}>
       <summary>
         <span>{title ?? "Как измерить?"}</span>
         <ChevronDown size={17} aria-hidden />
       </summary>
-      <div className={styles.measureHelpBody}>
+      <div className={`${styles.measureHelpBody} ${scheme ? styles.measureHelpBodyWithScheme : ""}`}>
         <div>{children}</div>
-        <div className={styles.schemePlaceholder} aria-label="Место для схемы замера">
-          <span>Схема замера</span>
-          <small>будет добавлена после проверки специалистом</small>
-        </div>
+        {scheme ? (
+          <RouteImageViewer
+            alt={scheme.alt}
+            previewClassName={styles.measureScheme}
+            previewSizes="(max-width: 720px) calc(100vw - 48px), 760px"
+            quality={86}
+            src={scheme.src}
+            title={scheme.title}
+          />
+        ) : (
+          <div className={styles.schemePlaceholder} aria-label="Место для схемы замера">
+            <span>Схема замера</span>
+            <small>будет добавлена после проверки специалистом</small>
+          </div>
+        )}
       </div>
     </details>
   );
@@ -273,7 +290,15 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
 
             <div className={styles.fieldGrid}>
               <MeasurementField draft={intake} field="connectionHeight" label={isHome ? "Высота отопителя или точки подключения" : "Высота печи или точки подключения"} onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Укажите контрольный размер" unit="мм">
-                <MeasurementHelp><p>Схему замера высоты печи и точки подключения добавим сюда после загрузки и проверки изображения.</p></MeasurementHelp>
+                <MeasurementHelp
+                  scheme={isHome ? undefined : {
+                    src: `${assetBasePath}/images/measurements/stove-height.webp`,
+                    alt: "Схема правильного и неправильного замера высоты печи от пола",
+                    title: "Как замерять высоту печи от пола",
+                  }}
+                >
+                  <p>{isHome ? "Схему замера высоты отопителя и точки подключения добавим сюда после загрузки и проверки изображения." : "Измерьте расстояние от чистого пола до самой высокой точки печи, не включая дымоход."}</p>
+                </MeasurementHelp>
               </MeasurementField>
               <MeasurementField draft={intake} field="diameter" label="Контрольный замер диаметра патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Фактический диаметр" unit="мм">
                 <MeasurementHelp><p>Схему контрольного замера диаметра патрубка добавим сюда после загрузки и проверки изображения.</p></MeasurementHelp>
