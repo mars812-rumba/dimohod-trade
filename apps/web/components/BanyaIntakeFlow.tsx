@@ -7,6 +7,9 @@ import { type ReactNode, useEffect, useState } from "react";
 import {
   createEmptyScenarioDraft,
   draftFieldStatus,
+  mergeConfiguratorDraft,
+  readConfiguratorDraft,
+  saveConfiguratorDraft,
   scenarioDraftConfiguratorHref,
   type ScenarioConfiguratorDraft,
   type DraftFieldStatus,
@@ -95,15 +98,18 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
   useEffect(() => {
     try {
       const saved = window.sessionStorage.getItem(storageKey);
-      if (saved) {
-        const savedDraft = JSON.parse(saved) as Partial<ScenarioConfiguratorDraft>;
-        setIntake({
-          ...emptyDraft,
-          ...savedDraft,
-          floorThickness: savedDraft.floorThickness || emptyDraft.floorThickness,
-          scenario,
-        });
-      }
+      const savedDraft = saved
+        ? JSON.parse(saved) as Partial<ScenarioConfiguratorDraft>
+        : null;
+      const sharedDraft = readConfiguratorDraft(window.sessionStorage);
+      const mergedDraft = mergeConfiguratorDraft(sharedDraft, {
+        ...savedDraft,
+        scenario,
+      });
+      setIntake({
+        ...mergedDraft,
+        floorThickness: mergedDraft.floorThickness || emptyDraft.floorThickness,
+      });
     } catch {
       // The form remains usable when browser storage is unavailable.
     }
@@ -114,6 +120,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
     if (!isReady) return;
     try {
       window.sessionStorage.setItem(storageKey, JSON.stringify(intake));
+      saveConfiguratorDraft(window.sessionStorage, intake);
     } catch {
       // Values still remain available for the current render.
     }
@@ -238,68 +245,9 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
             </details>
           </section>
 
-          <section className={styles.intakeStep} aria-labelledby="building-step-title">
-            <div className={styles.stepHeading}>
-              <span>Шаг 2</span>
-              <div>
-                <h3 id="building-step-title">Параметры здания</h3>
-                <p>Укажите этажность и основные высоты по предполагаемому пути дымохода.</p>
-              </div>
-            </div>
-
-            <fieldset className={styles.choiceFieldset}>
-              <legend>Количество этажей</legend>
-              <div className={styles.choiceRow}>
-                {[
-                  ["1", "1 этаж"],
-                  ["2", "2 этажа"],
-                  ["3", "3 и более"],
-                ].map(([value, label]) => (
-                  <label key={value}>
-                    <input
-                      checked={intake.levels === value}
-                      name={`${scenario}-levels`}
-                      onChange={() => updateMeasurement("levels", value)}
-                      type="radio"
-                    />
-                    <span>{label}</span>
-                  </label>
-                ))}
-              </div>
-              <MeasurementHelp title="Как определить этажность?">
-                <p>Схему подсчёта этажей по пути дымохода добавим сюда после загрузки и проверки изображения.</p>
-              </MeasurementHelp>
-            </fieldset>
-
-            <div className={styles.fieldGrid}>
-              <MeasurementField draft={intake} field="ceilingHeight" label="Высота от пола до потолка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 2400" unit="мм">
-                <MeasurementHelp><p>Схему замера высоты помещения добавим сюда после загрузки и проверки изображения.</p></MeasurementHelp>
-              </MeasurementField>
-              <MeasurementField draft={intake} field="floorThickness" label="Высота перекрытия" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="200" unit="мм">
-                <MeasurementHelp><p>Сейчас подставлено начальное значение 200 мм. После загрузки схемы здесь будет показано, между какими точками снимать фактический размер.</p></MeasurementHelp>
-              </MeasurementField>
-              <div className={`${styles.measurementField} ${styles.fieldWide}`}>
-                <label className={styles.checkField}>
-                  <input
-                    checked={intake.hasAttic}
-                    onChange={(event) => update("hasAttic", event.target.checked)}
-                    type="checkbox"
-                  />
-                  <span>
-                    <strong>Есть чердак</strong>
-                    <small>Отметьте, если над помещением есть чердачное пространство.</small>
-                  </span>
-                </label>
-                <MeasurementHelp title="Как определить наличие чердака?">
-                  <p>Схему с вариантами здания добавим сюда после загрузки и проверки изображения.</p>
-                </MeasurementHelp>
-              </div>
-            </div>
-          </section>
-
           <section className={styles.intakeStep} aria-labelledby="outlet-step-title">
             <div className={styles.stepHeading}>
-              <span>Шаг 3</span>
+              <span>Шаг 2</span>
               <div>
                 <h3 id="outlet-step-title">Печь и подключение дымохода</h3>
                 <p>Укажите положение патрубка и контрольные размеры отопителя.</p>
@@ -339,7 +287,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
 
           <section className={styles.intakeStep} aria-labelledby="route-step-title">
             <div className={styles.stepHeading}>
-              <span>Шаг 4</span>
+              <span>Шаг 3</span>
               <div>
                 <h3 id="route-step-title">Как пойдёт дымоход?</h3>
                 <p>Выберите наиболее похожий вариант. Его можно изменить позже.</p>
@@ -391,22 +339,70 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
           {intake.route !== "unknown" ? (
             <section className={styles.intakeStep} aria-labelledby="measurements-step-title">
               <div className={styles.stepHeading}>
-                <span>Шаг 5</span>
+                <span>Шаг 4</span>
                 <div>
-                  <h3 id="measurements-step-title">Размеры выбранного маршрута</h3>
-                  <p>Показываем только те замеры, которые относятся к выбранному варианту.</p>
+                  <h3 id="measurements-step-title">Замеры для выбранного маршрута</h3>
+                  <p>Здесь только те параметры здания и трассы, которые относятся к выбранному варианту.</p>
                 </div>
               </div>
 
               {intake.route === "ceiling" ? (
-                <div className={styles.fieldGrid}>
-                  <MeasurementField draft={intake} field="routeHeight" label="Ориентировочная высота всей трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Можно уточнить позже" unit="м">
-                    <MeasurementHelp><p>Сложите известные вертикальные участки от точки подключения до предполагаемого завершения трассы. Это исходный размер, не окончательная высота системы.</p></MeasurementHelp>
-                  </MeasurementField>
-                  <MeasurementField draft={intake} field="roofAngle" label="Угол кровли" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если известен" unit="°">
-                    <MeasurementHelp><p>Если угол указан в проекте дома, используйте это значение. Иначе оставьте поле для последующего замера — нормативные выводы по углу здесь не делаются.</p></MeasurementHelp>
-                  </MeasurementField>
-                </div>
+                <>
+                  <fieldset className={styles.choiceFieldset}>
+                    <legend>Количество этажей по пути дымохода</legend>
+                    <div className={styles.choiceRow}>
+                      {[
+                        ["1", "1 этаж"],
+                        ["2", "2 этажа"],
+                        ["3", "3 и более"],
+                      ].map(([value, label]) => (
+                        <label key={value}>
+                          <input
+                            checked={intake.levels === value}
+                            name={`${scenario}-levels`}
+                            onChange={() => updateMeasurement("levels", value)}
+                            type="radio"
+                          />
+                          <span>{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <MeasurementHelp title="Как определить этажность?">
+                      <p>Схему подсчёта этажей по пути дымохода добавим сюда после загрузки и проверки изображения.</p>
+                    </MeasurementHelp>
+                  </fieldset>
+
+                  <div className={styles.fieldGrid}>
+                    <MeasurementField draft={intake} field="ceilingHeight" label="Высота от пола до потолка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 2400" unit="мм">
+                      <MeasurementHelp><p>Схему замера высоты помещения добавим сюда после загрузки и проверки изображения.</p></MeasurementHelp>
+                    </MeasurementField>
+                    <MeasurementField draft={intake} field="floorThickness" label="Высота перекрытия" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="200" unit="мм">
+                      <MeasurementHelp><p>Сейчас подставлено начальное значение 200 мм. После загрузки схемы здесь будет показано, между какими точками снимать фактический размер.</p></MeasurementHelp>
+                    </MeasurementField>
+                    <MeasurementField draft={intake} field="routeHeight" label="Ориентировочная высота всей трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Можно уточнить позже" unit="м">
+                      <MeasurementHelp><p>Сложите известные вертикальные участки от точки подключения до предполагаемого завершения трассы. Это исходный размер, не окончательная высота системы.</p></MeasurementHelp>
+                    </MeasurementField>
+                    <MeasurementField draft={intake} field="roofAngle" label="Угол кровли" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если известен" unit="°">
+                      <MeasurementHelp><p>Если угол указан в проекте дома, используйте это значение. Иначе оставьте поле для последующего замера — нормативные выводы по углу здесь не делаются.</p></MeasurementHelp>
+                    </MeasurementField>
+                    <div className={`${styles.measurementField} ${styles.fieldWide}`}>
+                      <label className={styles.checkField}>
+                        <input
+                          checked={intake.hasAttic}
+                          onChange={(event) => update("hasAttic", event.target.checked)}
+                          type="checkbox"
+                        />
+                        <span>
+                          <strong>Есть чердак</strong>
+                          <small>Отметьте, если трасса проходит через чердачное пространство.</small>
+                        </span>
+                      </label>
+                      <MeasurementHelp title="Как определить наличие чердака?">
+                        <p>Схему с вариантами здания добавим сюда после загрузки и проверки изображения.</p>
+                      </MeasurementHelp>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <div className={styles.fieldGrid}>
                   <MeasurementField draft={intake} field="wallExitHeight" label="Высота точки выхода через стену" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От уровня пола" unit="м">
@@ -425,7 +421,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
 
           <section className={styles.intakeStep} aria-labelledby="photos-step-title">
             <div className={styles.stepHeading}>
-              <span>{intake.route === "unknown" ? "Шаг 5" : "Шаг 6"}</span>
+              <span>{intake.route === "unknown" ? "Шаг 4" : "Шаг 5"}</span>
               <div>
                 <h3 id="photos-step-title">Фото места установки</h3>
                 <p>Желательно подготовить общий вид отопителя, патрубка и предполагаемых мест прохода. Это не обязательно для продолжения.</p>

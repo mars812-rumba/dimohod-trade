@@ -1,9 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Download, Mail } from "lucide-react";
-import { parseBanyaDraft } from "@/lib/configuratorDraft";
+import {
+  createEmptyScenarioDraft,
+  mergeConfiguratorDraft,
+  parseBanyaDraft,
+  readConfiguratorDraft,
+  saveConfiguratorDraft,
+  type ScenarioConfiguratorDraft,
+} from "@/lib/configuratorDraft";
 import { LeadForm } from "./LeadForm";
 
 type RouteType = "ceiling" | "wall";
@@ -169,15 +176,14 @@ const ROOF_OPTIONS: Array<{ id: RoofType; label: string }> = [
   { id: "flat", label: "Плоская" },
 ];
 
-function banyaDraftSummary(serializedDraft: string | null): string[] {
-  const draft = parseBanyaDraft(serializedDraft);
+function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[] {
   if (!draft) return [];
   const values = [
-    draft.levels ? `Количество этажей: ${draft.levels === "3" ? "3 и более" : draft.levels}` : "",
-    draft.ceilingHeight ? `До потолка: ${draft.ceilingHeight} мм` : "",
-    draft.floorThickness ? `Высота перекрытия: ${draft.floorThickness} мм` : "",
-    `Чердак: ${draft.hasAttic ? "есть" : "нет"}`,
-    draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
+    draft.route === "ceiling" && draft.levels ? `Количество этажей: ${draft.levels === "3" ? "3 и более" : draft.levels}` : "",
+    draft.route === "ceiling" && draft.ceilingHeight ? `До потолка: ${draft.ceilingHeight} мм` : "",
+    draft.route === "ceiling" && draft.floorThickness ? `Высота перекрытия: ${draft.floorThickness} мм` : "",
+    draft.route === "ceiling" ? `Чердак: ${draft.hasAttic ? "есть" : "нет"}` : "",
+    draft.route === "ceiling" && draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
     draft.wallExitHeight ? `Точка выхода через стену: ${draft.wallExitHeight} м` : "",
     draft.photosReady ? "Фотографии места установки: подготовлены" : "",
   ].filter(Boolean);
@@ -530,14 +536,16 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const searchParams = useSearchParams();
   const scenario = searchParams.get("scenario");
   const serializedDraft = searchParams.get("draft");
-  const transferredDraft = useMemo(() => parseBanyaDraft(serializedDraft), [serializedDraft]);
+  const urlDraft = useMemo(() => parseBanyaDraft(serializedDraft), [serializedDraft]);
+  const [transferredDraft, setTransferredDraft] = useState<ScenarioConfiguratorDraft | null>(urlDraft);
+  const [draftHydrated, setDraftHydrated] = useState(false);
   const initialStove = scenario ? SCENARIO_STOVE_PRESETS[scenario] : undefined;
   const initialRoute = searchParams.get("route");
   const initialOutlet = searchParams.get("outlet");
   const initialHeight = Number(searchParams.get("heightM"));
   const initialDistance = Number(searchParams.get("distanceM"));
   const initialFloors = Number(searchParams.get("floors"));
-  const transferredDetails = useMemo(() => banyaDraftSummary(serializedDraft), [serializedDraft]);
+  const transferredDetails = useMemo(() => scenarioDraftSummary(transferredDraft), [transferredDraft]);
   const [route, setRoute] = useState<RouteType>(initialRoute === "wall" ? "wall" : "ceiling");
   const [stove, setStove] = useState<StoveType>(initialStove ?? "bania");
   const [outlet, setOutlet] = useState<OutletType>(initialOutlet === "horizontal" ? "horizontal" : "vertical");
@@ -546,6 +554,82 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const [roof, setRoof] = useState<RoofType>("pitched");
   const [heightM, setHeightM] = useState(Number.isFinite(initialHeight) && initialHeight >= 3 && initialHeight <= 9 ? initialHeight : 5);
   const [stoveModel, setStoveModel] = useState(searchParams.get("stoveModel") ?? "");
+
+  useEffect(() => {
+    try {
+      const storedDraft = readConfiguratorDraft(window.sessionStorage);
+      const nextDraft = urlDraft
+        ? mergeConfiguratorDraft(storedDraft, urlDraft)
+        : storedDraft;
+      if (nextDraft) {
+        setTransferredDraft(nextDraft);
+        saveConfiguratorDraft(window.sessionStorage, nextDraft);
+      }
+    } catch {
+      // URL parameters still initialize the configurator when storage is unavailable.
+    }
+    setDraftHydrated(true);
+  }, [urlDraft]);
+
+  useEffect(() => {
+    if (!transferredDraft) return;
+
+    if (transferredDraft.route !== "unknown") setRoute(transferredDraft.route);
+    if (transferredDraft.outlet) setOutlet(transferredDraft.outlet === "top" ? "vertical" : "horizontal");
+
+    const draftStove = transferredDraft.scenario === "banya"
+      ? "bania"
+      : (transferredDraft.equipmentType || "pech");
+    setStove(draftStove as StoveType);
+
+    const draftFloors = Number(transferredDraft.levels);
+    if (Number.isFinite(draftFloors) && draftFloors >= 1 && draftFloors <= 3) setFloors(draftFloors);
+
+    const draftHeight = Number(
+      transferredDraft.route === "wall"
+        ? transferredDraft.outdoorHeight
+        : transferredDraft.routeHeight,
+    );
+    if (Number.isFinite(draftHeight) && draftHeight >= 3 && draftHeight <= 9) setHeightM(draftHeight);
+
+    const draftDistance = Number(transferredDraft.wallDistance);
+    if (Number.isFinite(draftDistance) && draftDistance >= 0.5 && draftDistance <= 3) setDistanceM(draftDistance);
+
+    if (!searchParams.get("stoveModel")) {
+      const connection = [
+        transferredDraft.manufacturer.trim(),
+        transferredDraft.model.trim(),
+        transferredDraft.diameter ? `патрубок ${transferredDraft.diameter} мм` : "",
+        transferredDraft.connectionHeight ? `точка подключения ${transferredDraft.connectionHeight} мм` : "",
+        transferredDraft.connectionDetails.trim(),
+      ].filter(Boolean);
+      if (connection.length) setStoveModel(connection.join(" · "));
+    }
+  }, [searchParams, transferredDraft]);
+
+  useEffect(() => {
+    if (!draftHydrated) return;
+    const draftScenario = stove === "bania" ? "banya" : "dom";
+    const equipmentType = stove === "bania" ? "" : stove;
+    const baseDraft = transferredDraft?.scenario === draftScenario
+      ? transferredDraft
+      : createEmptyScenarioDraft(draftScenario);
+    const updatedDraft = mergeConfiguratorDraft(baseDraft, {
+      scenario: draftScenario,
+      equipmentType,
+      route,
+      outlet: outlet === "vertical" ? "top" : "rear",
+      levels: String(floors),
+      routeHeight: route === "ceiling" ? String(heightM) : baseDraft.routeHeight,
+      outdoorHeight: route === "wall" ? String(heightM) : baseDraft.outdoorHeight,
+      wallDistance: route === "wall" ? String(distanceM) : baseDraft.wallDistance,
+    });
+    try {
+      saveConfiguratorDraft(window.sessionStorage, updatedDraft);
+    } catch {
+      // The configurator remains usable without browser storage.
+    }
+  }, [distanceM, draftHydrated, floors, heightM, outlet, route, stove, transferredDraft]);
 
   const scene = useMemo(
     () =>

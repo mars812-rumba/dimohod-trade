@@ -24,6 +24,10 @@ export type ScenarioConfiguratorDraft = {
   deferredFields: string[];
 };
 
+export const CONFIGURATOR_DRAFT_STORAGE_KEY = "dimohod-trade:configurator-draft";
+
+type DraftStorage = Pick<Storage, "getItem" | "setItem">;
+
 export function createEmptyScenarioDraft(
   scenario: ScenarioConfiguratorDraft["scenario"],
 ): ScenarioConfiguratorDraft {
@@ -99,6 +103,33 @@ export function parseScenarioDraft(value: string | null): ScenarioConfiguratorDr
   } catch {
     return null;
   }
+}
+
+export function readConfiguratorDraft(storage: DraftStorage): ScenarioConfiguratorDraft | null {
+  return parseScenarioDraft(storage.getItem(CONFIGURATOR_DRAFT_STORAGE_KEY));
+}
+
+export function saveConfiguratorDraft(
+  storage: DraftStorage,
+  draft: ScenarioConfiguratorDraft,
+): void {
+  storage.setItem(CONFIGURATOR_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+}
+
+export function mergeConfiguratorDraft(
+  current: ScenarioConfiguratorDraft | null,
+  patch: Partial<ScenarioConfiguratorDraft> & Pick<ScenarioConfiguratorDraft, "scenario">,
+): ScenarioConfiguratorDraft {
+  const base = current?.scenario === patch.scenario
+    ? current
+    : createEmptyScenarioDraft(patch.scenario);
+
+  return {
+    ...base,
+    ...patch,
+    scenario: patch.scenario,
+    deferredFields: patch.deferredFields ?? base.deferredFields,
+  };
 }
 
 // Backward-compatible name for the configurator while scenario drafts are shared.
