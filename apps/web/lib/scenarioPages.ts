@@ -22,6 +22,7 @@ export type ScenarioRouteOption = {
   title: string;
   description: string;
   image?: string;
+  imagePresentation?: "portrait-scheme";
   href?: string;
   linkLabel?: string;
 };
@@ -205,6 +206,7 @@ export const banyaScenario: ScenarioPageContent = {
       description:
         "Дымоход поднимается от печи внутри здания, проходит перекрытия и выходит через кровлю.",
       image: "/images/home/banya-route-through-roof.webp",
+      imagePresentation: "portrait-scheme",
       href: "/solutions/banya/zamery?route=ceiling",
       linkLabel: "Выбрать этот вариант",
     },
@@ -214,6 +216,7 @@ export const banyaScenario: ScenarioPageContent = {
       description:
         "От верхнего патрубка трасса меняет направление, выходит через стену и поднимается по фасаду.",
       image: "/images/home/banya-route-through-wall.webp",
+      imagePresentation: "portrait-scheme",
       href: "/solutions/banya/zamery?route=wall",
       linkLabel: "Выбрать этот вариант",
     },
@@ -223,6 +226,7 @@ export const banyaScenario: ScenarioPageContent = {
       description:
         "Задний или боковой патрубок соединяется с проходом стены, затем трасса поднимается снаружи.",
       image: "/images/home/banya-route-through-wall-direct.webp",
+      imagePresentation: "portrait-scheme",
       href: "/solutions/banya/zamery?route=wall-direct",
       linkLabel: "Выбрать этот вариант",
     },

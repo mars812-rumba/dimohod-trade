@@ -178,9 +178,12 @@
   content: "";
 }
 
-.heroMedia img,
-.routeImage img {
+.heroMedia img {
   object-fit: cover;
+}
+
+.routeImage img {
+  object-fit: contain;
 }
 
 .measurementsPageHeader {
@@ -928,12 +931,24 @@
   display: none;
 }
 
-.guidanceItem summary svg {
+.guidanceTitle {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.guidanceTitle svg,
+.guidanceChevron {
+  flex: 0 0 auto;
   color: var(--scenario-signal);
+}
+
+.guidanceChevron {
   transition: transform 160ms ease-out;
 }
 
-.guidanceItem[open] summary svg {
+.guidanceItem[open] .guidanceChevron {
   transform: rotate(180deg);
 }
 
@@ -947,23 +962,20 @@
   gap: 14px;
   max-width: 820px;
   margin: 0;
-  padding: 0 4px 24px;
+  padding: 0 4px 24px 28px;
   color: var(--scenario-muted);
   font-size: 14px;
   line-height: 1.55;
-  list-style: none;
+  list-style: disc;
 }
 
 .guidanceItem li {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 9px;
-  align-items: start;
+  padding-left: 5px;
 }
 
-.guidanceItem li svg {
-  margin-top: 2px;
+.guidanceItem li::marker {
   color: var(--scenario-signal);
+  font-size: 1.15em;
 }
 
 .mistakeItem {
@@ -1195,6 +1207,12 @@
   position: relative;
   min-height: 250px;
   background: #dce4e5;
+}
+
+.routeImagePortrait {
+  aspect-ratio: 7 / 10;
+  min-height: 0;
+  background: #fff;
 }
 
 .houseGallery {
@@ -1770,7 +1788,7 @@ a.groupItem:hover {
 
 @media (prefers-reduced-motion: reduce) {
   .faqList summary svg,
-  .guidanceItem summary svg,
+  .guidanceChevron,
   .questionList summary svg:last-child {
     transition: none;
   }

@@ -162,57 +162,57 @@ export function ScenarioPageTemplate({
               <div className={styles.guidanceAccordion}>
                 <details className={styles.guidanceItem}>
                   <summary>
-                    <span>Что проверить в паспорте</span>
-                    <ChevronDown size={20} strokeWidth={1.7} aria-hidden />
+                    <span className={styles.guidanceTitle}>
+                      <NotebookTabs size={21} strokeWidth={1.7} aria-hidden />
+                      <span>Что проверить в паспорте</span>
+                    </span>
+                    <ChevronDown className={styles.guidanceChevron} size={20} strokeWidth={1.7} aria-hidden />
                   </summary>
                   <ul>
                     {content.guidance.passport.map((item) => (
-                      <li key={item}>
-                        <NotebookTabs size={17} strokeWidth={1.7} aria-hidden />
-                        <span>{item}</span>
-                      </li>
+                      <li key={item}>{item}</li>
                     ))}
                   </ul>
                 </details>
                 <details className={styles.guidanceItem}>
                   <summary>
-                    <span>Материал и исполнение</span>
-                    <ChevronDown size={20} strokeWidth={1.7} aria-hidden />
+                    <span className={styles.guidanceTitle}>
+                      <Wrench size={21} strokeWidth={1.7} aria-hidden />
+                      <span>Материал и исполнение</span>
+                    </span>
+                    <ChevronDown className={styles.guidanceChevron} size={20} strokeWidth={1.7} aria-hidden />
                   </summary>
                   <ul>
                     {content.guidance.material.map((item) => (
-                      <li key={item}>
-                        <Wrench size={17} strokeWidth={1.7} aria-hidden />
-                        <span>{item}</span>
-                      </li>
+                      <li key={item}>{item}</li>
                     ))}
                   </ul>
                 </details>
                 <details className={styles.guidanceItem}>
                   <summary>
-                    <span>Что проверить по безопасности</span>
-                    <ChevronDown size={20} strokeWidth={1.7} aria-hidden />
+                    <span className={styles.guidanceTitle}>
+                      <ShieldCheck size={21} strokeWidth={1.7} aria-hidden />
+                      <span>Что проверить по безопасности</span>
+                    </span>
+                    <ChevronDown className={styles.guidanceChevron} size={20} strokeWidth={1.7} aria-hidden />
                   </summary>
                   <ul>
                     {content.guidance.safety.map((item) => (
-                      <li key={item}>
-                        <ShieldCheck size={17} strokeWidth={1.7} aria-hidden />
-                        <span>{item}</span>
-                      </li>
+                      <li key={item}>{item}</li>
                     ))}
                   </ul>
                 </details>
                 <details className={`${styles.guidanceItem} ${styles.mistakeItem}`}>
                   <summary>
-                    <span>Типовые ошибки</span>
-                    <ChevronDown size={20} strokeWidth={1.7} aria-hidden />
+                    <span className={styles.guidanceTitle}>
+                      <AlertTriangle size={21} strokeWidth={1.7} aria-hidden />
+                      <span>Типовые ошибки</span>
+                    </span>
+                    <ChevronDown className={styles.guidanceChevron} size={20} strokeWidth={1.7} aria-hidden />
                   </summary>
                   <ul>
                     {content.guidance.mistakes.map((item) => (
-                      <li key={item}>
-                        <AlertTriangle size={17} strokeWidth={1.7} aria-hidden />
-                        <span>{item}</span>
-                      </li>
+                      <li key={item}>{item}</li>
                     ))}
                   </ul>
                 </details>
@@ -276,7 +276,11 @@ export function ScenarioPageTemplate({
                   {option.image ? (
                     <RouteImageViewer
                       alt={`Схема маршрута: ${option.title}`}
-                      previewClassName={styles.routeImage}
+                      previewClassName={`${styles.routeImage} ${
+                        option.imagePresentation === "portrait-scheme"
+                          ? styles.routeImagePortrait
+                          : ""
+                      }`}
                       previewSizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
                       quality={72}
                       src={`${assetBasePath}${option.image}`}
