@@ -18,7 +18,7 @@ const scenarioOrder = [
 
 const houseGalleryImages = [
   {
-    src: `${assetBasePath}/images/solutions/dom/house-chimney-room.webp`,
+    src: `${assetBasePath}/images/home/scenario-dom-card-user.webp`,
     alt: "Печь и вертикальный дымоход в интерьере дома",
   },
   {

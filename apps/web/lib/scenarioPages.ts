@@ -897,8 +897,8 @@ export const homeScenario: ScenarioPageContent = {
   heroPrimaryLabel: "Начать подбор",
   heroSecondaryLabel: "Что нужно подготовить",
   heroNote: "Не знаете всех размеров сейчас — начните с известных. Остальное можно добавить позже.",
-  heroImage: "/images/solutions/dom/house-chimney-room.webp",
-  heroImageAlt: "Печь и вертикальный дымоход в интерьере частного дома",
+  heroImage: "/images/home/scenario-dom-card-user.webp",
+  heroImageAlt: "Частный дом с наружным металлическим дымоходом зимой",
   guidance: {
     passport: [
       "сначала определите тип и точную модель отопителя",
