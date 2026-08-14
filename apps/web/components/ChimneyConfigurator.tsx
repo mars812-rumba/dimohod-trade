@@ -1,8 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Download, Mail } from "lucide-react";
+import {
+  readCalculationProfiles,
+  type CalculationProfile,
+} from "@/lib/calculationProfiles";
 import {
   createEmptyScenarioDraft,
   mergeConfiguratorDraft,
@@ -535,10 +540,14 @@ function renderBackground(item: BgItem, index: number) {
 export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorProps) {
   const searchParams = useSearchParams();
   const scenario = searchParams.get("scenario");
+  const requestedProfileId = searchParams.get("profile") ?? "";
   const serializedDraft = searchParams.get("draft");
   const urlDraft = useMemo(() => parseBanyaDraft(serializedDraft), [serializedDraft]);
   const [transferredDraft, setTransferredDraft] = useState<ScenarioConfiguratorDraft | null>(urlDraft);
   const [draftHydrated, setDraftHydrated] = useState(false);
+  const [calculationProfiles, setCalculationProfiles] = useState<CalculationProfile[]>([]);
+  const [activeProfileId, setActiveProfileId] = useState("");
+  const [profileNotice, setProfileNotice] = useState("");
   const initialStove = scenario ? SCENARIO_STOVE_PRESETS[scenario] : undefined;
   const initialRoute = searchParams.get("route");
   const initialOutlet = searchParams.get("outlet");
@@ -557,19 +566,30 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
 
   useEffect(() => {
     try {
+      const profiles = readCalculationProfiles(window.localStorage);
+      const requestedProfile = requestedProfileId
+        ? profiles.find((profile) => profile.id === requestedProfileId)
+        : undefined;
+      setCalculationProfiles(profiles);
       const storedDraft = readConfiguratorDraft(window.sessionStorage);
-      const nextDraft = urlDraft
+      const nextDraft = requestedProfile?.draft ?? (urlDraft
         ? mergeConfiguratorDraft(storedDraft, urlDraft)
-        : storedDraft;
+        : storedDraft);
       if (nextDraft) {
         setTransferredDraft(nextDraft);
         saveConfiguratorDraft(window.sessionStorage, nextDraft);
+      }
+      if (requestedProfile) {
+        setActiveProfileId(requestedProfile.id);
+        setProfileNotice(`Загружен профиль «${requestedProfile.name}».`);
+      } else if (requestedProfileId) {
+        setProfileNotice("Этот профиль не найден в текущем браузере. Выберите другой профиль или создайте новый.");
       }
     } catch {
       // URL parameters still initialize the configurator when storage is unavailable.
     }
     setDraftHydrated(true);
-  }, [urlDraft]);
+  }, [requestedProfileId, urlDraft]);
 
   useEffect(() => {
     if (!transferredDraft) return;
@@ -651,6 +671,32 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const sceneTitle =
     route === "ceiling" ? "Схема: через перекрытие и кровлю" : "Схема: наружный монтаж по стене";
   const assetUrl = (asset: AssetName) => `${assetBasePath}/images/configurator/${asset}.png`;
+  const activeProfile = calculationProfiles.find((profile) => profile.id === activeProfileId);
+  const measurementsHref = activeProfile?.draft.scenario === "banya"
+    ? `/solutions/banya/zamery?profile=${encodeURIComponent(activeProfile.id)}`
+    : "/solutions/banya/zamery";
+
+  const loadCalculationProfile = (profileId: string) => {
+    setActiveProfileId(profileId);
+    if (!profileId) {
+      setProfileNotice("Используется текущий несохранённый расчёт.");
+      return;
+    }
+
+    const profile = calculationProfiles.find((item) => item.id === profileId);
+    if (!profile) {
+      setProfileNotice("Профиль не найден в текущем браузере.");
+      return;
+    }
+
+    setTransferredDraft(profile.draft);
+    try {
+      saveConfiguratorDraft(window.sessionStorage, profile.draft);
+    } catch {
+      // The loaded values still remain available for the current render.
+    }
+    setProfileNotice(`Загружен профиль «${profile.name}».`);
+  };
   const configuration = useMemo(
     () =>
       [
@@ -704,6 +750,30 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         <div className="configurator-count" aria-live="polite">
           <strong>{totalQty}</strong>
           <span>деталей в комплекте</span>
+        </div>
+      </div>
+
+      <div className="configurator-profile-bar">
+        <label className="configurator-profile-select">
+          <span>Расчётный профиль</span>
+          <select value={activeProfileId} onChange={(event) => loadCalculationProfile(event.target.value)}>
+            <option value="">Текущий несохранённый расчёт</option>
+            {calculationProfiles.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="configurator-profile-meta">
+          <p role="status">
+            {profileNotice || (calculationProfiles.length
+              ? "Выберите сохранённые замеры. Изменения в конфигураторе не перезаписывают профиль автоматически."
+              : "Сохранённых профилей в этом браузере пока нет.")}
+          </p>
+          <Link href={measurementsHref}>
+            {activeProfile ? "Изменить замеры" : "Создать профиль замеров"}
+          </Link>
         </div>
       </div>
 

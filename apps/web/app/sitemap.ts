@@ -21,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/") },
     { url: absoluteUrl("/catalog") },
     { url: absoluteUrl("/solutions") },
+    { url: absoluteUrl("/solutions/banya/zamery") },
     { url: absoluteUrl("/privacy") },
     { url: absoluteUrl("/consent-personal-data") },
     { url: absoluteUrl("/cookie-policy") },

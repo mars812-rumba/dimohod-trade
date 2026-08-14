@@ -4,6 +4,11 @@ import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import {
+  calculationProfileConfiguratorHref,
+  readCalculationProfiles,
+  saveCalculationProfile,
+} from "@/lib/calculationProfiles";
+import {
   createEmptyScenarioDraft,
   draftFieldStatus,
   mergeConfiguratorDraft,
@@ -20,6 +25,8 @@ import styles from "./ScenarioPageTemplate.module.css";
 type BanyaIntakeFlowProps = {
   content: ScenarioPageContent;
   assetBasePath?: string;
+  initialProfileId?: string;
+  initialRoute?: string;
 };
 
 const statusLabels: Record<DraftFieldStatus, string> = {
@@ -115,34 +122,62 @@ function MeasurementHelp({
   );
 }
 
-export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlowProps) {
+export function BanyaIntakeFlow({
+  content,
+  assetBasePath = "",
+  initialProfileId = "",
+  initialRoute = "",
+}: BanyaIntakeFlowProps) {
   const scenario = content.slug === "dom" ? "dom" : "banya";
   const emptyDraft = createEmptyScenarioDraft(scenario);
   const isHome = scenario === "dom";
   const storageKey = `dimohod-trade:${scenario}-intake`;
+  const requestedProfileId = initialProfileId;
+  const requestedRoute = initialRoute;
   const [intake, setIntake] = useState<ScenarioConfiguratorDraft>(emptyDraft);
   const [isReady, setIsReady] = useState(false);
+  const [activeProfileId, setActiveProfileId] = useState("");
+  const [profileName, setProfileName] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [profileStatus, setProfileStatus] = useState("");
+  const [profileDirty, setProfileDirty] = useState(true);
 
   useEffect(() => {
     try {
+      const profiles = readCalculationProfiles(window.localStorage);
+      const requestedProfile = requestedProfileId
+        ? profiles.find((profile) => profile.id === requestedProfileId)
+        : undefined;
       const saved = window.sessionStorage.getItem(storageKey);
       const savedDraft = saved
         ? JSON.parse(saved) as Partial<ScenarioConfiguratorDraft>
         : null;
       const sharedDraft = readConfiguratorDraft(window.sessionStorage);
-      const mergedDraft = mergeConfiguratorDraft(sharedDraft, {
-        ...savedDraft,
-        scenario,
-      });
+      const mergedDraft = requestedProfile?.draft ?? mergeConfiguratorDraft(sharedDraft, {
+          ...savedDraft,
+          scenario,
+        });
+      const route = requestedRoute === "ceiling" || requestedRoute === "wall" || requestedRoute === "wall-direct"
+        ? requestedRoute
+        : mergedDraft.route;
       setIntake({
         ...mergedDraft,
+        route,
         floorThickness: mergedDraft.floorThickness || emptyDraft.floorThickness,
       });
+      if (requestedProfile) {
+        setActiveProfileId(requestedProfile.id);
+        setProfileName(requestedProfile.name);
+        setProfileStatus(`Загружен профиль «${requestedProfile.name}».`);
+        setProfileDirty(false);
+      } else if (requestedProfileId) {
+        setProfileStatus("Профиль не найден в этом браузере. Начните новый профиль или откройте ссылку на устройстве, где он был сохранён.");
+      }
     } catch {
       // The form remains usable when browser storage is unavailable.
     }
     setIsReady(true);
-  }, []);
+  }, [requestedProfileId, requestedRoute]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -154,13 +189,22 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
     }
   }, [intake, isReady]);
 
-  const configuratorHref = scenarioDraftConfiguratorHref(intake);
+  const configuratorHref = activeProfileId && !profileDirty
+    ? calculationProfileConfiguratorHref(activeProfileId)
+    : scenarioDraftConfiguratorHref(intake);
+
+  const markProfileDirty = () => {
+    setProfileDirty(true);
+    setProfileStatus(activeProfileId ? "В профиле есть несохранённые изменения." : "");
+  };
 
   const update = <Key extends keyof ScenarioConfiguratorDraft>(key: Key, value: ScenarioConfiguratorDraft[Key]) => {
+    markProfileDirty();
     setIntake((current) => ({ ...current, [key]: value }));
   };
 
   const updateMeasurement = (field: keyof ScenarioConfiguratorDraft, value: string) => {
+    markProfileDirty();
     setIntake((current) => ({
       ...current,
       [field]: value,
@@ -169,6 +213,7 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
   };
 
   const toggleDeferred = (field: keyof ScenarioConfiguratorDraft) => {
+    markProfileDirty();
     setIntake((current) => ({
       ...current,
       [field]: "",
@@ -176,6 +221,37 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
         ? current.deferredFields.filter((item) => item !== field)
         : [...current.deferredFields, field],
     }));
+  };
+
+  const saveProfile = () => {
+    const name = profileName.trim();
+    if (!name) {
+      setProfileError("Введите название, чтобы сохранить замеры.");
+      return;
+    }
+
+    try {
+      const profile = saveCalculationProfile(window.localStorage, {
+        id: activeProfileId || undefined,
+        name,
+        draft: intake,
+      });
+      setActiveProfileId(profile.id);
+      setProfileName(profile.name);
+      setProfileError("");
+      setProfileStatus(`Профиль «${profile.name}» сохранён в этом браузере.`);
+      setProfileDirty(false);
+    } catch {
+      setProfileError("Не удалось сохранить профиль в браузере. Проверьте настройки хранения данных и повторите попытку.");
+    }
+  };
+
+  const startProfileCopy = () => {
+    setActiveProfileId("");
+    setProfileName("");
+    setProfileError("");
+    setProfileStatus("Измените маршрут или размеры, затем сохраните их под новым названием.");
+    setProfileDirty(true);
   };
 
   return (
@@ -367,11 +443,14 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
                       <input
                         checked={selected}
                         name={`${scenario}-route`}
-                        onChange={() => setIntake((current) => ({
-                          ...current,
-                          route: value,
-                          outlet: value === "wall-direct" ? "rear" : current.outlet,
-                        }))}
+                        onChange={() => {
+                          markProfileDirty();
+                          setIntake((current) => ({
+                            ...current,
+                            route: value,
+                            outlet: value === "wall-direct" ? "rear" : current.outlet,
+                          }));
+                        }}
                         type="radio"
                         value={value}
                       />
@@ -528,14 +607,57 @@ export function BanyaIntakeFlow({ content, assetBasePath = "" }: BanyaIntakeFlow
         </div>
 
         <div className={styles.intakeHandoff}>
-          <div>
-            <h3>Известные данные уже сохранены</h3>
-            <p>Продолжите построение трассы в едином конфигураторе. Перед заказом состав проверит специалист.</p>
+          <div className={styles.profileSavePanel}>
+            <div>
+              <h3>Сохраните расчётный профиль</h3>
+              <p>Профиль останется только в этом браузере. На другом устройстве список профилей будет пустым.</p>
+            </div>
+            <label className={styles.profileNameField}>
+              <span>Название профиля</span>
+              <input
+                aria-describedby="profile-save-message"
+                aria-invalid={Boolean(profileError)}
+                maxLength={80}
+                onChange={(event) => {
+                  setProfileName(event.target.value);
+                  setProfileError("");
+                  markProfileDirty();
+                }}
+                placeholder="Например, Баня — через перекрытие"
+                required
+                value={profileName}
+              />
+            </label>
+            <div className={styles.profileActions}>
+              <button className={styles.primaryButton} onClick={saveProfile} type="button">
+                Сохранить замеры
+              </button>
+              {activeProfileId ? (
+                <button className={styles.profileCopyButton} onClick={startProfileCopy} type="button">
+                  Создать другой вариант
+                </button>
+              ) : null}
+            </div>
+            <p
+              className={profileError ? styles.profileError : styles.profileStatus}
+              id="profile-save-message"
+              role={profileError ? "alert" : "status"}
+            >
+              {profileError || profileStatus || "Введите понятное название, чтобы позже выбрать этот профиль в конфигураторе."}
+            </p>
           </div>
-          <Link className={styles.primaryButton} href={configuratorHref}>
-            Продолжить в конфигураторе
-            <ArrowRight size={18} aria-hidden />
-          </Link>
+          <div className={styles.profileContinue}>
+            {activeProfileId && !profileDirty ? (
+              <Link className={styles.primaryButton} href={configuratorHref}>
+                Открыть в конфигураторе
+                <ArrowRight size={18} aria-hidden />
+              </Link>
+            ) : (
+              <button aria-describedby="profile-save-message" className={styles.primaryButton} disabled type="button">
+                Сначала сохраните замеры
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </section>

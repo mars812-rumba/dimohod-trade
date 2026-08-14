@@ -70,14 +70,14 @@ export function ScenarioPageTemplate({
             <div className={styles.heroActions}>
               <Link
                 className={styles.primaryButton}
-                href={content.interactiveIntake ? "#scenario-intake" : configuratorHref}
+                href={content.heroPrimaryHref ?? (content.interactiveIntake ? "#scenario-intake" : configuratorHref)}
               >
                 {content.heroPrimaryLabel ?? "Подобрать комплект"}
                 <ArrowRight size={18} aria-hidden />
               </Link>
               <a
                 className={styles.secondaryButton}
-                href="#source-data"
+                href={content.heroSecondaryHref ?? "#source-data"}
               >
                 {content.heroSecondaryLabel ?? "Что подготовить"}
               </a>
@@ -250,10 +250,10 @@ export function ScenarioPageTemplate({
             <div>
               <h3>Как зафиксировать размер патрубка</h3>
               <p>
-                Сначала найдите размер в паспорте. Дополнительно сфотографируйте шильдик и
-                соединение рядом с линейкой или штангенциркулем, укажите внутренний и наружный
-                размеры, если они доступны. Не измеряйте горячее или работающее оборудование —
-                тип соединения и окончательный размер проверит специалист.
+                Сначала найдите размер в паспорте. Для контрольного замера наружного патрубка
+                измерьте его через центр по осям X и Y — от внешней стенки до внешней стенки.
+                Если значения отличаются, запишите оба. Не измеряйте горячее или работающее
+                оборудование — тип соединения и окончательный размер проверит специалист.
               </p>
             </div>
           </aside>
@@ -271,21 +271,9 @@ export function ScenarioPageTemplate({
           </div>
           <div className={styles.routeGrid}>
             {content.routeOptions.map((option) => {
-              const body = (
-                <>
-                {option.image ? (
-                  option.href ? (
-                    <div className={styles.routeImage}>
-                      <Image
-                        src={`${assetBasePath}${option.image}`}
-                        alt=""
-                        fill
-                        loading="lazy"
-                        quality={72}
-                        sizes="(max-width: 620px) calc(100vw - 32px), (max-width: 820px) 50vw, 540px"
-                      />
-                    </div>
-                  ) : (
+              return (
+                <article className={styles.routeOption} key={option.slug}>
+                  {option.image ? (
                     <RouteImageViewer
                       alt={`Схема маршрута: ${option.title}`}
                       previewClassName={styles.routeImage}
@@ -294,29 +282,19 @@ export function ScenarioPageTemplate({
                       src={`${assetBasePath}${option.image}`}
                       title={option.title}
                     />
-                  )
-                ) : (
-                  <Map className={styles.routeIcon} size={30} strokeWidth={1.5} aria-hidden />
-                )}
-                <div>
-                  <h3>{option.title}</h3>
-                  <p>{option.description}</p>
-                  {option.href ? (
-                    <span>
-                      Открыть сценарий <ArrowRight size={15} aria-hidden />
-                    </span>
-                  ) : null}
-                </div>
-                </>
-              );
-
-              return option.href ? (
-                <Link className={styles.routeOption} href={option.href} key={option.slug}>
-                  {body}
-                </Link>
-              ) : (
-                <article className={styles.routeOption} key={option.slug}>
-                  {body}
+                  ) : (
+                    <Map className={styles.routeIcon} size={30} strokeWidth={1.5} aria-hidden />
+                  )}
+                  <div>
+                    <h3>{option.title}</h3>
+                    <p>{option.description}</p>
+                    {option.href ? (
+                      <Link className={styles.routeOptionAction} href={option.href}>
+                        {option.linkLabel ?? "Открыть сценарий"}
+                        <ArrowRight size={15} aria-hidden />
+                      </Link>
+                    ) : null}
+                  </div>
                 </article>
               );
             })}
@@ -438,8 +416,8 @@ export function ScenarioPageTemplate({
             <h2>Соберите исходные данные в одном расчёте</h2>
             <p>Получите схему и список позиций, которые можно отправить специалисту на проверку.</p>
           </div>
-          <Link className={styles.primaryButton} href={configuratorHref}>
-            Подобрать комплект
+          <Link className={styles.primaryButton} href={content.finalCtaHref ?? configuratorHref}>
+            {content.finalCtaHref ? "Подготовить замеры" : "Подобрать комплект"}
             <ArrowRight size={18} aria-hidden />
           </Link>
         </div>

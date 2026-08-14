@@ -1808,6 +1808,69 @@ body.mobile-menu-open {
   line-height: 1.25;
 }
 
+.configurator-profile-bar {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.7fr) minmax(0, 1.3fr);
+  gap: 18px 28px;
+  align-items: end;
+  padding: 20px 28px;
+  border-bottom: 1px solid rgba(34, 32, 29, 0.1);
+  background: #f4f6f5;
+}
+
+.configurator-profile-select {
+  display: grid;
+  gap: 8px;
+}
+
+.configurator-profile-select span {
+  color: #102127;
+  font-size: 13px;
+  font-weight: 720;
+}
+
+.configurator-profile-select select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 38px 0 12px;
+  border: 1px solid #c8d2d5;
+  border-radius: 3px;
+  color: #102127;
+  background: #fff;
+  font: inherit;
+}
+
+.configurator-profile-select select:focus-visible,
+.configurator-profile-meta a:focus-visible {
+  outline: 3px solid rgba(177, 63, 32, 0.28);
+  outline-offset: 3px;
+}
+
+.configurator-profile-meta {
+  display: flex;
+  gap: 14px 22px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.configurator-profile-meta p {
+  max-width: 680px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.configurator-profile-meta a {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 760;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
 .configurator-body {
   display: grid;
   grid-template-columns: minmax(280px, 0.95fr) minmax(260px, 0.78fr) minmax(300px, 0.95fr);
@@ -1881,6 +1944,7 @@ body.mobile-menu-open {
 @media (max-width: 620px) {
   .lead-form-grid { grid-template-columns: 1fr; }
   .lead-form-footer > * { width: 100%; }
+  .configurator-profile-meta { display: grid; }
   .configurator-result-actions button,
   .configurator-result-actions a { width: 100%; }
   .configurator-lead { padding: 18px; }
@@ -2585,6 +2649,7 @@ body.mobile-menu-open {
   }
 
   .configurator-header,
+  .configurator-profile-bar,
   .configurator-controls,
   .configurator-schematic-pane,
   .configurator-spec {
@@ -2595,6 +2660,14 @@ body.mobile-menu-open {
     width: 100%;
     min-width: 0;
     text-align: left;
+  }
+
+  .configurator-profile-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .configurator-profile-meta {
+    align-items: flex-start;
   }
 
   .configurator-controls,

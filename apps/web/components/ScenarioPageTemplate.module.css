@@ -131,12 +131,20 @@
 }
 
 .primaryButton {
+  border: 0;
   color: #fff;
   background: var(--scenario-signal);
+  cursor: pointer;
 }
 
 .primaryButton:hover {
   background: var(--scenario-signal-dark);
+}
+
+.primaryButton:disabled {
+  color: #d7e0e2;
+  background: #52666d;
+  cursor: not-allowed;
 }
 
 .secondaryButton {
@@ -173,6 +181,44 @@
 .heroMedia img,
 .routeImage img {
   object-fit: cover;
+}
+
+.measurementsPageHeader {
+  padding: 42px 0 54px;
+  border-bottom: 1px solid var(--scenario-line);
+}
+
+.measurementsPageHeader h1 {
+  max-width: 900px;
+  margin: 0;
+  font-size: clamp(38px, 5.2vw, 68px);
+  font-weight: 650;
+  line-height: 0.98;
+  letter-spacing: -0.038em;
+  text-wrap: balance;
+}
+
+.measurementsPageHeader p {
+  max-width: 720px;
+  margin: 22px 0 18px;
+  color: var(--scenario-muted);
+  font-size: 17px;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.measurementsPageHeader a {
+  color: var(--scenario-steel);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.measurementsPageHeader a:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.3);
+  outline-offset: 3px;
 }
 
 .intakeSection {
@@ -655,6 +701,84 @@
   color: #c6d4d8;
 }
 
+.profileSavePanel {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.profileNameField {
+  display: grid;
+  gap: 8px;
+  max-width: 560px;
+}
+
+.profileNameField span {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.profileNameField input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 13px;
+  border: 1px solid #6f858c;
+  border-radius: 3px;
+  color: var(--scenario-ink);
+  background: #fff;
+  font: inherit;
+}
+
+.profileNameField input:focus-visible,
+.profileCopyButton:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.45);
+  outline-offset: 3px;
+}
+
+.profileNameField input[aria-invalid="true"] {
+  border-color: #d97757;
+}
+
+.profileActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profileCopyButton {
+  min-height: 50px;
+  padding: 0 18px;
+  border: 1px solid #6f858c;
+  border-radius: 3px;
+  color: #fff;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.profileCopyButton:hover {
+  border-color: #fff;
+}
+
+.profileStatus,
+.profileError {
+  min-height: 20px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.profileError {
+  color: #ffd3c5 !important;
+}
+
+.profileContinue {
+  display: grid;
+  align-content: end;
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;
@@ -1025,7 +1149,7 @@
   max-width: 900px;
   margin-top: 30px;
   padding: 22px 24px;
-  border-left: 3px solid var(--scenario-signal);
+  border: 1px solid var(--scenario-line);
   background: #eaf0f0;
 }
 
@@ -1058,13 +1182,8 @@
   text-decoration: none;
 }
 
-a.routeOption:hover {
+.routeOption:hover {
   border-color: var(--scenario-steel);
-}
-
-a.routeOption:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--scenario-signal) 45%, transparent);
-  outline-offset: 3px;
 }
 
 .routeOption:nth-child(even) {

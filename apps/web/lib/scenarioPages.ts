@@ -23,6 +23,7 @@ export type ScenarioRouteOption = {
   description: string;
   image?: string;
   href?: string;
+  linkLabel?: string;
 };
 
 export type ScenarioQuestion = {
@@ -75,8 +76,11 @@ export type ScenarioPageContent = {
   summary: string;
   interactiveIntake?: boolean;
   heroPrimaryLabel?: string;
+  heroPrimaryHref?: string;
   heroSecondaryLabel?: string;
+  heroSecondaryHref?: string;
   heroNote?: string;
+  finalCtaHref?: string;
   heroImage: string;
   heroImageAlt: string;
   diameterGuide?: ScenarioDiameterGuide;
@@ -106,9 +110,11 @@ export const banyaScenario: ScenarioPageContent = {
   title: "Дымоход для банной печи — по вашей печи и размерам бани",
   summary:
     "Укажите модель печи, маршрут и известные размеры. Поможем собрать исходные данные и подготовить состав дымохода для проверки специалистом.",
-  interactiveIntake: true,
-  heroPrimaryLabel: "Начать подбор",
+  heroPrimaryLabel: "Подготовить замеры",
+  heroPrimaryHref: "/solutions/banya/zamery",
   heroSecondaryLabel: "Что нужно подготовить",
+  heroSecondaryHref: "#source-data",
+  finalCtaHref: "/solutions/banya/zamery",
   heroNote: "Не знаете всех размеров сейчас — начните с известных. Остальное можно добавить позже.",
   heroImage: "/images/home/scenario-banya-winter-user.webp",
   heroImageAlt: "Баня с наружным металлическим дымоходом зимой",
@@ -199,6 +205,8 @@ export const banyaScenario: ScenarioPageContent = {
       description:
         "Дымоход поднимается от печи внутри здания, проходит перекрытия и выходит через кровлю.",
       image: "/images/home/banya-route-through-roof.webp",
+      href: "/solutions/banya/zamery?route=ceiling",
+      linkLabel: "Выбрать этот вариант",
     },
     {
       slug: "through-wall",
@@ -206,6 +214,8 @@ export const banyaScenario: ScenarioPageContent = {
       description:
         "От верхнего патрубка трасса меняет направление, выходит через стену и поднимается по фасаду.",
       image: "/images/home/banya-route-through-wall.webp",
+      href: "/solutions/banya/zamery?route=wall",
+      linkLabel: "Выбрать этот вариант",
     },
     {
       slug: "through-wall-direct",
@@ -213,6 +223,8 @@ export const banyaScenario: ScenarioPageContent = {
       description:
         "Задний или боковой патрубок соединяется с проходом стены, затем трасса поднимается снаружи.",
       image: "/images/home/banya-route-through-wall-direct.webp",
+      href: "/solutions/banya/zamery?route=wall-direct",
+      linkLabel: "Выбрать этот вариант",
     },
   ],
   selectionQuestions: [
