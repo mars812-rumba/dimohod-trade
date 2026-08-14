@@ -130,16 +130,6 @@
   }
 }
 
-.hero::before {
-  position: absolute;
-  top: 0;
-  right: 8%;
-  width: 36%;
-  height: 5px;
-  background: var(--signal);
-  content: "";
-}
-
 .heroGrid {
   width: 100%;
   min-width: 0;
