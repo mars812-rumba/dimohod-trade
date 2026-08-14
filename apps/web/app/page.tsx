@@ -66,7 +66,7 @@ const scenarios = [
     slug: "banya",
     title: "Баня и сауна",
     text: "Модель банной печи, параметры патрубка и маршрут через конструкции объекта.",
-    image: "/images/home/scenario-banya-card-user.webp",
+    image: "/images/home/scenario-banya-winter-user.webp",
     href: "/solutions/banya",
   },
   {

@@ -110,8 +110,8 @@ export const banyaScenario: ScenarioPageContent = {
   heroPrimaryLabel: "Начать подбор",
   heroSecondaryLabel: "Что нужно подготовить",
   heroNote: "Не знаете всех размеров сейчас — начните с известных. Остальное можно добавить позже.",
-  heroImage: "/images/home/scenario-banya-user.webp",
-  heroImageAlt: "Банная печь с металлическим дымоходом в деревянной парной",
+  heroImage: "/images/home/scenario-banya-winter-user.webp",
+  heroImageAlt: "Баня с наружным металлическим дымоходом зимой",
   diameterGuide: {
     title: "Диаметр для банной печи: начинаем с паспорта",
     description:
