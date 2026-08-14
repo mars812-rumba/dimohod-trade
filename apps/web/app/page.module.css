@@ -60,10 +60,10 @@
 .heroSmoke {
   position: absolute;
   z-index: 11;
-  top: -275px;
+  top: -215px;
   left: 52.5%;
-  width: 220px;
-  height: 320px;
+  width: 210px;
+  height: 270px;
   pointer-events: none;
   transform: translateX(-50%);
 }
@@ -74,21 +74,55 @@
   position: absolute;
   bottom: 0;
   left: 50%;
-  width: 188px;
-  height: 150px;
+  width: 164px;
+  height: 108px;
+  border-radius: 50%;
   opacity: 0;
-  background:
-    radial-gradient(circle at 31% 63%, rgba(197, 208, 204, 0.68) 0 16%, transparent 52%),
-    radial-gradient(circle at 57% 38%, rgba(235, 240, 238, 0.78) 0 21%, transparent 58%),
-    radial-gradient(circle at 75% 66%, rgba(188, 201, 197, 0.62) 0 17%, transparent 53%),
-    radial-gradient(ellipse at 49% 72%, rgba(220, 228, 225, 0.72) 0 27%, transparent 68%);
+  background: radial-gradient(
+    ellipse at 50% 58%,
+    rgba(215, 224, 221, 0.7) 0 24%,
+    rgba(205, 216, 212, 0.46) 42%,
+    transparent 72%
+  );
   animation: hero-smoke-rise 8s linear infinite;
   animation-play-state: paused;
 }
 
+.heroSmoke span::before,
+.heroSmoke span::after {
+  position: absolute;
+  border-radius: 50%;
+  content: "";
+}
+
+.heroSmoke span::before {
+  top: 16%;
+  left: 5%;
+  width: 58%;
+  height: 64%;
+  background: radial-gradient(
+    circle,
+    rgba(226, 233, 230, 0.72) 0 24%,
+    rgba(205, 216, 212, 0.42) 45%,
+    transparent 73%
+  );
+}
+
+.heroSmoke span::after {
+  top: 4%;
+  right: 3%;
+  width: 52%;
+  height: 68%;
+  background: radial-gradient(
+    circle,
+    rgba(234, 239, 237, 0.76) 0 22%,
+    rgba(198, 210, 206, 0.4) 46%,
+    transparent 74%
+  );
+}
+
 .heroSmoke[data-active="true"] span {
   animation-play-state: running;
-  will-change: transform, opacity;
 }
 
 .heroSmoke span:nth-child(2) {
@@ -136,16 +170,16 @@
 @keyframes hero-smoke-rise {
   0% {
     opacity: 0;
-    transform: translate3d(-50%, 18px, 0) scale(0.3, 0.36);
+    transform: translate3d(-50%, 12px, 0) scale(0.34, 0.4);
   }
 
-  12% {
+  9% {
     opacity: 0.62;
   }
 
-  30% {
+  26% {
     opacity: 0.78;
-    transform: translate3d(calc(-50% + var(--smoke-mid-drift)), -86px, 0) scale(0.78, 0.88);
+    transform: translate3d(calc(-50% + var(--smoke-mid-drift)), -58px, 0) scale(0.78, 0.86);
   }
 
   70% {
@@ -154,7 +188,7 @@
 
   100% {
     opacity: 0;
-    transform: translate3d(calc(-50% + var(--smoke-drift)), -340px, 0) scale(1.72, 1.95);
+    transform: translate3d(calc(-50% + var(--smoke-drift)), -260px, 0) scale(1.58, 1.76);
   }
 }
 
