@@ -2215,6 +2215,162 @@ body.mobile-menu-open {
   font-weight: 680;
 }
 
+.configurator-building-svg .scheme-paper {
+  fill: #f7f1e8;
+}
+
+.configurator-building-svg .scheme-room {
+  fill: #f3e5d3;
+}
+
+.configurator-building-svg .scheme-attic {
+  fill: #e8eee9;
+}
+
+.configurator-building-svg .scheme-floor-line,
+.configurator-building-svg .scheme-wall-line {
+  fill: none;
+  stroke: #8b6c4e;
+  stroke-width: 3;
+}
+
+.configurator-building-svg .scheme-roof-line {
+  fill: none;
+  stroke: #684c36;
+  stroke-linecap: square;
+  stroke-width: 13;
+}
+
+.configurator-building-svg .scheme-pass-band {
+  fill: #d9b982;
+  fill-opacity: 0.76;
+  stroke: #946d37;
+  stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-roof-pass {
+  fill: #d9b982;
+  fill-opacity: 0.88;
+  stroke: #946d37;
+  stroke-width: 1.5;
+}
+
+.configurator-building-svg .scheme-pass-band.is-placeholder {
+  fill: #f7f1e8;
+  fill-opacity: 0.86;
+  stroke-dasharray: 4 3;
+}
+
+.configurator-building-svg .scheme-zone-name {
+  fill: #806f5e;
+  font-size: 8px;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+}
+
+.configurator-building-svg .scheme-heater {
+  fill: #31464d;
+  stroke: #173d4c;
+  stroke-width: 2;
+}
+
+.configurator-building-svg .scheme-heater-door {
+  fill: #c96f43;
+  stroke: #f1c08e;
+  stroke-width: 1.5;
+}
+
+.configurator-building-svg .scheme-heater-detail {
+  stroke: #dce4e3;
+  stroke-width: 2;
+}
+
+.configurator-building-svg .scheme-single-pipe,
+.configurator-building-svg .scheme-sandwich-pipe,
+.configurator-building-svg .scheme-transition {
+  stroke: #173d4c;
+  stroke-width: 1.5;
+}
+
+.configurator-building-svg .scheme-single-pipe {
+  fill: #cfd8d6;
+}
+
+.configurator-building-svg .scheme-sandwich-pipe {
+  fill: #e8eeec;
+}
+
+.configurator-building-svg .scheme-sandwich-pipe.is-pass {
+  fill: #bad0c8;
+}
+
+.configurator-building-svg .scheme-transition {
+  fill: #c9825e;
+}
+
+.configurator-building-svg .scheme-joint {
+  fill: #b13f20;
+  stroke: #fff8ee;
+  stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-pipe-leader,
+.configurator-building-svg .scheme-callout-line {
+  fill: none;
+  stroke: #85949a;
+  stroke-width: 0.8;
+}
+
+.configurator-building-svg .scheme-pipe-label {
+  fill: #173d4c;
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.configurator-building-svg .scheme-target-line {
+  stroke: #b13f20;
+  stroke-dasharray: 4 3;
+  stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-termination {
+  fill: #b13f20;
+}
+
+.configurator-building-svg .scheme-dimension {
+  stroke: #b13f20;
+  stroke-width: 0.8;
+}
+
+.configurator-building-svg .scheme-dimension-label {
+  fill: #8b321e;
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.configurator-building-svg .scheme-callout-number {
+  fill: #173d4c;
+}
+
+.configurator-building-svg .scheme-callout-index {
+  fill: #fff;
+  font-size: 8px;
+  font-weight: 820;
+}
+
+.configurator-building-svg .scheme-callout-title {
+  fill: #173d4c;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.configurator-building-svg .scheme-callout-detail,
+.configurator-building-svg .scheme-legend {
+  fill: #68767b;
+  font-size: 7px;
+  font-weight: 620;
+}
+
 .configurator-svg text {
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

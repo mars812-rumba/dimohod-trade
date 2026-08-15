@@ -106,7 +106,15 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
   return values;
 }
 
-function GeneratedChimneyScheme({ calculation, variant }: { calculation: ChimneyCalculation; variant: PipeLayoutVariant | null }) {
+function GeneratedChimneyScheme({
+  calculation,
+  variant,
+  roofType,
+}: {
+  calculation: ChimneyCalculation;
+  variant: PipeLayoutVariant | null;
+  roofType: RoofType;
+}) {
   const ceiling = calculation.routeKind === "ceiling";
   const pipes = variant?.pipes ?? [];
   const maximumMm = Math.max(
@@ -171,39 +179,194 @@ function GeneratedChimneyScheme({ calculation, variant }: { calculation: Chimney
     );
   }
 
+  const floorZones = calculation.forbiddenZones.filter((zone) => zone.kind === "floor");
+  const roofZone = calculation.forbiddenZones.find((zone) => zone.kind === "roof");
+  const chimneyX = 146;
+  const houseLeft = 36;
+  const houseRight = 238;
+  const roofCenterY = roofZone
+    ? verticalY((roofZone.startMm + roofZone.endMm) / 2)
+    : Math.max(112, verticalY(maximumMm * 0.78));
+  const firstCeilingY = floorZones[0] ? verticalY(floorZones[0].startMm) : verticalY(maximumMm * 0.48);
+  const roofPath = roofType === "flat"
+    ? `M${houseLeft - 8} ${roofCenterY} H${houseRight + 10}`
+    : `M${houseLeft - 8} ${roofCenterY + 45} L${houseRight + 10} ${roofCenterY - 45}`;
+  const atticLabelY = floorZones.length
+    ? (verticalY(floorZones[floorZones.length - 1].endMm) + roofCenterY) / 2
+    : roofCenterY + 70;
+  const callouts = [
+    {
+      id: "termination",
+      anchorY: Math.max(36, verticalY(calculation.routeTargetMm) - 22),
+      label: "Оголовок",
+      detail: "Завершение трассы",
+    },
+    ...(calculation.hasAttic ? [{
+      id: roofZone?.id ?? "roof-pass-placeholder",
+      anchorY: roofZone ? verticalY((roofZone.startMm + roofZone.endMm) / 2) : roofCenterY,
+      label: "Проход кровли",
+      detail: roofZone ? `${roofZone.startMm}–${roofZone.endMm} мм` : "нужен замер кровли",
+    }] : []),
+    ...(floorZones.length
+      ? floorZones.slice().reverse().map((zone) => ({
+          id: zone.id,
+          anchorY: verticalY((zone.startMm + zone.endMm) / 2),
+          label: "Проход перекрытия",
+          detail: `${zone.startMm}–${zone.endMm} мм`,
+        }))
+      : [{
+          id: "floor-pass-placeholder",
+          anchorY: firstCeilingY,
+          label: "Проход перекрытия",
+          detail: "нужны высота и толщина",
+        }]),
+    ...calculation.fixedParts.slice().reverse().map((part) => ({
+      id: part.id,
+      anchorY: (verticalY(part.startMm) + verticalY(part.endMm)) / 2,
+      label: part.label,
+      detail: `${part.lengthMm} мм`,
+    })),
+    {
+      id: "heater",
+      anchorY: (verticalY(calculation.routeStartMm) + floorY) / 2,
+      label: "Печь / топка",
+      detail: calculation.routeStartMm > 0
+        ? `патрубок: ${calculation.routeStartMm} мм`
+        : "отметка патрубка не указана",
+    },
+  ];
+  const calloutStep = callouts.length > 1 ? 610 / (callouts.length - 1) : 0;
+
   return (
-    <svg className="configurator-generated-svg" viewBox="0 0 360 740" role="img" aria-label="Расчётная вертикальная схема дымохода со стыками и перекрытиями">
-      <rect width="360" height="740" fill="#f3efe4" />
-      <line x1="22" y1={floorY} x2="338" y2={floorY} stroke="#8a8272" strokeDasharray="5 4" />
+    <svg className="configurator-generated-svg configurator-building-svg" viewBox="0 0 380 740" role="img" aria-labelledby="generated-scheme-title generated-scheme-description">
+      <title id="generated-scheme-title">Расчётная схема дымохода через перекрытие и кровлю</title>
+      <desc id="generated-scheme-description">Вертикальный разрез здания с печью, трубами, проходными зонами, координатами стыков и перечнем узлов.</desc>
+      <rect width="380" height="740" className="scheme-paper" />
+
+      <g aria-hidden="true">
+        <rect x={houseLeft} y={firstCeilingY} width={houseRight - houseLeft} height={floorY - firstCeilingY} className="scheme-room" />
+        <rect x={houseLeft} y={roofCenterY} width={houseRight - houseLeft} height={Math.max(0, firstCeilingY - roofCenterY)} className="scheme-attic" />
+        <line x1={houseLeft} y1={floorY} x2={houseRight} y2={floorY} className="scheme-floor-line" />
+        <line x1={houseLeft} y1={floorY} x2={houseLeft} y2={roofCenterY + 45} className="scheme-wall-line" />
+        <line x1={houseRight} y1={floorY} x2={houseRight} y2={roofCenterY - 45} className="scheme-wall-line" />
+        <path d={roofPath} className="scheme-roof-line" />
+        <text x={houseLeft + 10} y={Math.min(floorY - 18, firstCeilingY + 24)} className="scheme-zone-name">ПОМЕЩЕНИЕ БАНИ</text>
+        {calculation.hasAttic ? <text x={houseLeft + 10} y={atticLabelY} className="scheme-zone-name">ХОЛОДНЫЙ ЧЕРДАК</text> : null}
+      </g>
+
       {calculation.forbiddenZones.map((zone) => (
         <g key={zone.id}>
-          <rect x="30" y={verticalY(zone.endMm)} width="300" height={Math.max(8, verticalY(zone.startMm) - verticalY(zone.endMm))} fill="#e2c99f" opacity="0.82" stroke="#8a6a3a" />
-          <text x="38" y={verticalY(zone.endMm) - 6}>{zone.label.toUpperCase()} · {zone.startMm}–{zone.endMm} мм</text>
+          {zone.kind === "roof" ? (
+            <rect
+              x={chimneyX - 24}
+              y={roofCenterY - 18}
+              width="48"
+              height="36"
+              rx="3"
+              className="scheme-pass-band scheme-roof-pass"
+              transform={`rotate(${roofType === "flat" ? 0 : -24} ${chimneyX} ${roofCenterY})`}
+            />
+          ) : (
+            <rect
+              x={houseLeft}
+              y={verticalY(zone.endMm)}
+              width={houseRight - houseLeft}
+              height={Math.max(8, verticalY(zone.startMm) - verticalY(zone.endMm))}
+              className="scheme-pass-band"
+            />
+          )}
         </g>
       ))}
-      <rect x="142" y={verticalY(calculation.routeStartMm)} width="76" height={Math.max(36, floorY - verticalY(calculation.routeStartMm))} rx="4" fill="#d9cbb7" stroke="#173d4c" strokeWidth="2" />
-      <text x="180" y={floorY - 12} textAnchor="middle">ОТОПИТЕЛЬ</text>
+      {!floorZones.length ? (
+        <rect x={houseLeft} y={firstCeilingY - 5} width={houseRight - houseLeft} height="10" className="scheme-pass-band is-placeholder" />
+      ) : null}
+      {calculation.hasAttic && !roofZone ? (
+        <rect
+          x={chimneyX - 24}
+          y={roofCenterY - 18}
+          width="48"
+          height="36"
+          rx="3"
+          className="scheme-pass-band scheme-roof-pass is-placeholder"
+          transform={`rotate(${roofType === "flat" ? 0 : -24} ${chimneyX} ${roofCenterY})`}
+        />
+      ) : null}
+
+      <rect
+        x={chimneyX - 31}
+        y={verticalY(calculation.routeStartMm)}
+        width="62"
+        height={Math.max(38, floorY - verticalY(calculation.routeStartMm))}
+        rx="4"
+        className="scheme-heater"
+      />
+      <rect x={chimneyX - 21} y={floorY - 66} width="42" height="28" rx="2" className="scheme-heater-door" />
+      <line x1={chimneyX - 22} y1={floorY - 18} x2={chimneyX + 22} y2={floorY - 18} className="scheme-heater-detail" />
+
       {calculation.fixedParts.map((part) => (
         <g key={part.id}>
-          <rect x="166" y={verticalY(part.endMm)} width="28" height={Math.max(6, verticalY(part.startMm) - verticalY(part.endMm))} fill={part.id === "support_cap" ? "#c6825f" : "#e7ece9"} stroke="#173d4c" strokeWidth="2" />
-          <line x1="194" y1={(verticalY(part.startMm) + verticalY(part.endMm)) / 2} x2="226" y2={(verticalY(part.startMm) + verticalY(part.endMm)) / 2} stroke="#b13f20" />
-          <text x="232" y={(verticalY(part.startMm) + verticalY(part.endMm)) / 2 + 4}>{part.label} · {part.lengthMm} мм</text>
-          <circle cx="180" cy={verticalY(part.endMm)} r="4" fill="#b13f20" />
+          <rect
+            x={chimneyX - (part.id === "support_cap" ? 18 : 12)}
+            y={verticalY(part.endMm)}
+            width={part.id === "support_cap" ? 36 : 24}
+            height={Math.max(6, verticalY(part.startMm) - verticalY(part.endMm))}
+            className={part.id === "support_cap" ? "scheme-transition" : "scheme-single-pipe"}
+          />
+          <circle cx={chimneyX} cy={verticalY(part.endMm)} r="3.5" className="scheme-joint" />
         </g>
       ))}
-      {pipes.map((pipe, index) => (
-        <g key={pipe.id}>
-          <rect x="162" y={verticalY(pipe.endMm)} width="36" height={Math.max(5, verticalY(pipe.startMm) - verticalY(pipe.endMm))} fill={pipe.zone === "wall_or_ceiling_pass" ? "#cfddd8" : "#e7ece9"} stroke="#173d4c" strokeWidth="2" />
-          <line x1="198" y1={(verticalY(pipe.startMm) + verticalY(pipe.endMm)) / 2} x2="226" y2={(verticalY(pipe.startMm) + verticalY(pipe.endMm)) / 2} stroke="#b13f20" />
-          <text x="232" y={(verticalY(pipe.startMm) + verticalY(pipe.endMm)) / 2 + 4}>Т{index + 1} · {pipe.nominalMm} мм</text>
-          <circle cx="180" cy={verticalY(pipe.endMm)} r="4" fill="#b13f20" />
-        </g>
-      ))}
-      <line x1="100" y1={verticalY(calculation.routeTargetMm)} x2="260" y2={verticalY(calculation.routeTargetMm)} stroke="#b13f20" strokeDasharray="5 4" />
-      <path d={`M164 ${Math.max(34, verticalY(calculation.routeTargetMm) - 18)} L180 ${Math.max(12, verticalY(calculation.routeTargetMm) - 42)} L196 ${Math.max(34, verticalY(calculation.routeTargetMm) - 18)} Z`} fill="#b13f20" />
-      <line x1="24" y1={floorY} x2="24" y2={verticalY(calculation.routeTargetMm)} stroke="#b13f20" />
-      <text x="14" y={(floorY + verticalY(calculation.routeTargetMm)) / 2} transform={`rotate(-90 14 ${(floorY + verticalY(calculation.routeTargetMm)) / 2})`} textAnchor="middle">До завершения · {calculation.routeTargetMm} мм от чистого пола</text>
-      <text x="180" y="724" textAnchor="middle">Красная точка — координата стыка</text>
+
+      {pipes.map((pipe, index) => {
+        const middleY = (verticalY(pipe.startMm) + verticalY(pipe.endMm)) / 2;
+        return (
+          <g key={pipe.id}>
+            <rect
+              x={chimneyX - 16}
+              y={verticalY(pipe.endMm)}
+              width="32"
+              height={Math.max(5, verticalY(pipe.startMm) - verticalY(pipe.endMm))}
+              className={pipe.zone === "wall_or_ceiling_pass" ? "scheme-sandwich-pipe is-pass" : "scheme-sandwich-pipe"}
+            />
+            <line x1={chimneyX - 16} y1={middleY} x2="94" y2={middleY} className="scheme-pipe-leader" />
+            <text x="90" y={middleY + 3} textAnchor="end" className="scheme-pipe-label">Т{index + 1} · {pipe.nominalMm}</text>
+            <circle cx={chimneyX} cy={verticalY(pipe.endMm)} r="3.5" className="scheme-joint" />
+          </g>
+        );
+      })}
+
+      <line x1={chimneyX - 34} y1={verticalY(calculation.routeTargetMm)} x2={chimneyX + 34} y2={verticalY(calculation.routeTargetMm)} className="scheme-target-line" />
+      <path d={`M${chimneyX - 15} ${Math.max(34, verticalY(calculation.routeTargetMm) - 14)} L${chimneyX} ${Math.max(12, verticalY(calculation.routeTargetMm) - 36)} L${chimneyX + 15} ${Math.max(34, verticalY(calculation.routeTargetMm) - 14)} Z`} className="scheme-termination" />
+
+      <line x1="18" y1={floorY} x2="18" y2={verticalY(calculation.routeTargetMm)} className="scheme-dimension" />
+      <line x1="13" y1={floorY} x2="23" y2={floorY} className="scheme-dimension" />
+      <line x1="13" y1={verticalY(calculation.routeTargetMm)} x2="23" y2={verticalY(calculation.routeTargetMm)} className="scheme-dimension" />
+      <text
+        x="10"
+        y={(floorY + verticalY(calculation.routeTargetMm)) / 2}
+        transform={`rotate(-90 10 ${(floorY + verticalY(calculation.routeTargetMm)) / 2})`}
+        textAnchor="middle"
+        className="scheme-dimension-label"
+      >{calculation.routeTargetMm} мм от чистого пола</text>
+
+      <g className="scheme-callouts">
+        {callouts.map((callout, index) => {
+          const labelY = 70 + index * calloutStep;
+          return (
+            <g key={callout.id}>
+              <path d={`M${chimneyX + 18} ${callout.anchorY} L252 ${callout.anchorY} L260 ${labelY}`} className="scheme-callout-line" />
+              <circle cx="270" cy={labelY} r="9" className="scheme-callout-number" />
+              <text x="270" y={labelY + 3.4} textAnchor="middle" className="scheme-callout-index">{index + 1}</text>
+              <text x="284" y={labelY - 2} className="scheme-callout-title">{callout.label}</text>
+              <text x="284" y={labelY + 11} className="scheme-callout-detail">{callout.detail}</text>
+            </g>
+          );
+        })}
+      </g>
+
+      <g transform="translate(38 718)">
+        <circle cx="4" cy="0" r="3.5" className="scheme-joint" />
+        <text x="14" y="3" className="scheme-legend">стык · не должен попадать внутрь проходной зоны</text>
+      </g>
     </svg>
   );
 }
@@ -735,7 +898,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             <strong>{calculation.status === "invalid" ? "Есть конфликт" : `${selectedPipeQuantity} труб`}</strong>
           </div>
           <div className="configurator-svg-wrap">
-            <GeneratedChimneyScheme calculation={calculation} variant={selectedVariant} />
+            <GeneratedChimneyScheme calculation={calculation} variant={selectedVariant} roofType={roof} />
           </div>
           <div className="configurator-height-badge">
             Отметка завершения {calculation.routeTargetMm} мм · раскладка {selectedVariant?.label ?? "не найдена"}
