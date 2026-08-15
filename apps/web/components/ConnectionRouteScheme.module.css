@@ -1,0 +1,150 @@
+.scheme {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  background: #f7f4ed;
+}
+
+.paper {
+  fill: #f7f4ed;
+}
+
+.room {
+  fill: #f0e6d7;
+}
+
+.outside {
+  fill: #e8efec;
+}
+
+.structure {
+  fill: #c7a77d;
+  stroke: #765d42;
+  stroke-width: 1;
+}
+
+.structureCut {
+  fill: #d8c5a8;
+  stroke: #765d42;
+  stroke-width: 1;
+}
+
+.roofCake {
+  fill: #c7a77d;
+  stroke: #765d42;
+  stroke-width: 1.5;
+}
+
+.pipe,
+.pipeSingle,
+.fitting {
+  stroke: #183f4b;
+  stroke-width: 1.4;
+}
+
+.pipeRun {
+  fill: none;
+  stroke: #183f4b;
+  stroke-width: 22;
+}
+
+.pipe {
+  fill: #dbe8e5;
+}
+
+.pipeSingle {
+  fill: #aebfbd;
+}
+
+.fitting {
+  fill: #77a99e;
+}
+
+.joint {
+  fill: #d45f37;
+  stroke: #fffaf2;
+  stroke-width: 1;
+}
+
+.heater {
+  fill: #263d45;
+  stroke: #102f39;
+  stroke-width: 1.5;
+}
+
+.heaterDoor {
+  fill: #c86d45;
+  stroke: #f0b280;
+  stroke-width: 1;
+}
+
+.metal {
+  fill: #859398;
+  stroke: #46565c;
+  stroke-width: 1;
+}
+
+.insulation {
+  fill: #e3c98c;
+  stroke: #a1742d;
+  stroke-width: 0.8;
+}
+
+.leader,
+.dimension {
+  fill: none;
+  stroke: #73868c;
+  stroke-width: 0.8;
+}
+
+.dimension {
+  stroke-dasharray: 3 3;
+}
+
+.label,
+.note,
+.zone {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.label {
+  fill: #173d4c;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.note {
+  fill: #63757b;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.zone {
+  fill: #7c6b58;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.nodeNumber {
+  fill: #173d4c;
+}
+
+.nodeNumberText {
+  fill: #fff;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+@media (max-width: 620px) {
+  .label {
+    font-size: 11px;
+  }
+
+  .note,
+  .zone {
+    font-size: 9.5px;
+  }
+}

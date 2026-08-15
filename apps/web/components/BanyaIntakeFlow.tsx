@@ -19,6 +19,7 @@ import {
   type DraftFieldStatus,
 } from "@/lib/configuratorDraft";
 import type { ScenarioPageContent } from "@/lib/scenarioPages";
+import { ConnectionRouteScheme, isConnectionRouteScheme } from "./ConnectionRouteScheme";
 import { RouteImageViewer } from "./RouteImageViewer";
 import styles from "./ScenarioPageTemplate.module.css";
 
@@ -579,7 +580,12 @@ export function BanyaIntakeFlow({
                   const selected = intake.route === value;
                   return (
                     <div className={styles.routeChoice} data-selected={selected || undefined} key={option.slug}>
-                    {option.image ? (
+                    {isConnectionRouteScheme(option.slug) ? (
+                      <ConnectionRouteScheme
+                        className={styles.routeChoiceImage}
+                        variant={option.slug}
+                      />
+                    ) : option.image ? (
                       <RouteImageViewer
                         alt={`Схема маршрута: ${option.title}`}
                         previewClassName={styles.routeChoiceImage}
