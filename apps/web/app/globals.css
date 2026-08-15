@@ -2267,6 +2267,27 @@ body.mobile-menu-open {
   stroke-dasharray: 7 5;
 }
 
+.configurator-building-svg .scheme-roof-reference,
+.configurator-building-svg .scheme-ridge-datum {
+  fill: none;
+  stroke: #684c36;
+  stroke-dasharray: 6 4;
+  stroke-width: 1.4;
+}
+
+.configurator-building-svg .scheme-ridge-datum {
+  stroke: #8d9a9f;
+  stroke-dasharray: 3 3;
+  stroke-width: 0.8;
+}
+
+.configurator-building-svg .scheme-ridge-label {
+  fill: #40515a;
+  font-size: 7px;
+  font-weight: 760;
+  letter-spacing: 0.04em;
+}
+
 .configurator-building-svg .scheme-pass-band {
   fill: #d9b982;
   fill-opacity: 0.76;
@@ -2361,7 +2382,8 @@ body.mobile-menu-open {
 
 .configurator-building-svg .scheme-single-pipe,
 .configurator-building-svg .scheme-sandwich-pipe,
-.configurator-building-svg .scheme-transition {
+.configurator-building-svg .scheme-transition,
+.configurator-building-svg .scheme-rotary-damper {
   stroke: #173d4c;
   stroke-width: 1.5;
 }
@@ -2380,6 +2402,23 @@ body.mobile-menu-open {
 
 .configurator-building-svg .scheme-transition {
   fill: #c9825e;
+}
+
+.configurator-building-svg .scheme-rotary-damper {
+  fill: #9ca8aa;
+}
+
+.configurator-building-svg .scheme-damper-axis {
+  stroke: #46555b;
+  stroke-width: 2;
+}
+
+.configurator-building-svg .scheme-damper-handle {
+  fill: #46555b;
+}
+
+.configurator-building-svg .scheme-roof-upk-foreground.is-placeholder {
+  opacity: 0.58;
 }
 
 .configurator-building-svg .scheme-joint {

@@ -15,10 +15,13 @@ export type CeilingRouteMeasurements = {
   levels: string;
   hasAttic: boolean;
   atticHeight: string;
+  ridgeHeight: string;
   routeHeight: string;
   roofAngle: string;
   roofThickness: string;
+  passageWoolKits: string;
   warmupLength: string;
+  rotaryDamperHeight: string;
   supportCapHeight: string;
 };
 
@@ -83,10 +86,13 @@ export function routeMeasurementsFromDraft(draft: ScenarioConfiguratorDraft): Ty
       levels: draft.levels,
       hasAttic: draft.hasAttic,
       atticHeight: draft.atticHeight,
+      ridgeHeight: draft.ridgeHeight,
       routeHeight: draft.routeHeight,
       roofAngle: draft.roofAngle,
       roofThickness: draft.roofThickness,
+      passageWoolKits: draft.passageWoolKits,
       warmupLength: draft.warmupLength,
+      rotaryDamperHeight: draft.rotaryDamperHeight,
       supportCapHeight: draft.supportCapHeight,
     };
   }

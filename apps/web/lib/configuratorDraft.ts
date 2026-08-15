@@ -21,6 +21,7 @@ export type ScenarioConfiguratorDraft = {
   connectionHeight: string;
   rearOutletBottomHeight: string;
   warmupLength: string;
+  rotaryDamperHeight: string;
   supportCapHeight: string;
   connectionDetails: string;
   route: DraftRoute;
@@ -32,9 +33,11 @@ export type ScenarioConfiguratorDraft = {
   thirdFloorThickness: string;
   levels: string;
   hasAttic: boolean;
+  ridgeHeight: string;
   routeHeight: string;
   roofAngle: string;
   roofThickness: string;
+  passageWoolKits: string;
   atticHeight: string;
   wallExitHeight: string;
   wallDistance: string;
@@ -72,6 +75,7 @@ export function createEmptyScenarioDraft(
     connectionHeight: "",
     rearOutletBottomHeight: "",
     warmupLength: "500",
+    rotaryDamperHeight: "0",
     supportCapHeight: "70",
     connectionDetails: "",
     route: "unknown",
@@ -83,9 +87,11 @@ export function createEmptyScenarioDraft(
     thirdFloorThickness: "",
     levels: "",
     hasAttic: false,
+    ridgeHeight: "",
     routeHeight: "",
     roofAngle: "",
     roofThickness: "",
+    passageWoolKits: "3",
     atticHeight: "",
     wallExitHeight: "",
     wallDistance: "",

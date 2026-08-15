@@ -1,7 +1,6 @@
 import type { ScenarioConfiguratorDraft } from "./configuratorDraft";
 
 export const PIPE_SOCKET_OVERLAP_MM = 50;
-
 export const PIPE_LENGTHS = [
   { nominalMm: 1000, effectiveMm: 950 },
   { nominalMm: 500, effectiveMm: 450 },
@@ -33,7 +32,7 @@ export type PlacedPipe = {
 };
 
 export type FixedRoutePart = {
-  id: "warmup" | "support_cap";
+  id: "warmup" | "rotary_damper" | "support_cap";
   label: string;
   axis: RouteAxis;
   lengthMm: number;
@@ -61,6 +60,9 @@ export type ChimneyBomLine = {
   zone: string;
   selectionReason: string;
   requiresSku: boolean;
+  catalogCategorySlug?: string;
+  catalogSearch?: string;
+  quantityNote?: string;
 };
 
 export type ChimneyCalculation = {
@@ -70,6 +72,13 @@ export type ChimneyCalculation = {
   diameterMm: number | null;
   diameterStatus: "known" | "oval" | "missing";
   roofAngleDeg: number | null;
+  roofThicknessMm: number | null;
+  floorThicknessesMm: number[];
+  passageWoolKits: number;
+  rotaryDamperHeightMm: number;
+  singleWallWarmupPipeLengthMm: number;
+  ridgeHeightMm: number | null;
+  terminationToRidgeDeltaMm: number | null;
   routeStartMm: number;
   routeTargetMm: number;
   fixedParts: FixedRoutePart[];
@@ -90,11 +99,12 @@ export type CalculationInput = {
   heightM: number;
   distanceM: number;
   warmupLengthMm?: number;
+  rotaryDamperHeightMm?: number;
   supportCapLengthMm?: number;
   draft: ScenarioConfiguratorDraft | null;
 };
 
-function positiveNumber(value: string | number | null | undefined): number | null {
+export function positiveNumber(value: string | number | null | undefined): number | null {
   const normalized = typeof value === "string" ? value.replace(",", ".").trim() : value;
   if (normalized === "" || normalized === null || normalized === undefined) return null;
   const parsed = Number(normalized);
@@ -229,9 +239,9 @@ function ceilingForbiddenZones(draft: ScenarioConfiguratorDraft | null, floors: 
     });
     floorLevel = endMm;
   }
-  const atticHeight = draft?.hasAttic ? positiveNumber(draft.atticHeight) : null;
+  const atticHeight = draft?.hasAttic ? positiveNumber(draft.atticHeight) : 0;
   const roofThickness = positiveNumber(draft?.roofThickness);
-  if (draft?.hasAttic && atticHeight && roofThickness) {
+  if (roofThickness !== null && atticHeight !== null) {
     const startMm = floorLevel + atticHeight;
     zones.push({
       id: "roof-pass",
@@ -284,20 +294,42 @@ function summarizePipeBom(variants: PipeLayoutVariant[], routeKind: ChimneyRoute
     }));
 }
 
-function addRouteNodes(bom: ChimneyBomLine[], routeKind: ChimneyRouteKind, passageQty: number, warmupLengthMm: number) {
-  if (warmupLengthMm > 0 && routeKind === "ceiling") {
-    bom.unshift({
-      key: `single-pipe-${warmupLengthMm}`,
-      productKind: "труба",
-      label: `Одностенная труба-разгон ${warmupLengthMm} мм`,
+function addRouteNodes(
+  bom: ChimneyBomLine[],
+  routeKind: ChimneyRouteKind,
+  passageQty: number,
+  singleWallWarmupPipeLengthMm: number,
+  rotaryDamperHeightMm: number,
+  passageWoolKits: number,
+) {
+  if (routeKind === "ceiling") {
+    if (singleWallWarmupPipeLengthMm > 0) {
+      bom.unshift({
+        key: `single-pipe-${singleWallWarmupPipeLengthMm}`,
+        productKind: "труба",
+        label: `Одностенная труба-разгон ${singleWallWarmupPipeLengthMm} мм`,
+        quantity: 1,
+        nominalLengthMm: singleWallWarmupPipeLengthMm,
+        contour: "одностенный",
+        zone: "indoor_warm",
+        selectionReason: "Из общей высоты разгона вычтена высота поворотного шибера.",
+        requiresSku: true,
+      });
+    }
+    bom.splice(singleWallWarmupPipeLengthMm > 0 ? 1 : 0, 0, {
+      key: "rotary-damper",
+      productKind: "шибер",
+      label: "Одноконтурный шибер поворотный",
       quantity: 1,
-      nominalLengthMm: warmupLengthMm,
       contour: "одностенный",
-      zone: "indoor_warm",
-      selectionReason: "Исходная длина разгона указана в расчёте.",
+      zone: "transition",
+      selectionReason: rotaryDamperHeightMm > 0
+        ? `Установлен между трубой-разгоном и опорной заглушкой; учтённая высота ${rotaryDamperHeightMm} мм.`
+        : "Устанавливается между трубой-разгоном и опорной заглушкой; высоту нужно указать вручную.",
       requiresSku: true,
+      catalogSearch: "Одноконтурный шибер поворотный",
     });
-    bom.splice(1, 0, {
+    bom.splice(singleWallWarmupPipeLengthMm > 0 ? 2 : 1, 0, {
       key: "support-cap",
       productKind: "заглушка",
       label: "Сэндвич-заглушка опорная",
@@ -317,15 +349,20 @@ function addRouteNodes(bom: ChimneyBomLine[], routeKind: ChimneyRouteKind, passa
     zone: "wall_or_ceiling_pass",
     selectionReason: "По одному стакану для каждой рассчитанной проходной зоны.",
     requiresSku: true,
+    catalogCategorySlug: "uzly-prohoda-sten-i-perekrytiy",
+    catalogSearch: routeKind === "ceiling" ? "Проходной стакан" : undefined,
   });
   bom.push({
     key: "passage-insulation",
     productKind: "изоляция",
-    label: "Комплект ваты для проходного узла (предварительно)",
-    quantity: passageQty,
+    label: "Комплект ваты для проходных узлов",
+    quantity: routeKind === "ceiling" ? passageWoolKits : passageQty,
     zone: "wall_or_ceiling_pass",
-    selectionReason: "Показан по одному на проход; фактическое число комплектов требует подтверждения.",
+    selectionReason: "Общее количество для проходов перекрытий и кровли задаётся вручную и проверяется менеджером.",
     requiresSku: true,
+    catalogCategorySlug: "uzly-prohoda-sten-i-perekrytiy",
+    catalogSearch: "Комплект ваты для проходного стакана",
+    quantityNote: routeKind === "ceiling" ? "Количество указано вручную." : undefined,
   });
   bom.push({
     key: "passage-flange",
@@ -339,18 +376,18 @@ function addRouteNodes(bom: ChimneyBomLine[], routeKind: ChimneyRouteKind, passa
   bom.push({
     key: routeKind === "ceiling" ? "floor-clamp" : "wall-clamp",
     productKind: "крепеж",
-    label: routeKind === "ceiling" ? "Опорный хомут с лапами в перекрытие" : "Хомут в стеновой проход",
-    quantity: passageQty,
+    label: routeKind === "ceiling" ? "Хомут в перекрытие" : "Хомут в стеновой проход",
+    quantity: routeKind === "ceiling" ? passageQty + 1 : passageQty,
     zone: "wall_or_ceiling_pass",
     selectionReason: routeKind === "ceiling"
-      ? "По одному на проход; это крепёж с лапами к лагам. Точный товар пока не заведён, обычный кольцевой хомут не подставляется."
+      ? "По одному на каждый проход перекрытия и один на проход кровли; используется одно семейство с изменяемым углом."
       : "По одному на проход; размер выбирается по наружному диаметру сэндвич-трубы.",
-    requiresSku: routeKind !== "ceiling",
+    requiresSku: true,
+    catalogCategorySlug: routeKind === "ceiling" ? "uzly-prohoda-sten-i-perekrytiy" : undefined,
+    catalogSearch: routeKind === "ceiling" ? "Хомут в перекрытие" : undefined,
   });
   if (routeKind === "ceiling") {
     bom.push({ key: "roof-interior-flange", productKind: "фланец", label: "Фланец кровельного прохода со стороны помещения", quantity: 1, zone: "roof", selectionReason: "Добавлен со стороны помещения по правилу кровельного узла.", requiresSku: true });
-    bom.push({ key: "roof-sleeve-or-insulation", productKind: "изоляция", label: "Стакан или комплект ваты для кровли", quantity: 1, zone: "roof", selectionReason: "Вариант выбирается после проверки, помещается ли стакан в геометрию кровли.", requiresSku: false });
-    bom.push({ key: "roof-clamp", productKind: "крепеж", label: "Хомут кровельного прохода", quantity: 1, zone: "roof", selectionReason: "Размер выбирается по наружному диаметру сэндвич-трубы.", requiresSku: true });
     bom.push({ key: "roof-passage", productKind: "проходной_узел", label: "УПК по углу кровли", quantity: 1, zone: "roof", selectionReason: "Исполнение выбирается по измеренному углу кровли.", requiresSku: true });
   } else {
     bom.push({ key: "outside-elbow", productKind: "отвод", label: "Сэндвич-отвод 90°", quantity: routeKind === "wall-top" ? 2 : 1, zone: "wall/outdoor", selectionReason: "Количество определяется поворотами выбранного маршрута.", requiresSku: true });
@@ -364,6 +401,9 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const hasAttic = Boolean(input.route === "ceiling" && input.draft?.hasAttic);
   const diameter = measuredDiameter(input.draft);
   const roofAngleDeg = positiveNumber(input.draft?.roofAngle);
+  const roofThicknessMm = positiveNumber(input.draft?.roofThickness);
+  const measuredRidgeHeightMm = positiveNumber(input.draft?.ridgeHeight);
+  const ridgeHeightMm = measuredRidgeHeightMm ? Math.round(measuredRidgeHeightMm) : null;
   const routeKind: ChimneyRouteKind = input.route === "ceiling"
     ? "ceiling"
     : input.outlet === "horizontal" ? "wall-rear" : "wall-top";
@@ -383,13 +423,24 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     : positiveNumber(input.draft?.connectionHeight) ?? 0;
   const routeLengthMm = input.heightM * 1000;
   const routeTargetMm = routeKind === "ceiling" ? connectionHeightMm + routeLengthMm : routeLengthMm;
+  const terminationToRidgeDeltaMm = routeKind === "ceiling" && ridgeHeightMm
+    ? Math.round(routeTargetMm - ridgeHeightMm)
+    : null;
   const warmupLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.warmupLengthMm ?? 500)) : 0;
+  const rotaryDamperHeightMm = routeKind === "ceiling"
+    ? Math.max(0, Math.round(input.rotaryDamperHeightMm ?? positiveNumber(input.draft?.rotaryDamperHeight) ?? 0))
+    : 0;
+  const singleWallWarmupPipeLengthMm = Math.max(0, warmupLengthMm - rotaryDamperHeightMm);
   const supportCapLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.supportCapLengthMm ?? 70)) : 0;
   const fixedParts: FixedRoutePart[] = [];
   let pipeStartMm = routeKind === "ceiling" ? connectionHeightMm : 0;
-  if (warmupLengthMm > 0) {
-    fixedParts.push({ id: "warmup", label: "Одностенный разгон", axis: "vertical", lengthMm: warmupLengthMm, startMm: pipeStartMm, endMm: pipeStartMm + warmupLengthMm });
-    pipeStartMm += warmupLengthMm;
+  if (singleWallWarmupPipeLengthMm > 0) {
+    fixedParts.push({ id: "warmup", label: "Одностенная труба-разгон", axis: "vertical", lengthMm: singleWallWarmupPipeLengthMm, startMm: pipeStartMm, endMm: pipeStartMm + singleWallWarmupPipeLengthMm });
+    pipeStartMm += singleWallWarmupPipeLengthMm;
+  }
+  if (rotaryDamperHeightMm > 0) {
+    fixedParts.push({ id: "rotary_damper", label: "Шибер поворотный", axis: "vertical", lengthMm: rotaryDamperHeightMm, startMm: pipeStartMm, endMm: pipeStartMm + rotaryDamperHeightMm });
+    pipeStartMm += rotaryDamperHeightMm;
   }
   if (supportCapLengthMm > 0) {
     fixedParts.push({ id: "support_cap", label: "Опорная заглушка", axis: "vertical", lengthMm: supportCapLengthMm, startMm: pipeStartMm, endMm: pipeStartMm + supportCapLengthMm });
@@ -399,6 +450,10 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const forbiddenZones = routeKind === "ceiling"
     ? ceilingForbiddenZones(input.draft, floors)
     : wallForbiddenZones(input.draft, input.distanceM);
+  const floorThicknessesMm = forbiddenZones
+    .filter((zone) => zone.kind === "floor")
+    .map((zone) => zone.endMm - zone.startMm);
+  const passageWoolKits = Math.max(1, Math.min(30, Math.round(positiveNumber(input.draft?.passageWoolKits) ?? 3)));
   if (routeKind === "ceiling" && floors > 1) {
     const missingSecond = !positiveNumber(input.draft?.secondCeilingHeight) || !positiveNumber(input.draft?.secondFloorThickness);
     const missingThird = floors > 2 && (!positiveNumber(input.draft?.thirdCeilingHeight) || !positiveNumber(input.draft?.thirdFloorThickness));
@@ -406,8 +461,24 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       reviewItems.unshift("Для незаполненных этажей повторены размеры первого этажа; внесите отдельные высоты и толщины перекрытий.");
     }
   }
-  if (routeKind === "ceiling" && hasAttic && (!positiveNumber(input.draft?.atticHeight) || !positiveNumber(input.draft?.roofThickness))) {
-    reviewItems.unshift("Заполнить высоту чердака и толщину кровли, чтобы проверить стыки в кровельном проходе.");
+  if (routeKind === "ceiling" && !roofThicknessMm) {
+    reviewItems.unshift("Заполнить толщину кровельного пирога, чтобы построить кровельный проход и проверить стыки.");
+  }
+  if (routeKind === "ceiling" && hasAttic && !positiveNumber(input.draft?.atticHeight)) {
+    reviewItems.unshift("Заполнить высоту чердака, чтобы определить отметку кровельного прохода.");
+  }
+  if (routeKind === "ceiling" && !ridgeHeightMm) {
+    reviewItems.unshift("Указать высоту дома в коньке: без неё контур кровли не привязан к абсолютной отметке здания.");
+  }
+  if (routeKind === "ceiling" && rotaryDamperHeightMm === 0) {
+    reviewItems.unshift("Указать фактическую высоту поворотного шибера: в каталоге этот размер не заполнен.");
+  }
+  if (routeKind === "ceiling" && rotaryDamperHeightMm >= warmupLengthMm && warmupLengthMm > 0) {
+    errors.push("Высота поворотного шибера должна быть меньше общей высоты разгона.");
+  }
+  const roofZoneForRidge = forbiddenZones.find((zone) => zone.kind === "roof");
+  if (ridgeHeightMm && roofZoneForRidge && ridgeHeightMm <= roofZoneForRidge.endMm) {
+    reviewItems.unshift("Высота конька должна быть выше наружной границы кровельного прохода; проверьте замеры.");
   }
   fixedParts.forEach((part) => {
     const forbidden = jointInsideForbiddenZone(part.endMm, forbiddenZones);
@@ -453,7 +524,14 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   if (!variants.length && !errors.length) errors.push("Не найдена раскладка труб без стыков внутри проходных зон.");
 
   const bom = summarizePipeBom(variants, routeKind);
-  addRouteNodes(bom, routeKind, routeKind === "ceiling" ? floors : 1, warmupLengthMm);
+  addRouteNodes(
+    bom,
+    routeKind,
+    routeKind === "ceiling" ? floors : 1,
+    singleWallWarmupPipeLengthMm,
+    rotaryDamperHeightMm,
+    passageWoolKits,
+  );
   if (diameter.diameterStatus === "missing") reviewItems.unshift("Указать наружный диаметр патрубка для подбора SKU.");
   if (diameter.diameterStatus === "oval") reviewItems.unshift("Замеры X и Y отличаются: соединение нужно проверить до подбора SKU.");
 
@@ -463,6 +541,13 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     hasAttic,
     ...diameter,
     roofAngleDeg,
+    roofThicknessMm,
+    floorThicknessesMm,
+    passageWoolKits,
+    rotaryDamperHeightMm,
+    singleWallWarmupPipeLengthMm,
+    ridgeHeightMm,
+    terminationToRidgeDeltaMm,
     routeStartMm: connectionHeightMm,
     routeTargetMm,
     fixedParts,
