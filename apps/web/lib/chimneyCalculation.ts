@@ -339,11 +339,13 @@ function addRouteNodes(bom: ChimneyBomLine[], routeKind: ChimneyRouteKind, passa
   bom.push({
     key: routeKind === "ceiling" ? "floor-clamp" : "wall-clamp",
     productKind: "крепеж",
-    label: routeKind === "ceiling" ? "Хомут в перекрытие" : "Хомут в стеновой проход",
+    label: routeKind === "ceiling" ? "Опорный хомут с лапами в перекрытие" : "Хомут в стеновой проход",
     quantity: passageQty,
     zone: "wall_or_ceiling_pass",
-    selectionReason: "По одному на проход; размер выбирается по наружному диаметру сэндвич-трубы.",
-    requiresSku: true,
+    selectionReason: routeKind === "ceiling"
+      ? "По одному на проход; это крепёж с лапами к лагам. Точный товар пока не заведён, обычный кольцевой хомут не подставляется."
+      : "По одному на проход; размер выбирается по наружному диаметру сэндвич-трубы.",
+    requiresSku: routeKind !== "ceiling",
   });
   if (routeKind === "ceiling") {
     bom.push({ key: "roof-interior-flange", productKind: "фланец", label: "Фланец кровельного прохода со стороны помещения", quantity: 1, zone: "roof", selectionReason: "Добавлен со стороны помещения по правилу кровельного узла.", requiresSku: true });

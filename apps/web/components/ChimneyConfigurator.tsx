@@ -140,8 +140,6 @@ function GeneratedChimneyScheme({
   );
   const floorY = 700;
   const topY = 56;
-  const millimetersToPixels = (floorY - topY) / maximumMm;
-  const verticalY = (millimeters: number) => floorY - millimeters * millimetersToPixels;
 
   if (!ceiling) {
     const horizontalPipes = pipes.filter((pipe) => pipe.axis === "horizontal");
@@ -196,7 +194,6 @@ function GeneratedChimneyScheme({
   }
 
   const floorZones = calculation.forbiddenZones.filter((zone) => zone.kind === "floor");
-  const roofZone = calculation.forbiddenZones.find((zone) => zone.kind === "roof");
   const upperFloorZone = floorZones[floorZones.length - 1];
   const chimneyX = 146;
   const houseLeft = 36;
@@ -204,17 +201,27 @@ function GeneratedChimneyScheme({
   const roofAngleDeg = roofType === "flat" ? 0 : calculation.roofAngleDeg;
   const drawnRoofAngleDeg = roofAngleDeg ?? 24;
   const roofAngleRad = drawnRoofAngleDeg * Math.PI / 180;
+  const roofSlope = Math.tan(roofAngleRad);
+  const roofZone = calculation.forbiddenZones.find((zone) => zone.kind === "roof");
+  const roofReferenceMm = Math.max(1, roofZone?.endMm ?? maximumMm * 0.72);
+  const highRoofRunPx = roofSlope >= 0
+    ? houseRight + 8 - chimneyX
+    : chimneyX - (houseLeft - 8);
+  const roofRisePx = Math.abs(roofSlope) * highRoofRunPx;
+  const baseMillimetersToPixels = (floorY - topY) / maximumMm;
+  const roofFittedMillimetersToPixels = (floorY - 24 - roofRisePx) / roofReferenceMm;
+  const millimetersToPixels = Math.min(
+    baseMillimetersToPixels,
+    roofFittedMillimetersToPixels > 0 ? roofFittedMillimetersToPixels : baseMillimetersToPixels,
+  );
+  const verticalY = (millimeters: number) => floorY - millimeters * millimetersToPixels;
   const firstCeilingY = floorZones[0] ? verticalY(floorZones[0].startMm) : verticalY(maximumMm * 0.48);
   const atticBottomY = upperFloorZone ? verticalY(upperFloorZone.endMm) : firstCeilingY;
   const roofGeometryMeasured = Boolean(roofZone || roofThicknessMm);
   const fullRoofSpan = houseRight - houseLeft + 18;
-  const placeholderRoofSpan = drawnRoofAngleDeg > 0
-    ? Math.min(fullRoofSpan, 24 / Math.tan(roofAngleRad))
-    : fullRoofSpan;
-  const roofSpan = roofGeometryMeasured ? fullRoofSpan : placeholderRoofSpan;
-  const roofStartX = roofGeometryMeasured ? houseLeft - 8 : chimneyX - roofSpan / 2;
+  const roofSpan = fullRoofSpan;
+  const roofStartX = houseLeft - 8;
   const roofEndX = roofStartX + roofSpan;
-  const roofSlope = Math.tan(roofAngleRad);
   const measuredRoofThicknessPx = roofZone
     ? verticalY(roofZone.startMm) - verticalY(roofZone.endMm)
     : roofThicknessMm
@@ -242,6 +249,15 @@ function GeneratedChimneyScheme({
   ].join(" ");
   const roofOuterPath = `M${roofStartX} ${roofOuterStartY} L${roofEndX} ${roofOuterEndY}`;
   const roofInnerPath = `M${roofStartX} ${roofInnerStartY} L${roofEndX} ${roofInnerEndY}`;
+  const upkHalfWidth = 34;
+  const upkLeftBaseY = roofSurfaceYAt(chimneyX - upkHalfWidth, roofOuterAtChimneyY);
+  const upkRightBaseY = roofSurfaceYAt(chimneyX + upkHalfWidth, roofOuterAtChimneyY);
+  const upkTopY = Math.min(upkLeftBaseY, upkRightBaseY) - 42;
+  const skirtHalfWidth = 28;
+  const skirtLeftBaseY = roofSurfaceYAt(chimneyX - skirtHalfWidth, roofInnerAtChimneyY);
+  const skirtRightBaseY = roofSurfaceYAt(chimneyX + skirtHalfWidth, roofInnerAtChimneyY);
+  const skirtNeckY = Math.max(skirtLeftBaseY, skirtRightBaseY) + 18;
+  const terminationY = verticalY(calculation.routeTargetMm);
   const buildingRoofYAt = (x: number) => roofSurfaceYAt(x, roofInnerAtChimneyY);
   const atticLabelY = floorZones.length
     ? (atticBottomY + roofCenterY) / 2
@@ -369,17 +385,18 @@ function GeneratedChimneyScheme({
       })}
       <g className={roofGeometryMeasured ? "scheme-roof-node" : "scheme-roof-node is-placeholder"} aria-hidden="true">
         <rect
-          x={chimneyX - 36}
+          x={chimneyX - 43}
           y={roofOuterAtChimneyY - 4}
-          width="72"
+          width="86"
           height="8"
           className="scheme-roof-upk-base"
           transform={`rotate(${-drawnRoofAngleDeg} ${chimneyX} ${roofOuterAtChimneyY})`}
         />
         <path
-          d={`M${chimneyX - 17} ${roofOuterAtChimneyY + 2} L${chimneyX - 10} ${roofOuterAtChimneyY - 22} L${chimneyX + 10} ${roofOuterAtChimneyY - 22} L${chimneyX + 17} ${roofOuterAtChimneyY + 2} Z`}
+          d={`M${chimneyX - upkHalfWidth} ${upkLeftBaseY} C${chimneyX - 25} ${upkLeftBaseY - 8} ${chimneyX - 14} ${upkTopY + 15} ${chimneyX - 11} ${upkTopY + 8} L${chimneyX - 11} ${upkTopY} L${chimneyX + 11} ${upkTopY} L${chimneyX + 11} ${upkTopY + 8} C${chimneyX + 14} ${upkTopY + 15} ${chimneyX + 25} ${upkRightBaseY - 8} ${chimneyX + upkHalfWidth} ${upkRightBaseY} Z`}
           className="scheme-roof-upk-collar"
         />
+        <rect x={chimneyX - 13} y={upkTopY - 3} width="26" height="6" rx="1" className="scheme-roof-upk-band" />
         <rect
           x={chimneyX - 31}
           y={roofInnerAtChimneyY - 3}
@@ -387,6 +404,10 @@ function GeneratedChimneyScheme({
           height="6"
           className="scheme-roof-inner-flange"
           transform={`rotate(${-drawnRoofAngleDeg} ${chimneyX} ${roofInnerAtChimneyY})`}
+        />
+        <path
+          d={`M${chimneyX - skirtHalfWidth} ${skirtLeftBaseY} L${chimneyX - 11} ${skirtNeckY} L${chimneyX + 11} ${skirtNeckY} L${chimneyX + skirtHalfWidth} ${skirtRightBaseY} Z`}
+          className="scheme-roof-skirt is-optional"
         />
       </g>
 
@@ -432,8 +453,14 @@ function GeneratedChimneyScheme({
         );
       })}
 
-      <line x1={chimneyX - 34} y1={verticalY(calculation.routeTargetMm)} x2={chimneyX + 34} y2={verticalY(calculation.routeTargetMm)} className="scheme-target-line" />
-      <path d={`M${chimneyX - 15} ${Math.max(34, verticalY(calculation.routeTargetMm) - 14)} L${chimneyX} ${Math.max(12, verticalY(calculation.routeTargetMm) - 36)} L${chimneyX + 15} ${Math.max(34, verticalY(calculation.routeTargetMm) - 14)} Z`} className="scheme-termination" />
+      <line x1={chimneyX - 34} y1={terminationY} x2={chimneyX + 34} y2={terminationY} className="scheme-target-line" />
+      <g className="scheme-termination" aria-hidden="true">
+        <rect x={chimneyX - 10} y={terminationY - 10} width="20" height="10" />
+        <path d={`M${chimneyX - 10} ${terminationY - 10} L${chimneyX - 16} ${terminationY - 22} L${chimneyX + 16} ${terminationY - 22} L${chimneyX + 10} ${terminationY - 10} Z`} />
+        <rect x={chimneyX - 17} y={terminationY - 27} width="34" height="6" rx="1" />
+        <rect x={chimneyX - 14} y={terminationY - 40} width="28" height="13" rx="2" />
+        <path d={`M${chimneyX - 17} ${terminationY - 40} Q${chimneyX} ${terminationY - 47} ${chimneyX + 17} ${terminationY - 40} L${chimneyX + 14} ${terminationY - 37} L${chimneyX - 14} ${terminationY - 37} Z`} />
+      </g>
 
       <line x1="18" y1={floorY} x2="18" y2={verticalY(calculation.routeTargetMm)} className="scheme-dimension" />
       <line x1="13" y1={floorY} x2="23" y2={floorY} className="scheme-dimension" />
@@ -481,9 +508,6 @@ function VerticalPassageDetails({
   const roofAngleDeg = roofType === "flat" ? 0 : calculation.roofAngleDeg;
   const drawnRoofAngleDeg = roofAngleDeg ?? 24;
   const roofAngleRad = drawnRoofAngleDeg * Math.PI / 180;
-  const roofRun = drawnRoofAngleDeg > 0
-    ? Math.min(180, 150 / Math.tan(roofAngleRad))
-    : 180;
   const roofSlope = Math.tan(roofAngleRad);
   const detailRoofThicknessPx = roofThicknessMm
     ? Math.max(16, Math.min(52, roofThicknessMm * 0.12))
@@ -491,13 +515,24 @@ function VerticalPassageDetails({
   const roofOuterAtPipeY = 116 - detailRoofThicknessPx / 2;
   const roofInnerAtPipeY = 116 + detailRoofThicknessPx / 2;
   const detailRoofYAt = (x: number, atPipeY: number) => atPipeY - roofSlope * (x - 160);
-  const roofStartX = 70;
-  const roofEndX = roofStartX + roofRun;
+  const detailRoofHalfRun = Math.abs(roofSlope) > 0.01
+    ? Math.min(112, 74 / Math.abs(roofSlope))
+    : 112;
+  const roofStartX = 160 - detailRoofHalfRun;
+  const roofEndX = 160 + detailRoofHalfRun;
   const roofOuterStartY = detailRoofYAt(roofStartX, roofOuterAtPipeY);
   const roofOuterEndY = detailRoofYAt(roofEndX, roofOuterAtPipeY);
   const roofInnerStartY = detailRoofYAt(roofStartX, roofInnerAtPipeY);
   const roofInnerEndY = detailRoofYAt(roofEndX, roofInnerAtPipeY);
   const detailRoofCakePath = `M${roofStartX} ${roofOuterStartY} L${roofEndX} ${roofOuterEndY} L${roofEndX} ${roofInnerEndY} L${roofStartX} ${roofInnerStartY} Z`;
+  const detailUpkHalfWidth = Math.min(42, detailRoofHalfRun - 4);
+  const detailUpkLeftBaseY = detailRoofYAt(160 - detailUpkHalfWidth, roofOuterAtPipeY);
+  const detailUpkRightBaseY = detailRoofYAt(160 + detailUpkHalfWidth, roofOuterAtPipeY);
+  const detailUpkTopY = Math.min(detailUpkLeftBaseY, detailUpkRightBaseY) - 46;
+  const detailSkirtHalfWidth = Math.min(34, detailRoofHalfRun - 4);
+  const detailSkirtLeftY = detailRoofYAt(160 - detailSkirtHalfWidth, roofInnerAtPipeY);
+  const detailSkirtRightY = detailRoofYAt(160 + detailSkirtHalfWidth, roofInnerAtPipeY);
+  const detailSkirtNeckY = Math.max(detailSkirtLeftY, detailSkirtRightY) + 22;
 
   return (
     <section className="configurator-node-details" aria-labelledby="passage-details-title">
@@ -510,7 +545,7 @@ function VerticalPassageDetails({
           <span>01</span>
           <div><strong>Проход перекрытия</strong><small>Повторяется для каждого перекрытия</small></div>
         </div>
-        <svg viewBox="0 0 320 230" role="img" aria-labelledby="floor-node-title floor-node-description">
+        <svg viewBox="0 0 380 230" role="img" aria-labelledby="floor-node-title floor-node-description">
           <title id="floor-node-title">Состав узла прохода перекрытия</title>
           <desc id="floor-node-description">Сэндвич-труба проходит через стакан в перекрытии, с двух сторон установлены фланцы, внутри показаны хомут и зона заполнения ватой.</desc>
           <defs>
@@ -550,7 +585,7 @@ function VerticalPassageDetails({
           <span>02</span>
           <div><strong>Проход кровли</strong><small>{roofAngleDeg === null ? "Угол нужно измерить" : `Угол кровли ${roofAngleDeg}°`}</small></div>
         </div>
-        <svg viewBox="0 0 320 230" role="img" aria-labelledby="roof-node-title roof-node-description">
+        <svg viewBox="0 0 380 230" role="img" aria-labelledby="roof-node-title roof-node-description">
           <title id="roof-node-title">Состав узла прохода кровли</title>
           <desc id="roof-node-description">Вертикальная сэндвич-труба проходит через кровельный пирог под измеренным углом. УПК показан снаружи на верхней поверхности, внутренний фланец — отдельно на нижней поверхности.</desc>
           <path d={detailRoofCakePath} className="scheme-node-roof-cake" />
@@ -558,17 +593,18 @@ function VerticalPassageDetails({
           <path d={`M${roofStartX} ${roofInnerStartY} L${roofEndX} ${roofInnerEndY}`} className="scheme-node-roof-surface is-inner" />
           <rect x="145" y="14" width="30" height="202" className="scheme-node-pipe" />
           <rect
-            x="112"
+            x="108"
             y={roofOuterAtPipeY - 5}
-            width="96"
+            width="104"
             height="10"
             className="scheme-node-upk"
             transform={`rotate(${-drawnRoofAngleDeg} 160 ${roofOuterAtPipeY})`}
           />
           <path
-            d={`M143 ${roofOuterAtPipeY + 3} L150 ${roofOuterAtPipeY - 25} L170 ${roofOuterAtPipeY - 25} L177 ${roofOuterAtPipeY + 3} Z`}
+            d={`M${160 - detailUpkHalfWidth} ${detailUpkLeftBaseY} C132 ${detailUpkLeftBaseY - 8} 145 ${detailUpkTopY + 17} 149 ${detailUpkTopY + 9} L149 ${detailUpkTopY} L171 ${detailUpkTopY} L171 ${detailUpkTopY + 9} C175 ${detailUpkTopY + 17} 188 ${detailUpkRightBaseY - 8} ${160 + detailUpkHalfWidth} ${detailUpkRightBaseY} Z`}
             className="scheme-node-upk-collar"
           />
+          <rect x="147" y={detailUpkTopY - 3} width="26" height="6" rx="1" className="scheme-node-upk-band" />
           <rect
             x="122"
             y={roofInnerAtPipeY - 3.5}
@@ -577,14 +613,20 @@ function VerticalPassageDetails({
             className="scheme-node-flange"
             transform={`rotate(${-drawnRoofAngleDeg} 160 ${roofInnerAtPipeY})`}
           />
+          <path
+            d={`M${160 - detailSkirtHalfWidth} ${detailSkirtLeftY} L149 ${detailSkirtNeckY} L171 ${detailSkirtNeckY} L${160 + detailSkirtHalfWidth} ${detailSkirtRightY} Z`}
+            className="scheme-node-skirt is-optional"
+          />
           <path d={`M74 ${roofInnerStartY + 8} A28 28 0 0 1 98 ${roofInnerStartY + 8 - roofSlope * 24}`} className="scheme-node-angle" />
           <text x="52" y={Math.min(205, roofInnerStartY + 42)} className="scheme-node-label">{roofAngleDeg === null ? "угол ?" : `${roofAngleDeg}°`}</text>
           <line x1="175" y1="38" x2="252" y2="38" className="scheme-node-leader" />
           <text x="258" y="41" className="scheme-node-label">Сэндвич-труба</text>
           <line x1="205" y1={roofOuterAtPipeY - 4} x2="252" y2="88" className="scheme-node-leader" />
           <text x="258" y="91" className="scheme-node-label">УПК по углу</text>
-          <line x1="198" y1={roofInnerAtPipeY} x2="252" y2="136" className="scheme-node-leader" />
-          <text x="258" y="139" className="scheme-node-label">Внутренний фланец</text>
+          <line x1="198" y1={roofInnerAtPipeY} x2="252" y2="132" className="scheme-node-leader" />
+          <text x="258" y="135" className="scheme-node-label">Внутренний фланец</text>
+          <line x1="172" y1={detailSkirtNeckY} x2="252" y2="156" className="scheme-node-leader" />
+          <text x="258" y="159" className="scheme-node-label">Юбка (опция)</text>
           <line x1="135" y1={roofInnerAtPipeY + 10} x2="50" y2="184" className="scheme-node-leader" />
           <text x="16" y="202" className="scheme-node-label">Фланец из помещения</text>
           <text x="160" y="224" textAnchor="middle" className="scheme-node-note">

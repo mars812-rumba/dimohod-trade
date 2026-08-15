@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "updated_at": "2026-08-15",
   "source": {
     "type": "owner_confirmed",
@@ -95,7 +95,8 @@
           "component_role": "floor_clamp",
           "product_kind": "крепеж",
           "quantity_per_passage": 1,
-          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm",
+          "catalog_mapping_status": "missing_do_not_substitute_generic_ring_clamp"
         },
         {
           "component_role": "insulation_kit",
@@ -107,7 +108,12 @@
           },
           "automation_status": "blocked_until_quantity_rule_confirmed"
         }
-      ]
+      ],
+      "scheme": {
+        "floor_clamp_shape": "rectangular_support_with_side_lugs",
+        "floor_clamp_relation": "left_lug -> joist; clamp -> sandwich_pipe; right_lug -> joist",
+        "generic_ring_clamp_allowed": false
+      }
     },
     "wall_passage": {
       "id": "wall_passage",
@@ -167,11 +173,26 @@
           "angle_match": "roof_angle_deg",
           "diameter_match": "selected_sandwich_pipe.outer_diameter_mm",
           "catalog_mapping_status": "requires_mapping"
+        },
+        {
+          "component_role": "decorative_skirt",
+          "catalog_name": "Декоративная юбка",
+          "product_kind": null,
+          "quantity_per_passage": 1,
+          "include_when": "decorative_skirt_selected == true",
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm",
+          "selection_status": "optional",
+          "catalog_mapping_status": "requires_mapping"
         }
       ],
       "scheme": {
         "roof_angle_source": "roof_angle_deg",
         "render_measured_angle": true,
+        "upk_shape": "sloped_base_with_tapered_vertical_collar",
+        "upk_side": "exterior",
+        "interior_flange_side": "interior",
+        "decorative_skirt_rendering": "optional_separate_component_over_flange_joint",
+        "termination_shape": "deflector_not_triangle",
         "measurement_lesson_status": "planned"
       }
     },

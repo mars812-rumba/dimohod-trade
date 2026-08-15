@@ -2301,16 +2301,28 @@ body.mobile-menu-open {
 }
 
 .configurator-building-svg .scheme-roof-upk-base,
-.configurator-building-svg .scheme-roof-upk-collar {
-  fill: #c9825e;
-  stroke: #8b321e;
-  stroke-width: 1;
+.configurator-building-svg .scheme-roof-upk-collar,
+.configurator-building-svg .scheme-roof-upk-band {
+  fill: #aeb7ba;
+  stroke: #46555b;
+  stroke-width: 1.1;
 }
 
 .configurator-building-svg .scheme-roof-inner-flange {
   fill: #8f9a9e;
   stroke: #4d5b61;
   stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-roof-skirt {
+  fill: #c8ced0;
+  stroke: #59666b;
+  stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-roof-skirt.is-optional {
+  fill-opacity: 0.76;
+  stroke-dasharray: 3 2;
 }
 
 .configurator-building-svg .scheme-roof-node.is-placeholder {
@@ -2396,7 +2408,9 @@ body.mobile-menu-open {
 }
 
 .configurator-building-svg .scheme-termination {
-  fill: #b13f20;
+  fill: #aeb7ba;
+  stroke: #46555b;
+  stroke-width: 0.8;
 }
 
 .configurator-building-svg .scheme-dimension {
@@ -2592,15 +2606,27 @@ body.mobile-menu-open {
 }
 
 .configurator-node-card .scheme-node-upk {
-  fill: #c9825e;
-  stroke: #8b321e;
+  fill: #aeb7ba;
+  stroke: #46555b;
   stroke-width: 1.5;
 }
 
-.configurator-node-card .scheme-node-upk-collar {
-  fill: #c9825e;
-  stroke: #8b321e;
+.configurator-node-card .scheme-node-upk-collar,
+.configurator-node-card .scheme-node-upk-band {
+  fill: #aeb7ba;
+  stroke: #46555b;
   stroke-width: 1.5;
+}
+
+.configurator-node-card .scheme-node-skirt {
+  fill: #c8ced0;
+  stroke: #59666b;
+  stroke-width: 1.2;
+}
+
+.configurator-node-card .scheme-node-skirt.is-optional {
+  fill-opacity: 0.76;
+  stroke-dasharray: 4 3;
 }
 
 .configurator-node-card .scheme-node-leader,
