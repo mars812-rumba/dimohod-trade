@@ -23,7 +23,6 @@ import {
   type ScenarioPageContent,
 } from "@/lib/scenarioPages";
 import { BanyaIntakeFlow } from "./BanyaIntakeFlow";
-import { ConnectionRouteScheme, isConnectionRouteScheme } from "./ConnectionRouteScheme";
 import { RouteImageViewer } from "./RouteImageViewer";
 import styles from "./ScenarioPageTemplate.module.css";
 
@@ -64,12 +63,7 @@ function ScenarioRouteSection({
         <div className={styles.routeGrid}>
           {content.routeOptions.map((option) => (
             <article className={styles.routeOption} key={option.slug}>
-              {isConnectionRouteScheme(option.slug) ? (
-                <ConnectionRouteScheme
-                  className={`${styles.routeImage} ${styles.routeImagePortrait}`}
-                  variant={option.slug}
-                />
-              ) : option.image ? (
+              {option.image ? (
                 <RouteImageViewer
                   alt={`Схема маршрута: ${option.title}`}
                   previewClassName={`${styles.routeImage} ${
