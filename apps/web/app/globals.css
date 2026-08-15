@@ -2241,6 +2241,11 @@ body.mobile-menu-open {
   stroke-width: 13;
 }
 
+.configurator-building-svg .scheme-roof-line.is-placeholder {
+  stroke-dasharray: 7 5;
+  stroke-width: 9;
+}
+
 .configurator-building-svg .scheme-pass-band {
   fill: #d9b982;
   fill-opacity: 0.76;

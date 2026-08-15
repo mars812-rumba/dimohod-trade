@@ -201,21 +201,25 @@ function GeneratedChimneyScheme({
   const roofAngleDeg = roofType === "flat" ? 0 : calculation.roofAngleDeg;
   const drawnRoofAngleDeg = roofAngleDeg ?? 24;
   const roofAngleRad = drawnRoofAngleDeg * Math.PI / 180;
+  const firstCeilingY = floorZones[0] ? verticalY(floorZones[0].startMm) : verticalY(maximumMm * 0.48);
+  const atticBottomY = upperFloorZone ? verticalY(upperFloorZone.endMm) : firstCeilingY;
+  const roofGeometryMeasured = Boolean(roofZone);
+  const fullRoofSpan = houseRight - houseLeft + 18;
+  const placeholderRoofSpan = drawnRoofAngleDeg > 0
+    ? Math.min(fullRoofSpan, 24 / Math.tan(roofAngleRad))
+    : fullRoofSpan;
+  const roofSpan = roofGeometryMeasured ? fullRoofSpan : placeholderRoofSpan;
+  const roofStartX = roofGeometryMeasured ? houseLeft - 8 : chimneyX - roofSpan / 2;
+  const roofEndX = roofStartX + roofSpan;
+  const roofRise = Math.tan(roofAngleRad) * roofSpan;
   const roofCenterY = roofZone
     ? verticalY((roofZone.startMm + roofZone.endMm) / 2)
-    : !calculation.hasAttic && upperFloorZone
-      ? verticalY((upperFloorZone.startMm + upperFloorZone.endMm) / 2)
-    : Math.max(112, verticalY(maximumMm * 0.78));
-  const firstCeilingY = floorZones[0] ? verticalY(floorZones[0].startMm) : verticalY(maximumMm * 0.48);
-  const roofStartX = houseLeft - 8;
-  const roofEndX = houseRight + 10;
-  const roofSpan = roofEndX - roofStartX;
-  const roofRise = Math.tan(roofAngleRad) * roofSpan;
+    : atticBottomY - 16 - roofRise / 2;
   const roofStartY = roofCenterY + roofRise / 2;
   const roofEndY = roofCenterY - roofRise / 2;
   const roofPath = `M${roofStartX} ${roofStartY} L${roofEndX} ${roofEndY}`;
   const roofYAt = (x: number) => roofStartY + ((roofEndY - roofStartY) * (x - roofStartX)) / roofSpan;
-  const atticBottomY = upperFloorZone ? verticalY(upperFloorZone.endMm) : firstCeilingY;
+  const buildingRoofYAt = (x: number) => roofGeometryMeasured ? roofYAt(x) : roofCenterY;
   const atticLabelY = floorZones.length
     ? (atticBottomY + roofCenterY) / 2
     : roofCenterY + 70;
@@ -297,14 +301,14 @@ function GeneratedChimneyScheme({
         )}
         {calculation.hasAttic ? (
           <path
-            d={`M${houseLeft} ${roofYAt(houseLeft)} L${houseRight} ${roofYAt(houseRight)} L${houseRight} ${atticBottomY} L${houseLeft} ${atticBottomY} Z`}
+            d={`M${houseLeft} ${buildingRoofYAt(houseLeft)} L${houseRight} ${buildingRoofYAt(houseRight)} L${houseRight} ${atticBottomY} L${houseLeft} ${atticBottomY} Z`}
             className="scheme-attic"
           />
         ) : null}
         <line x1={houseLeft} y1={floorY} x2={houseRight} y2={floorY} className="scheme-floor-line" />
-        <line x1={houseLeft} y1={floorY} x2={houseLeft} y2={roofYAt(houseLeft)} className="scheme-wall-line" />
-        <line x1={houseRight} y1={floorY} x2={houseRight} y2={roofYAt(houseRight)} className="scheme-wall-line" />
-        <path d={roofPath} className="scheme-roof-line" />
+        <line x1={houseLeft} y1={floorY} x2={houseLeft} y2={buildingRoofYAt(houseLeft)} className="scheme-wall-line" />
+        <line x1={houseRight} y1={floorY} x2={houseRight} y2={buildingRoofYAt(houseRight)} className="scheme-wall-line" />
+        <path d={roofPath} className={roofGeometryMeasured ? "scheme-roof-line" : "scheme-roof-line is-placeholder"} />
         {calculation.hasAttic ? <text x={houseLeft + 10} y={atticLabelY} className="scheme-zone-name">ХОЛОДНЫЙ ЧЕРДАК</text> : null}
       </g>
 
