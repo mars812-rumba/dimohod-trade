@@ -69,6 +69,7 @@ export type ChimneyCalculation = {
   hasAttic: boolean;
   diameterMm: number | null;
   diameterStatus: "known" | "oval" | "missing";
+  roofAngleDeg: number | null;
   routeStartMm: number;
   routeTargetMm: number;
   fixedParts: FixedRoutePart[];
@@ -311,41 +312,44 @@ function addRouteNodes(bom: ChimneyBomLine[], routeKind: ChimneyRouteKind, passa
   bom.push({
     key: routeKind === "ceiling" ? "ceiling-passage" : "wall-passage",
     productKind: "проходной_узел",
-    label: routeKind === "ceiling" ? "Проходной узел перекрытия" : "Проходной узел стены",
+    label: routeKind === "ceiling" ? "Стакан прохода перекрытия" : "Стакан прохода стены",
     quantity: passageQty,
     zone: "wall_or_ceiling_pass",
-    selectionReason: "Добавлен для каждой рассчитанной проходной зоны.",
+    selectionReason: "По одному стакану для каждой рассчитанной проходной зоны.",
     requiresSku: true,
   });
   bom.push({
     key: "passage-insulation",
     productKind: "изоляция",
-    label: "Комплект ваты для проходного узла",
+    label: "Комплект ваты для проходного узла (предварительно)",
     quantity: passageQty,
     zone: "wall_or_ceiling_pass",
-    selectionReason: "Добавлен как часть предварительного состава каждого проходного узла.",
+    selectionReason: "Показан по одному на проход; фактическое число комплектов требует подтверждения.",
     requiresSku: true,
   });
   bom.push({
     key: "passage-flange",
     productKind: "фланец",
     label: "Фланец проходного узла",
+    quantity: passageQty * 2,
+    zone: "wall_or_ceiling_pass",
+    selectionReason: "По два фланца на проход: со стороны помещения и с противоположной стороны конструкции.",
+    requiresSku: true,
+  });
+  bom.push({
+    key: routeKind === "ceiling" ? "floor-clamp" : "wall-clamp",
+    productKind: "крепеж",
+    label: routeKind === "ceiling" ? "Хомут в перекрытие" : "Хомут в стеновой проход",
     quantity: passageQty,
     zone: "wall_or_ceiling_pass",
-    selectionReason: "Предварительно один на проход; исполнение и количество сторон требуют проверки.",
+    selectionReason: "По одному на проход; размер выбирается по наружному диаметру сэндвич-трубы.",
     requiresSku: true,
   });
   if (routeKind === "ceiling") {
-    bom.push({
-      key: "floor-clamp",
-      productKind: "крепеж",
-      label: "Хомут в перекрытие",
-      quantity: passageQty,
-      zone: "wall_or_ceiling_pass",
-      selectionReason: "Добавлен по числу перекрытий; граница исполнения по наружному диаметру требует проверки.",
-      requiresSku: true,
-    });
-    bom.push({ key: "roof-passage", productKind: "проходной_узел", label: "Кровельный проходной узел", quantity: 1, zone: "roof", selectionReason: "Вертикальная трасса пересекает кровлю.", requiresSku: true });
+    bom.push({ key: "roof-interior-flange", productKind: "фланец", label: "Фланец кровельного прохода со стороны помещения", quantity: 1, zone: "roof", selectionReason: "Добавлен со стороны помещения по правилу кровельного узла.", requiresSku: true });
+    bom.push({ key: "roof-sleeve-or-insulation", productKind: "изоляция", label: "Стакан или комплект ваты для кровли", quantity: 1, zone: "roof", selectionReason: "Вариант выбирается после проверки, помещается ли стакан в геометрию кровли.", requiresSku: false });
+    bom.push({ key: "roof-clamp", productKind: "крепеж", label: "Хомут кровельного прохода", quantity: 1, zone: "roof", selectionReason: "Размер выбирается по наружному диаметру сэндвич-трубы.", requiresSku: true });
+    bom.push({ key: "roof-passage", productKind: "проходной_узел", label: "УПК по углу кровли", quantity: 1, zone: "roof", selectionReason: "Исполнение выбирается по измеренному углу кровли.", requiresSku: true });
   } else {
     bom.push({ key: "outside-elbow", productKind: "отвод", label: "Сэндвич-отвод 90°", quantity: routeKind === "wall-top" ? 2 : 1, zone: "wall/outdoor", selectionReason: "Количество определяется поворотами выбранного маршрута.", requiresSku: true });
   }
@@ -357,6 +361,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const floors = Math.max(1, Math.min(3, Math.round(draftFloors ?? input.floors)));
   const hasAttic = Boolean(input.route === "ceiling" && input.draft?.hasAttic);
   const diameter = measuredDiameter(input.draft);
+  const roofAngleDeg = positiveNumber(input.draft?.roofAngle);
   const routeKind: ChimneyRouteKind = input.route === "ceiling"
     ? "ceiling"
     : input.outlet === "horizontal" ? "wall-rear" : "wall-top";
@@ -455,6 +460,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     floors,
     hasAttic,
     ...diameter,
+    roofAngleDeg,
     routeStartMm: connectionHeightMm,
     routeTargetMm,
     fixedParts,

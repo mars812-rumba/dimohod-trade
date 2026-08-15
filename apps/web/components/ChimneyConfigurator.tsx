@@ -198,17 +198,26 @@ function GeneratedChimneyScheme({
   const chimneyX = 146;
   const houseLeft = 36;
   const houseRight = 238;
+  const roofAngleDeg = roofType === "flat" ? 0 : calculation.roofAngleDeg;
+  const drawnRoofAngleDeg = roofAngleDeg ?? 24;
+  const roofAngleRad = drawnRoofAngleDeg * Math.PI / 180;
   const roofCenterY = roofZone
     ? verticalY((roofZone.startMm + roofZone.endMm) / 2)
     : !calculation.hasAttic && upperFloorZone
       ? verticalY((upperFloorZone.startMm + upperFloorZone.endMm) / 2)
     : Math.max(112, verticalY(maximumMm * 0.78));
   const firstCeilingY = floorZones[0] ? verticalY(floorZones[0].startMm) : verticalY(maximumMm * 0.48);
-  const roofPath = roofType === "flat"
-    ? `M${houseLeft - 8} ${roofCenterY} H${houseRight + 10}`
-    : `M${houseLeft - 8} ${roofCenterY + 45} L${houseRight + 10} ${roofCenterY - 45}`;
+  const roofStartX = houseLeft - 8;
+  const roofEndX = houseRight + 10;
+  const roofSpan = roofEndX - roofStartX;
+  const roofRise = Math.tan(roofAngleRad) * roofSpan;
+  const roofStartY = roofCenterY + roofRise / 2;
+  const roofEndY = roofCenterY - roofRise / 2;
+  const roofPath = `M${roofStartX} ${roofStartY} L${roofEndX} ${roofEndY}`;
+  const roofYAt = (x: number) => roofStartY + ((roofEndY - roofStartY) * (x - roofStartX)) / roofSpan;
+  const atticBottomY = upperFloorZone ? verticalY(upperFloorZone.endMm) : firstCeilingY;
   const atticLabelY = floorZones.length
-    ? (verticalY(floorZones[floorZones.length - 1].endMm) + roofCenterY) / 2
+    ? (atticBottomY + roofCenterY) / 2
     : roofCenterY + 70;
   const floorRooms = floorZones.map((zone, index) => {
     const bottomMm = index === 0 ? 0 : floorZones[index - 1].endMm;
@@ -231,10 +240,10 @@ function GeneratedChimneyScheme({
       anchorY: roofZone ? verticalY((roofZone.startMm + roofZone.endMm) / 2) : roofCenterY,
       label: "Проход кровли",
       detail: roofZone
-        ? `${roofZone.startMm}–${roofZone.endMm} мм`
+        ? `${roofZone.startMm}–${roofZone.endMm} мм${roofAngleDeg !== null ? ` · ${roofAngleDeg}°` : ""}`
         : calculation.hasAttic
           ? "нужен замер кровли"
-          : `над ${calculation.floors} этажом`,
+          : `над ${calculation.floors} этажом${roofAngleDeg !== null ? ` · ${roofAngleDeg}°` : ""}`,
     }],
     ...(floorZones.length
       ? floorZones.slice().reverse().map((zone) => ({
@@ -286,10 +295,15 @@ function GeneratedChimneyScheme({
             <text x={houseLeft + 10} y={Math.min(floorY - 18, firstCeilingY + 24)} className="scheme-zone-name">ПОМЕЩЕНИЕ БАНИ</text>
           </>
         )}
-        {calculation.hasAttic ? <rect x={houseLeft} y={roofCenterY} width={houseRight - houseLeft} height={Math.max(0, firstCeilingY - roofCenterY)} className="scheme-attic" /> : null}
+        {calculation.hasAttic ? (
+          <path
+            d={`M${houseLeft} ${roofYAt(houseLeft)} L${houseRight} ${roofYAt(houseRight)} L${houseRight} ${atticBottomY} L${houseLeft} ${atticBottomY} Z`}
+            className="scheme-attic"
+          />
+        ) : null}
         <line x1={houseLeft} y1={floorY} x2={houseRight} y2={floorY} className="scheme-floor-line" />
-        <line x1={houseLeft} y1={floorY} x2={houseLeft} y2={roofCenterY + 45} className="scheme-wall-line" />
-        <line x1={houseRight} y1={floorY} x2={houseRight} y2={roofCenterY - 45} className="scheme-wall-line" />
+        <line x1={houseLeft} y1={floorY} x2={houseLeft} y2={roofYAt(houseLeft)} className="scheme-wall-line" />
+        <line x1={houseRight} y1={floorY} x2={houseRight} y2={roofYAt(houseRight)} className="scheme-wall-line" />
         <path d={roofPath} className="scheme-roof-line" />
         {calculation.hasAttic ? <text x={houseLeft + 10} y={atticLabelY} className="scheme-zone-name">ХОЛОДНЫЙ ЧЕРДАК</text> : null}
       </g>
@@ -304,7 +318,7 @@ function GeneratedChimneyScheme({
               height="36"
               rx="3"
               className="scheme-pass-band scheme-roof-pass"
-              transform={`rotate(${roofType === "flat" ? 0 : -24} ${chimneyX} ${roofCenterY})`}
+              transform={`rotate(${-drawnRoofAngleDeg} ${chimneyX} ${roofCenterY})`}
             />
           ) : (
             <rect
@@ -328,7 +342,7 @@ function GeneratedChimneyScheme({
           height="36"
           rx="3"
           className="scheme-pass-band scheme-roof-pass is-placeholder"
-          transform={`rotate(${roofType === "flat" ? 0 : -24} ${chimneyX} ${roofCenterY})`}
+          transform={`rotate(${-drawnRoofAngleDeg} ${chimneyX} ${roofCenterY})`}
         />
       ) : null}
 
@@ -408,6 +422,89 @@ function GeneratedChimneyScheme({
         <text x="14" y="3" className="scheme-legend">стык · не должен попадать внутрь проходной зоны</text>
       </g>
     </svg>
+  );
+}
+
+function VerticalPassageDetails({ calculation, roofType }: { calculation: ChimneyCalculation; roofType: RoofType }) {
+  const roofAngleDeg = roofType === "flat" ? 0 : calculation.roofAngleDeg;
+  const drawnRoofAngleDeg = roofAngleDeg ?? 24;
+  const roofAngleRad = drawnRoofAngleDeg * Math.PI / 180;
+  const roofRun = drawnRoofAngleDeg > 0
+    ? Math.min(180, 150 / Math.tan(roofAngleRad))
+    : 180;
+  const roofRise = Math.tan(roofAngleRad) * roofRun;
+  const roofStartY = 116 + roofRise / 2;
+  const roofEndY = 116 - roofRise / 2;
+
+  return (
+    <section className="configurator-node-details" aria-labelledby="passage-details-title">
+      <div className="configurator-node-details-head">
+        <span>Узлы вертикальной трассы</span>
+        <strong id="passage-details-title">Что войдёт в комплект</strong>
+      </div>
+      <article className="configurator-node-card">
+        <div className="configurator-node-card-title">
+          <span>01</span>
+          <div><strong>Проход перекрытия</strong><small>Повторяется для каждого перекрытия</small></div>
+        </div>
+        <svg viewBox="0 0 320 230" role="img" aria-labelledby="floor-node-title floor-node-description">
+          <title id="floor-node-title">Состав узла прохода перекрытия</title>
+          <desc id="floor-node-description">Сэндвич-труба проходит через стакан в перекрытии, с двух сторон установлены фланцы, внутри показаны хомут и зона заполнения ватой.</desc>
+          <defs>
+            <pattern id="floor-insulation-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M-2 8 L8 -2 M2 10 L10 2" className="scheme-node-hatch" />
+            </pattern>
+          </defs>
+          <rect x="18" y="86" width="284" height="62" className="scheme-node-structure" />
+          <rect x="116" y="77" width="88" height="80" rx="3" className="scheme-node-sleeve" />
+          <rect x="124" y="84" width="72" height="66" fill="url(#floor-insulation-pattern)" className="scheme-node-insulation" />
+          <rect x="145" y="18" width="30" height="194" className="scheme-node-pipe" />
+          <rect x="106" y="78" width="108" height="8" rx="2" className="scheme-node-flange" />
+          <rect x="106" y="148" width="108" height="8" rx="2" className="scheme-node-flange" />
+          <rect x="137" y="109" width="46" height="16" rx="8" className="scheme-node-clamp" />
+          <line x1="175" y1="42" x2="252" y2="42" className="scheme-node-leader" />
+          <text x="258" y="45" className="scheme-node-label">Сэндвич-труба</text>
+          <line x1="204" y1="96" x2="252" y2="78" className="scheme-node-leader" />
+          <text x="258" y="80" className="scheme-node-label">Стакан</text>
+          <line x1="214" y1="82" x2="252" y2="106" className="scheme-node-leader" />
+          <text x="258" y="109" className="scheme-node-label">Фланец 1</text>
+          <line x1="214" y1="152" x2="252" y2="144" className="scheme-node-leader" />
+          <text x="258" y="147" className="scheme-node-label">Фланец 2</text>
+          <line x1="183" y1="117" x2="70" y2="184" className="scheme-node-leader" />
+          <text x="16" y="202" className="scheme-node-label">Хомут по наружному Ø</text>
+          <text x="160" y="224" textAnchor="middle" className="scheme-node-note">Вата: количество комплектов уточняется</text>
+        </svg>
+      </article>
+
+      <article className="configurator-node-card">
+        <div className="configurator-node-card-title">
+          <span>02</span>
+          <div><strong>Проход кровли</strong><small>{roofAngleDeg === null ? "Угол нужно измерить" : `Угол кровли ${roofAngleDeg}°`}</small></div>
+        </div>
+        <svg viewBox="0 0 320 230" role="img" aria-labelledby="roof-node-title roof-node-description">
+          <title id="roof-node-title">Состав узла прохода кровли</title>
+          <desc id="roof-node-description">Вертикальная сэндвич-труба проходит через кровлю под измеренным углом. Показаны внутренний фланец, хомут, УПК и зона выбора стакана либо ваты.</desc>
+          <path d={`M70 ${roofStartY} L250 ${roofEndY}`} className="scheme-node-roof" />
+          <rect x="145" y="14" width="30" height="202" className="scheme-node-pipe" />
+          <g transform={`rotate(${-drawnRoofAngleDeg} 160 116)`}>
+            <rect x="112" y="102" width="96" height="28" rx="4" className="scheme-node-upk" />
+            <rect x="122" y="130" width="76" height="7" rx="2" className="scheme-node-flange" />
+          </g>
+          <rect x="137" y="128" width="46" height="16" rx="8" className="scheme-node-clamp" />
+          <path d={`M74 ${roofStartY - 6} A28 28 0 0 1 98 ${roofStartY - Math.tan(roofAngleRad) * 24}`} className="scheme-node-angle" />
+          <text x="52" y={Math.min(205, roofStartY + 34)} className="scheme-node-label">{roofAngleDeg === null ? "угол ?" : `${roofAngleDeg}°`}</text>
+          <line x1="175" y1="38" x2="252" y2="38" className="scheme-node-leader" />
+          <text x="258" y="41" className="scheme-node-label">Сэндвич-труба</text>
+          <line x1="205" y1="108" x2="252" y2="88" className="scheme-node-leader" />
+          <text x="258" y="91" className="scheme-node-label">УПК по углу</text>
+          <line x1="183" y1="136" x2="252" y2="136" className="scheme-node-leader" />
+          <text x="258" y="139" className="scheme-node-label">Хомут</text>
+          <line x1="135" y1="151" x2="50" y2="184" className="scheme-node-leader" />
+          <text x="16" y="202" className="scheme-node-label">Фланец из помещения</text>
+          <text x="160" y="224" textAnchor="middle" className="scheme-node-note">Стакан либо вата — после проверки геометрии</text>
+        </svg>
+      </article>
+    </section>
   );
 }
 
@@ -946,6 +1043,9 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           <div className="configurator-svg-wrap">
             <GeneratedChimneyScheme calculation={calculation} variant={selectedVariant} roofType={roof} />
           </div>
+          {calculation.routeKind === "ceiling" ? (
+            <VerticalPassageDetails calculation={calculation} roofType={roof} />
+          ) : null}
           <div className="configurator-height-badge">
             Отметка завершения {calculation.routeTargetMm} мм · раскладка {selectedVariant?.label ?? "не найдена"}
           </div>

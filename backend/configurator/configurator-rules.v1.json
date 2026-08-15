@@ -1,0 +1,298 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-08-15",
+  "source": {
+    "type": "owner_confirmed",
+    "status": "active_mvp_with_review_gates",
+    "note": "Правила подтверждены владельцем проекта. Неполные технические параметры явно помечены как требующие ввода или последующего подтверждения."
+  },
+  "units": {
+    "length": "mm",
+    "angle": "deg",
+    "quantity": "pcs"
+  },
+  "catalog_matching": {
+    "smoke_channel_components": {
+      "diameter_field": "diameter_mm",
+      "rule": "equal_to_appliance_outlet_diameter"
+    },
+    "sandwich_outer_clamps": {
+      "diameter_field": "outer_diameter_mm",
+      "rule": "equal_to_selected_sandwich_pipe_outer_diameter"
+    },
+    "sandwich_insulation": {
+      "field": "insulation_mm",
+      "required_value": 50
+    },
+    "selection_policy": "structured_fields_only"
+  },
+  "scheme_generation": {
+    "format": "svg",
+    "orientation": "portrait_mobile_first",
+    "geometry": {
+      "coordinate_source": "measurements_mm",
+      "scale_mode": "single_uniform_scale",
+      "preserve_proportions": true,
+      "independent_axis_scaling_allowed": false,
+      "render_actual_roof_angle": true,
+      "roof_angle_input": "roof_angle_deg"
+    },
+    "requirements": [
+      "Каждый участок трассы строится по фактическим замерам в миллиметрах.",
+      "Длины труб и координаты проходных узлов отображаются пропорционально.",
+      "Каждый элемент схемы должен иметь связь с соответствующей строкой BOM.",
+      "На схеме обозначаются стыки труб, проходные узлы и точки крепления."
+    ]
+  },
+  "joint_constraints": [
+    {
+      "id": "no_joint_inside_floor_passage",
+      "status": "active",
+      "severity": "hard_error",
+      "zone": "floor_passage",
+      "interval": {
+        "start": "finished_ceiling_level_mm",
+        "end": "finished_ceiling_level_mm + floor_thickness_mm",
+        "boundary_joints_allowed": true
+      },
+      "rule": "pipe_joint_mm must not be strictly inside the passage interval",
+      "message": "Стык трубы не может находиться внутри перекрытия."
+    },
+    {
+      "id": "no_joint_inside_wall_passage",
+      "status": "active",
+      "severity": "hard_error",
+      "zone": "wall_passage",
+      "interval": {
+        "start": "wall_inner_face_mm",
+        "end": "wall_inner_face_mm + wall_thickness_mm",
+        "boundary_joints_allowed": true
+      },
+      "rule": "pipe_joint_mm must not be strictly inside the passage interval",
+      "message": "Стык трубы не может находиться внутри стены."
+    }
+  ],
+  "assemblies": {
+    "floor_passage": {
+      "id": "floor_passage",
+      "label": "Узел прохода перекрытия",
+      "applies_per": "floor_passage_count",
+      "bom": [
+        {
+          "component_role": "finish_flange",
+          "product_kind": "фланец",
+          "quantity_per_passage": 2,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
+        },
+        {
+          "component_role": "passage_sleeve",
+          "product_kind": "проходной_узел",
+          "quantity_per_passage": 1,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm",
+          "catalog_mapping_status": "requires_mapping"
+        },
+        {
+          "component_role": "floor_clamp",
+          "product_kind": "крепеж",
+          "quantity_per_passage": 1,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
+        },
+        {
+          "component_role": "insulation_kit",
+          "product_kind": "изоляция",
+          "quantity": {
+            "mode": "required_input",
+            "input": "floor_insulation_kits_per_passage",
+            "multiply_by": "floor_passage_count"
+          },
+          "automation_status": "blocked_until_quantity_rule_confirmed"
+        }
+      ]
+    },
+    "wall_passage": {
+      "id": "wall_passage",
+      "label": "Узел прохода стены",
+      "inherits": "assemblies.floor_passage",
+      "applies_per": "wall_passage_count",
+      "override": {
+        "zone": "wall_passage"
+      }
+    },
+    "roof_passage": {
+      "id": "roof_passage",
+      "label": "Узел прохода кровли",
+      "applies_per": "roof_passage_count",
+      "required_inputs": [
+        "roof_angle_deg",
+        "roof_thickness_mm",
+        "roof_sleeve_fit_status"
+      ],
+      "bom": [
+        {
+          "component_role": "interior_finish_flange",
+          "product_kind": "фланец",
+          "quantity_per_passage": 1,
+          "side": "interior",
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
+        },
+        {
+          "component_role": "roof_sleeve",
+          "product_kind": "проходной_узел",
+          "quantity_per_passage": 1,
+          "include_when": "roof_sleeve_fit_status == 'fits'",
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm",
+          "catalog_mapping_status": "requires_mapping"
+        },
+        {
+          "component_role": "roof_insulation_kit",
+          "product_kind": "изоляция",
+          "quantity": {
+            "mode": "required_input",
+            "input": "roof_insulation_kits_per_passage",
+            "multiply_by": "roof_passage_count"
+          },
+          "include_when": "roof_sleeve_fit_status == 'does_not_fit'",
+          "automation_status": "blocked_until_quantity_rule_confirmed"
+        },
+        {
+          "component_role": "roof_clamp",
+          "product_kind": "крепеж",
+          "quantity_per_passage": 1,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
+        },
+        {
+          "component_role": "upk",
+          "product_kind": "проходной_узел",
+          "quantity_per_passage": 1,
+          "angle_match": "roof_angle_deg",
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm",
+          "catalog_mapping_status": "requires_mapping"
+        }
+      ],
+      "scheme": {
+        "roof_angle_source": "roof_angle_deg",
+        "render_measured_angle": true,
+        "measurement_lesson_status": "planned"
+      }
+    },
+    "turning_route_base_support": {
+      "id": "turning_route_base_support",
+      "label": "Опорный узел наружной трассы",
+      "applies_to_routes": [
+        "wall_top",
+        "wall_rear"
+      ],
+      "bom": [
+        {
+          "component_role": "tee",
+          "product_kind": "тройник",
+          "quantity": 1,
+          "diameter_match": "appliance_outlet.diameter_mm"
+        },
+        {
+          "component_role": "condensate_drain",
+          "product_kind": "конденсатоотвод",
+          "quantity": 1,
+          "diameter_match": "appliance_outlet.diameter_mm"
+        },
+        {
+          "component_role": "support_platform",
+          "product_kind": "опорная_площадка",
+          "quantity": 1,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
+        },
+        {
+          "component_role": "universal_bracket",
+          "product_kind": "консоль",
+          "quantity": 1,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
+        }
+      ],
+      "mounting_relations": [
+        "tee mounted_on support_platform",
+        "condensate_drain connected_below tee",
+        "support_platform mounted_on universal_bracket"
+      ]
+    },
+    "exterior_vertical_support": {
+      "id": "exterior_vertical_support",
+      "label": "Крепление наружной вертикальной трубы",
+      "applies_to_zone": "outdoor_vertical",
+      "maximum_spacing_mm": 2000,
+      "quantity_formula": "ceil(supported_outdoor_vertical_length_mm / maximum_spacing_mm)",
+      "bom_per_support_point": [
+        {
+          "component_role": "power_clamp",
+          "product_kind": "крепеж",
+          "quantity": 1,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
+        },
+        {
+          "component_role": "universal_bracket",
+          "product_kind": "консоль",
+          "quantity": 1,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
+        }
+      ],
+      "scheme_relation": "sandwich_pipe -> power_clamp -> universal_bracket -> facade"
+    }
+  },
+  "routes": {
+    "straight_through_floors": {
+      "required_assemblies": [
+        "floor_passage",
+        "roof_passage"
+      ],
+      "joint_constraints": [
+        "no_joint_inside_floor_passage"
+      ]
+    },
+    "wall_top": {
+      "required_assemblies": [
+        "wall_passage",
+        "turning_route_base_support",
+        "exterior_vertical_support"
+      ],
+      "joint_constraints": [
+        "no_joint_inside_wall_passage"
+      ]
+    },
+    "wall_rear": {
+      "inherits": "routes.wall_top",
+      "deferred_checks": [
+        {
+          "id": "rear_outlet_damper_clearance",
+          "status": "planned",
+          "required_inputs": [
+            "rear_outlet_geometry",
+            "damper_dimensions",
+            "available_service_clearance_mm"
+          ],
+          "message": "Позже проверить, хватает ли места для шибера и обслуживания заднего подключения."
+        }
+      ]
+    }
+  },
+  "unresolved_inputs": [
+    {
+      "field": "floor_insulation_kits_per_passage",
+      "blocks": "automatic_floor_passage_bom",
+      "reason": "Количество комплектов ваты пока не задано подтверждённой формулой."
+    },
+    {
+      "field": "roof_sleeve_fit_status",
+      "allowed_values": [
+        "fits",
+        "does_not_fit",
+        "unknown"
+      ],
+      "blocks": "automatic_roof_passage_bom_when_unknown",
+      "reason": "Нужно определить, устанавливается ли стакан в конкретной геометрии кровли."
+    },
+    {
+      "field": "roof_insulation_kits_per_passage",
+      "blocks": "automatic_roof_passage_bom_without_sleeve",
+      "reason": "Количество комплектов ваты для варианта без стакана пока не задано подтверждённой формулой."
+    }
+  ]
+}
