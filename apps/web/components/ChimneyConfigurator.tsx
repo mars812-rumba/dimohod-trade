@@ -42,6 +42,19 @@ type CatalogBomMatch = {
   exactByFields: boolean;
 };
 
+function catalogMediaUrl(url: string, assetBasePath: string) {
+  return url.startsWith("/media/") ? `${assetBasePath}${url}` : url;
+}
+
+function formatCatalogPrice(value: string | null) {
+  if (value === null || Number(value) <= 0) return "Цена по запросу";
+  return new Intl.NumberFormat("ru-RU", {
+    style: "currency",
+    currency: "RUB",
+    maximumFractionDigits: 0,
+  }).format(Number(value));
+}
+
 const ROUTE_OPTIONS: Array<{ id: RouteType; label: string }> = [
   { id: "ceiling", label: "Через дом" },
   { id: "wall", label: "По улице" },
@@ -181,11 +194,14 @@ function GeneratedChimneyScheme({
 
   const floorZones = calculation.forbiddenZones.filter((zone) => zone.kind === "floor");
   const roofZone = calculation.forbiddenZones.find((zone) => zone.kind === "roof");
+  const upperFloorZone = floorZones[floorZones.length - 1];
   const chimneyX = 146;
   const houseLeft = 36;
   const houseRight = 238;
   const roofCenterY = roofZone
     ? verticalY((roofZone.startMm + roofZone.endMm) / 2)
+    : !calculation.hasAttic && upperFloorZone
+      ? verticalY((upperFloorZone.startMm + upperFloorZone.endMm) / 2)
     : Math.max(112, verticalY(maximumMm * 0.78));
   const firstCeilingY = floorZones[0] ? verticalY(floorZones[0].startMm) : verticalY(maximumMm * 0.48);
   const roofPath = roofType === "flat"
@@ -194,6 +210,15 @@ function GeneratedChimneyScheme({
   const atticLabelY = floorZones.length
     ? (verticalY(floorZones[floorZones.length - 1].endMm) + roofCenterY) / 2
     : roofCenterY + 70;
+  const floorRooms = floorZones.map((zone, index) => {
+    const bottomMm = index === 0 ? 0 : floorZones[index - 1].endMm;
+    return {
+      id: `room-${index + 1}`,
+      floor: index + 1,
+      topY: verticalY(zone.startMm),
+      bottomY: verticalY(bottomMm),
+    };
+  });
   const callouts = [
     {
       id: "termination",
@@ -201,17 +226,21 @@ function GeneratedChimneyScheme({
       label: "Оголовок",
       detail: "Завершение трассы",
     },
-    ...(calculation.hasAttic ? [{
+    ...[{
       id: roofZone?.id ?? "roof-pass-placeholder",
       anchorY: roofZone ? verticalY((roofZone.startMm + roofZone.endMm) / 2) : roofCenterY,
       label: "Проход кровли",
-      detail: roofZone ? `${roofZone.startMm}–${roofZone.endMm} мм` : "нужен замер кровли",
-    }] : []),
+      detail: roofZone
+        ? `${roofZone.startMm}–${roofZone.endMm} мм`
+        : calculation.hasAttic
+          ? "нужен замер кровли"
+          : `над ${calculation.floors} этажом`,
+    }],
     ...(floorZones.length
       ? floorZones.slice().reverse().map((zone) => ({
           id: zone.id,
           anchorY: verticalY((zone.startMm + zone.endMm) / 2),
-          label: "Проход перекрытия",
+          label: `Перекрытие ${zone.id.replace("floor-", "")}`,
           detail: `${zone.startMm}–${zone.endMm} мм`,
         }))
       : [{
@@ -244,13 +273,24 @@ function GeneratedChimneyScheme({
       <rect width="380" height="740" className="scheme-paper" />
 
       <g aria-hidden="true">
-        <rect x={houseLeft} y={firstCeilingY} width={houseRight - houseLeft} height={floorY - firstCeilingY} className="scheme-room" />
-        <rect x={houseLeft} y={roofCenterY} width={houseRight - houseLeft} height={Math.max(0, firstCeilingY - roofCenterY)} className="scheme-attic" />
+        {floorRooms.length ? floorRooms.map((room) => (
+          <g key={room.id}>
+            <rect x={houseLeft} y={room.topY} width={houseRight - houseLeft} height={Math.max(0, room.bottomY - room.topY)} className="scheme-room" />
+            <text x={houseLeft + 10} y={room.topY + 24} className="scheme-zone-name">
+              {calculation.floors === 1 ? "ПОМЕЩЕНИЕ БАНИ" : `${room.floor} ЭТАЖ`}
+            </text>
+          </g>
+        )) : (
+          <>
+            <rect x={houseLeft} y={firstCeilingY} width={houseRight - houseLeft} height={floorY - firstCeilingY} className="scheme-room" />
+            <text x={houseLeft + 10} y={Math.min(floorY - 18, firstCeilingY + 24)} className="scheme-zone-name">ПОМЕЩЕНИЕ БАНИ</text>
+          </>
+        )}
+        {calculation.hasAttic ? <rect x={houseLeft} y={roofCenterY} width={houseRight - houseLeft} height={Math.max(0, firstCeilingY - roofCenterY)} className="scheme-attic" /> : null}
         <line x1={houseLeft} y1={floorY} x2={houseRight} y2={floorY} className="scheme-floor-line" />
         <line x1={houseLeft} y1={floorY} x2={houseLeft} y2={roofCenterY + 45} className="scheme-wall-line" />
         <line x1={houseRight} y1={floorY} x2={houseRight} y2={roofCenterY - 45} className="scheme-wall-line" />
         <path d={roofPath} className="scheme-roof-line" />
-        <text x={houseLeft + 10} y={Math.min(floorY - 18, firstCeilingY + 24)} className="scheme-zone-name">ПОМЕЩЕНИЕ БАНИ</text>
         {calculation.hasAttic ? <text x={houseLeft + 10} y={atticLabelY} className="scheme-zone-name">ХОЛОДНЫЙ ЧЕРДАК</text> : null}
       </g>
 
@@ -280,7 +320,7 @@ function GeneratedChimneyScheme({
       {!floorZones.length ? (
         <rect x={houseLeft} y={firstCeilingY - 5} width={houseRight - houseLeft} height="10" className="scheme-pass-band is-placeholder" />
       ) : null}
-      {calculation.hasAttic && !roofZone ? (
+      {!roofZone ? (
         <rect
           x={chimneyX - 24}
           y={roofCenterY - 18}
@@ -564,9 +604,15 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     Promise.all(selectedBom.filter((line) => line.requiresSku).map(async (line) => {
       const params = new URLSearchParams({ limit: "24", offset: "0", product_kind: line.productKind });
       const exactByFields = diameterKinds.has(line.productKind);
-      if (exactByFields) params.set("diameter", `${diameter}:`);
+      if (exactByFields) {
+        const outerDiameter = line.insulationMm !== undefined
+          ? diameter + line.insulationMm * 2
+          : null;
+        params.set("diameter", `${diameter}:${outerDiameter ?? ""}`);
+      }
       if (line.nominalLengthMm) params.set("length_mm", String(line.nominalLengthMm));
       if (line.contour) params.set("contour", line.contour);
+      if (line.insulationMm !== undefined) params.set("insulation_mm", String(line.insulationMm));
       if (line.productKind === "отвод") params.set("angle_deg", "90");
       const response = await fetch(`${assetBasePath}/api/v1/products?${params.toString()}`, { signal: controller.signal });
       if (!response.ok) throw new Error("catalog request failed");
@@ -948,22 +994,47 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         <div className="configurator-spec">
           <div className="configurator-spec-head">
             <span>Спецификация</span>
-            <strong>{selectedBom.length} типов деталей</strong>
+            <strong>
+              {calculation.diameterMm !== null
+                ? `Ø ${calculation.diameterMm}/${calculation.diameterMm + 100} · изоляция 50 мм`
+                : `${selectedBom.length} типов деталей`}
+            </strong>
           </div>
           <div className="configurator-spec-list">
             {selectedBom.map((part) => {
               const catalogMatch = catalogMatches[part.key];
               return (
                 <div key={part.key} className="configurator-spec-row">
-                  <span className="configurator-spec-dot" />
+                  <div className="configurator-spec-media" aria-hidden={!catalogMatch?.item.primary_image}>
+                    {catalogMatch?.item.primary_image ? (
+                      <img
+                        src={catalogMediaUrl(catalogMatch.item.primary_image.thumbnail_url ?? catalogMatch.item.primary_image.url, assetBasePath)}
+                        alt={catalogMatch.item.primary_image.alt ?? ""}
+                        width={catalogMatch.item.primary_image.width ?? undefined}
+                        height={catalogMatch.item.primary_image.height ?? undefined}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <PackageCheck aria-hidden size={20} />
+                    )}
+                  </div>
                   <div>
                     <strong>{part.label}</strong>
                     <small>{part.selectionReason}</small>
                     {catalogMatch ? (
-                      <Link className="configurator-spec-sku" href={productSelectionPath(catalogMatch.item.slug, catalogMatch.item, catalogMatch.item.selected_sku)}>
-                        {catalogMatch.item.article || catalogMatch.item.name}
-                        {!catalogMatch.exactByFields ? " · кандидат по типу, проверить размер" : " · совпадение по полям"}
-                      </Link>
+                      <>
+                        <span className="configurator-spec-parameters">
+                          {catalogMatch.item.diameter_mm !== null ? `Ø ${catalogMatch.item.diameter_mm}${catalogMatch.item.outer_diameter_mm !== null ? `/${catalogMatch.item.outer_diameter_mm}` : ""} мм` : null}
+                          {catalogMatch.item.length_mm !== null ? ` · L ${catalogMatch.item.length_mm} мм` : null}
+                          {catalogMatch.item.insulation_mm !== null ? ` · изоляция ${catalogMatch.item.insulation_mm} мм` : null}
+                          {` · ${formatCatalogPrice(catalogMatch.item.price_rub)}`}
+                        </span>
+                        <Link className="configurator-spec-sku" href={productSelectionPath(catalogMatch.item.slug, catalogMatch.item, catalogMatch.item.selected_sku)}>
+                          {catalogMatch.item.article || catalogMatch.item.name}
+                          {!catalogMatch.exactByFields ? " · кандидат по типу, проверить размер" : " · точное исполнение"}
+                        </Link>
+                      </>
                     ) : null}
                   </div>
                   <em>×{part.quantity}</em>

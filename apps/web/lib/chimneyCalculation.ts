@@ -57,6 +57,7 @@ export type ChimneyBomLine = {
   quantity: number;
   nominalLengthMm?: number;
   contour?: "одностенный" | "сэндвич";
+  insulationMm?: number;
   zone: string;
   selectionReason: string;
   requiresSku: boolean;
@@ -275,6 +276,7 @@ function summarizePipeBom(variants: PipeLayoutVariant[], routeKind: ChimneyRoute
       quantity,
       nominalLengthMm,
       contour,
+      insulationMm: contour === "сэндвич" ? 50 : undefined,
       zone: routeKind === "ceiling" ? "indoor/cold/pass" : "wall/outdoor",
       selectionReason: "Длина выбрана так, чтобы соединения не попадали внутрь проходных зон.",
       requiresSku: true,
@@ -300,6 +302,7 @@ function addRouteNodes(bom: ChimneyBomLine[], routeKind: ChimneyRouteKind, passa
       label: "Сэндвич-заглушка опорная",
       quantity: 1,
       contour: "сэндвич",
+      insulationMm: 50,
       zone: "transition",
       selectionReason: "Опорный переход перед сэндвич-участком задан схемой.",
       requiresSku: true,
@@ -346,7 +349,7 @@ function addRouteNodes(bom: ChimneyBomLine[], routeKind: ChimneyRouteKind, passa
   } else {
     bom.push({ key: "outside-elbow", productKind: "отвод", label: "Сэндвич-отвод 90°", quantity: routeKind === "wall-top" ? 2 : 1, zone: "wall/outdoor", selectionReason: "Количество определяется поворотами выбранного маршрута.", requiresSku: true });
   }
-  bom.push({ key: "termination", productKind: "оголовок", label: "Оголовок", quantity: 1, zone: "termination", selectionReason: "Завершает рассчитанную трассу.", requiresSku: true });
+  bom.push({ key: "termination", productKind: "оголовок", label: "Оголовок", quantity: 1, contour: "сэндвич", zone: "termination", selectionReason: "Завершает рассчитанную трассу.", requiresSku: true });
 }
 
 export function calculateChimney(input: CalculationInput): ChimneyCalculation {
