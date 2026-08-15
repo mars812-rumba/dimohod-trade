@@ -2234,16 +2234,37 @@ body.mobile-menu-open {
   stroke-width: 3;
 }
 
-.configurator-building-svg .scheme-roof-line {
-  fill: none;
-  stroke: #684c36;
-  stroke-linecap: square;
-  stroke-width: 13;
+.configurator-building-svg .scheme-roof-cake {
+  fill: #d9c4a7;
+  fill-opacity: 0.72;
+  stroke: none;
 }
 
-.configurator-building-svg .scheme-roof-line.is-placeholder {
+.configurator-building-svg .scheme-roof-cake.is-placeholder {
+  fill: #f7f1e8;
+  fill-opacity: 0.7;
+  stroke: #684c36;
   stroke-dasharray: 7 5;
-  stroke-width: 9;
+  stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-roof-surface {
+  fill: none;
+  stroke-linecap: square;
+}
+
+.configurator-building-svg .scheme-roof-surface.is-outer {
+  stroke: #684c36;
+  stroke-width: 4;
+}
+
+.configurator-building-svg .scheme-roof-surface.is-inner {
+  stroke: #9a8068;
+  stroke-width: 2;
+}
+
+.configurator-building-svg .scheme-roof-surface.is-placeholder {
+  stroke-dasharray: 7 5;
 }
 
 .configurator-building-svg .scheme-pass-band {
@@ -2258,6 +2279,42 @@ body.mobile-menu-open {
   fill-opacity: 0.88;
   stroke: #946d37;
   stroke-width: 1.5;
+}
+
+.configurator-building-svg .scheme-floor-joist {
+  fill: #a67f58;
+  stroke: #684c36;
+  stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-clamp-body,
+.configurator-building-svg .scheme-clamp-ear {
+  fill: #8f9a9e;
+  stroke: #4d5b61;
+  stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-clamp-bolt {
+  fill: #40515a;
+  stroke: #dfe5e3;
+  stroke-width: 0.7;
+}
+
+.configurator-building-svg .scheme-roof-upk-base,
+.configurator-building-svg .scheme-roof-upk-collar {
+  fill: #c9825e;
+  stroke: #8b321e;
+  stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-roof-inner-flange {
+  fill: #8f9a9e;
+  stroke: #4d5b61;
+  stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-roof-node.is-placeholder {
+  opacity: 0.58;
 }
 
 .configurator-building-svg .scheme-pass-band.is-placeholder {
@@ -2460,6 +2517,12 @@ body.mobile-menu-open {
   stroke-width: 1;
 }
 
+.configurator-node-card .scheme-node-joist {
+  fill: #a67f58;
+  stroke: #684c36;
+  stroke-width: 1.2;
+}
+
 .configurator-node-card .scheme-node-sleeve {
   fill: #f7f1e8;
   stroke: #8b6c4e;
@@ -2490,20 +2553,53 @@ body.mobile-menu-open {
 }
 
 .configurator-node-card .scheme-node-clamp {
-  fill: #173d4c;
-  stroke: #f7f1e8;
-  stroke-width: 1.5;
+  fill: #8f9a9e;
+  stroke: #4d5b61;
+  stroke-width: 1.2;
 }
 
-.configurator-node-card .scheme-node-roof {
+.configurator-node-card .scheme-node-clamp-ear {
+  fill: #8f9a9e;
+  stroke: #4d5b61;
+  stroke-width: 1;
+}
+
+.configurator-node-card .scheme-node-clamp-bolt {
+  fill: #40515a;
+  stroke: #dfe5e3;
+  stroke-width: 0.8;
+}
+
+.configurator-node-card .scheme-node-roof-cake {
+  fill: #d9c4a7;
+  fill-opacity: 0.78;
+  stroke: none;
+}
+
+.configurator-node-card .scheme-node-roof-surface {
   fill: none;
+  stroke-linecap: square;
+}
+
+.configurator-node-card .scheme-node-roof-surface.is-outer {
   stroke: #684c36;
-  stroke-width: 15;
+  stroke-width: 4;
+}
+
+.configurator-node-card .scheme-node-roof-surface.is-inner {
+  stroke: #9a8068;
+  stroke-width: 2;
 }
 
 .configurator-node-card .scheme-node-upk {
-  fill: #d9b982;
-  stroke: #946d37;
+  fill: #c9825e;
+  stroke: #8b321e;
+  stroke-width: 1.5;
+}
+
+.configurator-node-card .scheme-node-upk-collar {
+  fill: #c9825e;
+  stroke: #8b321e;
   stroke-width: 1.5;
 }
 
