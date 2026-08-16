@@ -1,4 +1,9 @@
 import type { ScenarioConfiguratorDraft } from "./configuratorDraft";
+import {
+  calculateMinimumTerminationHeight,
+  type RoofTerminationRule,
+} from "./chimneyTermination";
+import { calculatePitchedRoofPassage } from "./roofGeometry";
 
 export const PIPE_SOCKET_OVERLAP_MM = 50;
 export const PIPE_LENGTHS = [
@@ -35,7 +40,8 @@ export type FixedRoutePart = {
   id: "warmup" | "rotary_damper" | "support_cap";
   label: string;
   axis: RouteAxis;
-  lengthMm: number;
+  nominalLengthMm: number;
+  effectiveMm: number;
   startMm: number;
   endMm: number;
 };
@@ -77,7 +83,14 @@ export type ChimneyCalculation = {
   passageWoolKits: number;
   rotaryDamperHeightMm: number;
   singleWallWarmupPipeLengthMm: number;
+  grateHeightMm: number | null;
   ridgeHeightMm: number | null;
+  ridgeHorizontalDistanceMm: number | null;
+  roofTerminationRequirementMm: number | null;
+  fiveMeterRequirementMm: number | null;
+  tenDegreeLineHeightAtChimneyMm: number | null;
+  terminationRule: RoofTerminationRule | null;
+  controllingTerminationRequirement: "roof" | "five-meter" | "incomplete" | null;
   terminationToRidgeDeltaMm: number | null;
   routeStartMm: number;
   routeTargetMm: number;
@@ -98,6 +111,7 @@ export type CalculationInput = {
   floors: number;
   heightM: number;
   distanceM: number;
+  roofType: "pitched" | "flat";
   warmupLengthMm?: number;
   rotaryDamperHeightMm?: number;
   supportCapLengthMm?: number;
@@ -109,6 +123,10 @@ export function positiveNumber(value: string | number | null | undefined): numbe
   if (normalized === "" || normalized === null || normalized === undefined) return null;
   const parsed = Number(normalized);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function effectiveComponentHeight(nominalLengthMm: number): number {
+  return Math.max(0, nominalLengthMm - PIPE_SOCKET_OVERLAP_MM);
 }
 
 function measuredDiameter(draft: ScenarioConfiguratorDraft | null): Pick<ChimneyCalculation, "diameterMm" | "diameterStatus"> {
@@ -214,7 +232,11 @@ export function solvePipeLayouts({
     .slice(0, maxVariants);
 }
 
-function ceilingForbiddenZones(draft: ScenarioConfiguratorDraft | null, floors: number): ForbiddenJointZone[] {
+function ceilingForbiddenZones(
+  draft: ScenarioConfiguratorDraft | null,
+  floors: number,
+  roofType: "pitched" | "flat",
+): ForbiddenJointZone[] {
   const levelMeasurements = [
     [positiveNumber(draft?.ceilingHeight), positiveNumber(draft?.floorThickness)],
     [positiveNumber(draft?.secondCeilingHeight), positiveNumber(draft?.secondFloorThickness)],
@@ -241,14 +263,23 @@ function ceilingForbiddenZones(draft: ScenarioConfiguratorDraft | null, floors: 
   }
   const atticHeight = draft?.hasAttic ? positiveNumber(draft.atticHeight) : 0;
   const roofThickness = positiveNumber(draft?.roofThickness);
-  if (roofThickness !== null && atticHeight !== null) {
-    const startMm = floorLevel + atticHeight;
+  const pitchedPassage = roofType === "pitched"
+    ? calculatePitchedRoofPassage({
+        ridgeInnerHeightMm: positiveNumber(draft?.ridgeHeight),
+        chimneyToRidgeHorizontalMm: positiveNumber(draft?.ridgeHorizontalDistance),
+        roofAngleDeg: positiveNumber(draft?.roofAngle),
+        roofThicknessAlongChimneyMm: roofThickness,
+      })
+    : null;
+  if (pitchedPassage || (roofThickness !== null && atticHeight !== null)) {
+    const startMm = pitchedPassage?.innerHeightAtChimneyMm ?? floorLevel + (atticHeight ?? 0);
+    const endMm = pitchedPassage?.outerHeightAtChimneyMm ?? startMm + (roofThickness ?? 0);
     zones.push({
       id: "roof-pass",
       label: "Проход через кровлю",
       axis: "vertical",
       startMm,
-      endMm: startMm + roofThickness,
+      endMm,
       kind: "roof",
     });
   }
@@ -404,6 +435,12 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const roofThicknessMm = positiveNumber(input.draft?.roofThickness);
   const measuredRidgeHeightMm = positiveNumber(input.draft?.ridgeHeight);
   const ridgeHeightMm = measuredRidgeHeightMm ? Math.round(measuredRidgeHeightMm) : null;
+  const measuredRidgeHorizontalDistanceMm = positiveNumber(input.draft?.ridgeHorizontalDistance);
+  const ridgeHorizontalDistanceMm = measuredRidgeHorizontalDistanceMm
+    ? Math.round(measuredRidgeHorizontalDistanceMm)
+    : null;
+  const measuredGrateHeightMm = positiveNumber(input.draft?.grateHeight);
+  const grateHeightMm = measuredGrateHeightMm ? Math.round(measuredGrateHeightMm) : null;
   const routeKind: ChimneyRouteKind = input.route === "ceiling"
     ? "ceiling"
     : input.outlet === "horizontal" ? "wall-rear" : "wall-top";
@@ -422,10 +459,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     ? positiveNumber(input.draft?.rearOutletBottomHeight) ?? 0
     : positiveNumber(input.draft?.connectionHeight) ?? 0;
   const routeLengthMm = input.heightM * 1000;
-  const routeTargetMm = routeKind === "ceiling" ? connectionHeightMm + routeLengthMm : routeLengthMm;
-  const terminationToRidgeDeltaMm = routeKind === "ceiling" && ridgeHeightMm
-    ? Math.round(routeTargetMm - ridgeHeightMm)
-    : null;
+  const legacyRouteTargetMm = connectionHeightMm + routeLengthMm;
   const warmupLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.warmupLengthMm ?? 500)) : 0;
   const rotaryDamperHeightMm = routeKind === "ceiling"
     ? Math.max(0, Math.round(input.rotaryDamperHeightMm ?? positiveNumber(input.draft?.rotaryDamperHeight) ?? 0))
@@ -435,21 +469,40 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const fixedParts: FixedRoutePart[] = [];
   let pipeStartMm = routeKind === "ceiling" ? connectionHeightMm : 0;
   if (singleWallWarmupPipeLengthMm > 0) {
-    fixedParts.push({ id: "warmup", label: "Одностенная труба-разгон", axis: "vertical", lengthMm: singleWallWarmupPipeLengthMm, startMm: pipeStartMm, endMm: pipeStartMm + singleWallWarmupPipeLengthMm });
-    pipeStartMm += singleWallWarmupPipeLengthMm;
+    const effectiveMm = effectiveComponentHeight(singleWallWarmupPipeLengthMm);
+    fixedParts.push({ id: "warmup", label: "Одностенная труба-разгон", axis: "vertical", nominalLengthMm: singleWallWarmupPipeLengthMm, effectiveMm, startMm: pipeStartMm, endMm: pipeStartMm + effectiveMm });
+    pipeStartMm += effectiveMm;
   }
   if (rotaryDamperHeightMm > 0) {
-    fixedParts.push({ id: "rotary_damper", label: "Шибер поворотный", axis: "vertical", lengthMm: rotaryDamperHeightMm, startMm: pipeStartMm, endMm: pipeStartMm + rotaryDamperHeightMm });
-    pipeStartMm += rotaryDamperHeightMm;
+    const effectiveMm = effectiveComponentHeight(rotaryDamperHeightMm);
+    fixedParts.push({ id: "rotary_damper", label: "Шибер поворотный", axis: "vertical", nominalLengthMm: rotaryDamperHeightMm, effectiveMm, startMm: pipeStartMm, endMm: pipeStartMm + effectiveMm });
+    pipeStartMm += effectiveMm;
   }
   if (supportCapLengthMm > 0) {
-    fixedParts.push({ id: "support_cap", label: "Опорная заглушка", axis: "vertical", lengthMm: supportCapLengthMm, startMm: pipeStartMm, endMm: pipeStartMm + supportCapLengthMm });
-    pipeStartMm += supportCapLengthMm;
+    const effectiveMm = effectiveComponentHeight(supportCapLengthMm);
+    fixedParts.push({ id: "support_cap", label: "Опорная заглушка", axis: "vertical", nominalLengthMm: supportCapLengthMm, effectiveMm, startMm: pipeStartMm, endMm: pipeStartMm + effectiveMm });
+    pipeStartMm += effectiveMm;
   }
 
   const forbiddenZones = routeKind === "ceiling"
-    ? ceilingForbiddenZones(input.draft, floors)
+    ? ceilingForbiddenZones(input.draft, floors, input.roofType)
     : wallForbiddenZones(input.draft, input.distanceM);
+  const roofZoneForTermination = forbiddenZones.find((zone) => zone.kind === "roof");
+  const terminationHeight = routeKind === "ceiling"
+    ? calculateMinimumTerminationHeight({
+        roofType: input.roofType,
+        ridgeHeightMm,
+        ridgeHorizontalDistanceMm,
+        roofOuterHeightAtChimneyMm: roofZoneForTermination?.endMm ?? null,
+        grateHeightMm,
+      })
+    : null;
+  const routeTargetMm = routeKind === "ceiling"
+    ? terminationHeight?.minimumHeightMm ?? legacyRouteTargetMm
+    : routeLengthMm;
+  const terminationToRidgeDeltaMm = routeKind === "ceiling" && ridgeHeightMm
+    ? Math.round(routeTargetMm - ridgeHeightMm)
+    : null;
   const floorThicknessesMm = forbiddenZones
     .filter((zone) => zone.kind === "floor")
     .map((zone) => zone.endMm - zone.startMm);
@@ -470,12 +523,23 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   if (routeKind === "ceiling" && !ridgeHeightMm) {
     reviewItems.unshift("Указать высоту дома в коньке: без неё контур кровли не привязан к абсолютной отметке здания.");
   }
+  if (routeKind === "ceiling" && input.roofType === "pitched" && !ridgeHorizontalDistanceMm) {
+    reviewItems.unshift("Указать горизонтальное расстояние от оси дымохода до конька для расчёта высоты устья.");
+  }
+  if (routeKind === "ceiling" && !grateHeightMm) {
+    reviewItems.unshift("Указать высоту колосниковой решётки или подтвердить исходную отметку по паспорту отопителя.");
+  }
   if (routeKind === "ceiling" && rotaryDamperHeightMm === 0) {
     reviewItems.unshift("Указать фактическую высоту поворотного шибера: в каталоге этот размер не заполнен.");
   }
   if (routeKind === "ceiling" && rotaryDamperHeightMm >= warmupLengthMm && warmupLengthMm > 0) {
     errors.push("Высота поворотного шибера должна быть меньше общей высоты разгона.");
   }
+  fixedParts.forEach((part) => {
+    if (part.nominalLengthMm <= PIPE_SOCKET_OVERLAP_MM) {
+      errors.push(`Номинальная высота «${part.label}» должна быть больше зоны соединения ${PIPE_SOCKET_OVERLAP_MM} мм.`);
+    }
+  });
   const roofZoneForRidge = forbiddenZones.find((zone) => zone.kind === "roof");
   if (ridgeHeightMm && roofZoneForRidge && ridgeHeightMm <= roofZoneForRidge.endMm) {
     reviewItems.unshift("Высота конька должна быть выше наружной границы кровельного прохода; проверьте замеры.");
@@ -546,7 +610,14 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     passageWoolKits,
     rotaryDamperHeightMm,
     singleWallWarmupPipeLengthMm,
+    grateHeightMm,
     ridgeHeightMm,
+    ridgeHorizontalDistanceMm,
+    roofTerminationRequirementMm: terminationHeight?.roofRequirementMm ?? null,
+    fiveMeterRequirementMm: terminationHeight?.fiveMeterRequirementMm ?? null,
+    tenDegreeLineHeightAtChimneyMm: terminationHeight?.tenDegreeLineHeightAtChimneyMm ?? null,
+    terminationRule: terminationHeight?.roofRule ?? null,
+    controllingTerminationRequirement: terminationHeight?.controllingRequirement ?? null,
     terminationToRidgeDeltaMm,
     routeStartMm: connectionHeightMm,
     routeTargetMm,

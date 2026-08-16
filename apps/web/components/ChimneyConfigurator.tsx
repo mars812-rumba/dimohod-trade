@@ -107,6 +107,8 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
     draft.route === "ceiling" ? `Чердак: ${draft.hasAttic ? "есть" : "нет"}` : "",
     draft.route === "ceiling" && draft.atticHeight ? `Высота чердака: ${draft.atticHeight} мм` : "",
     draft.route === "ceiling" && draft.ridgeHeight ? `Высота дома в коньке: ${draft.ridgeHeight} мм` : "",
+    draft.route === "ceiling" && draft.ridgeHorizontalDistance ? `От оси дымохода до конька: ${draft.ridgeHorizontalDistance} мм` : "",
+    draft.route === "ceiling" && draft.grateHeight ? `Высота колосника: ${draft.grateHeight} мм` : "",
     draft.route === "ceiling" && draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
     draft.route === "ceiling" && draft.passageWoolKits ? `Комплекты ваты: ${draft.passageWoolKits} шт. (вручную)` : "",
     draft.route !== "ceiling" && draft.wallExitHeight ? `Точка выхода через стену: ${draft.wallExitHeight} м` : "",
@@ -121,7 +123,7 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
   return values;
 }
 
-function GeneratedChimneyScheme({
+export function GeneratedChimneyScheme({
   calculation,
   variant,
   roofType,
@@ -134,8 +136,10 @@ function GeneratedChimneyScheme({
 }) {
   const ceiling = calculation.routeKind === "ceiling";
   const pipes = variant?.pipes ?? [];
+  const actualTerminationMm = variant?.coveredEndMm ?? calculation.routeTargetMm;
   const maximumMm = Math.max(
     calculation.routeTargetMm,
+    actualTerminationMm,
     calculation.ridgeHeightMm ?? 0,
     variant?.coveredEndMm ?? 0,
     ...calculation.forbiddenZones.map((zone) => zone.endMm),
@@ -209,6 +213,16 @@ function GeneratedChimneyScheme({
   const baseMillimetersToPixels = (floorY - topY) / maximumMm;
   const millimetersToPixels = baseMillimetersToPixels;
   const verticalY = (millimeters: number) => floorY - millimeters * millimetersToPixels;
+  const singleWallDiameterMm = calculation.diameterMm ?? 0;
+  const sandwichOuterDiameterMm = singleWallDiameterMm + 100;
+  const singleWallWidthPx = singleWallDiameterMm * millimetersToPixels;
+  const sandwichWidthPx = sandwichOuterDiameterMm * millimetersToPixels;
+  const singleWallHalfWidthPx = singleWallWidthPx / 2;
+  const sandwichHalfWidthPx = sandwichWidthPx / 2;
+  const jointZoneY = (jointMm: number) => verticalY(jointMm + PIPE_SOCKET_OVERLAP_MM / 2);
+  const jointZoneHeight = (jointMm: number) => (
+    verticalY(jointMm - PIPE_SOCKET_OVERLAP_MM / 2) - verticalY(jointMm + PIPE_SOCKET_OVERLAP_MM / 2)
+  );
   const firstCeilingY = floorZones[0] ? verticalY(floorZones[0].startMm) : verticalY(maximumMm * 0.48);
   const atticBottomY = upperFloorZone ? verticalY(upperFloorZone.endMm) : firstCeilingY;
   const roofGeometryMeasured = Boolean(roofZone || roofThicknessMm);
@@ -228,11 +242,11 @@ function GeneratedChimneyScheme({
   const roofStartX = houseLeft - 8;
   const roofEndX = houseRight + 8;
   const ridgeX = 226;
-  const ridgeOuterY = calculation.ridgeHeightMm
+  const ridgePeakY = calculation.ridgeHeightMm
     ? verticalY(calculation.ridgeHeightMm)
-    : Math.max(topY + 18, roofSurfaceYAt(ridgeX, roofOuterAtChimneyY));
+    : Math.max(topY + 18, roofSurfaceYAt(ridgeX, roofInnerAtChimneyY));
   const rightRoofEndX = 310;
-  const rightRoofOuterEndY = ridgeOuterY + roofSlope * (rightRoofEndX - ridgeX);
+  const rightRoofInnerEndY = ridgePeakY + roofSlope * (rightRoofEndX - ridgeX);
   const roofInnerStartY = roofSurfaceYAt(roofStartX, roofInnerAtChimneyY);
   const roofInnerEndY = roofSurfaceYAt(roofEndX, roofInnerAtChimneyY);
   const roofOuterStartY = roofSurfaceYAt(roofStartX, roofOuterAtChimneyY);
@@ -247,7 +261,7 @@ function GeneratedChimneyScheme({
   ].join(" ");
   const roofOuterPath = `M${roofStartX} ${roofOuterStartY} L${roofEndX} ${roofOuterEndY}`;
   const roofInnerPath = `M${roofStartX} ${roofInnerStartY} L${roofEndX} ${roofInnerEndY}`;
-  const rightRoofReferencePath = `M${ridgeX} ${ridgeOuterY} L${rightRoofEndX} ${rightRoofOuterEndY}`;
+  const rightRoofReferencePath = `M${ridgeX} ${ridgePeakY} L${rightRoofEndX} ${rightRoofInnerEndY}`;
   const upkHalfWidth = 34;
   const upkLeftBaseY = roofSurfaceYAt(chimneyX - upkHalfWidth, roofOuterAtChimneyY);
   const upkRightBaseY = roofSurfaceYAt(chimneyX + upkHalfWidth, roofOuterAtChimneyY);
@@ -256,7 +270,16 @@ function GeneratedChimneyScheme({
   const skirtLeftBaseY = roofSurfaceYAt(chimneyX - skirtHalfWidth, roofInnerAtChimneyY);
   const skirtRightBaseY = roofSurfaceYAt(chimneyX + skirtHalfWidth, roofInnerAtChimneyY);
   const skirtNeckY = Math.max(skirtLeftBaseY, skirtRightBaseY) + 18;
-  const terminationY = verticalY(calculation.routeTargetMm);
+  const minimumTerminationY = verticalY(calculation.routeTargetMm);
+  const terminationY = verticalY(actualTerminationMm);
+  const tenDegreeLineYAtChimney = calculation.tenDegreeLineHeightAtChimneyMm === null
+    ? null
+    : verticalY(calculation.tenDegreeLineHeightAtChimneyMm);
+  const actualTerminationToRidgeDeltaMm = calculation.ridgeHeightMm === null
+    ? null
+    : Math.round(actualTerminationMm - calculation.ridgeHeightMm);
+  const ridgeDimensionMm = calculation.ridgeHeightMm ?? calculation.routeTargetMm;
+  const ridgeDimensionY = verticalY(ridgeDimensionMm);
   const buildingRoofYAt = (x: number) => roofSurfaceYAt(x, roofInnerAtChimneyY);
   const atticLabelY = floorZones.length
     ? (atticBottomY + roofCenterY) / 2
@@ -273,11 +296,11 @@ function GeneratedChimneyScheme({
   const callouts = [
     {
       id: "termination",
-      anchorY: Math.max(36, verticalY(calculation.routeTargetMm) - 22),
+      anchorY: Math.max(36, terminationY - 22),
       label: "Оголовок",
-      detail: calculation.terminationToRidgeDeltaMm === null
+      detail: actualTerminationToRidgeDeltaMm === null
         ? "Завершение трассы"
-        : `${calculation.terminationToRidgeDeltaMm >= 0 ? "+" : ""}${calculation.terminationToRidgeDeltaMm} мм к коньку`,
+        : `${actualTerminationMm} мм · ${actualTerminationToRidgeDeltaMm >= 0 ? "+" : ""}${actualTerminationToRidgeDeltaMm} мм к коньку`,
     },
     ...[{
       id: roofZone?.id ?? "roof-pass-placeholder",
@@ -306,7 +329,7 @@ function GeneratedChimneyScheme({
       id: part.id,
       anchorY: (verticalY(part.startMm) + verticalY(part.endMm)) / 2,
       label: part.label,
-      detail: `${part.lengthMm} мм`,
+      detail: `${part.nominalLengthMm} мм · +${part.effectiveMm} мм`,
     })),
     {
       id: "heater",
@@ -353,10 +376,26 @@ function GeneratedChimneyScheme({
         <path d={roofOuterPath} className={roofGeometryMeasured ? "scheme-roof-surface is-outer" : "scheme-roof-surface is-outer is-placeholder"} />
         <path d={roofInnerPath} className={roofGeometryMeasured ? "scheme-roof-surface is-inner" : "scheme-roof-surface is-inner is-placeholder"} />
         <path d={rightRoofReferencePath} className="scheme-roof-reference" />
-        <line x1={ridgeX} y1={ridgeOuterY} x2={rightRoofEndX} y2={ridgeOuterY} className="scheme-ridge-datum" />
-        <text x={ridgeX + 5} y={ridgeOuterY - 7} className="scheme-ridge-label">
+        <line x1={ridgeX} y1={ridgePeakY} x2={rightRoofEndX} y2={ridgePeakY} className="scheme-ridge-datum" />
+        <text x={ridgeX + 5} y={ridgePeakY - 7} className="scheme-ridge-label">
           {calculation.ridgeHeightMm ? `КОНЁК · ${calculation.ridgeHeightMm} ММ` : "КОНЁК · НУЖЕН ЗАМЕР"}
         </text>
+        {calculation.ridgeHorizontalDistanceMm ? (
+          <g className="scheme-ridge-distance">
+            <line x1={chimneyX} y1={ridgePeakY + 24} x2={ridgeX} y2={ridgePeakY + 24} />
+            <line x1={chimneyX} y1={ridgePeakY + 19} x2={chimneyX} y2={ridgePeakY + 29} />
+            <line x1={ridgeX} y1={ridgePeakY + 19} x2={ridgeX} y2={ridgePeakY + 29} />
+            <text x={(chimneyX + ridgeX) / 2} y={ridgePeakY + 19} textAnchor="middle">
+              X = {calculation.ridgeHorizontalDistanceMm} мм
+            </text>
+          </g>
+        ) : null}
+        {tenDegreeLineYAtChimney !== null ? (
+          <g className="scheme-ten-degree-clearance">
+            <line x1={ridgeX} y1={ridgePeakY} x2={chimneyX} y2={tenDegreeLineYAtChimney} />
+            <text x={(ridgeX + chimneyX) / 2 + 4} y={(ridgePeakY + tenDegreeLineYAtChimney) / 2 - 5}>10° · линия минимума</text>
+          </g>
+        ) : null}
         {calculation.hasAttic ? <text x={houseLeft + 10} y={atticLabelY} className="scheme-zone-name">ХОЛОДНЫЙ ЧЕРДАК</text> : null}
       </g>
 
@@ -379,33 +418,12 @@ function GeneratedChimneyScheme({
       {floorZones.map((zone) => {
         const clampY = verticalY((zone.startMm + zone.endMm) / 2);
         return (
-          <g key={`${zone.id}-clamp`} className="scheme-floor-clamp" aria-hidden="true">
+          <g key={`${zone.id}-joists`} aria-hidden="true">
             <rect x={houseLeft + 5} y={clampY - 10} width="51" height="20" className="scheme-floor-joist" />
             <rect x={houseRight - 56} y={clampY - 10} width="51" height="20" className="scheme-floor-joist" />
-            <rect x={houseLeft + 48} y={clampY - 4} width={chimneyX - 25 - (houseLeft + 48)} height="8" className="scheme-clamp-ear" />
-            <rect x={chimneyX + 25} y={clampY - 4} width={houseRight - 48 - (chimneyX + 25)} height="8" className="scheme-clamp-ear" />
-            <rect x={chimneyX - 25} y={clampY - 7} width="50" height="14" className="scheme-clamp-body" />
-            <circle cx={houseLeft + 53} cy={clampY} r="2" className="scheme-clamp-bolt" />
-            <circle cx={houseRight - 53} cy={clampY} r="2" className="scheme-clamp-bolt" />
           </g>
         );
       })}
-      <g className={roofGeometryMeasured ? "scheme-roof-node" : "scheme-roof-node is-placeholder"} aria-hidden="true">
-        <rect
-          x={chimneyX - 31}
-          y={roofInnerAtChimneyY - 3}
-          width="62"
-          height="6"
-          className="scheme-roof-inner-flange"
-          transform={`rotate(${-drawnRoofAngleDeg} ${chimneyX} ${roofInnerAtChimneyY})`}
-        />
-        {roofType === "flat" ? (
-          <path
-            d={`M${chimneyX - skirtHalfWidth} ${skirtLeftBaseY} L${chimneyX - 11} ${skirtNeckY} L${chimneyX + 11} ${skirtNeckY} L${chimneyX + skirtHalfWidth} ${skirtRightBaseY} Z`}
-            className="scheme-roof-skirt is-optional"
-          />
-        ) : null}
-      </g>
 
       <rect
         x={chimneyX - 31}
@@ -420,20 +438,33 @@ function GeneratedChimneyScheme({
 
       {calculation.fixedParts.map((part) => (
         <g key={part.id}>
-          <rect
-            x={chimneyX - (part.id === "support_cap" ? 18 : part.id === "rotary_damper" ? 15 : 12)}
-            y={verticalY(part.endMm)}
-            width={part.id === "support_cap" ? 36 : part.id === "rotary_damper" ? 30 : 24}
-            height={verticalY(part.startMm) - verticalY(part.endMm)}
-            className={part.id === "support_cap" ? "scheme-transition" : part.id === "rotary_damper" ? "scheme-rotary-damper" : "scheme-single-pipe"}
-          />
+          {part.id === "support_cap" ? (
+            <path
+              d={`M${chimneyX - sandwichHalfWidthPx} ${verticalY(part.endMm)} L${chimneyX + sandwichHalfWidthPx} ${verticalY(part.endMm)} L${chimneyX + singleWallHalfWidthPx} ${verticalY(part.startMm)} L${chimneyX - singleWallHalfWidthPx} ${verticalY(part.startMm)} Z`}
+              className="scheme-transition"
+            />
+          ) : (
+            <rect
+              x={chimneyX - singleWallHalfWidthPx}
+              y={verticalY(part.endMm)}
+              width={singleWallWidthPx}
+              height={verticalY(part.startMm) - verticalY(part.endMm)}
+              className={part.id === "rotary_damper" ? "scheme-rotary-damper" : "scheme-single-pipe"}
+            />
+          )}
           {part.id === "rotary_damper" ? (
             <>
-              <line x1={chimneyX - 15} y1={(verticalY(part.startMm) + verticalY(part.endMm)) / 2} x2={chimneyX + 24} y2={(verticalY(part.startMm) + verticalY(part.endMm)) / 2} className="scheme-damper-axis" />
+              <line x1={chimneyX - singleWallHalfWidthPx} y1={(verticalY(part.startMm) + verticalY(part.endMm)) / 2} x2={chimneyX + 24} y2={(verticalY(part.startMm) + verticalY(part.endMm)) / 2} className="scheme-damper-axis" />
               <circle cx={chimneyX + 25} cy={(verticalY(part.startMm) + verticalY(part.endMm)) / 2} r="2.5" className="scheme-damper-handle" />
             </>
           ) : null}
-          <circle cx={chimneyX} cy={verticalY(part.endMm)} r="3.5" className="scheme-joint" />
+          <rect
+            x={chimneyX - (part.id === "support_cap" ? sandwichHalfWidthPx : singleWallHalfWidthPx)}
+            y={jointZoneY(part.endMm)}
+            width={part.id === "support_cap" ? sandwichWidthPx : singleWallWidthPx}
+            height={jointZoneHeight(part.endMm)}
+            className="scheme-joint-zone"
+          />
         </g>
       ))}
 
@@ -442,18 +473,54 @@ function GeneratedChimneyScheme({
         return (
           <g key={pipe.id}>
             <rect
-              x={chimneyX - 16}
+              x={chimneyX - sandwichHalfWidthPx}
               y={verticalY(pipe.endMm)}
-              width="32"
+              width={sandwichWidthPx}
               height={verticalY(pipe.startMm) - verticalY(pipe.endMm)}
               className={pipe.zone === "wall_or_ceiling_pass" ? "scheme-sandwich-pipe is-pass" : "scheme-sandwich-pipe"}
             />
-            <line x1={chimneyX - 16} y1={middleY} x2="94" y2={middleY} className="scheme-pipe-leader" />
+            <line x1={chimneyX - sandwichHalfWidthPx} y1={middleY} x2="94" y2={middleY} className="scheme-pipe-leader" />
             <text x="90" y={middleY + 3} textAnchor="end" className="scheme-pipe-label">Т{index + 1} · {pipe.nominalMm}</text>
-            <circle cx={chimneyX} cy={verticalY(pipe.endMm)} r="3.5" className="scheme-joint" />
+            <rect
+              x={chimneyX - sandwichHalfWidthPx}
+              y={jointZoneY(pipe.endMm)}
+              width={sandwichWidthPx}
+              height={jointZoneHeight(pipe.endMm)}
+              className="scheme-joint-zone"
+            />
           </g>
         );
       })}
+
+      {floorZones.map((zone) => {
+        const clampY = verticalY((zone.startMm + zone.endMm) / 2);
+        return (
+          <g key={`${zone.id}-clamp`} className="scheme-floor-clamp" aria-hidden="true">
+            <rect x={houseLeft + 48} y={clampY - 4} width={chimneyX - 25 - (houseLeft + 48)} height="8" className="scheme-clamp-ear" />
+            <rect x={chimneyX + 25} y={clampY - 4} width={houseRight - 48 - (chimneyX + 25)} height="8" className="scheme-clamp-ear" />
+            <rect x={chimneyX - 25} y={clampY - 7} width="50" height="14" className="scheme-clamp-body" />
+            <circle cx={houseLeft + 53} cy={clampY} r="2" className="scheme-clamp-bolt" />
+            <circle cx={houseRight - 53} cy={clampY} r="2" className="scheme-clamp-bolt" />
+          </g>
+        );
+      })}
+
+      <g className={roofGeometryMeasured ? "scheme-roof-node" : "scheme-roof-node is-placeholder"} aria-hidden="true">
+        <rect
+          x={chimneyX - 31}
+          y={roofInnerAtChimneyY - 3}
+          width="62"
+          height="6"
+          className="scheme-roof-inner-flange"
+          transform={`rotate(${-drawnRoofAngleDeg} ${chimneyX} ${roofInnerAtChimneyY})`}
+        />
+        {roofType === "flat" ? (
+          <path
+            d={`M${chimneyX - skirtHalfWidth} ${skirtLeftBaseY} L${chimneyX - sandwichHalfWidthPx} ${skirtNeckY} L${chimneyX + sandwichHalfWidthPx} ${skirtNeckY} L${chimneyX + skirtHalfWidth} ${skirtRightBaseY} Z`}
+            className="scheme-roof-skirt is-optional"
+          />
+        ) : null}
+      </g>
 
       <g className={roofGeometryMeasured ? "scheme-roof-upk-foreground" : "scheme-roof-upk-foreground is-placeholder"} aria-hidden="true">
         <rect
@@ -465,13 +532,12 @@ function GeneratedChimneyScheme({
           transform={`rotate(${-drawnRoofAngleDeg} ${chimneyX} ${roofOuterAtChimneyY})`}
         />
         <path
-          d={`M${chimneyX - upkHalfWidth} ${upkLeftBaseY} C${chimneyX - 25} ${upkLeftBaseY - 8} ${chimneyX - 14} ${upkTopY + 15} ${chimneyX - 11} ${upkTopY + 8} L${chimneyX - 11} ${upkTopY} L${chimneyX + 11} ${upkTopY} L${chimneyX + 11} ${upkTopY + 8} C${chimneyX + 14} ${upkTopY + 15} ${chimneyX + 25} ${upkRightBaseY - 8} ${chimneyX + upkHalfWidth} ${upkRightBaseY} Z`}
+          d={`M${chimneyX - upkHalfWidth} ${upkLeftBaseY} C${chimneyX - 25} ${upkLeftBaseY - 8} ${chimneyX - sandwichHalfWidthPx} ${upkTopY + 15} ${chimneyX - sandwichHalfWidthPx} ${upkTopY} L${chimneyX + sandwichHalfWidthPx} ${upkTopY} C${chimneyX + sandwichHalfWidthPx} ${upkTopY + 15} ${chimneyX + 25} ${upkRightBaseY - 8} ${chimneyX + upkHalfWidth} ${upkRightBaseY} Z`}
           className="scheme-roof-upk-collar"
         />
-        <rect x={chimneyX - 13} y={upkTopY - 3} width="26" height="6" rx="1" className="scheme-roof-upk-band" />
       </g>
 
-      <line x1={chimneyX - 34} y1={terminationY} x2={chimneyX + 34} y2={terminationY} className="scheme-target-line" />
+      <line x1={chimneyX - 34} y1={minimumTerminationY} x2={chimneyX + 34} y2={minimumTerminationY} className="scheme-target-line" />
       <g className="scheme-termination" aria-hidden="true">
         <rect x={chimneyX - 10} y={terminationY - 10} width="20" height="10" />
         <path d={`M${chimneyX - 10} ${terminationY - 10} L${chimneyX - 16} ${terminationY - 22} L${chimneyX + 16} ${terminationY - 22} L${chimneyX + 10} ${terminationY - 10} Z`} />
@@ -480,16 +546,16 @@ function GeneratedChimneyScheme({
         <path d={`M${chimneyX - 17} ${terminationY - 40} Q${chimneyX} ${terminationY - 47} ${chimneyX + 17} ${terminationY - 40} L${chimneyX + 14} ${terminationY - 37} L${chimneyX - 14} ${terminationY - 37} Z`} />
       </g>
 
-      <line x1="18" y1={floorY} x2="18" y2={verticalY(calculation.routeTargetMm)} className="scheme-dimension" />
+      <line x1="18" y1={floorY} x2="18" y2={ridgeDimensionY} className="scheme-dimension" />
       <line x1="13" y1={floorY} x2="23" y2={floorY} className="scheme-dimension" />
-      <line x1="13" y1={verticalY(calculation.routeTargetMm)} x2="23" y2={verticalY(calculation.routeTargetMm)} className="scheme-dimension" />
+      <line x1="13" y1={ridgeDimensionY} x2="23" y2={ridgeDimensionY} className="scheme-dimension" />
       <text
         x="10"
-        y={(floorY + verticalY(calculation.routeTargetMm)) / 2}
-        transform={`rotate(-90 10 ${(floorY + verticalY(calculation.routeTargetMm)) / 2})`}
+        y={(floorY + ridgeDimensionY) / 2}
+        transform={`rotate(-90 10 ${(floorY + ridgeDimensionY) / 2})`}
         textAnchor="middle"
         className="scheme-dimension-label"
-      >{calculation.routeTargetMm} мм от чистого пола</text>
+      >{calculation.ridgeHeightMm ? `${ridgeDimensionMm} мм до внутренней грани конька` : `${ridgeDimensionMm} мм от чистого пола`}</text>
 
       <g className="scheme-callouts">
         {callouts.map((callout, index) => {
@@ -623,10 +689,9 @@ function VerticalPassageDetails({
             transform={`rotate(${-drawnRoofAngleDeg} 160 ${roofOuterAtPipeY})`}
           />
           <path
-            d={`M${160 - detailUpkHalfWidth} ${detailUpkLeftBaseY} C132 ${detailUpkLeftBaseY - 8} 145 ${detailUpkTopY + 17} 149 ${detailUpkTopY + 9} L149 ${detailUpkTopY} L171 ${detailUpkTopY} L171 ${detailUpkTopY + 9} C175 ${detailUpkTopY + 17} 188 ${detailUpkRightBaseY - 8} ${160 + detailUpkHalfWidth} ${detailUpkRightBaseY} Z`}
+            d={`M${160 - detailUpkHalfWidth} ${detailUpkLeftBaseY} C132 ${detailUpkLeftBaseY - 8} 145 ${detailUpkTopY + 17} 145 ${detailUpkTopY} L175 ${detailUpkTopY} C175 ${detailUpkTopY + 17} 188 ${detailUpkRightBaseY - 8} ${160 + detailUpkHalfWidth} ${detailUpkRightBaseY} Z`}
             className="scheme-node-upk-collar"
           />
-          <rect x="147" y={detailUpkTopY - 3} width="26" height="6" rx="1" className="scheme-node-upk-band" />
           <rect
             x="122"
             y={roofInnerAtPipeY - 3.5}
@@ -755,12 +820,10 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       setPassageWoolKits(Math.round(draftPassageWoolKits));
     }
 
-    const draftHeight = Number(
-      transferredDraft.route !== "ceiling"
-        ? transferredDraft.outdoorHeight
-        : transferredDraft.routeHeight,
-    );
-    if (Number.isFinite(draftHeight) && draftHeight >= 1 && draftHeight <= 20) setHeightM(draftHeight);
+    if (transferredDraft.route !== "ceiling") {
+      const draftHeight = Number(transferredDraft.outdoorHeight);
+      if (Number.isFinite(draftHeight) && draftHeight >= 1 && draftHeight <= 20) setHeightM(draftHeight);
+    }
 
     const rawDraftDistance = Number(transferredDraft.wallDistance);
     const draftDistance = rawDraftDistance > 20 ? rawDraftDistance / 1000 : rawDraftDistance;
@@ -805,7 +868,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       rotaryDamperHeight: String(rotaryDamperHeightMm),
       supportCapHeight: String(supportCapLengthMm),
       passageWoolKits: String(passageWoolKits),
-      routeHeight: route === "ceiling" ? String(heightM) : baseDraft.routeHeight,
+      routeHeight: baseDraft.routeHeight,
       outdoorHeight: route === "wall" ? String(heightM) : baseDraft.outdoorHeight,
       wallDistance: route === "wall" ? String(Math.round(distanceM * 1000)) : baseDraft.wallDistance,
     });
@@ -828,7 +891,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       rotaryDamperHeight: String(rotaryDamperHeightMm),
       supportCapHeight: String(supportCapLengthMm),
       passageWoolKits: String(passageWoolKits),
-      routeHeight: route === "ceiling" ? String(heightM) : transferredDraft.routeHeight,
+      routeHeight: transferredDraft.routeHeight,
       outdoorHeight: route === "wall" ? String(heightM) : transferredDraft.outdoorHeight,
       wallDistance: route === "wall" ? String(Math.round(distanceM * 1000)) : transferredDraft.wallDistance,
     };
@@ -841,16 +904,31 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       floors,
       heightM,
       distanceM,
+      roofType: roof,
       warmupLengthMm,
       rotaryDamperHeightMm,
       supportCapLengthMm,
       draft: calculationDraft,
     }),
-    [calculationDraft, distanceM, floors, heightM, outlet, rotaryDamperHeightMm, route, supportCapLengthMm, warmupLengthMm],
+    [calculationDraft, distanceM, floors, heightM, outlet, roof, rotaryDamperHeightMm, route, supportCapLengthMm, warmupLengthMm],
   );
   const roofThicknessMm = calculation.roofThicknessMm;
   const selectedVariant = calculation.variants.find((variant) => variant.id === selectedVariantId)
     ?? calculation.selectedVariant;
+  const svgValidationErrors = useMemo(() => {
+    const issues = [...calculation.errors];
+    if (!selectedVariant) issues.push("Нет проверенной раскладки труб.");
+    if (calculation.diameterStatus !== "known") issues.push("Не подтверждён диаметр одностенной трубы.");
+    if (calculation.routeKind === "ceiling") {
+      if (!calculation.ridgeHeightMm) issues.push("Не указана высота до внутренней нижней грани конька.");
+      if (roof === "pitched" && !calculation.ridgeHorizontalDistanceMm) issues.push("Не указано горизонтальное расстояние от оси дымохода до конька.");
+      if (!calculation.grateHeightMm) issues.push("Не указана высота колосниковой решётки или подтверждённая исходная отметка канала.");
+      if (!calculation.roofThicknessMm) issues.push("Не указана толщина кровельного пирога.");
+      if (roof === "pitched" && calculation.roofAngleDeg === null) issues.push("Не указан угол скатной кровли.");
+      if (calculation.floorThicknessesMm.length < calculation.floors) issues.push("Не заполнены толщины всех перекрытий.");
+    }
+    return [...new Set(issues)];
+  }, [calculation, roof, selectedVariant]);
   const selectedBom = useMemo(
     () => bomForVariant(calculation, selectedVariant),
     [calculation, selectedVariant],
@@ -859,6 +937,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const selectedCoveredMm = selectedVariant
     ? selectedVariant.pipes.reduce((sum, pipe) => sum + pipe.effectiveMm, 0)
     : 0;
+  const selectedTerminationMm = selectedVariant?.coveredEndMm ?? calculation.routeTargetMm;
   useEffect(() => {
     const diameter = calculation.diameterMm;
     if (!diameter || calculation.diameterStatus !== "known") {
@@ -1207,25 +1286,41 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             </>
           )}
 
-          <div className="configurator-field">
-            <div className="configurator-label">
-              Высота: {heightM.toFixed(1)} м{route === "wall" ? " наружного участка" : ""}
+          {route === "wall" ? (
+            <div className="configurator-field">
+              <div className="configurator-label">
+                Высота наружного участка: {heightM.toFixed(1)} м
+              </div>
+              <input
+                aria-label="Высота наружного участка дымохода"
+                className="configurator-range"
+                type="range"
+                min="1"
+                max="20"
+                step="0.1"
+                value={heightM}
+                onChange={(event) => setHeightM(Number(event.target.value))}
+              />
+              <div className="configurator-ticks">
+                <span>1 м</span>
+                <span>20 м</span>
+              </div>
             </div>
-            <input
-              aria-label="Высота дымохода"
-              className="configurator-range"
-              type="range"
-              min="1"
-              max="20"
-              step="0.1"
-              value={heightM}
-              onChange={(event) => setHeightM(Number(event.target.value))}
-            />
-            <div className="configurator-ticks">
-              <span>1 м</span>
-              <span>20 м</span>
+          ) : (
+            <div className="configurator-note">
+              <strong>Высота вертикального дымохода рассчитывается автоматически</strong>
+              <span>
+                По положению относительно кровли: {calculation.roofTerminationRequirementMm ?? "нужны замеры"} мм.
+                По условию 5 м от колосниковой решётки: {calculation.fiveMeterRequirementMm ?? "нужен замер"} мм.
+                Итоговая минимальная отметка устья: {calculation.routeTargetMm} мм от чистого пола
+                {calculation.controllingTerminationRequirement === "five-meter"
+                  ? " — определяет условие 5 м от колосника."
+                  : calculation.controllingTerminationRequirement === "roof"
+                    ? " — определяет положение относительно кровли."
+                    : "."}
+              </span>
             </div>
-          </div>
+          )}
 
           <div className="configurator-note">
             <strong>{sceneTitle}</strong>
@@ -1242,21 +1337,31 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             <strong>{calculation.status === "invalid" ? "Есть конфликт" : `${selectedPipeQuantity} труб`}</strong>
           </div>
           <div className="configurator-svg-wrap">
-            <GeneratedChimneyScheme
-              calculation={calculation}
-              roofThicknessMm={roofThicknessMm}
-              roofType={roof}
-              variant={selectedVariant}
-            />
+            {svgValidationErrors.length ? (
+              <div className="configurator-svg-validation" role="alert">
+                <strong>Инженерная схема не сформирована</strong>
+                <span>Сначала исправьте геометрию:</span>
+                <ul>
+                  {svgValidationErrors.map((issue) => <li key={issue}>{issue}</li>)}
+                </ul>
+              </div>
+            ) : (
+              <GeneratedChimneyScheme
+                calculation={calculation}
+                roofThicknessMm={roofThicknessMm}
+                roofType={roof}
+                variant={selectedVariant}
+              />
+            )}
           </div>
-          {calculation.routeKind === "ceiling" ? (
+          {calculation.routeKind === "ceiling" && !svgValidationErrors.length ? (
             <VerticalPassageDetails
               calculation={calculation}
               roofType={roof}
             />
           ) : null}
           <div className="configurator-height-badge">
-            Отметка завершения {calculation.routeTargetMm} мм
+            Минимум {calculation.routeTargetMm} мм · фактическое устье {selectedTerminationMm} мм
             {calculation.ridgeHeightMm ? ` · конёк ${calculation.ridgeHeightMm} мм` : " · высота конька не указана"}
             {` · раскладка ${selectedVariant?.label ?? "не найдена"}`}
           </div>

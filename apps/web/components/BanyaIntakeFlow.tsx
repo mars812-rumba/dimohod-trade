@@ -44,30 +44,34 @@ type MeasurementFieldProps = {
   placeholder: string;
   unit?: string;
   numeric?: boolean;
+  required?: boolean;
+  allowDefer?: boolean;
   onChange: (field: keyof ScenarioConfiguratorDraft, value: string) => void;
   onDefer: (field: keyof ScenarioConfiguratorDraft) => void;
   children?: ReactNode;
 };
 
-function MeasurementField({ draft, field, label, placeholder, unit, numeric = true, onChange, onDefer, children }: MeasurementFieldProps) {
+function MeasurementField({ draft, field, label, placeholder, unit, numeric = true, required = false, allowDefer = true, onChange, onDefer, children }: MeasurementFieldProps) {
   const value = typeof draft[field] === "string" ? String(draft[field]) : "";
   const status = draftFieldStatus(draft, field);
   return (
     <div className={styles.measurementField}>
       <label className={styles.field}>
-        <span>{label}{unit ? `, ${unit}` : ""}</span>
+        <span>{label}{unit ? `, ${unit}` : ""}{required ? " · обязательно" : ""}</span>
         <input
+          aria-required={required || undefined}
           inputMode={numeric ? "decimal" : undefined}
           min={numeric ? "0" : undefined}
           onChange={(event) => onChange(field, event.target.value)}
           placeholder={placeholder}
+          required={required}
           type={numeric ? "number" : "text"}
           value={value}
         />
       </label>
       <div className={styles.fieldMeta}>
         <span data-status={status}>{statusLabels[status]}</span>
-        {status !== "known" ? (
+        {allowDefer && status !== "known" ? (
           <button onClick={() => onDefer(field)} type="button">
             {status === "later" ? "Вернуть к замеру" : "Уточнить позже"}
           </button>
@@ -177,11 +181,6 @@ export function BanyaIntakeFlow({
       alt: "Вертикальная схема замера полной толщины межэтажного перекрытия",
       title: "Как измерить толщину перекрытия",
     },
-    routeHeight: {
-      src: `${assetBasePath}/images/measurements/route-total-height-mobile.webp`,
-      alt: "Вертикальная схема ориентировочного замера всей трассы лазерной рулеткой",
-      title: "Как измерить ориентировочную высоту трассы",
-    },
     atticRoof: {
       src: `${assetBasePath}/images/measurements/attic-roof-angle-mobile.webp`,
       alt: "Вертикальная схема замера высоты чердака и угла кровли",
@@ -287,6 +286,14 @@ export function BanyaIntakeFlow({
   };
 
   const saveProfile = () => {
+    if (intake.route === "ceiling" && !(Number(intake.ridgeHeight) > 0)) {
+      setProfileError("Укажите высоту дома в коньке в миллиметрах — без неё вертикальный чертёж нельзя считать привязанным к зданию.");
+      return;
+    }
+    if (intake.route === "ceiling" && !(Number(intake.ridgeHorizontalDistance) > 0)) {
+      setProfileError("Укажите горизонтальное расстояние от оси дымохода до конька — оно определяет требуемую высоту трубы над кровлей.");
+      return;
+    }
     const name = profileName.trim();
     if (!name) {
       setProfileError("Введите название, чтобы сохранить замеры.");
@@ -523,6 +530,12 @@ export function BanyaIntakeFlow({
                   <p>Измерьте расстояние от чистового пола до верхней грани печи или другого отопителя. Патрубок и элементы дымохода в этот размер не включайте.</p>
                 </MeasurementHelp>
               </MeasurementField> : null}
+              <MeasurementField draft={intake} field="grateHeight" label="Высота колосниковой решётки" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От чистового пола" unit="мм">
+                <MeasurementHelp>
+                  <p>Измерьте вертикально от чистового пола до уровня колосниковой решётки. Этот размер нужен для проверки минимальной высоты дымового канала до устья.</p>
+                  <p>Если у отопителя нет колосниковой решётки, оставьте поле на уточнение по паспорту оборудования — подменять его высотой печи нельзя.</p>
+                </MeasurementHelp>
+              </MeasurementField>
               {intake.outlet === "rear" ? <MeasurementField draft={intake} field="rearOutletBottomHeight" label="Высота нижней кромки патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От чистового пола" unit="мм">
                 <MeasurementHelp scheme={schemes.rearOutletHeight}>
                   <p>Измерьте вертикально от чистового пола до самой нижней точки наружной кромки заднего патрубка.</p>
@@ -698,25 +711,24 @@ export function BanyaIntakeFlow({
                         <MeasurementHelp scheme={schemes.floorThickness}><p>Укажите полную толщину третьего перекрытия. Стык внутри этого диапазона будет считаться ошибкой.</p></MeasurementHelp>
                       </MeasurementField>
                     </> : null}
-                    <MeasurementField draft={intake} field="routeHeight" label="Ориентировочная высота всей трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Можно уточнить позже" unit="м">
-                      <MeasurementHelp scheme={schemes.routeHeight}>
-                        {isHome ? (
-                          <p>Сложите известные вертикальные участки от точки подключения до предполагаемого завершения трассы. Это исходный размер, не окончательная высота системы.</p>
-                        ) : (
-                          <>
-                            <p>Лазерной рулеткой измерьте общую вертикальную высоту от удобной нижней точки — например, от доступного участка фундамента или балки — до предполагаемого конца трассы.</p>
-                            <p>Приведите замер к уровню чистового пола, затем вычтите высоту печи или точки подключения. Получится примерная высота трассы.</p>
-                            <p>Это ориентировочное значение для первичного подбора. Его можно уточнить после контрольного замера.</p>
-                          </>
-                        )}
+                    <MeasurementField allowDefer={false} draft={intake} field="ridgeHeight" label="Высота дома в коньке" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 5200" required unit="мм">
+                      <MeasurementHelp showSchemePlaceholder={false}>
+                        <p>Измерьте вертикальную отметку от чистового пола первого этажа до внутренней нижней грани конька.</p>
+                        <p>На чертеже эта отметка задаёт положение конька. Правый скат показывается пунктиром как контур здания, а рабочая трасса располагается слева.</p>
+                      </MeasurementHelp>
+                    </MeasurementField>
+                    <MeasurementField allowDefer={false} draft={intake} field="ridgeHorizontalDistance" label="От оси дымохода до конька" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 3500" required unit="мм">
+                      <MeasurementHelp showSchemePlaceholder={false}>
+                        <p>Измерьте горизонтальное расстояние в плане от вертикальной оси будущего дымохода до пика конька. Не измеряйте по поверхности ската.</p>
+                        <p>До 1,5 м, от 1,5 до 3 м и свыше 3 м применяются разные правила определения минимальной отметки устья.</p>
                       </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="roofAngle" label="Угол кровли" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если известен" unit="°">
                       <MeasurementHelp scheme={schemes.atticRoof}><p>Если угол указан в проекте дома, используйте это значение. Иначе оставьте поле для последующего замера — нормативные выводы по углу здесь не делаются.</p></MeasurementHelp>
                     </MeasurementField>
-                    {intake.hasAttic ? <MeasurementField draft={intake} field="roofThickness" label="Толщина кровельного пирога" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По линии прохода" unit="мм">
+                    <MeasurementField draft={intake} field="roofThickness" label="Толщина кровельного пирога" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По линии прохода" unit="мм">
                       <MeasurementHelp scheme={schemes.atticRoof}><p>Укажите толщину кровельной конструкции по линии трубы. Этот диапазон станет отдельной зоной, внутри которой стыки запрещены.</p></MeasurementHelp>
-                    </MeasurementField> : null}
+                    </MeasurementField>
                     {intake.hasAttic ? <MeasurementField draft={intake} field="atticHeight" label="Высота чердака по пути трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По вертикали" unit="мм">
                       <MeasurementHelp scheme={schemes.atticRoof}><p>Измерьте вертикальное расстояние внутри чердака в предполагаемом месте прохождения дымохода.</p></MeasurementHelp>
                     </MeasurementField> : null}
