@@ -29,6 +29,7 @@ import {
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
 import { HomeHeroCarousel } from "../components/HomeHeroCarousel";
+import { HomeGuidedShowcase } from "../components/HomeGuidedShowcase";
 import { LeadForm } from "../components/LeadForm";
 import { ProductGalleryPreview } from "../components/ProductGalleryPreview";
 import { YANDEX_MAPS_RATING } from "../components/YandexRatingBadge";
@@ -315,6 +316,7 @@ export default async function HomePage() {
     <>
       <main className={styles.main}>
         <HomeHeroCarousel assetBasePath={basePath} />
+        <HomeGuidedShowcase assetBasePath={basePath} />
 
       <section className={styles.differenceSection} aria-labelledby="difference-title">
         <div className={styles.shell}>

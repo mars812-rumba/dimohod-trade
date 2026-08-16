@@ -1,0 +1,280 @@
+.showcase {
+  color: #102127;
+  background: #f4f6f5;
+}
+
+.section {
+  padding: clamp(52px, 7vw, 96px) 0;
+}
+
+.resultSection {
+  border-top: 1px solid #ccd5d7;
+  background: #e8eeee;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.55fr);
+  gap: clamp(24px, 4vw, 64px);
+  width: min(1240px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.introPanel {
+  align-self: start;
+  padding: clamp(26px, 3vw, 40px);
+  color: #fff;
+  background: linear-gradient(145deg, #102f3d 0%, #1c5870 100%);
+}
+
+.introPanel h2 {
+  max-width: 12ch;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(29px, 3.2vw, 44px);
+  font-weight: 680;
+  line-height: 1.03;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.introPanel p {
+  max-width: 42ch;
+  margin: 22px 0 0;
+  color: #d5e2e5;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.introPanel a {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: 28px;
+  padding: 0 18px;
+  color: #fff;
+  background: #ed5b2a;
+  font-size: 14px;
+  font-weight: 740;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.introPanel a:hover {
+  background: #bd3d16;
+  transform: translateY(-2px);
+}
+
+.introPanel a:focus-visible,
+.controls button:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.48);
+  outline-offset: 3px;
+}
+
+.carousel {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(240px, 1fr);
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #ccd5d7;
+  background: #fff;
+}
+
+.imageColumn {
+  display: grid;
+  align-items: center;
+  min-width: 0;
+  padding: 18px;
+  background: #dce5e6;
+}
+
+.imageStage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 720 / 1612;
+  overflow: hidden;
+  background: #fff;
+}
+
+.image {
+  object-fit: contain;
+  animation: slide-reveal 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.slideCopy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: clamp(26px, 4vw, 52px);
+}
+
+.counter {
+  color: #326276;
+  font-size: 13px;
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+}
+
+.slideCopy h3 {
+  max-width: 16ch;
+  margin: 16px 0 0;
+  font-size: clamp(27px, 3vw, 40px);
+  font-weight: 660;
+  line-height: 1.04;
+  letter-spacing: -0.032em;
+  text-wrap: balance;
+}
+
+.slideCopy p {
+  max-width: 42ch;
+  margin: 20px 0 0;
+  color: #637277;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 10px;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 32px;
+}
+
+.controls > button,
+.steps button {
+  display: inline-grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  border: 1px solid #bcc8cb;
+  color: #173d4c;
+  background: #fff;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+}
+
+.controls > button:hover,
+.steps button:hover {
+  border-color: #326276;
+  background: #e8eeee;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(44px, 1fr));
+  gap: 6px;
+}
+
+.steps button {
+  min-width: 0;
+  color: #637277;
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.steps .stepActive {
+  border-color: #173d4c;
+  color: #fff;
+  background: #173d4c;
+}
+
+@keyframes slide-reveal {
+  from {
+    opacity: 0.42;
+    transform: translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 920px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .introPanel h2 {
+    max-width: 18ch;
+  }
+
+  .carousel {
+    grid-template-columns: minmax(250px, 330px) minmax(220px, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: 38px 0 48px;
+  }
+
+  .shell {
+    gap: 16px;
+    width: calc(100% - 28px);
+  }
+
+  .introPanel {
+    padding: 24px 20px;
+  }
+
+  .introPanel h2 {
+    max-width: 15ch;
+    font-size: clamp(27px, 8.2vw, 35px);
+  }
+
+  .introPanel p {
+    margin-top: 16px;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .introPanel a {
+    width: 100%;
+    margin-top: 22px;
+  }
+
+  .carousel {
+    grid-template-columns: 1fr;
+  }
+
+  .imageColumn {
+    padding: 10px;
+  }
+
+  .imageStage {
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .slideCopy {
+    padding: 24px 20px 20px;
+  }
+
+  .slideCopy h3 {
+    margin-top: 10px;
+    font-size: 27px;
+  }
+
+  .slideCopy p {
+    margin-top: 14px;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .controls {
+    padding-top: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image,
+  .introPanel a {
+    animation: none;
+    transition: none;
+  }
+}
