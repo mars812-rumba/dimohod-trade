@@ -7,8 +7,8 @@
 }
 
 .banner {
-  color: #fff;
-  background: linear-gradient(112deg, #102f3d 0%, #1c5870 58%, #26778e 100%);
+  color: #102f3d;
+  background: transparent;
 }
 
 .bannerInner {
@@ -20,7 +20,7 @@
 .banner h1 {
   max-width: 1000px;
   margin: 0;
-  color: #fff;
+  color: #102f3d;
   font-size: clamp(38px, 4.8vw, 66px);
   font-weight: 720;
   line-height: 1;
