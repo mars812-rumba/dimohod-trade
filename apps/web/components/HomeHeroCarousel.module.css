@@ -1,41 +1,21 @@
 .hero {
-  position: relative;
   display: flex;
   height: calc(100svh - 68px);
   flex-direction: column;
   color: #102127;
-  background: #f4f6f5;
+  background: #102127;
 }
 
-.banner {
+.srOnly {
   position: absolute;
-  z-index: 2;
-  inset: 0 0 auto;
-  color: #102f3d;
-  background: transparent;
-  pointer-events: none;
-}
-
-.bannerInner {
-  width: min(1240px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: clamp(22px, 3.2vw, 38px) 0;
-}
-
-.banner h1 {
-  max-width: 1000px;
-  margin: 0;
-  color: #102f3d;
-  font-size: clamp(38px, 4.8vw, 66px);
-  font-weight: 720;
-  line-height: 1;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-}
-
-.banner h1 span {
-  display: block;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
+  border: 0;
 }
 
 .carouselFrame {
@@ -119,36 +99,9 @@
   }
 }
 
-@media (max-width: 1020px) {
-  .bannerInner {
-    display: grid;
-    gap: 14px;
-    justify-items: start;
-  }
-
-  .banner h1 {
-    font-size: clamp(28px, 5.3vw, 50px);
-  }
-}
-
 @media (max-width: 720px) {
   .hero {
-    height: calc(100svh - 72px);
-  }
-
-  .bannerInner {
-    width: calc(100% - 28px);
-    display: grid;
-    gap: 13px;
-    justify-items: start;
-    padding: 16px 0 18px;
-  }
-
-  .banner h1 {
-    max-width: 560px;
-    font-size: clamp(17px, 4.8vw, 22px);
-    line-height: 1.02;
-    letter-spacing: -0.03em;
+    height: calc(100svh - 94px);
   }
 
   .carouselFrame {

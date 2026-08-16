@@ -71,14 +71,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         touchStartX.current = null;
       }}
     >
-      <div className={styles.banner}>
-        <div className={styles.bannerInner}>
-          <h1>
-            <span>Безопасный, совместимый дымоход</span>
-            <span>— без замерщика</span>
-          </h1>
-        </div>
-      </div>
+      <h1 className={styles.srOnly}>Безопасный, совместимый дымоход — без замерщика</h1>
 
       <div className={styles.carouselFrame}>
         <div className={styles.imageStage} aria-live="off">
