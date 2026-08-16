@@ -8,13 +8,13 @@
   background: linear-gradient(112deg, #102f3d 0%, #1c5870 58%, #26778e 100%);
 }
 
-.bannerInner,
-.actionInner {
+.bannerInner {
   width: min(1240px, calc(100% - 48px));
   margin: 0 auto;
-}
-
-.bannerInner {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  justify-content: space-between;
   padding: clamp(22px, 3.2vw, 38px) 0;
 }
 
@@ -27,6 +27,11 @@
   line-height: 1;
   letter-spacing: -0.035em;
   text-wrap: balance;
+}
+
+.banner h1 span {
+  display: block;
+  white-space: nowrap;
 }
 
 .carouselFrame {
@@ -84,62 +89,17 @@
   background: #ed5b2a;
 }
 
-.actionBar {
-  border-bottom: 1px solid #ccd5d7;
-  background: #fff;
-}
-
-.actionInner {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 0;
-}
-
-.controls {
-  display: flex;
-  align-items: center;
-  color: #fff;
-  background: #173d4c;
-}
-
-.controls button {
-  display: grid;
-  width: 46px;
-  height: 46px;
-  padding: 0;
-  border: 0;
-  color: inherit;
-  background: transparent;
-  cursor: pointer;
-  place-items: center;
-}
-
-.controls button:hover {
-  color: #ffb49a;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.counter {
-  min-width: 70px;
-  padding: 0 12px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.08em;
-  text-align: center;
-}
-
 .cta {
   display: inline-flex;
+  flex: 0 0 auto;
   gap: 12px;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
-  padding: 0 24px;
+  min-height: 46px;
+  padding: 0 17px;
   color: #fff;
   background: #ed5b2a;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 750;
   transition: background-color 160ms ease, transform 160ms ease;
 }
@@ -149,9 +109,8 @@
   transform: translateY(-2px);
 }
 
-.cta:focus-visible,
-.controls button:focus-visible {
-  outline: 3px solid rgba(237, 91, 42, 0.35);
+.cta:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.88);
   outline-offset: 4px;
 }
 
@@ -169,26 +128,37 @@
   }
 }
 
-@media (max-width: 720px) {
-  .bannerInner,
-  .actionInner {
-    width: calc(100% - 28px);
+@media (max-width: 1020px) {
+  .bannerInner {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
   }
 
+  .banner h1 {
+    font-size: clamp(26px, 5vw, 46px);
+  }
+}
+
+@media (max-width: 720px) {
   .bannerInner {
-    padding: 18px 0 20px;
+    width: calc(100% - 28px);
+    display: grid;
+    gap: 13px;
+    justify-items: start;
+    padding: 16px 0 18px;
   }
 
   .banner h1 {
     max-width: 560px;
-    font-size: clamp(27px, 8.5vw, 38px);
+    font-size: clamp(17px, 5.5vw, 28px);
     line-height: 1.02;
     letter-spacing: -0.03em;
   }
 
   .carouselFrame {
-    height: min(68svh, 690px);
-    min-height: 470px;
+    height: min(64svh, 620px);
+    min-height: 400px;
   }
 
   .watermark {
@@ -197,29 +167,10 @@
     width: 98px;
   }
 
-  .actionInner {
-    display: grid;
-    gap: 12px;
-    padding: 12px 0 14px;
-  }
-
-  .controls {
-    justify-self: center;
-  }
-
-  .controls button {
-    width: 44px;
-    height: 44px;
-  }
-
-  .counter {
-    min-width: 66px;
-    padding: 0 8px;
-    font-size: 11px;
-  }
-
   .cta {
-    width: 100%;
+    min-height: 42px;
+    padding-inline: 14px;
+    font-size: 12px;
   }
 }
 

@@ -3,12 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  IconArrowLeft,
   IconArrowRight,
-  IconPlayerPause,
-  IconPlayerPlay,
+  IconFileTypePdf,
 } from "@tabler/icons-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./HomeHeroCarousel.module.css";
 
 const slides = [
@@ -30,13 +28,12 @@ type HomeHeroCarouselProps = {
 
 export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
-  const showSlide = useCallback((index: number) => {
+  const showSlide = (index: number) => {
     setActiveIndex((index + slides.length) % slides.length);
-  }, []);
+  };
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -47,12 +44,12 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   }, []);
 
   useEffect(() => {
-    if (isPaused || reduceMotion) return;
+    if (reduceMotion) return;
     const interval = window.setInterval(() => {
       setActiveIndex((index) => (index + 1) % slides.length);
     }, 6500);
     return () => window.clearInterval(interval);
-  }, [isPaused, reduceMotion]);
+  }, [reduceMotion]);
 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
@@ -77,7 +74,15 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
     >
       <div className={styles.banner}>
         <div className={styles.bannerInner}>
-          <h1>Безопасный и совместимый дымоход — без замерщика</h1>
+          <h1>
+            <span>Безопасный, совместимый дымоход</span>
+            <span>— без замерщика</span>
+          </h1>
+          <Link className={styles.cta} href="/zamery?edit=1">
+            <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
+            Получить смету в PDF
+            <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
+          </Link>
         </div>
       </div>
 
@@ -111,38 +116,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         </div>
       </div>
 
-      <div className={styles.actionBar}>
-        <div className={styles.actionInner}>
-          <div className={styles.controls}>
-            <button type="button" onClick={() => showSlide(activeIndex - 1)} aria-label="Предыдущая фотография">
-              <IconArrowLeft size={20} strokeWidth={1.7} aria-hidden />
-            </button>
-            <span className={styles.counter}>
-              {String(activeIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsPaused((value) => !value)}
-              aria-label={isPaused ? "Продолжить смену фотографий" : "Остановить смену фотографий"}
-              aria-pressed={isPaused}
-            >
-              {isPaused ? (
-                <IconPlayerPlay size={19} strokeWidth={1.7} aria-hidden />
-              ) : (
-                <IconPlayerPause size={19} strokeWidth={1.7} aria-hidden />
-              )}
-            </button>
-            <button type="button" onClick={() => showSlide(activeIndex + 1)} aria-label="Следующая фотография">
-              <IconArrowRight size={20} strokeWidth={1.7} aria-hidden />
-            </button>
-          </div>
-
-          <Link className={styles.cta} href="/zamery?edit=1">
-            Получить смету в PDF
-            <IconArrowRight size={20} strokeWidth={1.8} aria-hidden />
-          </Link>
-        </div>
-      </div>
     </section>
   );
 }
