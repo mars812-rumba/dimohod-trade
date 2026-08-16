@@ -172,6 +172,11 @@
       "scheme": {
         "floor_clamp_shape": "rectangular_support_with_side_lugs",
         "floor_clamp_relation": "left_lug -> joist; clamp -> sandwich_pipe; right_lug -> joist",
+        "finish_flange_positions": [
+          "upper_floor_face",
+          "lower_ceiling_face"
+        ],
+        "finish_flange_opening_relation": "Each flange must extend visibly beyond both edges of the passage opening and cover the opening perimeter; exact overhang requires a measured opening and selected SKU dimensions.",
         "generic_ring_clamp_allowed": false
       }
     },
@@ -293,6 +298,7 @@
         "upk_side": "exterior",
         "master_flash_relation": "separate pipe-mounted element; never relabel as UPK",
         "interior_flange_side": "interior",
+        "interior_flange_opening_relation": "The angled interior flange must extend visibly beyond both edges of the rafter passage opening and cover its perimeter; exact overhang requires a measured opening and selected SKU dimensions.",
         "roof_passage_wool_rendering": "hatched_on_both_sides_of_sandwich_pipe_inside_rafter_opening",
         "roof_clamp_family": "homut-v-perekrytie",
         "roof_clamp_body_orientation": "level_perpendicular_to_vertical_pipe_not_rotated_to_roof_angle",

@@ -2383,6 +2383,12 @@ body.mobile-menu-open {
   stroke-width: 1;
 }
 
+.configurator-building-svg .scheme-floor-finish-flanges rect {
+  fill: #8f9a9e;
+  stroke: #4d5b61;
+  stroke-width: 1;
+}
+
 .configurator-building-svg .scheme-roof-skirt {
   fill: #c8ced0;
   stroke: #59666b;

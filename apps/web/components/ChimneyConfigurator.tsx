@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AlertTriangle, Download, Mail, PackageCheck } from "lucide-react";
+import {
+  IconAlertTriangle as AlertTriangle,
+  IconDownload as Download,
+  IconMail as Mail,
+  IconPackage as PackageCheck,
+} from "@tabler/icons-react";
 import {
   calculationProfileMeasurementsHref,
   readCalculationProfiles,
@@ -301,6 +306,7 @@ export function GeneratedChimneyScheme({
   const upkRightBaseY = roofSurfaceYAt(chimneyX + upkHalfWidth, roofOuterAtChimneyY);
   const upkTopY = Math.min(upkLeftBaseY, upkRightBaseY) - 42;
   const skirtHalfWidth = 28;
+  const roofInteriorFlangeHalfWidth = Math.max(44, sandwichHalfWidthPx + 18);
   const skirtLeftBaseY = roofSurfaceYAt(chimneyX - skirtHalfWidth, roofInnerAtChimneyY);
   const skirtRightBaseY = roofSurfaceYAt(chimneyX + skirtHalfWidth, roofInnerAtChimneyY);
   const skirtNeckY = Math.max(skirtLeftBaseY, skirtRightBaseY) + 18;
@@ -380,7 +386,7 @@ export function GeneratedChimneyScheme({
   return (
     <svg className="configurator-generated-svg configurator-building-svg" viewBox="0 0 380 740" role="img" aria-labelledby="generated-scheme-title generated-scheme-description">
       <title id="generated-scheme-title">Расчётная схема дымохода через перекрытие и кровлю</title>
-      <desc id="generated-scheme-description">Вертикальный разрез здания с печью, трубами, проходными зонами, координатами стыков и перечнем узлов.</desc>
+      <desc id="generated-scheme-description">Вертикальный разрез здания с печью, трубами, проходными зонами, широкими верхними и нижними фланцами перекрытий, внутренним кровельным фланцем, координатами стыков и перечнем узлов.</desc>
       <rect width="380" height="740" className="scheme-paper" />
 
       <g aria-hidden="true">
@@ -531,10 +537,18 @@ export function GeneratedChimneyScheme({
         const lowerSurfaceY = verticalY(zone.startMm);
         const skirtNeckHalfWidth = Math.max(3, sandwichHalfWidthPx);
         const skirtBaseHalfWidth = skirtNeckHalfWidth + 7;
+        const passageOpeningHalfWidth = skirtBaseHalfWidth + 4;
+        const finishFlangeHalfWidth = passageOpeningHalfWidth + 10;
         return (
-          <g key={`${zone.id}-decorative-skirts`} className="scheme-floor-decorative-skirts" aria-hidden="true">
-            <path d={`M${chimneyX - skirtBaseHalfWidth} ${upperSurfaceY} L${chimneyX - skirtNeckHalfWidth} ${upperSurfaceY - 8} L${chimneyX + skirtNeckHalfWidth} ${upperSurfaceY - 8} L${chimneyX + skirtBaseHalfWidth} ${upperSurfaceY} Z`} />
-            <path d={`M${chimneyX - skirtBaseHalfWidth} ${lowerSurfaceY} L${chimneyX - skirtNeckHalfWidth} ${lowerSurfaceY + 8} L${chimneyX + skirtNeckHalfWidth} ${lowerSurfaceY + 8} L${chimneyX + skirtBaseHalfWidth} ${lowerSurfaceY} Z`} />
+          <g key={`${zone.id}-passage-finishes`} aria-hidden="true">
+            <g className="scheme-floor-finish-flanges">
+              <rect x={chimneyX - finishFlangeHalfWidth} y={upperSurfaceY - 3} width={finishFlangeHalfWidth * 2} height="6" rx="1" />
+              <rect x={chimneyX - finishFlangeHalfWidth} y={lowerSurfaceY - 3} width={finishFlangeHalfWidth * 2} height="6" rx="1" />
+            </g>
+            <g className="scheme-floor-decorative-skirts">
+              <path d={`M${chimneyX - skirtBaseHalfWidth} ${upperSurfaceY} L${chimneyX - skirtNeckHalfWidth} ${upperSurfaceY - 8} L${chimneyX + skirtNeckHalfWidth} ${upperSurfaceY - 8} L${chimneyX + skirtBaseHalfWidth} ${upperSurfaceY} Z`} />
+              <path d={`M${chimneyX - skirtBaseHalfWidth} ${lowerSurfaceY} L${chimneyX - skirtNeckHalfWidth} ${lowerSurfaceY + 8} L${chimneyX + skirtNeckHalfWidth} ${lowerSurfaceY + 8} L${chimneyX + skirtBaseHalfWidth} ${lowerSurfaceY} Z`} />
+            </g>
           </g>
         );
       })}
@@ -554,9 +568,9 @@ export function GeneratedChimneyScheme({
 
       <g className={roofGeometryMeasured ? "scheme-roof-node" : "scheme-roof-node is-placeholder"} aria-hidden="true">
         <rect
-          x={chimneyX - 31}
+          x={chimneyX - roofInteriorFlangeHalfWidth}
           y={roofInnerAtChimneyY - 3}
-          width="62"
+          width={roofInteriorFlangeHalfWidth * 2}
           height="6"
           className="scheme-roof-inner-flange"
           transform={`rotate(${-drawnRoofAngleDeg} ${chimneyX} ${roofInnerAtChimneyY})`}
@@ -696,8 +710,8 @@ function VerticalPassageDetails({
           <rect x="116" y="77" width="88" height="80" rx="3" className="scheme-node-sleeve" />
           <rect x="124" y="84" width="72" height="66" fill="url(#floor-insulation-pattern)" className="scheme-node-insulation" />
           <rect x="145" y="18" width="30" height="194" className="scheme-node-pipe" />
-          <rect x="106" y="78" width="108" height="8" rx="2" className="scheme-node-flange" />
-          <rect x="106" y="148" width="108" height="8" rx="2" className="scheme-node-flange" />
+          <rect x="90" y="78" width="140" height="8" rx="2" className="scheme-node-flange" />
+          <rect x="90" y="148" width="140" height="8" rx="2" className="scheme-node-flange" />
           <path d="M120 78 L145 62 L175 62 L200 78 Z" className="scheme-node-decorative-skirt" />
           <path d="M120 156 L145 172 L175 172 L200 156 Z" className="scheme-node-decorative-skirt" />
           <rect x="72" y="113" width="65" height="8" className="scheme-node-clamp-ear" />
@@ -735,7 +749,7 @@ function VerticalPassageDetails({
         </div>
         <svg viewBox="0 0 380 280" role="img" aria-labelledby="roof-node-title roof-node-description">
           <title id="roof-node-title">Состав узла прохода кровли</title>
-          <desc id="roof-node-description">Вертикальная сэндвич-труба проходит через кровельный пирог под измеренным углом. Вата показана по обеим сторонам трубы в проёме между стропилами. Хомут в перекрытие установлен ровно поперёк вертикальной трубы, а его боковые ушки закреплены к стропилам. УПК показан снаружи на верхней поверхности, внутренний фланец — отдельно на нижней поверхности.</desc>
+          <desc id="roof-node-description">Вертикальная сэндвич-труба проходит через кровельный пирог под измеренным углом. Вата показана по обеим сторонам трубы в проёме между стропилами. Хомут в перекрытие установлен ровно поперёк вертикальной трубы, а его боковые ушки закреплены к стропилам. УПК показан снаружи на верхней поверхности, широкий внутренний фланец перекрывает края проёма на нижней поверхности.</desc>
           <defs>
             <pattern id="roof-insulation-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
               <path d="M-2 8 L8 -2 M2 10 L10 2" className="scheme-node-hatch" />
@@ -769,9 +783,9 @@ function VerticalPassageDetails({
             className="scheme-node-upk-collar"
           />
           <rect
-            x="122"
+            x="98"
             y={roofInnerAtPipeY - 3.5}
-            width="76"
+            width="124"
             height="7"
             className="scheme-node-flange"
             transform={`rotate(${-drawnRoofAngleDeg} 160 ${roofInnerAtPipeY})`}

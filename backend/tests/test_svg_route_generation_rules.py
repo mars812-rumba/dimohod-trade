@@ -66,6 +66,12 @@ def test_passage_components_and_manual_wool_stay_separate() -> None:
         "Декоративная юбка — снизу перекрытия",
     ]
     assert floor_bom["wool_quantity"]["mode"] == "manual"
+    assert floor_bom["finish_flanges"]["positions"] == [
+        "upper_floor_face",
+        "lower_ceiling_face",
+    ]
+    assert floor_bom["finish_flanges"]["main_route_svg_required"] is True
+    assert "extend beyond" in floor_bom["finish_flanges"]["opening_relation"]
     assert floor_bom["decorative_skirts"]["positions"] == [
         "upper_floor_face",
         "lower_ceiling_face",
@@ -77,6 +83,8 @@ def test_passage_components_and_manual_wool_stay_separate() -> None:
     ]
     assert rules["wall_passage_bom"]["decorative_skirts"]["independently_removable"] is True
     assert rules["roof_passage"]["inside_element"]["separate_from_upk"] is True
+    assert rules["roof_passage"]["inside_element"]["main_route_svg_required"] is True
+    assert "extend beyond" in rules["roof_passage"]["inside_element"]["opening_relation"]
     assert rules["roof_passage"]["decorative_skirt"]["pitched_roof"] == "forbidden"
     assert "foreground" in rules["roof_passage"]["outside_element"]["layering"]
     assert rules["roof_passage"]["catalog_identity"]["required_article_prefix"] == "DT-UPK-"

@@ -189,6 +189,16 @@
       "Декоративная юбка — снизу перекрытия"
     ],
     "forbidden_combined_line": "Комплект вата + стакан",
+    "finish_flanges": {
+      "positions": [
+        "upper_floor_face",
+        "lower_ceiling_face"
+      ],
+      "opening_relation": "Each flat flange outer edge must extend beyond the passage opening on both sides so the flange visibly covers the complete opening perimeter.",
+      "main_route_svg_required": true,
+      "detail_svg_required": true,
+      "dimension_policy": "Do not state an exact overhang until the opening and selected flange SKU dimensions are known."
+    },
     "decorative_skirts": {
       "positions": [
         "upper_floor_face",
@@ -274,6 +284,8 @@
       "name": "Внутренний фланец",
       "position": "inside on the lower roof surface",
       "pitched_roof_shape": "flat flange plate following the roof angle with an angled pipe opening",
+      "opening_relation": "The flange outer edge must extend beyond both sides of the rafter passage opening so the full opening perimeter is covered.",
+      "main_route_svg_required": true,
       "separate_from_upk": true
     },
     "rafter_passage": {
@@ -350,6 +362,7 @@
     "chimney pipes",
     "component connection geometry",
     "floor clamp OVER pipe",
+    "upper and lower floor finish flanges OVER the passage opening",
     "interior angled roof flange as a separate element",
     "external UPK roof flashing IN FOREGROUND over pipe",
     "dimensions and leader lines",
@@ -363,6 +376,8 @@
     "Check that the mouth height satisfies the applicable ridge-distance branch and the minimum height from the grate.",
     "Check that the result separately explains roof requirement, five-metre requirement, controlling requirement, minimum height and actual discrete height.",
     "Check D_SINGLE < D_SANDWICH.",
+    "Check upper and lower floor flanges extend beyond both edges of every floor passage opening in the detail and main route SVG.",
+    "Check the angled interior roof flange extends beyond both edges of the rafter passage opening in the detail and main route SVG.",
     "Check rotary damper diameter equals D_SINGLE.",
     "Check every socketed joint consumes 50 mm of nominal component length.",
     "Check effective component height = nominal height - 50 mm.",
