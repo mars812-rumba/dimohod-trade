@@ -1,4 +1,7 @@
 .hero {
+  display: flex;
+  height: calc(100svh - 68px);
+  flex-direction: column;
   color: #102127;
   background: #f4f6f5;
 }
@@ -32,7 +35,8 @@
 
 .carouselFrame {
   position: relative;
-  height: clamp(460px, 50vw, 700px);
+  min-height: 0;
+  flex: 1 1 auto;
   overflow: hidden;
   background: #102127;
 }
@@ -123,6 +127,10 @@
 }
 
 @media (max-width: 720px) {
+  .hero {
+    height: calc(100svh - 72px);
+  }
+
   .bannerInner {
     width: calc(100% - 28px);
     display: grid;
@@ -133,14 +141,13 @@
 
   .banner h1 {
     max-width: 560px;
-    font-size: clamp(18px, 5.8vw, 30px);
+    font-size: clamp(17px, 4.8vw, 22px);
     line-height: 1.02;
     letter-spacing: -0.03em;
   }
 
   .carouselFrame {
-    height: min(64svh, 620px);
-    min-height: 400px;
+    min-height: 0;
   }
 
   .cta {

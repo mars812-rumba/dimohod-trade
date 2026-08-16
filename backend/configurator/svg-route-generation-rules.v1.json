@@ -105,7 +105,10 @@
     },
     "rotary_damper": {
       "diameter": "D_SINGLE",
-      "rule": "Rotary damper belongs to the single-wall section and must have the same pipe diameter as the single-wall start pipe."
+      "rule": "Rotary damper belongs to the single-wall section and must have the same pipe diameter as the single-wall start pipe.",
+      "overall_length_mm": 180,
+      "effective_installed_length_mm": 130,
+      "length_rule": "The 50 mm inserted port is already included in the 130 mm effective installed length; never add it again."
     },
     "sandwich_pipe": {
       "diameter": "D_SANDWICH",
@@ -128,7 +131,7 @@
       "sandwich pipe -> sandwich pipe",
       "other socketed chimney component connections"
     ],
-    "effective_height_formula": "effective_height_mm = nominal_height_mm - 50",
+    "effective_height_formula": "Pipe/support component: effective_height_mm = nominal_height_mm - 50. Rotary damper exception: effective_height_mm = 130 because the inserted port is already accounted for.",
     "example": {
       "nominal_pipe_height_mm": 1000,
       "effective_added_height_mm": 950

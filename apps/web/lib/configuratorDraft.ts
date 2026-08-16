@@ -19,6 +19,7 @@ export type ScenarioConfiguratorDraft = {
   diameterY: string;
   diameterSource: DiameterSource;
   connectionHeight: string;
+  grateHeight: string;
   rearOutletBottomHeight: string;
   warmupLength: string;
   rotaryDamperHeight: string;
@@ -34,6 +35,7 @@ export type ScenarioConfiguratorDraft = {
   levels: string;
   hasAttic: boolean;
   ridgeHeight: string;
+  ridgeHorizontalDistance: string;
   routeHeight: string;
   roofAngle: string;
   roofThickness: string;
@@ -73,9 +75,10 @@ export function createEmptyScenarioDraft(
     diameterY: "",
     diameterSource: "unknown",
     connectionHeight: "",
+    grateHeight: "",
     rearOutletBottomHeight: "",
     warmupLength: "500",
-    rotaryDamperHeight: "0",
+    rotaryDamperHeight: "130",
     supportCapHeight: "70",
     connectionDetails: "",
     route: "unknown",
@@ -88,6 +91,7 @@ export function createEmptyScenarioDraft(
     levels: "",
     hasAttic: false,
     ridgeHeight: "",
+    ridgeHorizontalDistance: "",
     routeHeight: "",
     roofAngle: "",
     roofThickness: "",
@@ -140,8 +144,9 @@ export function scenarioDraftConfiguratorHref(draft: ScenarioConfiguratorDraft):
   ].filter(Boolean);
   if (connection.length) params.set("stoveModel", connection.join(" · "));
 
-  const height = draft.route === "ceiling" ? draft.routeHeight : draft.outdoorHeight;
-  if (height && Number.isFinite(Number(height))) params.set("heightM", height);
+  if (draft.route !== "ceiling" && draft.outdoorHeight && Number.isFinite(Number(draft.outdoorHeight))) {
+    params.set("heightM", draft.outdoorHeight);
+  }
   const wallDistance = Number(draft.wallDistance);
   if (draft.wallDistance && Number.isFinite(wallDistance)) {
     params.set("distanceM", String(wallDistance > 20 ? wallDistance / 1000 : wallDistance));

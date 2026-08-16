@@ -6,8 +6,8 @@ import { useSearchParams } from "next/navigation";
 import {
   IconAlertTriangle as AlertTriangle,
   IconDownload as Download,
-  IconMail as Mail,
   IconPackage as PackageCheck,
+  IconPlus as Plus,
 } from "@tabler/icons-react";
 import {
   calculationProfileMeasurementsHref,
@@ -15,10 +15,6 @@ import {
   type CalculationProfile,
 } from "@/lib/calculationProfiles";
 import {
-  createEmptyScenarioDraft,
-  mergeConfiguratorDraft,
-  parseBanyaDraft,
-  readConfiguratorDraft,
   saveConfiguratorDraft,
   type ScenarioConfiguratorDraft,
 } from "@/lib/configuratorDraft";
@@ -26,6 +22,7 @@ import {
   bomForVariant,
   calculateChimney,
   PIPE_SOCKET_OVERLAP_MM,
+  ROTARY_DAMPER_EFFECTIVE_LENGTH_MM,
   type ChimneyCalculation,
   type PipeLayoutVariant,
 } from "@/lib/chimneyCalculation";
@@ -38,7 +35,6 @@ import {
   type EstimateMeasurement,
 } from "@/lib/chimneyEstimate";
 import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
-import { LeadForm } from "./LeadForm";
 
 type RouteType = "ceiling" | "wall";
 type StoveType = "bania" | "pech" | "kamin" | "tt-kotel" | "gaz";
@@ -95,16 +91,6 @@ const STOVE_OPTIONS: Array<{ id: StoveType; label: string }> = [
   { id: "gaz", label: "Газовый котёл" },
 ];
 
-const SCENARIO_STOVE_PRESETS: Record<string, StoveType> = {
-  banya: "bania",
-  pech: "pech",
-  kamin: "kamin",
-  "tt-kotel": "tt-kotel",
-  "tverdotoplivny-kotel": "tt-kotel",
-  gaz: "gaz",
-  "gazovyy-kotel": "gaz",
-};
-
 const OUTLET_OPTIONS: Array<{ id: OutletType; label: string }> = [
   { id: "vertical", label: "Вертикальный" },
   { id: "horizontal", label: "Горизонтальный" },
@@ -120,6 +106,8 @@ const ROOF_OPTIONS: Array<{ id: RoofType; label: string }> = [
   { id: "pitched", label: "Скатная" },
   { id: "flat", label: "Плоская" },
 ];
+
+const ACTIVE_CALCULATION_PROFILE_KEY = "dimohod-trade:active-calculation-profile:v1";
 
 function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[] {
   if (!draft) return [];
@@ -369,7 +357,9 @@ export function GeneratedChimneyScheme({
       id: part.id,
       anchorY: (verticalY(part.startMm) + verticalY(part.endMm)) / 2,
       label: part.label,
-      detail: `${part.nominalLengthMm} мм · +${part.effectiveMm} мм`,
+      detail: part.id === "rotary_damper"
+        ? `${part.effectiveMm} мм полезная · порт учтён`
+        : `${part.nominalLengthMm} мм · +${part.effectiveMm} мм`,
     })),
     {
       id: "heater",
@@ -830,32 +820,22 @@ function VerticalPassageDetails({
 
 export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorProps) {
   const searchParams = useSearchParams();
-  const scenario = searchParams.get("scenario");
   const requestedProfileId = searchParams.get("profile") ?? "";
-  const serializedDraft = searchParams.get("draft");
-  const urlDraft = useMemo(() => parseBanyaDraft(serializedDraft), [serializedDraft]);
-  const [transferredDraft, setTransferredDraft] = useState<ScenarioConfiguratorDraft | null>(urlDraft);
-  const [draftHydrated, setDraftHydrated] = useState(false);
+  const [transferredDraft, setTransferredDraft] = useState<ScenarioConfiguratorDraft | null>(null);
   const [calculationProfiles, setCalculationProfiles] = useState<CalculationProfile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState("");
   const [profileNotice, setProfileNotice] = useState("");
-  const initialStove = scenario ? SCENARIO_STOVE_PRESETS[scenario] : undefined;
-  const initialRoute = searchParams.get("route");
-  const initialOutlet = searchParams.get("outlet");
-  const initialHeight = Number(searchParams.get("heightM"));
-  const initialDistance = Number(searchParams.get("distanceM"));
-  const initialFloors = Number(searchParams.get("floors"));
   const transferredDetails = useMemo(() => scenarioDraftSummary(transferredDraft), [transferredDraft]);
-  const [route, setRoute] = useState<RouteType>(initialRoute === "wall" ? "wall" : "ceiling");
-  const [stove, setStove] = useState<StoveType>(initialStove ?? "bania");
-  const [outlet, setOutlet] = useState<OutletType>(initialOutlet === "horizontal" ? "horizontal" : "vertical");
-  const [distanceM, setDistanceM] = useState(Number.isFinite(initialDistance) && initialDistance >= 0.1 && initialDistance <= 6 ? initialDistance : 1.5);
-  const [floors, setFloors] = useState(Number.isFinite(initialFloors) && initialFloors >= 1 && initialFloors <= 3 ? initialFloors : 1);
+  const [route, setRoute] = useState<RouteType>("ceiling");
+  const [stove, setStove] = useState<StoveType>("bania");
+  const [outlet, setOutlet] = useState<OutletType>("vertical");
+  const [distanceM, setDistanceM] = useState(1.5);
+  const [floors, setFloors] = useState(1);
   const [hasAttic, setHasAttic] = useState(false);
   const [roof, setRoof] = useState<RoofType>("pitched");
-  const [heightM, setHeightM] = useState(Number.isFinite(initialHeight) && initialHeight >= 1 && initialHeight <= 20 ? initialHeight : 5);
+  const [heightM, setHeightM] = useState(5);
   const [warmupLengthMm, setWarmupLengthMm] = useState(500);
-  const [rotaryDamperHeightMm, setRotaryDamperHeightMm] = useState(0);
+  const rotaryDamperHeightMm = ROTARY_DAMPER_EFFECTIVE_LENGTH_MM;
   const [supportCapLengthMm, setSupportCapLengthMm] = useState(70);
   const [passageWoolKits, setPassageWoolKits] = useState(3);
   const [selectedVariantId, setSelectedVariantId] = useState("");
@@ -871,26 +851,30 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       const requestedProfile = requestedProfileId
         ? profiles.find((profile) => profile.id === requestedProfileId)
         : undefined;
+      const storedProfileId = window.localStorage.getItem(ACTIVE_CALCULATION_PROFILE_KEY) ?? "";
+      const storedProfile = storedProfileId
+        ? profiles.find((profile) => profile.id === storedProfileId)
+        : undefined;
+      const nextProfile = requestedProfile ?? storedProfile;
       setCalculationProfiles(profiles);
-      const storedDraft = readConfiguratorDraft(window.sessionStorage);
-      const nextDraft = requestedProfile?.draft ?? (urlDraft
-        ? mergeConfiguratorDraft(storedDraft, urlDraft)
-        : storedDraft);
-      if (nextDraft) {
-        setTransferredDraft(nextDraft);
-        saveConfiguratorDraft(window.sessionStorage, nextDraft);
+      if (nextProfile) {
+        setTransferredDraft(nextProfile.draft);
+        setActiveProfileId(nextProfile.id);
+        saveConfiguratorDraft(window.sessionStorage, nextProfile.draft);
+        window.localStorage.setItem(ACTIVE_CALCULATION_PROFILE_KEY, nextProfile.id);
+        setProfileNotice(`Открыт замер «${nextProfile.name}».`);
+      } else {
+        setTransferredDraft(null);
+        setActiveProfileId("");
       }
-      if (requestedProfile) {
-        setActiveProfileId(requestedProfile.id);
-        setProfileNotice(`Загружен профиль «${requestedProfile.name}».`);
-      } else if (requestedProfileId) {
+      if (requestedProfileId && !requestedProfile) {
         setProfileNotice("Этот профиль не найден в текущем браузере. Выберите другой профиль или создайте новый.");
       }
     } catch {
-      // URL parameters still initialize the configurator when storage is unavailable.
+      setTransferredDraft(null);
+      setProfileNotice("Не удалось прочитать сохранённые замеры на этом устройстве.");
     }
-    setDraftHydrated(true);
-  }, [requestedProfileId, urlDraft]);
+  }, [requestedProfileId]);
 
   useEffect(() => {
     if (!transferredDraft) return;
@@ -910,8 +894,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     setHasAttic(Boolean(transferredDraft.hasAttic));
     const draftWarmup = Number(transferredDraft.warmupLength);
     if (Number.isFinite(draftWarmup) && draftWarmup >= 0) setWarmupLengthMm(draftWarmup);
-    const draftRotaryDamperHeight = Number(transferredDraft.rotaryDamperHeight);
-    if (Number.isFinite(draftRotaryDamperHeight) && draftRotaryDamperHeight >= 0) setRotaryDamperHeightMm(draftRotaryDamperHeight);
     const draftSupportCap = Number(transferredDraft.supportCapHeight);
     if (Number.isFinite(draftSupportCap) && draftSupportCap >= 0) setSupportCapLengthMm(draftSupportCap);
     const draftPassageWoolKits = Number(transferredDraft.passageWoolKits);
@@ -943,40 +925,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       if (connection.length) setStoveModel(connection.join(" · "));
     }
   }, [searchParams, transferredDraft]);
-
-  useEffect(() => {
-    if (!draftHydrated) return;
-    const draftScenario = stove === "bania" ? "banya" : "dom";
-    const equipmentType = stove === "bania" ? "" : stove;
-    const baseDraft = transferredDraft?.scenario === draftScenario
-      ? transferredDraft
-      : createEmptyScenarioDraft(draftScenario);
-    const draftRoute = route === "wall"
-      && outlet === "horizontal"
-      && transferredDraft?.route === "wall-direct"
-      ? "wall-direct"
-      : route;
-    const updatedDraft = mergeConfiguratorDraft(baseDraft, {
-      scenario: draftScenario,
-      equipmentType,
-      route: draftRoute,
-      outlet: outlet === "vertical" ? "top" : "rear",
-      levels: String(floors),
-      hasAttic,
-      warmupLength: String(warmupLengthMm),
-      rotaryDamperHeight: String(rotaryDamperHeightMm),
-      supportCapHeight: String(supportCapLengthMm),
-      passageWoolKits: String(passageWoolKits),
-      routeHeight: baseDraft.routeHeight,
-      outdoorHeight: route === "wall" ? String(heightM) : baseDraft.outdoorHeight,
-      wallDistance: route === "wall" ? String(Math.round(distanceM * 1000)) : baseDraft.wallDistance,
-    });
-    try {
-      saveConfiguratorDraft(window.sessionStorage, updatedDraft);
-    } catch {
-      // The configurator remains usable without browser storage.
-    }
-  }, [distanceM, draftHydrated, floors, hasAttic, heightM, outlet, passageWoolKits, rotaryDamperHeightMm, route, stove, supportCapLengthMm, transferredDraft, warmupLengthMm]);
 
   const calculationDraft = useMemo<ScenarioConfiguratorDraft | null>(() => {
     if (!transferredDraft) return null;
@@ -1196,7 +1144,13 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const loadCalculationProfile = (profileId: string) => {
     setActiveProfileId(profileId);
     if (!profileId) {
-      setProfileNotice("Используется текущий несохранённый расчёт.");
+      setTransferredDraft(null);
+      setProfileNotice("Выберите сохранённый замер или создайте новый.");
+      try {
+        window.localStorage.removeItem(ACTIVE_CALCULATION_PROFILE_KEY);
+      } catch {
+        // The empty state still works when browser storage is unavailable.
+      }
       return;
     }
 
@@ -1209,32 +1163,12 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     setTransferredDraft(profile.draft);
     try {
       saveConfiguratorDraft(window.sessionStorage, profile.draft);
+      window.localStorage.setItem(ACTIVE_CALCULATION_PROFILE_KEY, profile.id);
     } catch {
       // The loaded values still remain available for the current render.
     }
-    setProfileNotice(`Загружен профиль «${profile.name}».`);
+    setProfileNotice(`Открыт замер «${profile.name}».`);
   };
-  const configuration = useMemo(
-    () =>
-      [
-        `Маршрут: ${route === "ceiling" ? "через дом" : "по улице"}`,
-        `Источник: ${stoveLabel}`,
-        `Модель отопителя / патрубок: ${stoveModel.trim() || "не указаны"}`,
-        route === "ceiling" ? `Этажность: ${floors}; кровля: ${roof === "pitched" ? "скатная" : "плоская"}` : `Выход: ${outlet === "vertical" ? "вертикальный" : "горизонтальный"}; до стены: ${distanceM.toFixed(1)} м`,
-        `Расчётная отметка завершения: ${calculation.routeTargetMm} мм`,
-        `Раскладка труб: ${selectedVariant?.label || "не найдена"}`,
-        `Соединения: ${selectedVariant?.jointPositionsMm.join(", ") || "нет"} мм`,
-        `Запас раскладки: ${selectedVariant?.reserveMm ?? 0} мм`,
-        ...transferredDetails,
-        "Позиции:",
-        ...selectedBom.map((part) => `${part.label} — ${part.quantity} шт.${part.quantityNote ? `; ${part.quantityNote}` : ""} (${part.selectionReason})`),
-        ...(calculation.errors.length ? ["Ошибки:", ...calculation.errors] : []),
-        "Требует проверки:",
-        ...calculation.reviewItems,
-      ].join("\n"),
-    [calculation, distanceM, floors, outlet, roof, route, selectedBom, selectedVariant, stoveLabel, stoveModel, transferredDetails],
-  );
-
   async function savePdf() {
     if (pdfStatus === "generating") return;
     setPdfStatus("generating");
@@ -1247,33 +1181,28 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   }
 
   return (
-    <div className="chimney-configurator" aria-label="Интерактивный конфигуратор комплекта дымохода">
+    <div className="chimney-configurator" aria-label="Результат расчёта дымохода по сохранённым замерам">
       <div className="configurator-header">
         <div>
-          <p className="eyebrow">Бета · результат уточняет инженер</p>
-          <h3>Соберите базовую схему дымохода за 30 секунд.</h3>
+          <h3>{activeProfile ? activeProfile.name : "Расчёт дымохода по сохранённым замерам"}</h3>
           <p>
-            Теперь конфигуратор учитывает два маршрута: вертикальный проход через дом и кровлю,
-            либо боковое подключение с наружным стояком по фасаду.
+            Выберите замер, чтобы открыть рассчитанную схему, состав комплекта и PDF-смету.
+            Изменение размеров выполняется на отдельной странице замеров.
           </p>
-          {initialStove ? (
-            <p className="configurator-preset" role="status">
-              Сценарий страницы: <strong>{stoveLabel}</strong>
-              {transferredDraft ? " · исходные данные перенесены" : ""}
-            </p>
-          ) : null}
         </div>
-        <div className="configurator-count" aria-live="polite">
-          <strong>{totalQty}</strong>
-          <span>деталей в комплекте</span>
-        </div>
+        {activeProfile ? (
+          <div className="configurator-count" aria-live="polite">
+            <strong>{totalQty}</strong>
+            <span>деталей в комплекте</span>
+          </div>
+        ) : null}
       </div>
 
       <div className="configurator-profile-bar">
         <label className="configurator-profile-select">
           <span>Замеры объекта</span>
           <select value={activeProfileId} onChange={(event) => loadCalculationProfile(event.target.value)}>
-            <option value="">Текущий несохранённый расчёт</option>
+            <option value="">Выберите сохранённый замер</option>
             {calculationProfiles.map((profile) => (
               <option key={profile.id} value={profile.id}>
                 {profile.name}
@@ -1284,16 +1213,33 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         <div className="configurator-profile-meta">
           <p role="status">
             {profileNotice || (calculationProfiles.length
-              ? "Выберите сохранённые замеры. Изменения в конфигураторе не перезаписывают их автоматически."
-              : "Сохранённых профилей в этом браузере пока нет.")}
+              ? "Выберите объект — результат откроется без дополнительных полей."
+              : "На этом устройстве пока нет сохранённых замеров.")}
           </p>
-          <Link href={measurementsHref}>
-            {activeProfile ? "Изменить замеры" : "Открыть мои замеры"}
-          </Link>
+          <div className="configurator-profile-actions">
+            {activeProfile ? <Link href={measurementsHref}>Изменить замеры</Link> : null}
+            <Link className="is-primary" href="/zamery?edit=1">
+              <Plus aria-hidden size={16} /> Новый замер
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="configurator-body">
+      {!activeProfile ? (
+        <div className="configurator-empty-state">
+          <strong>{calculationProfiles.length ? "Выберите сохранённый замер" : "Сначала сделайте замеры объекта"}</strong>
+          <p>
+            {calculationProfiles.length
+              ? "После выбора здесь появятся схема дымохода, BOM с ценами и кнопка скачивания PDF."
+              : "Заполните размеры на странице замеров и сохраните профиль. Затем схема, комплект и смета появятся здесь автоматически."}
+          </p>
+          <Link href="/zamery?edit=1">
+            <Plus aria-hidden size={17} /> Сделать новый замер
+          </Link>
+        </div>
+      ) : (
+      <>
+      <div className="configurator-body is-results-only">
         <div className="configurator-controls">
           <div className="configurator-field">
             <label className="configurator-text-field">
@@ -1425,16 +1371,14 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                   />
                 </label>
                 <label className="configurator-text-field">
-                  <span className="configurator-label">Высота поворотного шибера, мм</span>
+                  <span className="configurator-label">Полезная длина поворотного шибера, мм</span>
                   <input
-                    inputMode="numeric"
-                    min="0"
-                    max={warmupLengthMm}
-                    onChange={(event) => setRotaryDamperHeightMm(Math.max(0, Number(event.target.value) || 0))}
+                    aria-readonly="true"
+                    readOnly
                     type="number"
                     value={rotaryDamperHeightMm}
                   />
-                  <small>Укажите фактический размер: он вычитается из длины одностенной трубы-разгона.</small>
+                  <small>Фиксировано: 130 мм уже с вставленным портом. Дополнительные 50 мм не прибавляются.</small>
                 </label>
                 <label className="configurator-text-field">
                   <span className="configurator-label">Опорная заглушка, мм</span>
@@ -1740,24 +1684,15 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       </div>
       <div className="configurator-result-actions">
         <div>
-          <strong>Комплект собран в конфигураторе</strong>
+          <strong>Комплект рассчитан по замерам</strong>
           <span>{estimate.unpricedLineCount ? `Предварительный итог ${formatRub(estimate.knownSubtotalRub)} · ${estimate.unpricedLineCount} поз. без цены.` : `Итого ${formatRub(estimate.knownSubtotalRub)}.`}</span>
         </div>
         <button disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"} type="button" onClick={savePdf}>
           <Download aria-hidden size={16} /> {pdfStatus === "generating" ? "Формируем…" : "Сохранить PDF"}
         </button>
-        <a href={`mailto:office@dimohod-trade.pro?subject=${encodeURIComponent("Проверка сметы дымохода")}&body=${encodeURIComponent(configuration)}`}>
-          <Mail aria-hidden size={16} /> Отправить по почте
-        </a>
       </div>
-      <div className="configurator-lead">
-        <LeadForm source="configurator" configuration={configuration} title="Проверить комплект перед заказом" />
-        <aside>
-          <strong>Можно просто позвонить</strong>
-          <a href="tel:+79650756555">+7 (965) 075-65-55</a>
-          <span>Санкт-Петербург, ул. Хрустальная, 11Б<br />ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span>
-        </aside>
-      </div>
+      </>
+      )}
     </div>
   );
 }

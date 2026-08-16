@@ -386,9 +386,10 @@
           "support_cap"
         ],
         "total_height_input": "warmup_length_mm",
-        "rotary_damper_height_input": "rotary_damper_height_mm",
-        "rotary_damper_height_mode": "manual_required_because_catalog_dimension_missing",
-        "single_wall_pipe_nominal_length_formula": "warmup_length_mm - rotary_damper_height_mm",
+        "rotary_damper_effective_height_mm": 130,
+        "rotary_damper_overall_height_mm": 180,
+        "rotary_damper_height_mode": "fixed_verified_effective_length_with_inserted_port",
+        "single_wall_pipe_nominal_length_formula": "warmup_length_mm - rotary_damper_effective_height_mm",
         "single_wall_pipe_sku_selection": {
           "first_choice": "exact catalogue length with matching inner diameter and single-wall contour",
           "fallback_when_exact_length_missing": "SKU with the smallest absolute catalogue-length difference, preserving diameter and contour filters",
@@ -396,9 +397,9 @@
           "verification_rule": "When fallback length differs from the calculated length, flag the difference for final assembled-height verification."
         },
         "socket_overlap_mm": 50,
-        "effective_height_formula_each_component": "nominal_height_mm - socket_overlap_mm",
+        "effective_height_formula_each_component": "pipe_or_support_component: nominal_height_mm - socket_overlap_mm; rotary_damper: fixed 130 mm because its 50 mm inserted port is already accounted for",
         "assembled_height_formula": "sum(component_effective_height_mm)",
-        "constraint": "0 < rotary_damper_height_mm < warmup_length_mm"
+        "constraint": "rotary_damper_effective_height_mm < warmup_length_mm"
       },
       "required_assemblies": [
         "floor_passage",

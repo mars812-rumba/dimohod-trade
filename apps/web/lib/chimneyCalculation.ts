@@ -6,6 +6,8 @@ import {
 import { calculatePitchedRoofPassage } from "./roofGeometry";
 
 export const PIPE_SOCKET_OVERLAP_MM = 50;
+export const ROTARY_DAMPER_EFFECTIVE_LENGTH_MM = 130;
+export const ROTARY_DAMPER_OVERALL_LENGTH_MM = 180;
 export const PIPE_LENGTHS = [
   { nominalMm: 1000, effectiveMm: 950 },
   { nominalMm: 500, effectiveMm: 450 },
@@ -359,9 +361,7 @@ function addRouteNodes(
       quantity: 1,
       contour: "одностенный",
       zone: "transition",
-      selectionReason: rotaryDamperHeightMm > 0
-        ? `Установлен между трубой-разгоном и опорной заглушкой; учтённая высота ${rotaryDamperHeightMm} мм.`
-        : "Устанавливается между трубой-разгоном и опорной заглушкой; высоту нужно указать вручную.",
+      selectionReason: `Установлен между трубой-разгоном и опорной заглушкой; полезная длина ${rotaryDamperHeightMm} мм уже учитывает вставленный 50-мм порт.`,
       requiresSku: true,
       catalogSearch: "Одноконтурный шибер поворотный",
     });
@@ -527,7 +527,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const legacyRouteTargetMm = connectionHeightMm + routeLengthMm;
   const warmupLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.warmupLengthMm ?? 500)) : 0;
   const rotaryDamperHeightMm = routeKind === "ceiling"
-    ? Math.max(0, Math.round(input.rotaryDamperHeightMm ?? positiveNumber(input.draft?.rotaryDamperHeight) ?? 0))
+    ? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM
     : 0;
   const singleWallWarmupPipeLengthMm = Math.max(0, warmupLengthMm - rotaryDamperHeightMm);
   const supportCapLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.supportCapLengthMm ?? 70)) : 0;
@@ -539,9 +539,16 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     pipeStartMm += effectiveMm;
   }
   if (rotaryDamperHeightMm > 0) {
-    const effectiveMm = effectiveComponentHeight(rotaryDamperHeightMm);
-    fixedParts.push({ id: "rotary_damper", label: "Шибер поворотный", axis: "vertical", nominalLengthMm: rotaryDamperHeightMm, effectiveMm, startMm: pipeStartMm, endMm: pipeStartMm + effectiveMm });
-    pipeStartMm += effectiveMm;
+    fixedParts.push({
+      id: "rotary_damper",
+      label: "Шибер поворотный",
+      axis: "vertical",
+      nominalLengthMm: ROTARY_DAMPER_OVERALL_LENGTH_MM,
+      effectiveMm: rotaryDamperHeightMm,
+      startMm: pipeStartMm,
+      endMm: pipeStartMm + rotaryDamperHeightMm,
+    });
+    pipeStartMm += rotaryDamperHeightMm;
   }
   if (supportCapLengthMm > 0) {
     const effectiveMm = effectiveComponentHeight(supportCapLengthMm);
@@ -593,9 +600,6 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   }
   if (routeKind === "ceiling" && !grateHeightMm) {
     reviewItems.unshift("Указать высоту колосниковой решётки или подтвердить исходную отметку по паспорту отопителя.");
-  }
-  if (routeKind === "ceiling" && rotaryDamperHeightMm === 0) {
-    reviewItems.unshift("Указать фактическую высоту поворотного шибера: в каталоге этот размер не заполнен.");
   }
   if (routeKind === "ceiling" && rotaryDamperHeightMm >= warmupLengthMm && warmupLengthMm > 0) {
     errors.push("Высота поворотного шибера должна быть меньше общей высоты разгона.");
