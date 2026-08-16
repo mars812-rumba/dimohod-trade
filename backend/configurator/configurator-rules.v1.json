@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.3.0",
-  "updated_at": "2026-08-15",
+  "schema_version": "1.4.0",
+  "updated_at": "2026-08-16",
   "source": {
     "type": "owner_confirmed",
     "status": "active_mvp_with_review_gates",
@@ -431,6 +431,32 @@
           ],
           "message": "Позже проверить, хватает ли места для шибера и обслуживания заднего подключения."
         }
+      ]
+    }
+  },
+  "estimate_pdf_contract": {
+    "scope": "current_selected_bom_only",
+    "removed_lines": "exclude_from_totals_and_list_separately",
+    "line_total_formula": "quantity * current_catalog_sku_price_rub",
+    "known_subtotal_formula": "sum(line_total_rub where current_catalog_sku_price_rub is confirmed)",
+    "missing_price_policy": "show_as_requires_clarification_and_never_invent_or_include_in_known_subtotal",
+    "required_sections": [
+      "customer_measurements",
+      "route_and_selected_layout",
+      "bom_with_sku_characteristics",
+      "quantity_unit_price_and_line_total",
+      "known_price_subtotal",
+      "missing_price_count",
+      "review_items_and_calculation_errors",
+      "generation_timestamp"
+    ],
+    "document_status": "preliminary_estimate_requires_confirmation",
+    "pricing_tiers": {
+      "status": "deferred",
+      "planned_values": [
+        "economy_aisi_430",
+        "standard",
+        "premium"
       ]
     }
   },

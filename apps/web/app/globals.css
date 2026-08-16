@@ -1906,6 +1906,7 @@ body.mobile-menu-open {
 .configurator-result-actions a,
 .lead-form button { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border: 0; border-radius: 3px; color: #fff; background: #ed5b2a; font-weight: 760; cursor: pointer; }
 .configurator-result-actions a { color: #173d4c; border: 1px solid #ccd5d7; background: #fff; }
+.configurator-result-actions button:disabled { cursor: wait; opacity: 0.58; }
 .configurator-lead { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 28px; padding: 28px; border-top: 1px solid #ccd5d7; background: #fff; }
 .configurator-lead aside { display: flex; flex-direction: column; gap: 10px; padding: 22px; color: #fff; background: #173d4c; }
 .configurator-lead aside a { color: #fff; font-size: 20px; font-weight: 800; }
@@ -3013,6 +3014,16 @@ body.mobile-menu-open {
   font-weight: 820;
 }
 
+.configurator-spec-line-total {
+  max-width: 92px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 720;
+  line-height: 1.25;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
 .configurator-spec-actions {
   display: grid;
   justify-items: end;
@@ -3063,6 +3074,66 @@ body.mobile-menu-open {
   align-items: center;
   justify-content: space-between;
   color: var(--text);
+  font-size: 12px;
+}
+
+.configurator-estimate-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 18px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 18px;
+  border-block: 1px solid rgba(23, 61, 76, 0.18);
+  background: rgba(238, 242, 242, 0.7);
+}
+
+.configurator-estimate-summary > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.configurator-estimate-summary span,
+.configurator-estimate-summary small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.configurator-estimate-summary strong {
+  color: var(--steel);
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+
+.configurator-estimate-summary button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.configurator-estimate-summary button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.configurator-estimate-summary > p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #a04428;
   font-size: 12px;
 }
 
@@ -3733,6 +3804,16 @@ body.mobile-menu-open {
   .configurator-spec-row em {
     grid-column: auto;
     font-size: 13px;
+  }
+
+  .configurator-estimate-summary {
+    grid-template-columns: 1fr;
+    padding: 16px 0;
+    background: transparent;
+  }
+
+  .configurator-estimate-summary button {
+    width: 100%;
   }
 }
 

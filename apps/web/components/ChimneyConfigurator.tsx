@@ -31,6 +31,13 @@ import {
 } from "@/lib/chimneyCalculation";
 import { productSelectionPath } from "@/lib/productUrls";
 import type { ProductListItem, ProductListResponse } from "@/lib/api";
+import {
+  buildChimneyEstimate,
+  formatRub,
+  type CatalogEstimateMatch,
+  type EstimateMeasurement,
+} from "@/lib/chimneyEstimate";
+import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
 import { LeadForm } from "./LeadForm";
 
 type RouteType = "ceiling" | "wall";
@@ -40,13 +47,6 @@ type RoofType = "pitched" | "flat";
 
 type ChimneyConfiguratorProps = {
   assetBasePath?: string;
-};
-
-type CatalogBomMatch = {
-  item: ProductListItem;
-  exactByFields: boolean;
-  lengthMatch?: "exact" | "nearest";
-  requestedLengthMm?: number;
 };
 
 function catalogMediaUrl(url: string, assetBasePath: string) {
@@ -861,8 +861,9 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const [selectedVariantId, setSelectedVariantId] = useState("");
   const [removedBomKeys, setRemovedBomKeys] = useState<string[]>([]);
   const [stoveModel, setStoveModel] = useState(searchParams.get("stoveModel") ?? "");
-  const [catalogMatches, setCatalogMatches] = useState<Record<string, CatalogBomMatch>>({});
+  const [catalogMatches, setCatalogMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [catalogMatchStatus, setCatalogMatchStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [pdfStatus, setPdfStatus] = useState<"idle" | "generating" | "error">("idle");
 
   useEffect(() => {
     try {
@@ -1141,6 +1142,56 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const measurementsHref = activeProfile
     ? calculationProfileMeasurementsHref(activeProfile.id)
     : "/zamery?edit=1";
+  const estimateMeasurements = useMemo<EstimateMeasurement[]>(() => {
+    const base: EstimateMeasurement[] = [
+      { label: "Маршрут", value: route === "ceiling" ? "Через дом, перекрытия и кровлю" : "Через стену, наружный монтаж" },
+      { label: "Источник тепла", value: stoveLabel },
+      { label: "Модель / патрубок", value: stoveModel.trim() || "не указаны" },
+      { label: "Диаметр дымового канала", value: calculation.diameterMm === null ? "требует уточнения" : `Ø ${calculation.diameterMm} мм` },
+      { label: "Расчётная отметка устья", value: `${calculation.routeTargetMm} мм` },
+      { label: "Фактическая отметка выбранной раскладки", value: `${selectedTerminationMm} мм` },
+      { label: "Раскладка труб", value: selectedVariant?.label ?? "не найдена" },
+      { label: "Запас раскладки", value: `${selectedVariant?.reserveMm ?? 0} мм` },
+    ];
+    if (route === "ceiling") {
+      base.push(
+        { label: "Этажность", value: String(floors) },
+        { label: "Тип кровли", value: roof === "pitched" ? "скатная" : "плоская" },
+        { label: "Угол кровли", value: calculation.roofAngleDeg === null ? "требует уточнения" : `${calculation.roofAngleDeg}°` },
+        { label: "Кровельный пирог", value: calculation.roofThicknessMm === null ? "требует уточнения" : `${calculation.roofThicknessMm} мм` },
+        { label: "Высота до конька", value: calculation.ridgeHeightMm === null ? "требует уточнения" : `${calculation.ridgeHeightMm} мм` },
+        { label: "Ось трубы от конька", value: calculation.ridgeHorizontalDistanceMm === null ? "требует уточнения" : `${calculation.ridgeHorizontalDistanceMm} мм` },
+        { label: "Высота колосника", value: calculation.grateHeightMm === null ? "требует уточнения" : `${calculation.grateHeightMm} мм` },
+        { label: "Толщины перекрытий", value: calculation.floorThicknessesMm.length ? `${calculation.floorThicknessesMm.join(" / ")} мм` : "требуют уточнения" },
+      );
+    } else {
+      base.push(
+        { label: "Выход отопителя", value: outlet === "vertical" ? "вертикальный" : "горизонтальный" },
+        { label: "Удалённость от стены", value: `${distanceM.toFixed(1)} м` },
+        { label: "Высота наружного участка", value: `${heightM.toFixed(1)} м` },
+      );
+    }
+    const existingLabels = new Set(base.map((item) => item.label));
+    transferredDetails.forEach((detail) => {
+      const separator = detail.indexOf(":");
+      const label = separator > 0 ? detail.slice(0, separator).trim() : "Дополнительные данные";
+      const value = separator > 0 ? detail.slice(separator + 1).trim() : detail;
+      if (!existingLabels.has(label)) {
+        base.push({ label, value });
+        existingLabels.add(label);
+      }
+    });
+    return base;
+  }, [calculation, distanceM, floors, heightM, outlet, roof, route, selectedTerminationMm, selectedVariant, stoveLabel, stoveModel, transferredDetails]);
+  const estimate = useMemo(() => buildChimneyEstimate({
+    selectedBom,
+    matches: catalogMatches,
+    measurements: estimateMeasurements,
+    profileName: activeProfile?.name ?? "Текущий несохранённый расчёт",
+    removedLabels: removedBom.map((line) => line.label),
+    reviewItems: calculation.reviewItems,
+    calculationErrors: calculation.errors,
+  }), [activeProfile?.name, calculation.errors, calculation.reviewItems, catalogMatches, estimateMeasurements, removedBom, selectedBom]);
 
   const loadCalculationProfile = (profileId: string) => {
     setActiveProfileId(profileId);
@@ -1184,22 +1235,15 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     [calculation, distanceM, floors, outlet, roof, route, selectedBom, selectedVariant, stoveLabel, stoveModel, transferredDetails],
   );
 
-  function savePdf() {
-    const escapeHtml = (value: string) =>
-      value.replace(/[&<>"']/g, (character) => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;",
-      })[character] ?? character);
-    const rows = selectedBom.map((part) => `<tr><td>${part.label}${part.quantityNote ? `<br><small>${part.quantityNote}</small>` : ""}</td><td>${part.quantity}</td></tr>`).join("");
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-    printWindow.opener = null;
-    const summary = escapeHtml(configuration.split("\nПозиции:")[0]).replaceAll("\n", "<br>");
-    printWindow.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Комплект из конфигуратора — Дымоход Трейд</title><style>body{font:15px Arial,sans-serif;color:#102127;margin:40px}h1{font-size:28px}p{line-height:1.55}table{width:100%;border-collapse:collapse;margin:24px 0}td,th{padding:10px;border:1px solid #ccd5d7;text-align:left}.note{padding:16px;background:#eef2f2} @page{size:A4;margin:18mm}</style></head><body><h1>Комплект дымохода из конфигуратора</h1><p>${summary}</p><table><thead><tr><th>Позиция</th><th>Количество</th></tr></thead><tbody>${rows}</tbody></table><p class="note">Раскладка проверяет координаты стыков и исключает соединения внутри известных проходных зон. Полезные длины коротких труб и конкретные SKU требуют подтверждения.</p><p>Дымоход Трейд · +7 (965) 075-65-55 · office@dimohod-trade.pro</p><script>window.onload=()=>window.print()<\/script></body></html>`);
-    printWindow.document.close();
+  async function savePdf() {
+    if (pdfStatus === "generating") return;
+    setPdfStatus("generating");
+    try {
+      await downloadChimneyEstimatePdf({ ...estimate, generatedAt: new Date() });
+      setPdfStatus("idle");
+    } catch {
+      setPdfStatus("error");
+    }
   }
 
   return (
@@ -1571,6 +1615,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           <div className="configurator-spec-list">
             {selectedBom.map((part) => {
               const catalogMatch = catalogMatches[part.key];
+              const estimateLine = estimate.lines.find((line) => line.key === part.key);
               const materialLabel = catalogMatch ? catalogMaterialLabel(catalogMatch.item) : null;
               const nearestLengthLabel = catalogMatch?.lengthMatch === "nearest" && catalogMatch.item.length_mm !== null
                 ? `Одностенная труба-разгон ${catalogMatch.item.length_mm} мм`
@@ -1618,6 +1663,11 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                   </div>
                   <div className="configurator-spec-actions">
                     <em>×{part.quantity}</em>
+                    <span className="configurator-spec-line-total">
+                      {estimateLine?.lineTotalRub === null || estimateLine?.lineTotalRub === undefined
+                        ? "по запросу"
+                        : formatRub(estimateLine.lineTotalRub)}
+                    </span>
                     {part.removable ? (
                       <button
                         aria-label={`Удалить «${part.label}» из комплекта`}
@@ -1646,6 +1696,27 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               ))}
             </div>
           ) : null}
+          <div className="configurator-estimate-summary" aria-live="polite">
+            <div>
+              <span>{estimate.unpricedLineCount ? "Итого по известным ценам" : "Итого по комплекту"}</span>
+              <strong>{formatRub(estimate.knownSubtotalRub)}</strong>
+              <small>
+                {estimate.pricedLineCount} из {estimate.lines.length} позиций с ценой
+                {estimate.unpricedLineCount ? ` · ${estimate.unpricedLineCount} требуют уточнения` : ""}
+              </small>
+            </div>
+            <button
+              disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"}
+              onClick={savePdf}
+              type="button"
+            >
+              <Download aria-hidden size={17} />
+              {pdfStatus === "generating" ? "Формируем PDF…" : "Скачать PDF-смету"}
+            </button>
+            {pdfStatus === "error" ? (
+              <p role="alert">Не удалось сформировать PDF. Попробуйте ещё раз.</p>
+            ) : null}
+          </div>
           <div className="configurator-catalog-match" data-status={catalogMatchStatus}>
             <div className="configurator-catalog-match-title">
               <PackageCheck aria-hidden size={18} />
@@ -1670,10 +1741,10 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       <div className="configurator-result-actions">
         <div>
           <strong>Комплект собран в конфигураторе</strong>
-          <span>Сохраните её в PDF или отправьте состав на проверку.</span>
+          <span>{estimate.unpricedLineCount ? `Предварительный итог ${formatRub(estimate.knownSubtotalRub)} · ${estimate.unpricedLineCount} поз. без цены.` : `Итого ${formatRub(estimate.knownSubtotalRub)}.`}</span>
         </div>
-        <button type="button" onClick={savePdf}>
-          <Download aria-hidden size={16} /> Сохранить PDF
+        <button disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"} type="button" onClick={savePdf}>
+          <Download aria-hidden size={16} /> {pdfStatus === "generating" ? "Формируем…" : "Сохранить PDF"}
         </button>
         <a href={`mailto:office@dimohod-trade.pro?subject=${encodeURIComponent("Проверка сметы дымохода")}&body=${encodeURIComponent(configuration)}`}>
           <Mail aria-hidden size={16} /> Отправить по почте
