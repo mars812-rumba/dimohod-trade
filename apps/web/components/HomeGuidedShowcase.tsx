@@ -18,25 +18,25 @@ type ShowcaseSlide = {
 
 const measurementSlides: ShowcaseSlide[] = [
   {
-    image: "/images/home/guided-showcase/measure-object.webp",
+    image: "/images/home/guided-showcase/measure-object-cropped.webp",
     alt: "Экран выбора объекта, состояния и типа отопителя",
     title: "Объект и отопитель",
     text: "Укажите, где будет установлен дымоход, выбран ли отопитель и какой именно источник тепла используется.",
   },
   {
-    image: "/images/home/guided-showcase/measure-outlet.webp",
+    image: "/images/home/guided-showcase/measure-outlet-cropped.webp",
     alt: "Наглядная подсказка по измерению наружного диаметра патрубка по осям X и Y",
     title: "Размеры патрубка",
     text: "Покажем, где приложить рулетку и почему нужно измерять наружный размер по двум осям, а не внутренний диаметр.",
   },
   {
-    image: "/images/home/guided-showcase/measure-height.webp",
+    image: "/images/home/guided-showcase/measure-height-cropped.webp",
     alt: "Наглядная подсказка по измерению высоты от чистового пола до верхней грани патрубка",
     title: "Высота подключения",
     text: "Размер снимается от чистового пола до верхней грани штатного патрубка. Установленная сверху дымовая труба в него не входит.",
   },
   {
-    image: "/images/home/guided-showcase/measure-route.webp",
+    image: "/images/home/guided-showcase/measure-route-cropped.webp",
     alt: "Экран выбора маршрута дымохода через перекрытие и кровлю",
     title: "Маршрут дымохода",
     text: "Выберите наиболее похожий вариант прохождения. После заполнения размеров расчёт построит маршрут для вашего объекта.",
@@ -45,25 +45,25 @@ const measurementSlides: ShowcaseSlide[] = [
 
 const resultSlides: ShowcaseSlide[] = [
   {
-    image: "/images/home/guided-showcase/result-route.webp",
+    image: "/images/home/guided-showcase/result-route-cropped.webp",
     alt: "Индивидуальная вертикальная схема маршрута дымохода с размерами и обозначением элементов",
     title: "Индивидуальная схема маршрута",
     text: "Увидите трассу от отопителя до оголовка, длины труб, положение стыков и основные отметки вашего объекта.",
   },
   {
-    image: "/images/home/guided-showcase/result-nodes.webp",
+    image: "/images/home/guided-showcase/result-nodes-cropped.webp",
     alt: "Схемы прохода дымохода через перекрытие и кровлю",
     title: "Основные проходные узлы",
     text: "Отдельно покажем проходы перекрытия и кровли, фланцы, хомуты, утепление и расположение элементов узла.",
   },
   {
-    image: "/images/home/guided-showcase/result-bom.webp",
+    image: "/images/home/guided-showcase/result-bom-cropped.webp",
     alt: "Спецификация совместимых изделий дымохода с количеством и ценами",
     title: "Полный перечень изделий",
     text: "Получите BOM: совместимые изделия нужного диаметра и исполнения, их количество, характеристики и цены.",
   },
   {
-    image: "/images/home/guided-showcase/result-pdf.webp",
+    image: "/images/home/guided-showcase/result-pdf-cropped.webp",
     alt: "PDF-смета дымохода с перечнем изделий, количеством, ценами и суммами",
     title: "Смета в формате PDF",
     text: "Скачайте готовый документ с размерами, составом комплекта, ценами по позициям и итоговой суммой.",
