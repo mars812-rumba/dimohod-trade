@@ -7,11 +7,6 @@
   padding: clamp(52px, 7vw, 96px) 0;
 }
 
-.resultSection {
-  border-top: 1px solid #ccd5d7;
-  background: #e8eeee;
-}
-
 .shell {
   display: grid;
   grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.55fr);
@@ -45,10 +40,6 @@
   font-size: 16px;
   line-height: 1.65;
   text-wrap: pretty;
-}
-
-.introPanel p + p {
-  margin-top: 12px;
 }
 
 .introPanel a {
@@ -170,7 +161,7 @@
 
 .steps {
   display: grid;
-  grid-template-columns: repeat(4, minmax(44px, 1fr));
+  grid-template-columns: repeat(2, minmax(44px, 1fr));
   gap: 6px;
 }
 
@@ -185,6 +176,19 @@
   border-color: #173d4c;
   color: #fff;
   background: #173d4c;
+}
+
+.note {
+  grid-column: 2;
+  max-width: 70ch;
+  margin: -36px 0 0;
+  padding: 18px 22px;
+  border: 1px solid #ccd5d7;
+  color: #42565d;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1.55;
+  text-wrap: pretty;
 }
 
 @keyframes slide-reveal {
@@ -210,6 +214,11 @@
 
   .carousel {
     grid-template-columns: minmax(250px, 330px) minmax(220px, 1fr);
+  }
+
+  .note {
+    grid-column: 1;
+    margin-top: -8px;
   }
 }
 

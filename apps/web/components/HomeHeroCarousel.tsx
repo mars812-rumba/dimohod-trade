@@ -94,8 +94,8 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         <Link className={styles.cta} href="/zamery?edit=1">
           <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
           <span className={styles.ctaCopy}>
-            <strong>Получить смету в PDF</strong>
-            <span>и сэкономить от 7 000 ₽ за выезд мастера</span>
+            <strong>Получить предварительный расчёт</strong>
+            <span>Схема, комплект и цена до выезда специалиста</span>
           </span>
           <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
         </Link>

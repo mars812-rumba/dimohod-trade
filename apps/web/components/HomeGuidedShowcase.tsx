@@ -16,57 +16,18 @@ type ShowcaseSlide = {
   text: string;
 };
 
-const measurementSlides: ShowcaseSlide[] = [
-  {
-    image: "/images/home/guided-showcase/measure-object-cropped.webp",
-    alt: "Экран выбора объекта, состояния и типа отопителя",
-    title: "Объект и отопитель",
-    text: "Укажите, где будет установлен дымоход, выбран ли отопитель и какой именно источник тепла используется.",
-  },
+const previewSlides: ShowcaseSlide[] = [
   {
     image: "/images/home/guided-showcase/measure-outlet-cropped.webp",
-    alt: "Наглядная подсказка по измерению наружного диаметра патрубка по осям X и Y",
-    title: "Размеры патрубка",
-    text: "Покажем, где приложить рулетку и почему нужно измерять наружный размер по двум осям, а не внутренний диаметр.",
-  },
-  {
-    image: "/images/home/guided-showcase/measure-height-cropped.webp",
-    alt: "Наглядная подсказка по измерению высоты от чистового пола до верхней грани патрубка",
-    title: "Высота подключения",
-    text: "Размер снимается от чистового пола до верхней грани штатного патрубка. Установленная сверху дымовая труба в него не входит.",
-  },
-  {
-    image: "/images/home/guided-showcase/measure-route-cropped.webp",
-    alt: "Экран выбора маршрута дымохода через перекрытие и кровлю",
-    title: "Маршрут дымохода",
-    text: "Выберите наиболее похожий вариант прохождения. После заполнения размеров расчёт построит маршрут для вашего объекта.",
-  },
-];
-
-const resultSlides: ShowcaseSlide[] = [
-  {
-    image: "/images/home/guided-showcase/result-route-cropped.webp",
-    alt: "Индивидуальная вертикальная схема маршрута дымохода с размерами и обозначением элементов",
-    title: "Индивидуальная схема маршрута",
-    text: "Увидите трассу от отопителя до оголовка, длины труб, положение стыков и основные отметки вашего объекта.",
-  },
-  {
-    image: "/images/home/guided-showcase/result-nodes-cropped.webp",
-    alt: "Схемы прохода дымохода через перекрытие и кровлю",
-    title: "Основные проходные узлы",
-    text: "Отдельно покажем проходы перекрытия и кровли, фланцы, хомуты, утепление и расположение элементов узла.",
-  },
-  {
-    image: "/images/home/guided-showcase/result-bom-cropped.webp",
-    alt: "Спецификация совместимых изделий дымохода с количеством и ценами",
-    title: "Полный перечень изделий",
-    text: "Получите BOM: совместимые изделия нужного диаметра и исполнения, их количество, характеристики и цены.",
+    alt: "Вопрос о размере патрубка с раскрытой наглядной подсказкой по измерению",
+    title: "Ответьте на несколько вопросов об объекте",
+    text: "Подсказки и схемы покажут, какие размеры нужны. Данные можно сохранить и продолжить заполнение в удобное время.",
   },
   {
     image: "/images/home/guided-showcase/result-pdf-cropped.webp",
-    alt: "PDF-смета дымохода с перечнем изделий, количеством, ценами и суммами",
-    title: "Смета в формате PDF",
-    text: "Скачайте готовый документ с размерами, составом комплекта, ценами по позициям и итоговой суммой.",
+    alt: "Предварительный расчёт дымохода в PDF со схемой, перечнем изделий и ценами",
+    title: "Получите предварительный расчёт",
+    text: "Схема трассы, совместимый комплект и смета — ещё до выезда специалиста.",
   },
 ];
 
@@ -74,18 +35,16 @@ function ShowcaseCarousel({
   id,
   title,
   description,
-  details,
+  note,
   slides,
   assetBasePath,
-  result = false,
 }: {
   id: string;
   title: string;
   description: string;
-  details?: string;
+  note: string;
   slides: ShowcaseSlide[];
   assetBasePath: string;
-  result?: boolean;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -93,25 +52,22 @@ function ShowcaseCarousel({
   const showSlide = (index: number) => setActiveIndex((index + slides.length) % slides.length);
 
   return (
-    <section className={`${styles.section} ${result ? styles.resultSection : ""}`} aria-labelledby={id}>
+    <section className={styles.section} aria-labelledby={id}>
       <div className={styles.shell}>
         <div className={styles.introPanel}>
           <h2 id={id}>{title}</h2>
           <p>{description}</p>
-          {details ? <p>{details}</p> : null}
-          {result ? (
-            <Link href="/zamery?edit=1">
-              Получить расчёт
-              <IconArrowRight aria-hidden size={19} strokeWidth={1.8} />
-            </Link>
-          ) : null}
+          <Link href="/zamery?edit=1">
+            Начать предварительный расчёт
+            <IconArrowRight aria-hidden size={19} strokeWidth={1.8} />
+          </Link>
         </div>
 
         <div
           className={styles.carousel}
           role="region"
           aria-roledescription="карусель"
-          aria-label={`${title}: 4 слайда`}
+          aria-label={`${title}: ${slides.length} слайда`}
           onTouchStart={(event) => {
             touchStartX.current = event.touches[0]?.clientX ?? null;
           }}
@@ -175,6 +131,8 @@ function ShowcaseCarousel({
             </div>
           </div>
         </div>
+
+        <p className={styles.note}>{note}</p>
       </div>
     </section>
   );
@@ -185,19 +143,11 @@ export function HomeGuidedShowcase({ assetBasePath = "" }: { assetBasePath?: str
     <div className={styles.showcase}>
       <ShowcaseCarousel
         assetBasePath={assetBasePath}
-        description="Мы в отрасли с 2018 года, поэтому знаем, что спросить, чтобы рассчитать подробную и правдивую цену."
-        details="В разделе «Мои замеры» главного меню можно работать в удобное время: данные хранятся на вашем устройстве. Ниже — несколько примеров параметров, которые нужно заполнить. К каждому вопросу есть наглядная схема; если останутся вопросы, позвоните нам."
-        id="home-measurements-showcase"
-        slides={measurementSlides}
-        title="Заполните необходимые размеры"
-      />
-      <ShowcaseCarousel
-        assetBasePath={assetBasePath}
-        description="Получите наглядную схему маршрута и проходных узлов, полный перечень совместимых изделий и смету в PDF с ценами."
-        id="home-result-showcase"
-        result
-        slides={resultSlides}
-        title="Что вы получите после расчёта"
+        description="Заполните понятный вопросник с наглядными подсказками. По базовым данным об объекте вы получите полезный предварительный результат, а специалист подключится там, где нужна дополнительная проверка."
+        id="home-preliminary-estimate-showcase"
+        note="Для удалённых объектов предварительный расчёт может сэкономить отдельный платный выезд на первичный замер."
+        slides={previewSlides}
+        title="Сначала поймите, что вам нужно и сколько это стоит"
       />
     </div>
   );
