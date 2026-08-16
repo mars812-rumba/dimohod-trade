@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1080" role="img" aria-labelledby="title description">
+  <title id="title">Горизонтальное расстояние от оси дымохода до конька</title>
+  <desc id="description">Вид кровли сверху. Горизонтальный размер показан от центра будущего дымохода до линии конька, перпендикулярно коньку.</desc>
+  <defs>
+    <marker id="arrow-start" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto-start-reverse" markerUnits="strokeWidth">
+      <path d="M9 1 1 5l8 4" fill="none" stroke="#ed5b2a" stroke-width="1.6"/>
+    </marker>
+    <style>
+      .outline{fill:none;stroke:#173d4c;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+      .secondary{fill:none;stroke:#718187;stroke-width:3}
+      .axis{fill:none;stroke:#326276;stroke-width:3;stroke-dasharray:18 7 3 7}
+      .dimension{fill:none;stroke:#ed5b2a;stroke-width:4;marker-start:url(#arrow-start);marker-end:url(#arrow-start)}
+      .extension{fill:none;stroke:#ed5b2a;stroke-width:2}
+      .label{fill:#173d4c;font-family:DejaVu Sans,Arial,sans-serif;font-size:26px;font-weight:700}
+      .small{fill:#637277;font-family:DejaVu Sans,Arial,sans-serif;font-size:21px;font-weight:600}
+      .measure{fill:#bd3d16;font-family:DejaVu Sans,Arial,sans-serif;font-size:28px;font-weight:700}
+    </style>
+  </defs>
+  <rect id="background" width="720" height="1080" fill="#f4efe7"/>
+  <text class="label" x="360" y="84" text-anchor="middle">ВИД СВЕРХУ</text>
+  <g id="roof-plan">
+    <rect x="100" y="155" width="520" height="730" fill="#e4ddd1" stroke="#173d4c" stroke-width="5"/>
+    <line class="outline" x1="500" y1="180" x2="500" y2="860"/>
+    <path class="secondary" d="M500 270 570 320M500 475 570 525M500 680 570 730"/>
+    <path class="secondary" d="M500 270 430 320M500 475 430 525M500 680 430 730"/>
+    <text class="label" x="475" y="208" text-anchor="end">ЛИНИЯ КОНЬКА</text>
+  </g>
+  <g id="chimney-center">
+    <circle cx="220" cy="540" r="34" fill="#dce5e3" stroke="#173d4c" stroke-width="5"/>
+    <line class="axis" x1="160" y1="540" x2="280" y2="540"/>
+    <line class="axis" x1="220" y1="480" x2="220" y2="600"/>
+    <circle cx="220" cy="540" r="7" fill="#ed5b2a"/>
+    <text class="label" x="220" y="632" text-anchor="middle">ОСЬ ДЫМОХОДА</text>
+  </g>
+  <g id="horizontal-dimension">
+    <line class="extension" x1="220" y1="390" x2="220" y2="500"/>
+    <line class="extension" x1="500" y1="390" x2="500" y2="500"/>
+    <line class="dimension" x1="228" y1="410" x2="492" y2="410"/>
+    <text class="measure" x="360" y="386" text-anchor="middle">X — ПО ГОРИЗОНТАЛИ</text>
+  </g>
+  <g id="annotations">
+    <text class="label" x="360" y="950" text-anchor="middle">МЕРЬТЕ В ПЛАНЕ</text>
+    <text class="small" x="360" y="990" text-anchor="middle">ОТ ЦЕНТРА ТРУБЫ ДО ЛИНИИ КОНЬКА</text>
+    <text class="small" x="360" y="1025" text-anchor="middle">НЕ ПО ПОВЕРХНОСТИ СКАТА</text>
+  </g>
+</svg>

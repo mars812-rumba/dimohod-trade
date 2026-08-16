@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { IconArrowRight as ArrowRight, IconChevronDown as ChevronDown } from "@tabler/icons-react";
 import { type ReactNode, useEffect, useState } from "react";
 import {
   calculationProfileConfiguratorHref,
@@ -157,9 +157,14 @@ export function BanyaIntakeFlow({
   const isHome = intake.objectType !== "banya";
   const schemes = {
     stoveHeight: {
-      src: `${assetBasePath}/images/measurements/stove-height-top-mobile.webp`,
-      alt: "Вертикальная схема замера от чистового пола до верхней грани отопителя",
-      title: "Как измерить высоту отопителя",
+      src: `${assetBasePath}/images/measurements/stove-height-mobile.webp`,
+      alt: "Вертикальная схема замера от чистового пола до верхней грани патрубка отопителя",
+      title: "Как измерить высоту до патрубка",
+    },
+    grateHeight: {
+      src: `${assetBasePath}/images/measurements/grate-height-mobile.webp`,
+      alt: "Схема замера от чистового пола до уровня колосниковой решётки внутри топки",
+      title: "Как измерить высоту колосниковой решётки",
     },
     rearOutletHeight: {
       src: `${assetBasePath}/images/measurements/rear-outlet-bottom-height-mobile.webp`,
@@ -185,6 +190,16 @@ export function BanyaIntakeFlow({
       src: `${assetBasePath}/images/measurements/attic-roof-angle-mobile.webp`,
       alt: "Вертикальная схема замера высоты чердака и угла кровли",
       title: "Как измерить чердак и угол кровли",
+    },
+    ridgeHeight: {
+      src: `${assetBasePath}/images/measurements/ridge-height.svg`,
+      alt: "Вертикальная схема замера от чистового пола первого этажа до внутренней нижней грани конька",
+      title: "Как измерить высоту дома в коньке",
+    },
+    ridgeHorizontalDistance: {
+      src: `${assetBasePath}/images/measurements/ridge-horizontal-distance.svg`,
+      alt: "Схема вида сверху с горизонтальным расстоянием от оси дымохода до линии конька",
+      title: "Как измерить расстояние от оси дымохода до конька",
     },
     topOutletWall: {
       src: `${assetBasePath}/images/measurements/top-outlet-wall-measurements-mobile.webp`,
@@ -525,13 +540,13 @@ export function BanyaIntakeFlow({
             </fieldset>
 
             <div className={styles.fieldGrid}>
-              {intake.outlet === "top" ? <MeasurementField draft={intake} field="connectionHeight" label="Высота до верхней грани отопителя" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От чистового пола" unit="мм">
+              {intake.outlet === "top" ? <MeasurementField draft={intake} field="connectionHeight" label="Высота до верхней грани патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От чистового пола" unit="мм">
                 <MeasurementHelp scheme={schemes.stoveHeight}>
-                  <p>Измерьте расстояние от чистового пола до верхней грани печи или другого отопителя. Патрубок и элементы дымохода в этот размер не включайте.</p>
+                  <p>Измерьте расстояние от чистового пола до верхней грани штатного патрубка отопителя. Патрубок входит в размер, установленная сверху дымовая труба — нет.</p>
                 </MeasurementHelp>
               </MeasurementField> : null}
               <MeasurementField draft={intake} field="grateHeight" label="Высота колосниковой решётки" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От чистового пола" unit="мм">
-                <MeasurementHelp>
+                <MeasurementHelp scheme={schemes.grateHeight}>
                   <p>Измерьте вертикально от чистового пола до уровня колосниковой решётки. Этот размер нужен для проверки минимальной высоты дымового канала до устья.</p>
                   <p>Если у отопителя нет колосниковой решётки, оставьте поле на уточнение по паспорту оборудования — подменять его высотой печи нельзя.</p>
                 </MeasurementHelp>
@@ -712,13 +727,13 @@ export function BanyaIntakeFlow({
                       </MeasurementField>
                     </> : null}
                     <MeasurementField allowDefer={false} draft={intake} field="ridgeHeight" label="Высота дома в коньке" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 5200" required unit="мм">
-                      <MeasurementHelp showSchemePlaceholder={false}>
+                      <MeasurementHelp scheme={schemes.ridgeHeight}>
                         <p>Измерьте вертикальную отметку от чистового пола первого этажа до внутренней нижней грани конька.</p>
                         <p>На чертеже эта отметка задаёт положение конька. Правый скат показывается пунктиром как контур здания, а рабочая трасса располагается слева.</p>
                       </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField allowDefer={false} draft={intake} field="ridgeHorizontalDistance" label="От оси дымохода до конька" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 3500" required unit="мм">
-                      <MeasurementHelp showSchemePlaceholder={false}>
+                      <MeasurementHelp scheme={schemes.ridgeHorizontalDistance}>
                         <p>Измерьте горизонтальное расстояние в плане от вертикальной оси будущего дымохода до пика конька. Не измеряйте по поверхности ската.</p>
                         <p>До 1,5 м, от 1,5 до 3 м и свыше 3 м применяются разные правила определения минимальной отметки устья.</p>
                       </MeasurementHelp>

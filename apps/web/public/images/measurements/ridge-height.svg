@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1080" role="img" aria-labelledby="title description">
+  <title id="title">Высота дома до нижней грани конька</title>
+  <desc id="description">Вертикальный размер от чистового пола первого этажа до внутренней нижней грани конька. Ось будущего дымохода показана слева от конька.</desc>
+  <defs>
+    <marker id="arrow-start" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto-start-reverse" markerUnits="strokeWidth">
+      <path d="M9 1 1 5l8 4" fill="none" stroke="#ed5b2a" stroke-width="1.6"/>
+    </marker>
+    <style>
+      .outline{fill:none;stroke:#173d4c;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+      .secondary{fill:none;stroke:#718187;stroke-width:3}
+      .hidden{fill:none;stroke:#718187;stroke-width:3;stroke-dasharray:14 10}
+      .axis{fill:none;stroke:#326276;stroke-width:3;stroke-dasharray:18 7 3 7}
+      .dimension{fill:none;stroke:#ed5b2a;stroke-width:4;marker-start:url(#arrow-start);marker-end:url(#arrow-start)}
+      .extension{fill:none;stroke:#ed5b2a;stroke-width:2}
+      .label{fill:#173d4c;font-family:DejaVu Sans,Arial,sans-serif;font-size:26px;font-weight:700}
+      .small{fill:#637277;font-family:DejaVu Sans,Arial,sans-serif;font-size:21px;font-weight:600}
+      .measure{fill:#bd3d16;font-family:DejaVu Sans,Arial,sans-serif;font-size:28px;font-weight:700}
+    </style>
+  </defs>
+  <rect id="background" width="720" height="1080" fill="#f4efe7"/>
+  <g id="building-outlines">
+    <path class="outline" d="M150 890V420L360 160"/>
+    <path class="hidden" d="M360 160 570 420v470"/>
+    <line class="outline" x1="120" y1="890" x2="600" y2="890"/>
+    <line class="secondary" x1="150" y1="420" x2="570" y2="420"/>
+    <path d="M335 180h50l-25 22z" fill="#d9e1df" stroke="#173d4c" stroke-width="4"/>
+  </g>
+  <g id="chimney-axis">
+    <line class="axis" x1="255" y1="846" x2="255" y2="275"/>
+    <rect x="226" y="760" width="58" height="104" rx="5" fill="#31464d" stroke="#173d4c" stroke-width="4"/>
+    <rect x="244" y="310" width="22" height="450" fill="#dce5e3" stroke="#173d4c" stroke-width="4"/>
+    <text class="small" x="286" y="300">ОСЬ ДЫМОХОДА</text>
+  </g>
+  <g id="height-dimension">
+    <line class="extension" x1="88" y1="890" x2="335" y2="890"/>
+    <line class="extension" x1="88" y1="180" x2="335" y2="180"/>
+    <line class="dimension" x1="96" y1="882" x2="96" y2="188"/>
+    <text class="measure" x="72" y="555" text-anchor="middle" transform="rotate(-90 72 555)">H — ВЕРТИКАЛЬНЫЙ РАЗМЕР</text>
+  </g>
+  <g id="annotations">
+    <circle cx="360" cy="180" r="8" fill="#ed5b2a"/>
+    <line class="secondary" x1="368" y1="180" x2="515" y2="180"/>
+    <text class="label" x="515" y="165" text-anchor="end">НИЖНЯЯ ГРАНЬ</text>
+    <text class="small" x="515" y="196" text-anchor="end">КОНЬКА</text>
+    <text class="label" x="360" y="938" text-anchor="middle">ЧИСТОВОЙ ПОЛ 1 ЭТАЖА</text>
+    <text class="small" x="360" y="997" text-anchor="middle">МЕРЬТЕ СТРОГО ПО ВЕРТИКАЛИ</text>
+  </g>
+</svg>
