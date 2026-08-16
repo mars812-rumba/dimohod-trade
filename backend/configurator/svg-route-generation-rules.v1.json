@@ -1,0 +1,388 @@
+{
+  "schema_version": "1.1.0",
+  "status": "locked_engineering_contract",
+  "units": "millimetres",
+  "task": "generate_engineering_chimney_svg",
+  "priority": "ENGINEERING_GEOMETRY_IS_ABSOLUTE. Visual beauty is secondary.",
+  "goal": "Generate technically correct proportional SVG chimney diagrams. All dimensions, joints, diameters, overlaps and building geometry must affect the actual SVG geometry, not only labels.",
+  "global_rules": {
+    "svg_only": true,
+    "use_real_proportions": true,
+    "all_dimensions_affect_geometry": true,
+    "single_mm_to_px_scale_per_scene": true,
+    "do_not_fake_dimensions_with_labels": true,
+    "do_not_invent_components": true,
+    "do_not_simplify_connection_geometry": true,
+    "preserve_route_logic": true,
+    "preserve_pipe_layout": true,
+    "preserve_forbidden_joint_zones": true,
+    "preserve_bom_and_sku_selection": true,
+    "unknown_value_policy": "Show the value as requiring measurement or manager review; never replace it with invented geometry or an invented SKU."
+  },
+  "building_measurements": {
+    "finished_floor_datum": {
+      "value_mm": 0,
+      "rule": "All absolute vertical measurements use the same finished-floor datum. A laser measurement made from a veranda or another level must be corrected to this datum before use."
+    },
+    "ridge_height": {
+      "field": "ridgeHeight",
+      "definition": "Absolute vertical distance from finished floor level to the INNER LOWER EDGE of the roof ridge.",
+      "measurement_method": "Laser distance meter from the same finished-floor datum to the visible inner ridge vault/edge.",
+      "svg_rule": "The dimension arrow starts exactly at finished floor level and ends exactly at the inner lower edge of the ridge.",
+      "not_the_same_as": [
+        "attic height",
+        "roof rise above the ceiling",
+        "distance from ceiling to ridge",
+        "approximate total route height"
+      ],
+      "forbidden": [
+        "silently add room height to an already absolute ridge height",
+        "measure to chimney",
+        "measure to approximate ridge center",
+        "use a laser origin with a different floor elevation without correction"
+      ]
+    },
+    "ridge_horizontal_distance": {
+      "field": "ridgeHorizontalDistance",
+      "definition": "Horizontal plan distance from the vertical chimney axis to the ridge axis.",
+      "svg_rule": "The value drives both local roof geometry and ridge-clearance calculation; it is never measured along the roof slope.",
+      "required_for_pitched_roof": true
+    },
+    "roof_build_up": {
+      "field": "roofThickness",
+      "rule": "Roof construction thickness must be represented geometrically.",
+      "measurement_axis": "vertical chimney axis at the planned passage",
+      "description": "Show both inner roof surface and outer roof surface. Roof thickness affects the actual length of the chimney section passing through the roof.",
+      "pitched_roof_geometry": {
+        "inner_surface_at_chimney_mm": "ridge_height_mm - abs(ridge_horizontal_distance_mm) * tan(roof_angle_deg)",
+        "outer_surface_at_chimney_mm": "inner_surface_at_chimney_mm + roof_build_up_mm"
+      }
+    },
+    "floor_and_attic_geometry": {
+      "floor_zone_formula": "floor_zone = [room_height_mm, room_height_mm + floor_thickness_mm] for the first level, accumulated for later levels",
+      "local_attic_height_formula": "roof_inner_surface_at_chimney_mm - upper_edge_of_last_floor_zone_mm",
+      "consistency_rule": "If a separately measured attic height conflicts with ridge/distance/angle geometry, report the conflict. Do not silently move the ridge or roof passage."
+    }
+  },
+  "termination_height_rules": {
+    "grate_definition_plain_language": "The grate is the metal grid inside the firebox on which the firewood lies; ash falls through it into the ash pan.",
+    "grate_height_field": "grateHeight",
+    "minimum_from_grate_mm": 5000,
+    "missing_grate_rule": "If the appliance has no identifiable grate, require the appliance passport or manufacturer datum. Never substitute stove height or flue-connection height.",
+    "pitched_roof": [
+      {
+        "maximum_horizontal_distance_mm": 1500,
+        "minimum_mouth_height": "ridge_height_mm + 500"
+      },
+      {
+        "minimum_horizontal_distance_exclusive_mm": 1500,
+        "maximum_horizontal_distance_mm": 3000,
+        "minimum_mouth_height": "ridge_height_mm"
+      },
+      {
+        "minimum_horizontal_distance_exclusive_mm": 3000,
+        "minimum_mouth_height": "ridge_height_mm - ridge_horizontal_distance_mm * tan(10deg)",
+        "svg_rule": "Draw the 10 degree reference line from the ridge and keep the chimney mouth on or above it."
+      }
+    ],
+    "flat_roof": {
+      "minimum_mouth_height": "outer_roof_surface_at_chimney_mm + 500"
+    },
+    "final_formula": "minimum_mouth_height_mm = max(roof_requirement_mm, grate_height_mm + 5000)",
+    "explanation_contract": {
+      "show_roof_requirement_separately": true,
+      "show_five_metre_requirement_separately": true,
+      "show_controlling_requirement": true,
+      "show_minimum_and_actual_discrete_mouth_height": true,
+      "plain_language_example": "By roof: 3900 mm. By 5 m from grate: 5150 mm. The 5 m condition controls the result."
+    },
+    "discrete_layout_rule": "Select the shortest valid effective pipe layout whose mouth is not below the calculated minimum.",
+    "tall_exposed_stack_rule": "Do not shorten a compliant route merely because it looks tall. Flag the exposed section for engineering support review without inventing bracing SKUs or limits."
+  },
+  "diameter_rules": {
+    "single_wall_start_pipe": {
+      "diameter": "D_SINGLE"
+    },
+    "rotary_damper": {
+      "diameter": "D_SINGLE",
+      "rule": "Rotary damper belongs to the single-wall section and must have the same pipe diameter as the single-wall start pipe."
+    },
+    "sandwich_pipe": {
+      "diameter": "D_SANDWICH",
+      "rule": "D_SANDWICH must always be visually larger than D_SINGLE."
+    },
+    "mandatory_relation": "D_SINGLE = D_DAMPER < D_SANDWICH",
+    "forbidden": [
+      "draw single-wall pipe equal in outside width to sandwich pipe",
+      "draw damper wider than single-wall pipe",
+      "draw sandwich pipe narrower than single-wall pipe"
+    ]
+  },
+  "connection_rules": {
+    "joint_overlap_mm": 50,
+    "rule": "EVERY connection where one chimney component enters/connects to another must show a 50 mm insertion/connection zone.",
+    "affected_connections": [
+      "single-wall pipe -> rotary damper",
+      "rotary damper -> support cap / transition",
+      "pipe -> pipe",
+      "sandwich pipe -> sandwich pipe",
+      "other socketed chimney component connections"
+    ],
+    "effective_height_formula": "effective_height_mm = nominal_height_mm - 50",
+    "example": {
+      "nominal_pipe_height_mm": 1000,
+      "effective_added_height_mm": 950
+    },
+    "svg_geometry_rule": "Do not place components end-to-end using full nominal heights. The 50 mm connection zone is geometrically shared/overlapped and therefore must not add to total chimney height.",
+    "visual_joint_rule": "Every joint must be visibly readable in the SVG as a connection zone approximately 50 mm high at the diagram scale.",
+    "critical": "Total assembled chimney height must be calculated from EFFECTIVE heights, not the sum of nominal catalogue heights."
+  },
+  "support_cap_transition": {
+    "component": "support_cap",
+    "shape": "trapezoid_transition",
+    "orientation": {
+      "narrow_side": "connects to single-wall / damper section below",
+      "wide_side": "connects to sandwich pipe section above"
+    },
+    "diameters": {
+      "narrow_side": "D_SINGLE",
+      "wide_side": "D_SANDWICH"
+    },
+    "svg_rule": "The transition must visibly expand from the smaller single-wall diameter below to the larger sandwich diameter above.",
+    "forbidden": [
+      "rectangle",
+      "cylinder with equal upper and lower diameter",
+      "inverted trapezoid",
+      "narrow side connected to sandwich pipe",
+      "wide side connected to single-wall pipe"
+    ]
+  },
+  "floor_clamp": {
+    "catalog_name": "Хомут в перекрытие",
+    "catalog_category": "Узлы прохода стен и перекрытий",
+    "rule": "The floor/ceiling clamp must be drawn DIRECTLY OVER the chimney pipe, not behind it and not interrupted by the pipe.",
+    "2d_shape": "rectangular horizontal clamp",
+    "appearance": {
+      "color": "gray",
+      "body": "rectangular",
+      "mounting_ears": true
+    },
+    "mounting": "Mounting ears extend sideways and visually connect to the floor joists.",
+    "layering": {
+      "z_order": "clamp above pipe",
+      "critical": true
+    },
+    "forbidden": [
+      "oval ring",
+      "clamp hidden behind pipe",
+      "clamp split into two unrelated pieces",
+      "floating clamp not connected to joists"
+    ]
+  },
+  "floor_passage_bom": {
+    "category": "Узлы прохода стен и перекрытий",
+    "separate_sellable_lines": [
+      "Хомут в перекрытие",
+      "Проходной стакан",
+      "Комплект ваты"
+    ],
+    "forbidden_combined_line": "Комплект вата + стакан",
+    "wool_quantity": {
+      "mode": "manual",
+      "must_be_addable": true,
+      "typical_manager_orientation_only": "3-6 kits; this is not an automatic engineering quantity",
+      "forbidden": "Do not calculate wool quantity from an assumed package volume and do not hard-code an automatic quantity."
+    }
+  },
+  "roof_passage": {
+    "component": "rigid metal UPK roof passage",
+    "applies_to_roof_types": [
+      "pitched",
+      "flat"
+    ],
+    "catalog_identity": {
+      "required_family_name": "Проходной узел кровли (УПК) до 45°",
+      "required_article_prefix": "DT-UPK-",
+      "selection_diameter": "D_SANDWICH",
+      "selection_rule": "Choose the SKU whose confirmed diameter_min_mm <= D_SANDWICH <= diameter_max_mm and whose permitted roof angle includes the measured angle.",
+      "explicitly_not_upk": [
+        "Мастер-флеш",
+        "Master Flash",
+        "DT-MASTER-FLASH-2"
+      ],
+      "substitution_rule": "Master Flash is a separate flexible sealing product and must never be returned, labelled or drawn as the UPK BOM line."
+    },
+    "default_bom_components": {
+      "master_flash": {
+        "catalog_product_slug": "master-flesh",
+        "catalog_article": "DT-MASTER-FLASH-2",
+        "position": "separate flexible element mounted on the chimney pipe",
+        "included_by_default": true,
+        "user_removable": true,
+        "applies_to_roof_types": [
+          "pitched",
+          "flat"
+        ]
+      },
+      "upk": {
+        "catalog_product_slug": "prohodnoy-uzel-krovli-upk-do-45",
+        "catalog_article_prefix": "DT-UPK-",
+        "position": "separate rigid metal roof-passage element after Master Flash in the confirmed assembly order",
+        "included_by_default": true,
+        "user_removable": true,
+        "applies_to_roof_types": [
+          "pitched",
+          "flat"
+        ]
+      },
+      "interaction_rule": "For both pitched and flat roofs, both lines start in BOM. The user can remove and restore either line independently without changing pipe layout, route geometry or the other BOM line."
+    },
+    "outside_element": {
+      "name": "УПК по углу кровли",
+      "position": "outside on the upper roof surface",
+      "layering": "foreground above the chimney pipe at the passage",
+      "shape": "rigid metal base plate with a rigid angled metal neck/cone matching the selected UPK family",
+      "rule": "The UPK visually overlaps the pipe at the joint while preserving the straight constant pipe diameter above and below it. Do not draw an EPDM/silicone stepped cone."
+    },
+    "inside_element": {
+      "name": "Внутренний фланец",
+      "position": "inside on the lower roof surface",
+      "pitched_roof_shape": "flat flange plate following the roof angle with an angled pipe opening",
+      "separate_from_upk": true
+    },
+    "decorative_skirt": {
+      "pitched_roof": "forbidden",
+      "flat_roof": "optional only when explicitly selected by the route/BOM",
+      "rule": "Never merge a decorative skirt, the inner flange and the external UPK into one symbol."
+    },
+    "pipe_opening_rule": "At the exact location where the sandwich pipe exits through the roof flashing, the opening/neck width must equal the OUTER DIAMETER of the sandwich pipe.",
+    "geometry": "The pipe remains straight and constant in diameter through the roof passage.",
+    "diameter_relation": "D_ROOF_PASSAGE_OPENING = D_SANDWICH",
+    "forbidden": [
+      "flexible Master Flash silhouette",
+      "rubber or silicone stepped cone",
+      "rolled edge around pipe",
+      "extra collar increasing pipe diameter",
+      "flared neck",
+      "bell shape",
+      "bead",
+      "step in pipe diameter",
+      "decorative ring",
+      "invented adapter between flashing and pipe"
+    ],
+    "reference_intent": "Match the corrected reference drawing: the roof flashing terminates directly against the straight vertical pipe without changing the pipe silhouette."
+  },
+  "termination_component": {
+    "rule": "Draw the selected real terminal/deflector family as a readable component on the pipe axis.",
+    "forbidden": [
+      "generic triangle",
+      "unselected invented terminal",
+      "terminal geometry that changes the calculated mouth datum"
+    ]
+  },
+  "pipe_geometry": {
+    "vertical_axis": "All straight vertical chimney elements share one centerline unless the scenario explicitly contains offsets.",
+    "constant_diameter_sections": true,
+    "rule": "Never change pipe width merely to make the illustration look attractive."
+  },
+  "proportional_layout": {
+    "rule": "All vertical positions must be calculated from actual input dimensions.",
+    "scale_rule": "Choose one millimetres-to-pixels coefficient for the entire scene and use it for rooms, floors, attic, roof build-up, pipes, passage zones, joints and termination height.",
+    "rebuild_rule": "When any measurement changes, recompute coordinates and rebuild the SVG geometry; changing labels alone is forbidden.",
+    "must_account_for": [
+      "finished floor level",
+      "stove height",
+      "single-wall elements",
+      "50 mm insertion overlap at every joint",
+      "floor/ceiling levels",
+      "floor thickness",
+      "cold attic height",
+      "inner roof surface",
+      "roof build-up thickness",
+      "outer roof surface",
+      "ridge height",
+      "chimney height above roof"
+    ]
+  },
+  "rendering_order": [
+    "building geometry",
+    "stove",
+    "chimney pipes",
+    "component connection geometry",
+    "floor clamp OVER pipe",
+    "interior angled roof flange as a separate element",
+    "external UPK roof flashing IN FOREGROUND over pipe",
+    "dimensions and leader lines",
+    "labels"
+  ],
+  "validation_before_output": [
+    "Check that floor-to-ridge dimension ends at the INNER LOWER EDGE of ridge.",
+    "Check that ridge height is an absolute finished-floor measurement, not attic height or roof rise.",
+    "Check roof inner surface at chimney = ridge height - horizontal ridge distance * tan(roof angle).",
+    "Check roof outer surface at chimney = roof inner surface + measured roof build-up along the chimney axis.",
+    "Check that the mouth height satisfies the applicable ridge-distance branch and the minimum height from the grate.",
+    "Check that the result separately explains roof requirement, five-metre requirement, controlling requirement, minimum height and actual discrete height.",
+    "Check D_SINGLE < D_SANDWICH.",
+    "Check rotary damper diameter equals D_SINGLE.",
+    "Check every socketed joint consumes 50 mm of nominal component length.",
+    "Check effective component height = nominal height - 50 mm.",
+    "Check support cap is a correctly oriented trapezoid: narrow below, wide above.",
+    "Check floor clamp is rendered over the pipe and attached to joists.",
+    "Check passage glass, wool kits and floor clamp remain separate BOM lines; wool quantity is manual.",
+    "Check pitched roof has a separate inner angled flange and no decorative skirt.",
+    "Check external UPK is rendered in the foreground over the pipe.",
+    "Check roof flashing opening is exactly D_SANDWICH.",
+    "Check there are no decorative collars, rolled edges or invented diameter changes.",
+    "Check total chimney height from SVG coordinates matches calculated effective assembled height."
+  ],
+  "acceptance_examples": [
+    {
+      "id": "small_bath_near_ridge",
+      "inputs_mm": {
+        "room_height": 2200,
+        "floor_thickness": 200,
+        "ridge_height_inner_lower": 3400,
+        "ridge_horizontal_distance": 500,
+        "roof_build_up": 150,
+        "grate_height": 150
+      },
+      "roof_angle_deg": 37,
+      "expected_geometry_mm": {
+        "floor_zone": [2200, 2400],
+        "roof_inner_at_chimney": 3023,
+        "roof_outer_at_chimney": 3173,
+        "local_attic_height_above_floor_zone": 623
+      },
+      "expected_termination_mm": {
+        "roof_requirement": 3900,
+        "five_metre_requirement": 5150,
+        "minimum": 5150,
+        "controlling_requirement": "five-meter",
+        "actual": "the shortest valid effective SKU layout at or above 5150"
+      }
+    },
+    {
+      "id": "roof_passage_regression",
+      "inputs_mm": {
+        "ridge_height_inner_lower": 3500,
+        "ridge_horizontal_distance": 300,
+        "roof_build_up": 200,
+        "grate_height": 600
+      },
+      "roof_angle_deg": 37,
+      "expected_geometry_mm": {
+        "roof_inner_at_chimney": 3274,
+        "roof_outer_at_chimney": 3474
+      },
+      "expected_termination_mm": {
+        "roof_requirement": 4000,
+        "five_metre_requirement": 5600,
+        "minimum": 5600,
+        "controlling_requirement": "five-meter"
+      }
+    }
+  ],
+  "failure_policy": {
+    "rule": "If any validation rule fails, DO NOT output the SVG. Correct the geometry first and validate again."
+  }
+}

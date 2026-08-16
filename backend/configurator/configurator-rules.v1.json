@@ -6,6 +6,7 @@
     "status": "active_mvp_with_review_gates",
     "note": "Правила подтверждены владельцем проекта. Неполные технические параметры явно помечены как требующие ввода или последующего подтверждения."
   },
+  "svg_generation_contract": "svg-route-generation-rules.v1.json",
   "units": {
     "length": "mm",
     "angle": "deg",
@@ -37,8 +38,17 @@
       "render_actual_roof_angle": true,
       "roof_angle_input": "roof_angle_deg",
       "ridge_height_input": "ridge_height_mm",
+      "ridge_height_datum": "outer_highest_point",
+      "ridge_horizontal_distance_input": "ridge_horizontal_distance_mm",
       "ridge_height_required_for_vertical_route": true,
-      "termination_to_ridge_relation": "termination_height_mm - ridge_height_mm"
+      "ridge_horizontal_distance_required_for_pitched_roof": true,
+      "termination_to_ridge_relation": "termination_height_mm - ridge_height_mm",
+      "termination_minimum_formula": "max(roof_requirement_mm, grate_height_mm + 5000)",
+      "ridge_clearance_branches": [
+        "distance <= 1500: ridge_height_mm + 500",
+        "1500 < distance <= 3000: ridge_height_mm",
+        "distance > 3000: ridge_height_mm - distance * tan(10deg)"
+      ]
     },
     "requirements": [
       "Каждый участок трассы строится по фактическим замерам в миллиметрах.",
@@ -135,6 +145,10 @@
       "id": "roof_passage",
       "label": "Узел прохода кровли",
       "applies_per": "roof_passage_count",
+      "applies_to_roof_types": [
+        "pitched",
+        "flat"
+      ],
       "required_inputs": [
         "roof_angle_deg",
         "roof_thickness_mm",
@@ -177,12 +191,41 @@
           "note": "Отдельного хомута кровельного прохода нет; используется хомут в перекрытие с изменяемым углом."
         },
         {
+          "component_role": "master_flash",
+          "catalog_name": "Мастер-флеш",
+          "product_kind": "проходной_узел",
+          "quantity_per_passage": 1,
+          "include_by_default": true,
+          "user_removable": true,
+          "applies_to_roof_types": [
+            "pitched",
+            "flat"
+          ],
+          "catalog_category_slug": "uzly-prohoda-krovli",
+          "catalog_product_slug": "master-flesh",
+          "catalog_article": "DT-MASTER-FLASH-2",
+          "assembly_relation": "Mounted on the chimney pipe as a separate flexible element before the optional removal decision; it is not merged with UPK."
+        },
+        {
           "component_role": "upk",
           "product_kind": "проходной_узел",
           "quantity_per_passage": 1,
+          "include_by_default": true,
+          "user_removable": true,
+          "applies_to_roof_types": [
+            "pitched",
+            "flat"
+          ],
           "angle_match": "roof_angle_deg",
           "diameter_match": "selected_sandwich_pipe.outer_diameter_mm",
-          "catalog_mapping_status": "requires_mapping"
+          "catalog_category_slug": "uzly-prohoda-krovli",
+          "catalog_product_slug": "prohodnoy-uzel-krovli-upk-do-45",
+          "catalog_article_prefix": "DT-UPK-",
+          "excluded_product_slugs": [
+            "master-flesh"
+          ],
+          "catalog_mapping_status": "confirmed",
+          "note": "Master Flash is a separate flexible roof seal and is not an UPK substitute."
         },
         {
           "component_role": "decorative_skirt",
@@ -200,6 +243,7 @@
         "render_measured_angle": true,
         "upk_shape": "sloped_base_with_tapered_vertical_collar",
         "upk_side": "exterior",
+        "master_flash_relation": "separate pipe-mounted element; never relabel as UPK",
         "interior_flange_side": "interior",
         "decorative_skirt_rendering": "flat_roof_only_optional_separate_component_over_flange_joint",
         "termination_shape": "deflector_not_triangle",
@@ -271,7 +315,9 @@
   "routes": {
     "straight_through_floors": {
       "required_inputs": [
-        "ridge_height_mm"
+        "ridge_height_mm",
+        "ridge_horizontal_distance_mm",
+        "grate_height_mm"
       ],
       "warmup_assembly": {
         "sequence_bottom_to_top": [
@@ -282,7 +328,10 @@
         "total_height_input": "warmup_length_mm",
         "rotary_damper_height_input": "rotary_damper_height_mm",
         "rotary_damper_height_mode": "manual_required_because_catalog_dimension_missing",
-        "single_wall_pipe_length_formula": "warmup_length_mm - rotary_damper_height_mm",
+        "single_wall_pipe_nominal_length_formula": "warmup_length_mm - rotary_damper_height_mm",
+        "socket_overlap_mm": 50,
+        "effective_height_formula_each_component": "nominal_height_mm - socket_overlap_mm",
+        "assembled_height_formula": "sum(component_effective_height_mm)",
         "constraint": "0 < rotary_damper_height_mm < warmup_length_mm"
       },
       "required_assemblies": [
