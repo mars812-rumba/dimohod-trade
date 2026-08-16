@@ -376,7 +376,12 @@ export function GeneratedChimneyScheme({
   return (
     <svg className="configurator-generated-svg configurator-building-svg" viewBox="0 0 380 740" role="img" aria-labelledby="generated-scheme-title generated-scheme-description">
       <title id="generated-scheme-title">Расчётная схема дымохода через перекрытие и кровлю</title>
-      <desc id="generated-scheme-description">Вертикальный разрез здания с печью, трубами, проходными зонами, широкими верхними и нижними фланцами перекрытий, внутренним кровельным фланцем, координатами стыков и перечнем узлов.</desc>
+      <desc id="generated-scheme-description">Вертикальный разрез здания с печью, трубами, проходными зонами, широкими верхними и нижними фланцами перекрытий, внутренним кровельным фланцем, координатами стыков и перечнем узлов. Со стороны холодного чердака декоративная юбка не устанавливается. В проходах показаны зазор до деревянных конструкций и заполнение каменной ватой без неподтверждённого числового размера.</desc>
+      <defs>
+        <pattern id="building-floor-insulation-pattern" width="6" height="6" patternUnits="userSpaceOnUse">
+          <path d="M-2 6 L6 -2 M1 9 L9 1" className="scheme-floor-insulation-hatch" />
+        </pattern>
+      </defs>
       <rect width="380" height="740" className="scheme-paper" />
 
       <g aria-hidden="true">
@@ -447,10 +452,16 @@ export function GeneratedChimneyScheme({
       ) : null}
       {floorZones.map((zone) => {
         const clampY = verticalY((zone.startMm + zone.endMm) / 2);
+        const leftWoodInnerX = houseLeft + 56;
+        const rightWoodInnerX = houseRight - 56;
+        const pipeLeftX = chimneyX - sandwichHalfWidthPx;
+        const pipeRightX = chimneyX + sandwichHalfWidthPx;
         return (
           <g key={`${zone.id}-joists`} aria-hidden="true">
             <rect x={houseLeft + 5} y={clampY - 10} width="51" height="20" className="scheme-floor-joist" />
             <rect x={houseRight - 56} y={clampY - 10} width="51" height="20" className="scheme-floor-joist" />
+            <rect x={leftWoodInnerX} y={clampY - 10} width={Math.max(0, pipeLeftX - leftWoodInnerX)} height="20" fill="url(#building-floor-insulation-pattern)" className="scheme-floor-insulation" />
+            <rect x={pipeRightX} y={clampY - 10} width={Math.max(0, rightWoodInnerX - pipeRightX)} height="20" fill="url(#building-floor-insulation-pattern)" className="scheme-floor-insulation" />
           </g>
         );
       })}
@@ -529,6 +540,7 @@ export function GeneratedChimneyScheme({
         const skirtBaseHalfWidth = skirtNeckHalfWidth + 7;
         const passageOpeningHalfWidth = skirtBaseHalfWidth + 4;
         const finishFlangeHalfWidth = passageOpeningHalfWidth + 10;
+        const atticSide = calculation.hasAttic && zone.id === upperFloorZone?.id;
         return (
           <g key={`${zone.id}-passage-finishes`} aria-hidden="true">
             <g className="scheme-floor-finish-flanges">
@@ -536,7 +548,7 @@ export function GeneratedChimneyScheme({
               <rect x={chimneyX - finishFlangeHalfWidth} y={lowerSurfaceY - 3} width={finishFlangeHalfWidth * 2} height="6" rx="1" />
             </g>
             <g className="scheme-floor-decorative-skirts">
-              <path d={`M${chimneyX - skirtBaseHalfWidth} ${upperSurfaceY - 3} L${chimneyX - skirtNeckHalfWidth} ${upperSurfaceY - 11} L${chimneyX + skirtNeckHalfWidth} ${upperSurfaceY - 11} L${chimneyX + skirtBaseHalfWidth} ${upperSurfaceY - 3} Z`} />
+              {!atticSide ? <path d={`M${chimneyX - skirtBaseHalfWidth} ${upperSurfaceY - 3} L${chimneyX - skirtNeckHalfWidth} ${upperSurfaceY - 11} L${chimneyX + skirtNeckHalfWidth} ${upperSurfaceY - 11} L${chimneyX + skirtBaseHalfWidth} ${upperSurfaceY - 3} Z`} /> : null}
               <path d={`M${chimneyX - skirtBaseHalfWidth} ${lowerSurfaceY + 3} L${chimneyX - skirtNeckHalfWidth} ${lowerSurfaceY + 11} L${chimneyX + skirtNeckHalfWidth} ${lowerSurfaceY + 11} L${chimneyX + skirtBaseHalfWidth} ${lowerSurfaceY + 3} Z`} />
             </g>
           </g>
@@ -545,13 +557,16 @@ export function GeneratedChimneyScheme({
 
       {floorZones.map((zone) => {
         const clampY = verticalY((zone.startMm + zone.endMm) / 2);
+        const clampBodyHalfWidth = 25;
+        const clampMountHalfWidth = 42;
+        const clampEarWidth = clampMountHalfWidth - clampBodyHalfWidth;
         return (
           <g key={`${zone.id}-clamp`} className="scheme-floor-clamp" aria-hidden="true">
-            <rect x={houseLeft + 48} y={clampY - 4} width={chimneyX - 25 - (houseLeft + 48)} height="8" className="scheme-clamp-ear" />
-            <rect x={chimneyX + 25} y={clampY - 4} width={houseRight - 48 - (chimneyX + 25)} height="8" className="scheme-clamp-ear" />
-            <rect x={chimneyX - 25} y={clampY - 7} width="50" height="14" className="scheme-clamp-body" />
-            <circle cx={houseLeft + 53} cy={clampY} r="2" className="scheme-clamp-bolt" />
-            <circle cx={houseRight - 53} cy={clampY} r="2" className="scheme-clamp-bolt" />
+            <rect x={chimneyX - clampMountHalfWidth} y={clampY - 4} width={clampEarWidth} height="8" className="scheme-clamp-ear" />
+            <rect x={chimneyX + clampBodyHalfWidth} y={clampY - 4} width={clampEarWidth} height="8" className="scheme-clamp-ear" />
+            <rect x={chimneyX - clampBodyHalfWidth} y={clampY - 7} width={clampBodyHalfWidth * 2} height="14" className="scheme-clamp-body" />
+            <circle cx={chimneyX - clampMountHalfWidth + 5} cy={clampY} r="2" className="scheme-clamp-bolt" />
+            <circle cx={chimneyX + clampMountHalfWidth - 5} cy={clampY} r="2" className="scheme-clamp-bolt" />
           </g>
         );
       })}
@@ -627,6 +642,10 @@ export function GeneratedChimneyScheme({
         <circle cx="4" cy="0" r="3.5" className="scheme-joint" />
         <text x="14" y="3" className="scheme-legend">стык · не должен попадать внутрь проходной зоны</text>
       </g>
+      <g transform="translate(38 732)">
+        <rect x="0" y="-5" width="8" height="8" fill="url(#building-floor-insulation-pattern)" className="scheme-floor-insulation" />
+        <text x="14" y="2" className="scheme-legend">зазор до древесины · каменная вата · размер требует подтверждения</text>
+      </g>
     </svg>
   );
 }
@@ -684,11 +703,14 @@ function VerticalPassageDetails({
       <article className="configurator-node-card">
         <div className="configurator-node-card-title">
           <span>01</span>
-          <div><strong>Проход перекрытия</strong><small>Повторяется для каждого перекрытия</small></div>
+          <div>
+            <strong>Проход перекрытия</strong>
+            <small>{calculation.hasAttic ? "Верхнее перекрытие перед чердаком" : "Повторяется для каждого перекрытия"}</small>
+          </div>
         </div>
         <svg viewBox="0 0 380 244" role="img" aria-labelledby="floor-node-title floor-node-description">
           <title id="floor-node-title">Состав узла прохода перекрытия</title>
-          <desc id="floor-node-description">Сэндвич-труба проходит через стакан в перекрытии. Сверху и снизу установлены отдельные фланцы и съёмные декоративные юбки, внутри показаны хомут и зона заполнения ватой.</desc>
+          <desc id="floor-node-description">Сэндвич-труба проходит через стакан в перекрытии. Отдельные фланцы установлены с обеих сторон. Декоративная юбка устанавливается со стороны помещения, но не со стороны холодного чердака. Внутри показаны симметричный хомут, зазор до деревянных конструкций и зона заполнения каменной ватой.</desc>
           <defs>
             <pattern id="floor-insulation-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
               <path d="M-2 8 L8 -2 M2 10 L10 2" className="scheme-node-hatch" />
@@ -702,7 +724,7 @@ function VerticalPassageDetails({
           <rect x="145" y="18" width="30" height="194" className="scheme-node-pipe" />
           <rect x="90" y="78" width="140" height="8" rx="2" className="scheme-node-flange" />
           <rect x="90" y="148" width="140" height="8" rx="2" className="scheme-node-flange" />
-          <path d="M120 78 L145 62 L175 62 L200 78 Z" className="scheme-node-decorative-skirt" />
+          {!calculation.hasAttic ? <path d="M120 78 L145 62 L175 62 L200 78 Z" className="scheme-node-decorative-skirt" /> : null}
           <path d="M120 156 L145 172 L175 172 L200 156 Z" className="scheme-node-decorative-skirt" />
           <rect x="72" y="113" width="65" height="8" className="scheme-node-clamp-ear" />
           <rect x="183" y="113" width="65" height="8" className="scheme-node-clamp-ear" />
@@ -717,8 +739,8 @@ function VerticalPassageDetails({
           <text x="258" y="109" className="scheme-node-label">Фланец 1</text>
           <line x1="214" y1="152" x2="252" y2="144" className="scheme-node-leader" />
           <text x="258" y="147" className="scheme-node-label">Фланец 2</text>
-          <line x1="145" y1="66" x2="82" y2="52" className="scheme-node-leader" />
-          <text x="16" y="51" className="scheme-node-label">Юбка сверху</text>
+          <line x1="145" y1={calculation.hasAttic ? 82 : 66} x2="82" y2="52" className="scheme-node-leader" />
+          <text x="16" y="51" className="scheme-node-label">{calculation.hasAttic ? "Чердак: без юбки" : "Юбка сверху"}</text>
           <line x1="145" y1="168" x2="82" y2="178" className="scheme-node-leader" />
           <text x="16" y="181" className="scheme-node-label">Юбка снизу</text>
           <line x1="183" y1="117" x2="70" y2="184" className="scheme-node-leader" />

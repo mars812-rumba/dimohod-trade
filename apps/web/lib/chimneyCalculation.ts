@@ -335,6 +335,7 @@ function addRouteNodes(
   bom: ChimneyBomLine[],
   routeKind: ChimneyRouteKind,
   passageQty: number,
+  hasAttic: boolean,
   singleWallWarmupPipeLengthMm: number,
   rotaryDamperHeightMm: number,
   passageWoolKits: number,
@@ -409,16 +410,19 @@ function addRouteNodes(
     selectionReason: "По два фланца на проход: со стороны помещения и с противоположной стороны конструкции.",
     requiresSku: true,
   });
+  const upperFloorSkirtQty = Math.max(0, passageQty - (hasAttic ? 1 : 0));
   const decorativeSkirts = routeKind === "ceiling"
     ? [
       {
         key: "floor-decorative-skirt-upper",
         label: "Декоративная юбка — сверху перекрытия",
-        selectionReason: "Закрывает верхний фланец прямого прохода перекрытия.",
+        quantity: upperFloorSkirtQty,
+        selectionReason: "Закрывает верхний фланец прямого прохода только в помещении; со стороны холодного чердака юбка не устанавливается.",
       },
       {
         key: "floor-decorative-skirt-lower",
         label: "Декоративная юбка — снизу перекрытия",
+        quantity: passageQty,
         selectionReason: "Закрывает нижний фланец прямого прохода перекрытия.",
       },
     ]
@@ -426,18 +430,19 @@ function addRouteNodes(
       {
         key: "wall-decorative-skirt-interior",
         label: "Декоративная юбка — со стороны помещения",
+        quantity: passageQty,
         selectionReason: "Закрывает фланец прямого прохода с внутренней стороны стены.",
       },
       {
         key: "wall-decorative-skirt-exterior",
         label: "Декоративная юбка — с наружной стороны стены",
+        quantity: passageQty,
         selectionReason: "Закрывает фланец прямого прохода с наружной стороны стены.",
       },
     ];
-  decorativeSkirts.forEach((skirt) => bom.push({
+  decorativeSkirts.filter((skirt) => skirt.quantity > 0).forEach((skirt) => bom.push({
     ...skirt,
     productKind: "декоративная_юбка",
-    quantity: passageQty,
     zone: "wall_or_ceiling_pass",
     requiresSku: true,
     catalogCategorySlug: "uzly-prohoda-sten-i-perekrytiy",
@@ -661,6 +666,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     bom,
     routeKind,
     routeKind === "ceiling" ? floors : 1,
+    hasAttic,
     singleWallWarmupPipeLengthMm,
     rotaryDamperHeightMm,
     passageWoolKits,

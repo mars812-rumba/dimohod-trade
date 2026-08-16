@@ -2414,6 +2414,17 @@ body.mobile-menu-open {
   stroke-width: 1;
 }
 
+.configurator-building-svg .scheme-floor-insulation {
+  stroke: #6f8581;
+  stroke-width: 0.6;
+}
+
+.configurator-building-svg .scheme-floor-insulation-hatch {
+  fill: none;
+  stroke: #78918b;
+  stroke-width: 0.7;
+}
+
 .configurator-building-svg .scheme-clamp-body,
 .configurator-building-svg .scheme-clamp-ear {
   fill: #8f9a9e;
