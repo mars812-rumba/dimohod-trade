@@ -44,6 +44,11 @@
   color: #d5e2e5;
   font-size: 16px;
   line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.introPanel p + p {
+  margin-top: 12px;
 }
 
 .introPanel a {
@@ -92,7 +97,7 @@
 .imageStage {
   position: relative;
   width: 100%;
-  aspect-ratio: 720 / 1612;
+  aspect-ratio: 9 / 16;
   overflow: hidden;
   background: #fff;
 }

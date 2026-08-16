@@ -74,6 +74,7 @@ function ShowcaseCarousel({
   id,
   title,
   description,
+  details,
   slides,
   assetBasePath,
   result = false,
@@ -81,6 +82,7 @@ function ShowcaseCarousel({
   id: string;
   title: string;
   description: string;
+  details?: string;
   slides: ShowcaseSlide[];
   assetBasePath: string;
   result?: boolean;
@@ -96,6 +98,7 @@ function ShowcaseCarousel({
         <div className={styles.introPanel}>
           <h2 id={id}>{title}</h2>
           <p>{description}</p>
+          {details ? <p>{details}</p> : null}
           {result ? (
             <Link href="/zamery?edit=1">
               Получить расчёт
@@ -182,7 +185,8 @@ export function HomeGuidedShowcase({ assetBasePath = "" }: { assetBasePath?: str
     <div className={styles.showcase}>
       <ShowcaseCarousel
         assetBasePath={assetBasePath}
-        description="Как замерить каждый параметр, мы наглядно подскажем. Если у вас появятся вопросы, инженер на них ответит."
+        description="Мы в отрасли с 2018 года, поэтому знаем, что спросить, чтобы рассчитать подробную и правдивую цену."
+        details="В разделе «Мои замеры» главного меню можно работать в удобное время: данные хранятся на вашем устройстве. Ниже — несколько примеров параметров, которые нужно заполнить. К каждому вопросу есть наглядная схема; если останутся вопросы, позвоните нам."
         id="home-measurements-showcase"
         slides={measurementSlides}
         title="Заполните необходимые размеры"

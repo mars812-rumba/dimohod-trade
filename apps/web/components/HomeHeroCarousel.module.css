@@ -7,24 +7,21 @@
 }
 
 .headline {
-  position: absolute;
-  right: max(24px, calc((100vw - 1240px) / 2));
-  bottom: 82px;
-  max-width: calc(100% - 48px);
+  display: flex;
+  flex: 0 0 68px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 68px;
   margin: 0;
-  padding: 13px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  padding: 0 24px;
   color: #fff;
-  background: rgba(16, 33, 39, 0.62);
-  box-shadow: 0 10px 28px rgba(5, 17, 22, 0.18);
-  font-size: clamp(13px, 1.45vw, 18px);
+  background: linear-gradient(105deg, #102127 0%, #173d4c 62%, #102127 100%);
+  font-size: clamp(16px, 1.55vw, 20px);
   font-weight: 690;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-  -webkit-backdrop-filter: blur(12px) saturate(0.86);
-  backdrop-filter: blur(12px) saturate(0.86);
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
 }
 
 .carouselFrame {
@@ -53,16 +50,33 @@
   right: max(24px, calc((100vw - 1240px) / 2));
   bottom: 24px;
   display: inline-flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
   justify-content: center;
-  min-height: 46px;
-  padding: 0 17px;
+  min-height: 58px;
+  padding: 8px 17px;
   color: #fff;
   background: #ed5b2a;
   font-size: 13px;
   font-weight: 750;
   transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.ctaCopy {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.ctaCopy strong {
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+.ctaCopy span {
+  font-size: 11px;
+  font-weight: 620;
+  line-height: 1.2;
 }
 
 .progress {
@@ -120,17 +134,21 @@
   .cta {
     right: 14px;
     bottom: 16px;
-    min-height: 42px;
+    width: calc(100% - 28px);
+    min-height: 60px;
     padding-inline: 14px;
     font-size: 12px;
   }
 
+  .ctaCopy {
+    flex: 1;
+  }
+
   .headline {
-    right: 14px;
-    bottom: 70px;
-    max-width: calc(100% - 28px);
-    padding: 10px 12px;
-    font-size: clamp(10px, 2.85vw, 12px);
+    flex-basis: 72px;
+    min-height: 72px;
+    padding: 0 14px;
+    font-size: clamp(14px, 4vw, 17px);
   }
 }
 

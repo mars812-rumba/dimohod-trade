@@ -71,6 +71,10 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         touchStartX.current = null;
       }}
     >
+      <h1 className={styles.headline}>
+        Безопасный, совместимый с вашим отопителем дымоход от производителя.
+      </h1>
+
       <div className={styles.carouselFrame}>
         <div className={styles.imageStage} aria-live="off">
           <picture key={imagePath}>
@@ -87,11 +91,12 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
           </picture>
         </div>
 
-        <h1 className={styles.headline}>Безопасный, совместимый дымоход — без замерщика</h1>
-
         <Link className={styles.cta} href="/zamery?edit=1">
           <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
-          Получить смету в PDF
+          <span className={styles.ctaCopy}>
+            <strong>Получить смету в PDF</strong>
+            <span>и сэкономить от 7 000 ₽ за выезд мастера</span>
+          </span>
           <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
         </Link>
 
