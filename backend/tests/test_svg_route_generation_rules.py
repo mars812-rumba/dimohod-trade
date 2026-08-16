@@ -77,6 +77,9 @@ def test_passage_components_and_manual_wool_stay_separate() -> None:
         "lower_ceiling_face",
     ]
     assert floor_bom["decorative_skirts"]["independently_removable"] is True
+    assert "flush with" in floor_bom["decorative_skirts"]["svg_rule"]
+    floor_scheme = load_configurator_rules()["assemblies"]["floor_passage"]["scheme"]
+    assert "No gap" in floor_scheme["decorative_skirt_flange_surface_relation"]
     assert rules["wall_passage_bom"]["decorative_skirts"]["positions"] == [
         "interior_wall_face",
         "exterior_wall_face",

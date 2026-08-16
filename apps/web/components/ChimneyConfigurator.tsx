@@ -546,8 +546,8 @@ export function GeneratedChimneyScheme({
               <rect x={chimneyX - finishFlangeHalfWidth} y={lowerSurfaceY - 3} width={finishFlangeHalfWidth * 2} height="6" rx="1" />
             </g>
             <g className="scheme-floor-decorative-skirts">
-              <path d={`M${chimneyX - skirtBaseHalfWidth} ${upperSurfaceY} L${chimneyX - skirtNeckHalfWidth} ${upperSurfaceY - 8} L${chimneyX + skirtNeckHalfWidth} ${upperSurfaceY - 8} L${chimneyX + skirtBaseHalfWidth} ${upperSurfaceY} Z`} />
-              <path d={`M${chimneyX - skirtBaseHalfWidth} ${lowerSurfaceY} L${chimneyX - skirtNeckHalfWidth} ${lowerSurfaceY + 8} L${chimneyX + skirtNeckHalfWidth} ${lowerSurfaceY + 8} L${chimneyX + skirtBaseHalfWidth} ${lowerSurfaceY} Z`} />
+              <path d={`M${chimneyX - skirtBaseHalfWidth} ${upperSurfaceY - 3} L${chimneyX - skirtNeckHalfWidth} ${upperSurfaceY - 11} L${chimneyX + skirtNeckHalfWidth} ${upperSurfaceY - 11} L${chimneyX + skirtBaseHalfWidth} ${upperSurfaceY - 3} Z`} />
+              <path d={`M${chimneyX - skirtBaseHalfWidth} ${lowerSurfaceY + 3} L${chimneyX - skirtNeckHalfWidth} ${lowerSurfaceY + 11} L${chimneyX + skirtNeckHalfWidth} ${lowerSurfaceY + 11} L${chimneyX + skirtBaseHalfWidth} ${lowerSurfaceY + 3} Z`} />
             </g>
           </g>
         );

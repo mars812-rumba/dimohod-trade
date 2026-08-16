@@ -177,6 +177,7 @@
           "lower_ceiling_face"
         ],
         "finish_flange_opening_relation": "Each flange must extend visibly beyond both edges of the passage opening and cover the opening perimeter; exact overhang requires a measured opening and selected SKU dimensions.",
+        "decorative_skirt_flange_surface_relation": "The wide base edge of the upper skirt is flush with the exposed upper face of the upper flange; the wide base edge of the lower skirt is flush with the exposed lower face of the lower flange. No gap and no insertion into the flange thickness.",
         "generic_ring_clamp_allowed": false
       }
     },

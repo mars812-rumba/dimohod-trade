@@ -208,7 +208,7 @@
       "match_diameter_to": "D_SANDWICH",
       "included_by_default": true,
       "independently_removable": true,
-      "svg_rule": "Draw each skirt as a separate foreground collar over its finish flange without replacing or hiding the flange."
+      "svg_rule": "Draw each skirt as a separate foreground collar without replacing or hiding the flange. Its wide base edge must be flush with the exposed outer face of its flange: upper skirt on the upper flange face, lower skirt on the lower flange face, with no gap and no overlap into the flange thickness."
     },
     "wool_quantity": {
       "mode": "manual",
