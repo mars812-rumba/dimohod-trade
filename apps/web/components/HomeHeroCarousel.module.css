@@ -10,17 +10,17 @@
   display: flex;
   flex: 0 0 68px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   min-height: 68px;
   margin: 0;
-  padding: 0 24px;
+  padding: 0 32px;
   color: #fff;
   background: linear-gradient(105deg, #102127 0%, #173d4c 62%, #102127 100%);
   font-size: clamp(16px, 1.55vw, 20px);
   font-weight: 690;
   line-height: 1.2;
-  text-align: center;
+  text-align: left;
   text-wrap: balance;
 }
 
@@ -147,7 +147,7 @@
   .headline {
     flex-basis: 72px;
     min-height: 72px;
-    padding: 0 14px;
+    padding: 0 12px;
     font-size: clamp(14px, 4vw, 17px);
   }
 }
