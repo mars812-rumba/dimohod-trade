@@ -2208,6 +2208,29 @@ body.mobile-menu-open {
   height: auto;
 }
 
+.configurator-svg-validation {
+  width: min(100%, 420px);
+  padding: 20px;
+  border: 1px solid rgba(177, 63, 32, 0.3);
+  border-radius: 16px;
+  background: rgba(255, 248, 238, 0.94);
+  color: #552a1f;
+}
+
+.configurator-svg-validation strong,
+.configurator-svg-validation span {
+  display: block;
+}
+
+.configurator-svg-validation span {
+  margin-top: 6px;
+}
+
+.configurator-svg-validation ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+}
+
 .configurator-generated-svg text {
   fill: #40515a;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -2286,6 +2309,31 @@ body.mobile-menu-open {
   font-size: 7px;
   font-weight: 760;
   letter-spacing: 0.04em;
+}
+
+.configurator-building-svg .scheme-ridge-distance line {
+  fill: none;
+  stroke: #6f7f86;
+  stroke-width: 0.75;
+}
+
+.configurator-building-svg .scheme-ridge-distance text {
+  fill: #40515a;
+  font-size: 6.5px;
+  font-weight: 700;
+}
+
+.configurator-building-svg .scheme-ten-degree-clearance line {
+  fill: none;
+  stroke: #b13f20;
+  stroke-dasharray: 5 3;
+  stroke-width: 1.1;
+}
+
+.configurator-building-svg .scheme-ten-degree-clearance text {
+  fill: #8f321c;
+  font-size: 6.5px;
+  font-weight: 760;
 }
 
 .configurator-building-svg .scheme-pass-band {
@@ -2425,6 +2473,13 @@ body.mobile-menu-open {
   fill: #b13f20;
   stroke: #fff8ee;
   stroke-width: 1;
+}
+
+.configurator-building-svg .scheme-joint-zone {
+  fill: #78898d;
+  fill-opacity: 0.58;
+  stroke: #46555b;
+  stroke-width: 0.8;
 }
 
 .configurator-building-svg .scheme-pipe-leader,
@@ -2627,6 +2682,23 @@ body.mobile-menu-open {
   fill: #d9c4a7;
   fill-opacity: 0.78;
   stroke: none;
+}
+
+.configurator-node-card .scheme-node-rafter {
+  fill: #a67f58;
+  stroke: #684c36;
+  stroke-width: 1.2;
+}
+
+.configurator-node-card .scheme-node-roof-insulation {
+  stroke: #c9825e;
+  stroke-width: 0.8;
+}
+
+.configurator-node-card .scheme-node-roof-clamp {
+  /* The clamp stays level around the vertical pipe; only its ears meet the sloped rafters. */
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .configurator-node-card .scheme-node-roof-surface {
@@ -2920,6 +2992,59 @@ body.mobile-menu-open {
   font-size: 14px;
   font-style: normal;
   font-weight: 820;
+}
+
+.configurator-spec-actions {
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+
+.configurator-spec-remove,
+.configurator-spec-removed button {
+  border: 0;
+  padding: 2px 0;
+  background: transparent;
+  color: var(--steel);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 760;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.configurator-spec-remove:focus-visible,
+.configurator-spec-removed button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.configurator-spec-removed {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px dashed rgba(64, 81, 90, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.configurator-spec-removed > strong {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.configurator-spec-removed > div {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text);
+  font-size: 12px;
 }
 
 .configurator-catalog-match,

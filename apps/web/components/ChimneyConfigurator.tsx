@@ -616,6 +616,13 @@ function VerticalPassageDetails({
   const detailSkirtLeftY = detailRoofYAt(160 - detailSkirtHalfWidth, roofInnerAtPipeY);
   const detailSkirtRightY = detailRoofYAt(160 + detailSkirtHalfWidth, roofInnerAtPipeY);
   const detailSkirtNeckY = Math.max(detailSkirtLeftY, detailSkirtRightY) + 22;
+  const detailRoofSectionPath = (startX: number, endX: number) => (
+    `M${startX} ${detailRoofYAt(startX, roofOuterAtPipeY)} `
+    + `L${endX} ${detailRoofYAt(endX, roofOuterAtPipeY)} `
+    + `L${endX} ${detailRoofYAt(endX, roofInnerAtPipeY)} `
+    + `L${startX} ${detailRoofYAt(startX, roofInnerAtPipeY)} Z`
+  );
+  const roofClampY = 116;
 
   return (
     <section className="configurator-node-details" aria-labelledby="passage-details-title">
@@ -673,13 +680,29 @@ function VerticalPassageDetails({
           <span>02</span>
           <div><strong>Проход кровли</strong><small>{roofAngleDeg === null ? "Угол нужно измерить" : `Угол кровли ${roofAngleDeg}°`}</small></div>
         </div>
-        <svg viewBox="0 0 380 230" role="img" aria-labelledby="roof-node-title roof-node-description">
+        <svg viewBox="0 0 380 280" role="img" aria-labelledby="roof-node-title roof-node-description">
           <title id="roof-node-title">Состав узла прохода кровли</title>
-          <desc id="roof-node-description">Вертикальная сэндвич-труба проходит через кровельный пирог под измеренным углом. УПК показан снаружи на верхней поверхности, внутренний фланец — отдельно на нижней поверхности.</desc>
+          <desc id="roof-node-description">Вертикальная сэндвич-труба проходит через кровельный пирог под измеренным углом. Вата показана по обеим сторонам трубы в проёме между стропилами. Хомут в перекрытие установлен ровно поперёк вертикальной трубы, а его боковые ушки закреплены к стропилам. УПК показан снаружи на верхней поверхности, внутренний фланец — отдельно на нижней поверхности.</desc>
+          <defs>
+            <pattern id="roof-insulation-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M-2 8 L8 -2 M2 10 L10 2" className="scheme-node-hatch" />
+            </pattern>
+          </defs>
           <path d={detailRoofCakePath} className="scheme-node-roof-cake" />
+          <path d={detailRoofSectionPath(88, 116)} className="scheme-node-rafter" />
+          <path d={detailRoofSectionPath(204, 232)} className="scheme-node-rafter" />
+          <path d={detailRoofSectionPath(116, 145)} fill="url(#roof-insulation-pattern)" className="scheme-node-roof-insulation" />
+          <path d={detailRoofSectionPath(175, 204)} fill="url(#roof-insulation-pattern)" className="scheme-node-roof-insulation" />
           <path d={`M${roofStartX} ${roofOuterStartY} L${roofEndX} ${roofOuterEndY}`} className="scheme-node-roof-surface is-outer" />
           <path d={`M${roofStartX} ${roofInnerStartY} L${roofEndX} ${roofInnerEndY}`} className="scheme-node-roof-surface is-inner" />
           <rect x="145" y="14" width="30" height="202" className="scheme-node-pipe" />
+          <g className="scheme-node-roof-clamp" aria-hidden="true">
+            <rect x="112" y={roofClampY - 4} width="25" height="8" className="scheme-node-clamp-ear" />
+            <rect x="183" y={roofClampY - 4} width="25" height="8" className="scheme-node-clamp-ear" />
+            <rect x="137" y={roofClampY - 9} width="46" height="18" className="scheme-node-clamp" />
+            <circle cx="119" cy={roofClampY} r="2.5" className="scheme-node-clamp-bolt" />
+            <circle cx="201" cy={roofClampY} r="2.5" className="scheme-node-clamp-bolt" />
+          </g>
           <rect
             x="108"
             y={roofOuterAtPipeY - 5}
@@ -710,19 +733,26 @@ function VerticalPassageDetails({
           <text x="52" y={Math.min(205, roofInnerStartY + 42)} className="scheme-node-label">{roofAngleDeg === null ? "угол ?" : `${roofAngleDeg}°`}</text>
           <line x1="175" y1="38" x2="252" y2="38" className="scheme-node-leader" />
           <text x="258" y="41" className="scheme-node-label">Сэндвич-труба</text>
-          <line x1="205" y1={roofOuterAtPipeY - 4} x2="252" y2="88" className="scheme-node-leader" />
-          <text x="258" y="91" className="scheme-node-label">УПК по углу</text>
-          <line x1="198" y1={roofInnerAtPipeY} x2="252" y2="132" className="scheme-node-leader" />
-          <text x="258" y="135" className="scheme-node-label">{roofType === "flat" ? "Внутренний фланец" : "Фланец под углом"}</text>
+          <line x1="205" y1={roofOuterAtPipeY - 4} x2="252" y2="78" className="scheme-node-leader" />
+          <text x="258" y="81" className="scheme-node-label">УПК по углу</text>
+          <line x1="188" y1={detailRoofYAt(188, 116)} x2="252" y2="108" className="scheme-node-leader" />
+          <text x="258" y="111" className="scheme-node-label">Вата по бокам</text>
+          <line x1="183" y1={roofClampY} x2="252" y2="138" className="scheme-node-leader" />
+          <text x="258" y="141" className="scheme-node-label">Хомут в перекрытие</text>
+          <line x1="198" y1={roofInnerAtPipeY} x2="252" y2="168" className="scheme-node-leader" />
+          <text x="258" y="171" className="scheme-node-label">{roofType === "flat" ? "Внутренний фланец" : "Фланец под углом"}</text>
           {roofType === "flat" ? (
             <>
-              <line x1="172" y1={detailSkirtNeckY} x2="252" y2="156" className="scheme-node-leader" />
-              <text x="258" y="159" className="scheme-node-label">Юбка (опция)</text>
+              <line x1="172" y1={detailSkirtNeckY} x2="252" y2="194" className="scheme-node-leader" />
+              <text x="258" y="197" className="scheme-node-label">Юбка (опция)</text>
             </>
           ) : null}
-          <line x1="135" y1={roofInnerAtPipeY + 10} x2="50" y2="184" className="scheme-node-leader" />
-          <text x="16" y="202" className="scheme-node-label">Фланец из помещения</text>
-          <text x="160" y="224" textAnchor="middle" className="scheme-node-note">
+          <line x1="119" y1={roofClampY} x2="54" y2="218" className="scheme-node-leader" />
+          <text x="16" y="234" className="scheme-node-label">Ушки закреплены</text>
+          <text x="16" y="247" className="scheme-node-label">к стропилам</text>
+          <line x1="135" y1={roofInnerAtPipeY + 10} x2="150" y2="230" className="scheme-node-leader" />
+          <text x="154" y="247" className="scheme-node-label">Фланец из помещения</text>
+          <text x="160" y="272" textAnchor="middle" className="scheme-node-note">
             Кровельный пирог: {roofThicknessMm ? `${roofThicknessMm} мм` : "нужен замер"}
           </text>
         </svg>
@@ -762,6 +792,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const [supportCapLengthMm, setSupportCapLengthMm] = useState(70);
   const [passageWoolKits, setPassageWoolKits] = useState(3);
   const [selectedVariantId, setSelectedVariantId] = useState("");
+  const [removedBomKeys, setRemovedBomKeys] = useState<string[]>([]);
   const [stoveModel, setStoveModel] = useState(searchParams.get("stoveModel") ?? "");
   const [catalogMatches, setCatalogMatches] = useState<Record<string, CatalogBomMatch>>({});
   const [catalogMatchStatus, setCatalogMatchStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -929,9 +960,17 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     }
     return [...new Set(issues)];
   }, [calculation, roof, selectedVariant]);
-  const selectedBom = useMemo(
+  const completeBom = useMemo(
     () => bomForVariant(calculation, selectedVariant),
     [calculation, selectedVariant],
+  );
+  const selectedBom = useMemo(
+    () => completeBom.filter((line) => !removedBomKeys.includes(line.key)),
+    [completeBom, removedBomKeys],
+  );
+  const removedBom = useMemo(
+    () => completeBom.filter((line) => line.removable && removedBomKeys.includes(line.key)),
+    [completeBom, removedBomKeys],
   );
   const selectedPipeQuantity = selectedVariant?.pipes.length ?? 0;
   const selectedCoveredMm = selectedVariant
@@ -953,12 +992,17 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       const params = new URLSearchParams({ limit: "24", offset: "0", product_kind: line.productKind });
       if (line.catalogCategorySlug) params.set("category", line.catalogCategorySlug);
       if (line.catalogSearch) params.set("q", line.catalogSearch);
-      const exactByFields = diameterKinds.has(line.productKind);
-      if (exactByFields) {
+      const exactDiameter = diameterKinds.has(line.productKind);
+      const rangeBySandwichOuterDiameter = line.catalogDiameterMode === "sandwich-outer-range";
+      const exactByFields = exactDiameter || rangeBySandwichOuterDiameter;
+      if (exactDiameter) {
         const outerDiameter = line.insulationMm !== undefined
           ? diameter + line.insulationMm * 2
           : null;
         params.set("diameter", `${diameter}:${outerDiameter ?? ""}`);
+      }
+      if (rangeBySandwichOuterDiameter) {
+        params.set("preferred_diameter", `:${diameter + 100}`);
       }
       if (line.nominalLengthMm) params.set("length_mm", String(line.nominalLengthMm));
       if (line.contour) params.set("contour", line.contour);
@@ -1454,11 +1498,36 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                       </>
                     ) : null}
                   </div>
-                  <em>×{part.quantity}</em>
+                  <div className="configurator-spec-actions">
+                    <em>×{part.quantity}</em>
+                    {part.removable ? (
+                      <button
+                        aria-label={`Удалить «${part.label}» из комплекта`}
+                        className="configurator-spec-remove"
+                        onClick={() => setRemovedBomKeys((current) => current.includes(part.key) ? current : [...current, part.key])}
+                        type="button"
+                      >Удалить</button>
+                    ) : null}
+                  </div>
                 </div>
               );
             })}
           </div>
+          {removedBom.length ? (
+            <div className="configurator-spec-removed" aria-live="polite">
+              <strong>Удалено из комплекта</strong>
+              {removedBom.map((part) => (
+                <div key={part.key}>
+                  <span>{part.label}</span>
+                  <button
+                    aria-label={`Вернуть «${part.label}» в комплект`}
+                    onClick={() => setRemovedBomKeys((current) => current.filter((key) => key !== part.key))}
+                    type="button"
+                  >Вернуть</button>
+                </div>
+              ))}
+            </div>
+          ) : null}
           <div className="configurator-catalog-match" data-status={catalogMatchStatus}>
             <div className="configurator-catalog-match-title">
               <PackageCheck aria-hidden size={18} />

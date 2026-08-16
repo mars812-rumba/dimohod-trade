@@ -250,6 +250,20 @@
       "pitched_roof_shape": "flat flange plate following the roof angle with an angled pipe opening",
       "separate_from_upk": true
     },
+    "rafter_passage": {
+      "side_fill": "Render the manually selected wool as two distinct hatched zones, one on each side of the sandwich pipe inside the rafter opening.",
+      "wool_quantity_source": "manual BOM input only",
+      "floor_clamp_reuse": "Use the same rectangular Хомут в перекрытие family and the same pipe-sized clamp body as in the floor passage.",
+      "clamp_orientation": "The clamp body remains level and perpendicular to the vertical pipe exactly as in the floor passage; never rotate the clamp body to the roof angle.",
+      "ear_mounting": "Only the side mounting ears extend to and fasten to the rafters on both sides.",
+      "layering": "Clamp body and ears are drawn in the foreground over the pipe, wool and rafter opening.",
+      "forbidden": [
+        "rotate the whole clamp to the roof angle",
+        "hide the clamp behind the pipe",
+        "show wool on only one side",
+        "leave mounting ears floating without rafter attachment"
+      ]
+    },
     "decorative_skirt": {
       "pitched_roof": "forbidden",
       "flat_roof": "optional only when explicitly selected by the route/BOM",
@@ -329,6 +343,8 @@
     "Check support cap is a correctly oriented trapezoid: narrow below, wide above.",
     "Check floor clamp is rendered over the pipe and attached to joists.",
     "Check passage glass, wool kits and floor clamp remain separate BOM lines; wool quantity is manual.",
+    "Check roof passage wool is visibly hatched on both sides of the pipe inside the rafter opening.",
+    "Check the roof-passage clamp body is level like the floor clamp, is not rotated with the roof, and both ears attach to rafters.",
     "Check pitched roof has a separate inner angled flange and no decorative skirt.",
     "Check external UPK is rendered in the foreground over the pipe.",
     "Check roof flashing opening is exactly D_SANDWICH.",

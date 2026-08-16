@@ -245,6 +245,11 @@
         "upk_side": "exterior",
         "master_flash_relation": "separate pipe-mounted element; never relabel as UPK",
         "interior_flange_side": "interior",
+        "roof_passage_wool_rendering": "hatched_on_both_sides_of_sandwich_pipe_inside_rafter_opening",
+        "roof_clamp_family": "homut-v-perekrytie",
+        "roof_clamp_body_orientation": "level_perpendicular_to_vertical_pipe_not_rotated_to_roof_angle",
+        "roof_clamp_ear_mounting": "left_and_right_ears_fastened_to_rafters",
+        "roof_clamp_layering": "foreground_over_pipe_and_rafter_opening",
         "decorative_skirt_rendering": "flat_roof_only_optional_separate_component_over_flange_joint",
         "termination_shape": "deflector_not_triangle",
         "measurement_lesson_status": "planned"

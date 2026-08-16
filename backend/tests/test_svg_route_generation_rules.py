@@ -71,6 +71,21 @@ def test_passage_components_and_manual_wool_stay_separate() -> None:
     assert "DT-MASTER-FLASH-2" in rules["roof_passage"]["catalog_identity"]["explicitly_not_upk"]
 
 
+def test_roof_rafter_passage_reuses_level_floor_clamp_and_side_wool() -> None:
+    rules = load_rules()["roof_passage"]["rafter_passage"]
+
+    assert "each side" in rules["side_fill"]
+    assert rules["wool_quantity_source"] == "manual BOM input only"
+    assert "Хомут в перекрытие" in rules["floor_clamp_reuse"]
+    assert "never rotate" in rules["clamp_orientation"]
+    assert "both sides" in rules["ear_mounting"]
+
+    scheme = load_configurator_rules()["assemblies"]["roof_passage"]["scheme"]
+    assert scheme["roof_clamp_family"] == "homut-v-perekrytie"
+    assert scheme["roof_clamp_body_orientation"] == "level_perpendicular_to_vertical_pipe_not_rotated_to_roof_angle"
+    assert scheme["roof_clamp_ear_mounting"] == "left_and_right_ears_fastened_to_rafters"
+
+
 def test_small_bath_acceptance_example_explains_the_tall_stack() -> None:
     example = load_rules()["acceptance_examples"][0]
 
