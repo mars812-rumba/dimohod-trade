@@ -2,38 +2,33 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { Suspense, type CSSProperties } from "react";
+import { Suspense } from "react";
 import {
-  ArrowRight,
-  Boxes,
-  Check,
-  ChevronRight,
-  CircleDot,
-  Cog,
-  FileCheck2,
-  FlameKindling,
-  Gauge,
-  Home,
-  LayoutGrid,
-  Layers3,
-  Link2,
-  ListChecks,
-  Mail,
-  MapPin,
-  MessageCircleQuestion,
-  Phone,
-  ReceiptText,
-  Ruler,
-  ShieldCheck,
-  SlidersHorizontal,
-  Star,
-  Timer,
-  Wrench,
-  Zap,
-} from "lucide-react";
+  IconArrowRight as ArrowRight,
+  IconBoxMultiple as Boxes,
+  IconCheck as Check,
+  IconChevronRight as ChevronRight,
+  IconCircleDot as CircleDot,
+  IconFileCheck as FileCheck2,
+  IconFlame as FlameKindling,
+  IconGauge as Gauge,
+  IconHome as Home,
+  IconStack3 as Layers3,
+  IconLink as Link2,
+  IconListCheck as ListChecks,
+  IconMail as Mail,
+  IconMapPin as MapPin,
+  IconPhone as Phone,
+  IconRuler as Ruler,
+  IconSettings as Cog,
+  IconShieldCheck as ShieldCheck,
+  IconStar as Star,
+  IconTool as Wrench,
+  IconBolt as Zap,
+} from "@tabler/icons-react";
 import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
-import { HeroSmoke } from "../components/HeroSmoke";
+import { HomeHeroCarousel } from "../components/HomeHeroCarousel";
 import { LeadForm } from "../components/LeadForm";
 import { ProductGalleryPreview } from "../components/ProductGalleryPreview";
 import { YANDEX_MAPS_RATING } from "../components/YandexRatingBadge";
@@ -316,95 +311,10 @@ export default async function HomePage() {
     role: item.role,
   }));
   const { compatibleProducts, previewBadges } = homeProductDemo;
-  const heroStyle = {
-    "--hero-image": `url("${assetUrl("/images/home/hero-chimney-clean-v4-1600.webp")}")`,
-    "--hero-image-mobile": `url("${assetUrl("/images/home/hero-chimney-clean-v4-720.webp")}")`,
-    "--hero-smoke-image": `url("${assetUrl("/images/home/smoke-cloud.svg")}")`,
-  } as CSSProperties;
-
   return (
     <>
-      <link
-        rel="preload"
-        as="image"
-        href={assetUrl("/images/home/hero-chimney-clean-v4-720.webp")}
-        media="(max-width: 720px)"
-        type="image/webp"
-        fetchPriority="high"
-      />
-      <link
-        rel="preload"
-        as="image"
-        href={assetUrl("/images/home/hero-chimney-clean-v4-1600.webp")}
-        media="(min-width: 721px)"
-        type="image/webp"
-        fetchPriority="high"
-      />
       <main className={styles.main}>
-      <section className={styles.hero} style={heroStyle}>
-        <HeroSmoke />
-        <div className={styles.shell}>
-          <div className={styles.heroGrid}>
-            <div className={styles.heroCopy}>
-              <p className={styles.kicker}>
-                <span />
-                Санкт-Петербург · доставка по России
-              </p>
-              <h1>
-                Дымоход, который <span>точно подойдет</span>
-              </h1>
-              <p className={styles.heroLead}>
-                Подберём комплект по вашей трассе и параметрам отопителя.
-              </p>
-              <div className={styles.heroInfo}>
-                <dl className={styles.proof}>
-                  <div>
-                    <dt>
-                      <Timer size={20} strokeWidth={1.65} aria-hidden />
-                      <span>≈ 2 минуты</span>
-                    </dt>
-                    <dd>на пошаговый подбор совместимого комплекта</dd>
-                  </div>
-                  <div>
-                    <dt>
-                      <ReceiptText size={20} strokeWidth={1.65} aria-hidden />
-                      <span>Состав на экране</span>
-                    </dt>
-                    <dd>увидите элементы и их количество в одной смете</dd>
-                  </div>
-                  <div>
-                    <dt>
-                      <MessageCircleQuestion size={20} strokeWidth={1.65} aria-hidden />
-                      <span>Помощь специалиста</span>
-                    </dt>
-                    <dd>менеджер подключится к сложным вопросам</dd>
-                  </div>
-                </dl>
-                <div className={styles.systemRule}>
-                  <ShieldCheck size={22} aria-hidden />
-                  <div>
-                    <span>Результат конфигуратора</span>
-                    <strong>
-                      Готовый расчёт дымохода под ваш индивидуальный случай с возможностью
-                      скачать PDF
-                    </strong>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.heroActions}>
-                <a className={styles.primaryButton} href="#calculator">
-                  <SlidersHorizontal size={18} strokeWidth={1.7} aria-hidden />
-                  Подобрать за 2 минуты
-                </a>
-                <Link className={styles.secondaryButton} href="/catalog">
-                  <LayoutGrid size={17} strokeWidth={1.7} aria-hidden />
-                  Открыть каталог
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+        <HomeHeroCarousel assetBasePath={basePath} />
 
       <section className={styles.differenceSection} aria-labelledby="difference-title">
         <div className={styles.shell}>
@@ -663,12 +573,12 @@ export default async function HomePage() {
         <div className={styles.shell}>
           <div className={styles.sectionHeading}>
             <div>
-              <p className={styles.overline}>Комплект в конфигураторе</p>
-              <h2>Покажите трассу — увидите состав системы.</h2>
+              <p className={styles.overline}>Расчёт по вашим замерам</p>
+              <h2>Схема, состав и смета — в одном месте.</h2>
             </div>
             <p>
-              Выберите направление выхода, этажность и высоту. Схема и список элементов
-              перестроятся сразу; перед заказом результат проверит специалист.
+              Откройте сохранённый замер, чтобы увидеть схему дымохода, BOM с ценами
+              и скачать предварительную смету в PDF.
             </p>
           </div>
           <Suspense
