@@ -54,7 +54,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
   const mobileImagePath = `${assetBasePath}/images/home/hero-projects/${fileName.replace(".webp", ".mobile.webp")}`;
-  const logoPath = `${assetBasePath}/brand/logo-original.jpg`;
 
   return (
     <section
@@ -78,11 +77,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             <span>Безопасный, совместимый дымоход</span>
             <span>— без замерщика</span>
           </h1>
-          <Link className={styles.cta} href="/zamery?edit=1">
-            <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
-            Получить смету в PDF
-            <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
-          </Link>
         </div>
       </div>
 
@@ -102,9 +96,11 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
           </picture>
         </div>
 
-        <div className={styles.watermark} aria-hidden="true">
-          <Image src={logoPath} alt="" width={222} height={101} unoptimized />
-        </div>
+        <Link className={styles.cta} href="/zamery?edit=1">
+          <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
+          Получить смету в PDF
+          <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
+        </Link>
 
         <div className={styles.progress} aria-hidden="true">
           {slides.map(([name], index) => (
