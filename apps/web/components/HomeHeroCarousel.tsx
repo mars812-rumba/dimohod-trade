@@ -56,6 +56,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
+  const mobileImagePath = `${assetBasePath}/images/home/hero-projects/${fileName.replace(".webp", ".mobile.webp")}`;
   const logoPath = `${assetBasePath}/brand/logo-original.jpg`;
 
   return (
@@ -74,75 +75,73 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         touchStartX.current = null;
       }}
     >
-      <div className={styles.imageStage} aria-live="off">
-        <Image
-          key={imagePath}
-          className={styles.slideImage}
-          src={imagePath}
-          alt={alt}
-          fill
-          priority={activeIndex === 0}
-          unoptimized
-          sizes="100vw"
-        />
-      </div>
-      <div className={styles.shade} aria-hidden="true" />
-
-      <div className={styles.content}>
-        <h1>Безопасный и совместимый дымоход — без вызова замерщика</h1>
-        <p>
-          Замерщики обычно берут 5–7 тыс. ₽. Здесь вы бесплатно пройдёте понятный гайд,
-          сделаете замеры сами и получите смету в PDF. Если возникнет вопрос, поможет инженер.
-        </p>
-        <Link className={styles.cta} href="/zamery?edit=1">
-          Получить смету в PDF
-          <IconArrowRight size={20} strokeWidth={1.8} aria-hidden />
-        </Link>
+      <div className={styles.banner}>
+        <div className={styles.bannerInner}>
+          <h1>Безопасный и совместимый дымоход — без замерщика</h1>
+        </div>
       </div>
 
-      <div className={styles.watermark} aria-hidden="true">
-        <Image src={logoPath} alt="" width={222} height={101} unoptimized />
+      <div className={styles.carouselFrame}>
+        <div className={styles.imageStage} aria-live="off">
+          <picture key={imagePath}>
+            <source media="(max-width: 720px)" srcSet={mobileImagePath} type="image/webp" />
+            <Image
+              className={styles.slideImage}
+              src={imagePath}
+              alt={alt}
+              fill
+              priority={activeIndex === 0}
+              unoptimized
+              sizes="100vw"
+            />
+          </picture>
+        </div>
+
+        <div className={styles.watermark} aria-hidden="true">
+          <Image src={logoPath} alt="" width={222} height={101} unoptimized />
+        </div>
+
+        <div className={styles.progress} aria-hidden="true">
+          {slides.map(([name], index) => (
+            <span
+              key={name}
+              className={index === activeIndex ? styles.progressActive : undefined}
+            />
+          ))}
+        </div>
       </div>
 
-      <div className={styles.controls}>
-        <button
-          type="button"
-          onClick={() => showSlide(activeIndex - 1)}
-          aria-label="Предыдущая фотография"
-        >
-          <IconArrowLeft size={20} strokeWidth={1.7} aria-hidden />
-        </button>
-        <span className={styles.counter}>
-          {String(activeIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
-        </span>
-        <button
-          type="button"
-          onClick={() => setIsPaused((value) => !value)}
-          aria-label={isPaused ? "Продолжить смену фотографий" : "Остановить смену фотографий"}
-          aria-pressed={isPaused}
-        >
-          {isPaused ? (
-            <IconPlayerPlay size={19} strokeWidth={1.7} aria-hidden />
-          ) : (
-            <IconPlayerPause size={19} strokeWidth={1.7} aria-hidden />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => showSlide(activeIndex + 1)}
-          aria-label="Следующая фотография"
-        >
-          <IconArrowRight size={20} strokeWidth={1.7} aria-hidden />
-        </button>
-      </div>
+      <div className={styles.actionBar}>
+        <div className={styles.actionInner}>
+          <div className={styles.controls}>
+            <button type="button" onClick={() => showSlide(activeIndex - 1)} aria-label="Предыдущая фотография">
+              <IconArrowLeft size={20} strokeWidth={1.7} aria-hidden />
+            </button>
+            <span className={styles.counter}>
+              {String(activeIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsPaused((value) => !value)}
+              aria-label={isPaused ? "Продолжить смену фотографий" : "Остановить смену фотографий"}
+              aria-pressed={isPaused}
+            >
+              {isPaused ? (
+                <IconPlayerPlay size={19} strokeWidth={1.7} aria-hidden />
+              ) : (
+                <IconPlayerPause size={19} strokeWidth={1.7} aria-hidden />
+              )}
+            </button>
+            <button type="button" onClick={() => showSlide(activeIndex + 1)} aria-label="Следующая фотография">
+              <IconArrowRight size={20} strokeWidth={1.7} aria-hidden />
+            </button>
+          </div>
 
-      <div className={styles.progress} aria-hidden="true">
-        {slides.map(([name], index) => (
-          <span
-            key={name}
-            className={index === activeIndex ? styles.progressActive : undefined}
-          />
-        ))}
+          <Link className={styles.cta} href="/zamery?edit=1">
+            Получить смету в PDF
+            <IconArrowRight size={20} strokeWidth={1.8} aria-hidden />
+          </Link>
+        </div>
       </div>
     </section>
   );
