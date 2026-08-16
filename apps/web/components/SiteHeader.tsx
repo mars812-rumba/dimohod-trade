@@ -122,8 +122,6 @@ export function SiteHeader() {
           <Link href="/solutions/dom">Для дома</Link>
         </nav>
 
-        <p className="header-slogan">Безопасный, совместимый дымоход — без замерщика</p>
-
         <div className="header-right">
           <div className="header-install">
             <InstallAppButton />

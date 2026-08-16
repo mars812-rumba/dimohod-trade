@@ -482,17 +482,6 @@ ul {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.header-slogan {
-  flex: 1 1 auto;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.84);
-  font-size: clamp(11px, 1vw, 14px);
-  font-weight: 650;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-}
-
 .header-right {
   display: flex;
   align-items: center;
@@ -5196,10 +5185,9 @@ body.mobile-menu-open {
 
 @media (max-width: 768px) {
   .site-header {
-    position: sticky;
     gap: 8px;
-    min-height: 94px;
-    padding: 0 12px 22px;
+    min-height: 72px;
+    padding: 0 12px;
   }
 
   .top-nav {
@@ -5237,14 +5225,6 @@ body.mobile-menu-open {
     min-height: 38px;
     padding: 0 10px;
     font-size: 11px;
-  }
-
-  .header-slogan {
-    position: absolute;
-    right: 12px;
-    bottom: 6px;
-    left: 12px;
-    font-size: clamp(10px, 2.9vw, 12px);
   }
 
   .page {

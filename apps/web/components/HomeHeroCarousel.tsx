@@ -71,8 +71,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         touchStartX.current = null;
       }}
     >
-      <h1 className={styles.srOnly}>Безопасный, совместимый дымоход — без замерщика</h1>
-
       <div className={styles.carouselFrame}>
         <div className={styles.imageStage} aria-live="off">
           <picture key={imagePath}>
@@ -88,6 +86,8 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             />
           </picture>
         </div>
+
+        <h1 className={styles.headline}>Безопасный, совместимый дымоход — без замерщика</h1>
 
         <Link className={styles.cta} href="/zamery?edit=1">
           <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
