@@ -2389,6 +2389,13 @@ body.mobile-menu-open {
   stroke-width: 1;
 }
 
+.configurator-building-svg .scheme-floor-decorative-skirts path,
+.configurator-generated-svg .scheme-wall-decorative-skirt {
+  fill: #c8ced0;
+  stroke: #59666b;
+  stroke-width: 1;
+}
+
 .configurator-building-svg .scheme-roof-skirt.is-optional {
   fill-opacity: 0.76;
   stroke-dasharray: 3 2;
@@ -2730,6 +2737,12 @@ body.mobile-menu-open {
 }
 
 .configurator-node-card .scheme-node-skirt {
+  fill: #c8ced0;
+  stroke: #59666b;
+  stroke-width: 1.2;
+}
+
+.configurator-node-card .scheme-node-decorative-skirt {
   fill: #c8ced0;
   stroke: #59666b;
   stroke-width: 1.2;

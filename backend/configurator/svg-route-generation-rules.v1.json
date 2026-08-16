@@ -184,14 +184,40 @@
     "separate_sellable_lines": [
       "Хомут в перекрытие",
       "Проходной стакан",
-      "Комплект ваты"
+      "Комплект ваты",
+      "Декоративная юбка — сверху перекрытия",
+      "Декоративная юбка — снизу перекрытия"
     ],
     "forbidden_combined_line": "Комплект вата + стакан",
+    "decorative_skirts": {
+      "positions": [
+        "upper_floor_face",
+        "lower_ceiling_face"
+      ],
+      "catalog_product_slug": "dekorativnaya-yubka",
+      "match_diameter_to": "D_SANDWICH",
+      "included_by_default": true,
+      "independently_removable": true,
+      "svg_rule": "Draw each skirt as a separate foreground collar over its finish flange without replacing or hiding the flange."
+    },
     "wool_quantity": {
       "mode": "manual",
       "must_be_addable": true,
       "typical_manager_orientation_only": "3-6 kits; this is not an automatic engineering quantity",
       "forbidden": "Do not calculate wool quantity from an assumed package volume and do not hard-code an automatic quantity."
+    }
+  },
+  "wall_passage_bom": {
+    "decorative_skirts": {
+      "positions": [
+        "interior_wall_face",
+        "exterior_wall_face"
+      ],
+      "catalog_product_slug": "dekorativnaya-yubka",
+      "match_diameter_to": "D_SANDWICH",
+      "included_by_default": true,
+      "independently_removable": true,
+      "svg_rule": "Draw a separate foreground collar over the flange on each face of every straight wall passage."
     }
   },
   "roof_passage": {

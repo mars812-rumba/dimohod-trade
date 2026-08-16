@@ -62,8 +62,20 @@ def test_passage_components_and_manual_wool_stay_separate() -> None:
         "Хомут в перекрытие",
         "Проходной стакан",
         "Комплект ваты",
+        "Декоративная юбка — сверху перекрытия",
+        "Декоративная юбка — снизу перекрытия",
     ]
     assert floor_bom["wool_quantity"]["mode"] == "manual"
+    assert floor_bom["decorative_skirts"]["positions"] == [
+        "upper_floor_face",
+        "lower_ceiling_face",
+    ]
+    assert floor_bom["decorative_skirts"]["independently_removable"] is True
+    assert rules["wall_passage_bom"]["decorative_skirts"]["positions"] == [
+        "interior_wall_face",
+        "exterior_wall_face",
+    ]
+    assert rules["wall_passage_bom"]["decorative_skirts"]["independently_removable"] is True
     assert rules["roof_passage"]["inside_element"]["separate_from_upk"] is True
     assert rules["roof_passage"]["decorative_skirt"]["pitched_roof"] == "forbidden"
     assert "foreground" in rules["roof_passage"]["outside_element"]["layering"]
@@ -129,3 +141,24 @@ def test_master_flash_and_upk_are_default_independently_removable_bom_lines() ->
     assert svg_components["upk"]["user_removable"] is True
     assert svg_components["master_flash"]["applies_to_roof_types"] == ["pitched", "flat"]
     assert svg_components["upk"]["applies_to_roof_types"] == ["pitched", "flat"]
+
+
+def test_warmup_pipe_uses_nearest_real_sku_when_exact_length_is_missing() -> None:
+    selection = load_configurator_rules()["routes"]["straight_through_floors"]["warmup_assembly"]["single_wall_pipe_sku_selection"]
+
+    assert selection["first_choice"].startswith("exact catalogue length")
+    assert "smallest absolute catalogue-length difference" in selection["fallback_when_exact_length_missing"]
+    assert "assembled-height verification" in selection["verification_rule"]
+
+
+def test_stainless_304_is_default_except_for_hidden_mounting_components() -> None:
+    defaults = load_configurator_rules()["material_selection_defaults"]
+    visible = defaults["visible_chimney_components"]
+    exceptions = defaults["catalog_default_exceptions"]
+
+    assert visible["preferred_material"] == "stainless"
+    assert visible["preferred_steel_grade"] == "AISI 304"
+    assert visible["sandwich_outer_pipe_preferred_material"] == "stainless"
+    assert visible["selection_mode"] == "soft_preference_with_catalog_fallback"
+    assert "ceiling-passage" in exceptions["component_keys"]
+    assert "крепеж" in exceptions["product_kinds"]

@@ -68,6 +68,10 @@ export type ChimneyBomLine = {
   requiresSku: boolean;
   catalogCategorySlug?: string;
   catalogSearch?: string;
+  catalogDiameterMode?: "sandwich-outer-exact" | "sandwich-outer-range";
+  catalogLengthMode?: "exact" | "nearest";
+  materialPreference?: "stainless-standard" | "catalog-default";
+  removable?: boolean;
   quantityNote?: string;
 };
 
@@ -345,6 +349,7 @@ function addRouteNodes(
         zone: "indoor_warm",
         selectionReason: "Из общей высоты разгона вычтена высота поворотного шибера.",
         requiresSku: true,
+        catalogLengthMode: "nearest",
       });
     }
     bom.splice(singleWallWarmupPipeLengthMm > 0 ? 1 : 0, 0, {
@@ -404,6 +409,42 @@ function addRouteNodes(
     selectionReason: "По два фланца на проход: со стороны помещения и с противоположной стороны конструкции.",
     requiresSku: true,
   });
+  const decorativeSkirts = routeKind === "ceiling"
+    ? [
+      {
+        key: "floor-decorative-skirt-upper",
+        label: "Декоративная юбка — сверху перекрытия",
+        selectionReason: "Закрывает верхний фланец прямого прохода перекрытия.",
+      },
+      {
+        key: "floor-decorative-skirt-lower",
+        label: "Декоративная юбка — снизу перекрытия",
+        selectionReason: "Закрывает нижний фланец прямого прохода перекрытия.",
+      },
+    ]
+    : [
+      {
+        key: "wall-decorative-skirt-interior",
+        label: "Декоративная юбка — со стороны помещения",
+        selectionReason: "Закрывает фланец прямого прохода с внутренней стороны стены.",
+      },
+      {
+        key: "wall-decorative-skirt-exterior",
+        label: "Декоративная юбка — с наружной стороны стены",
+        selectionReason: "Закрывает фланец прямого прохода с наружной стороны стены.",
+      },
+    ];
+  decorativeSkirts.forEach((skirt) => bom.push({
+    ...skirt,
+    productKind: "декоративная_юбка",
+    quantity: passageQty,
+    zone: "wall_or_ceiling_pass",
+    requiresSku: true,
+    catalogCategorySlug: "uzly-prohoda-sten-i-perekrytiy",
+    catalogSearch: "Декоративная юбка",
+    catalogDiameterMode: "sandwich-outer-exact",
+    removable: true,
+  }));
   bom.push({
     key: routeKind === "ceiling" ? "floor-clamp" : "wall-clamp",
     productKind: "крепеж",
@@ -419,7 +460,31 @@ function addRouteNodes(
   });
   if (routeKind === "ceiling") {
     bom.push({ key: "roof-interior-flange", productKind: "фланец", label: "Фланец кровельного прохода со стороны помещения", quantity: 1, zone: "roof", selectionReason: "Добавлен со стороны помещения по правилу кровельного узла.", requiresSku: true });
-    bom.push({ key: "roof-passage", productKind: "проходной_узел", label: "УПК по углу кровли", quantity: 1, zone: "roof", selectionReason: "Исполнение выбирается по измеренному углу кровли.", requiresSku: true });
+    bom.push({
+      key: "roof-master-flash",
+      productKind: "проходной_узел",
+      label: "Мастер-флеш",
+      quantity: 1,
+      zone: "roof",
+      selectionReason: "Гибкая кровельная проходка надевается на трубу и остаётся отдельной позицией от УПК.",
+      requiresSku: true,
+      catalogCategorySlug: "uzly-prohoda-krovli",
+      catalogSearch: "Мастер-флеш",
+      removable: true,
+    });
+    bom.push({
+      key: "roof-passage",
+      productKind: "проходной_узел",
+      label: "УПК по углу кровли",
+      quantity: 1,
+      zone: "roof",
+      selectionReason: "Жёсткий металлический УПК выбирается по наружному диаметру сэндвич-трубы и измеренному углу кровли; Master Flash не является заменой УПК.",
+      requiresSku: true,
+      catalogCategorySlug: "uzly-prohoda-krovli",
+      catalogSearch: "Проходной узел кровли (УПК) до 45°",
+      catalogDiameterMode: "sandwich-outer-range",
+      removable: true,
+    });
   } else {
     bom.push({ key: "outside-elbow", productKind: "отвод", label: "Сэндвич-отвод 90°", quantity: routeKind === "wall-top" ? 2 : 1, zone: "wall/outdoor", selectionReason: "Количество определяется поворотами выбранного маршрута.", requiresSku: true });
   }
@@ -635,14 +700,25 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
 
 export function bomForVariant(calculation: ChimneyCalculation, variant: PipeLayoutVariant | null): ChimneyBomLine[] {
   const isLayoutPipe = (line: ChimneyBomLine) => line.key.startsWith("sandwich-pipe-") || line.key.startsWith("single-layout-pipe-");
-  if (!variant) return calculation.bom.filter((line) => !isLayoutPipe(line));
+  const withMaterialDefaults = (lines: ChimneyBomLine[]) => lines.map((line) => ({
+    ...line,
+    materialPreference: line.materialPreference ?? (
+      line.key === "ceiling-passage"
+      || line.key === "wall-passage"
+      || line.productKind === "крепеж"
+      || line.productKind === "изоляция"
+        ? "catalog-default"
+        : "stainless-standard"
+    ),
+  } satisfies ChimneyBomLine));
+  if (!variant) return withMaterialDefaults(calculation.bom.filter((line) => !isLayoutPipe(line)));
   const pipeLines = summarizePipeBom([variant], calculation.routeKind);
   const fixedAndNodes = calculation.bom.filter((line) => !isLayoutPipe(line));
   const insertionIndex = fixedAndNodes.findIndex((line) => line.key === "ceiling-passage" || line.key === "wall-passage");
-  if (insertionIndex < 0) return [...fixedAndNodes, ...pipeLines];
-  return [
+  if (insertionIndex < 0) return withMaterialDefaults([...fixedAndNodes, ...pipeLines]);
+  return withMaterialDefaults([
     ...fixedAndNodes.slice(0, insertionIndex),
     ...pipeLines,
     ...fixedAndNodes.slice(insertionIndex),
-  ];
+  ]);
 }

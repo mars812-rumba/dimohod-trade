@@ -27,6 +27,31 @@
     },
     "selection_policy": "structured_fields_only"
   },
+  "material_selection_defaults": {
+    "visible_chimney_components": {
+      "preferred_material": "stainless",
+      "preferred_steel_grade": "AISI 304",
+      "sandwich_outer_pipe_preferred_material": "stainless",
+      "sandwich_outer_pipe_preferred_steel_grade": "AISI 304",
+      "selection_mode": "soft_preference_with_catalog_fallback",
+      "fallback_rule": "If the requested stainless standard execution is absent, keep the available real SKU and do not invent a variant."
+    },
+    "catalog_default_exceptions": {
+      "component_keys": [
+        "ceiling-passage",
+        "wall-passage"
+      ],
+      "product_kinds": [
+        "крепеж",
+        "изоляция"
+      ],
+      "examples": [
+        "проходной стакан",
+        "хомут",
+        "скрытый крепёж"
+      ]
+    }
+  },
   "scheme_generation": {
     "format": "svg",
     "orientation": "portrait_mobile_first",
@@ -99,6 +124,24 @@
           "diameter_match": "selected_sandwich_pipe.outer_diameter_mm"
         },
         {
+          "component_role": "decorative_skirt_upper",
+          "catalog_name": "Декоративная юбка",
+          "product_kind": "декоративная_юбка",
+          "quantity_per_passage": 1,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm",
+          "included_by_default": true,
+          "user_removable": true
+        },
+        {
+          "component_role": "decorative_skirt_lower",
+          "catalog_name": "Декоративная юбка",
+          "product_kind": "декоративная_юбка",
+          "quantity_per_passage": 1,
+          "diameter_match": "selected_sandwich_pipe.outer_diameter_mm",
+          "included_by_default": true,
+          "user_removable": true
+        },
+        {
           "component_role": "passage_sleeve",
           "product_kind": "проходной_узел",
           "quantity_per_passage": 1,
@@ -138,7 +181,12 @@
       "inherits": "assemblies.floor_passage",
       "applies_per": "wall_passage_count",
       "override": {
-        "zone": "wall_passage"
+        "zone": "wall_passage",
+        "decorative_skirt_positions": [
+          "interior_wall_face",
+          "exterior_wall_face"
+        ],
+        "decorative_skirts_independently_removable": true
       }
     },
     "roof_passage": {
@@ -334,6 +382,12 @@
         "rotary_damper_height_input": "rotary_damper_height_mm",
         "rotary_damper_height_mode": "manual_required_because_catalog_dimension_missing",
         "single_wall_pipe_nominal_length_formula": "warmup_length_mm - rotary_damper_height_mm",
+        "single_wall_pipe_sku_selection": {
+          "first_choice": "exact catalogue length with matching inner diameter and single-wall contour",
+          "fallback_when_exact_length_missing": "SKU with the smallest absolute catalogue-length difference, preserving diameter and contour filters",
+          "display_rule": "Show the selected real SKU length and the requested calculated length; never keep an unmatched placeholder as if it were a SKU.",
+          "verification_rule": "When fallback length differs from the calculated length, flag the difference for final assembled-height verification."
+        },
         "socket_overlap_mm": 50,
         "effective_height_formula_each_component": "nominal_height_mm - socket_overlap_mm",
         "assembled_height_formula": "sum(component_effective_height_mm)",

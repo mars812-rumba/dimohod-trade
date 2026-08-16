@@ -40,6 +40,8 @@ type ChimneyConfiguratorProps = {
 type CatalogBomMatch = {
   item: ProductListItem;
   exactByFields: boolean;
+  lengthMatch?: "exact" | "nearest";
+  requestedLengthMm?: number;
 };
 
 function catalogMediaUrl(url: string, assetBasePath: string) {
@@ -53,6 +55,26 @@ function formatCatalogPrice(value: string | null) {
     currency: "RUB",
     maximumFractionDigits: 0,
   }).format(Number(value));
+}
+
+function shortMaterialLabel(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const normalized = value.toLocaleLowerCase("ru-RU");
+  if (normalized.includes("нержав") || normalized === "stainless") return "нерж.";
+  if (normalized.includes("оцинк") || normalized === "galvanized") return "оцинковка";
+  return value.trim();
+}
+
+function catalogMaterialLabel(item: ProductListItem): string | null {
+  const innerMaterial = shortMaterialLabel(item.material);
+  const inner = [innerMaterial, item.steel_grade].filter(Boolean).join(" ");
+  const outerMaterial = shortMaterialLabel(item.attributes.outer_material);
+  const outerSteel = typeof item.attributes.outer_steel_grade === "string"
+    ? item.attributes.outer_steel_grade
+    : null;
+  const outer = [outerMaterial, outerSteel].filter(Boolean).join(" ");
+  if (inner && outer) return `${inner} · наруж. ${outer}`;
+  return inner || outer || null;
 }
 
 const ROUTE_OPTIONS: Array<{ id: RouteType; label: string }> = [
@@ -185,6 +207,18 @@ export function GeneratedChimneyScheme({
             <circle cx={horizontalX(pipe.endMm)} cy={horizontalY} r="4" fill="#b13f20" />
           </g>
         ))}
+        {wall ? (
+          <g aria-hidden="true">
+            <path
+              d={`M${horizontalX(wall.startMm)} ${horizontalY - 29} L${horizontalX(wall.startMm) - 18} ${horizontalY - 12} L${horizontalX(wall.startMm) - 18} ${horizontalY + 12} L${horizontalX(wall.startMm)} ${horizontalY + 29} Z`}
+              className="scheme-wall-decorative-skirt"
+            />
+            <path
+              d={`M${horizontalX(wall.endMm)} ${horizontalY - 29} L${horizontalX(wall.endMm) + 18} ${horizontalY - 12} L${horizontalX(wall.endMm) + 18} ${horizontalY + 12} L${horizontalX(wall.endMm)} ${horizontalY + 29} Z`}
+              className="scheme-wall-decorative-skirt"
+            />
+          </g>
+        ) : null}
         <path d={`M280 ${horizontalY} Q300 ${horizontalY} 300 ${horizontalY - 20} L300 ${horizontalY - 40}`} fill="none" stroke="#173d4c" strokeWidth="24" />
         {outdoorPipes.map((pipe, index) => (
           <g key={pipe.id}>
@@ -493,6 +527,19 @@ export function GeneratedChimneyScheme({
       })}
 
       {floorZones.map((zone) => {
+        const upperSurfaceY = verticalY(zone.endMm);
+        const lowerSurfaceY = verticalY(zone.startMm);
+        const skirtNeckHalfWidth = Math.max(3, sandwichHalfWidthPx);
+        const skirtBaseHalfWidth = skirtNeckHalfWidth + 7;
+        return (
+          <g key={`${zone.id}-decorative-skirts`} className="scheme-floor-decorative-skirts" aria-hidden="true">
+            <path d={`M${chimneyX - skirtBaseHalfWidth} ${upperSurfaceY} L${chimneyX - skirtNeckHalfWidth} ${upperSurfaceY - 8} L${chimneyX + skirtNeckHalfWidth} ${upperSurfaceY - 8} L${chimneyX + skirtBaseHalfWidth} ${upperSurfaceY} Z`} />
+            <path d={`M${chimneyX - skirtBaseHalfWidth} ${lowerSurfaceY} L${chimneyX - skirtNeckHalfWidth} ${lowerSurfaceY + 8} L${chimneyX + skirtNeckHalfWidth} ${lowerSurfaceY + 8} L${chimneyX + skirtBaseHalfWidth} ${lowerSurfaceY} Z`} />
+          </g>
+        );
+      })}
+
+      {floorZones.map((zone) => {
         const clampY = verticalY((zone.startMm + zone.endMm) / 2);
         return (
           <g key={`${zone.id}-clamp`} className="scheme-floor-clamp" aria-hidden="true">
@@ -637,7 +684,7 @@ function VerticalPassageDetails({
         </div>
         <svg viewBox="0 0 380 244" role="img" aria-labelledby="floor-node-title floor-node-description">
           <title id="floor-node-title">Состав узла прохода перекрытия</title>
-          <desc id="floor-node-description">Сэндвич-труба проходит через стакан в перекрытии, с двух сторон установлены фланцы, внутри показаны хомут и зона заполнения ватой.</desc>
+          <desc id="floor-node-description">Сэндвич-труба проходит через стакан в перекрытии. Сверху и снизу установлены отдельные фланцы и съёмные декоративные юбки, внутри показаны хомут и зона заполнения ватой.</desc>
           <defs>
             <pattern id="floor-insulation-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
               <path d="M-2 8 L8 -2 M2 10 L10 2" className="scheme-node-hatch" />
@@ -651,6 +698,8 @@ function VerticalPassageDetails({
           <rect x="145" y="18" width="30" height="194" className="scheme-node-pipe" />
           <rect x="106" y="78" width="108" height="8" rx="2" className="scheme-node-flange" />
           <rect x="106" y="148" width="108" height="8" rx="2" className="scheme-node-flange" />
+          <path d="M120 78 L145 62 L175 62 L200 78 Z" className="scheme-node-decorative-skirt" />
+          <path d="M120 156 L145 172 L175 172 L200 156 Z" className="scheme-node-decorative-skirt" />
           <rect x="72" y="113" width="65" height="8" className="scheme-node-clamp-ear" />
           <rect x="183" y="113" width="65" height="8" className="scheme-node-clamp-ear" />
           <rect x="137" y="108" width="46" height="18" className="scheme-node-clamp" />
@@ -664,6 +713,10 @@ function VerticalPassageDetails({
           <text x="258" y="109" className="scheme-node-label">Фланец 1</text>
           <line x1="214" y1="152" x2="252" y2="144" className="scheme-node-leader" />
           <text x="258" y="147" className="scheme-node-label">Фланец 2</text>
+          <line x1="145" y1="66" x2="82" y2="52" className="scheme-node-leader" />
+          <text x="16" y="51" className="scheme-node-label">Юбка сверху</text>
+          <line x1="145" y1="168" x2="82" y2="178" className="scheme-node-leader" />
+          <text x="16" y="181" className="scheme-node-label">Юбка снизу</text>
           <line x1="183" y1="117" x2="70" y2="184" className="scheme-node-leader" />
           <text x="16" y="202" className="scheme-node-label">Хомут в перекрытие</text>
           <text x="160" y="218" textAnchor="middle" className="scheme-node-note">
@@ -986,32 +1039,73 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     }
 
     const controller = new AbortController();
-    const diameterKinds = new Set(["труба", "отвод", "заглушка", "оголовок", "шибер"]);
+    const diameterKinds = new Set(["труба", "отвод", "заглушка", "оголовок", "шибер", "декоративная_юбка"]);
     setCatalogMatchStatus("loading");
     Promise.all(selectedBom.filter((line) => line.requiresSku).map(async (line) => {
       const params = new URLSearchParams({ limit: "24", offset: "0", product_kind: line.productKind });
       if (line.catalogCategorySlug) params.set("category", line.catalogCategorySlug);
       if (line.catalogSearch) params.set("q", line.catalogSearch);
       const exactDiameter = diameterKinds.has(line.productKind);
+      const exactBySandwichOuterDiameter = line.catalogDiameterMode === "sandwich-outer-exact";
       const rangeBySandwichOuterDiameter = line.catalogDiameterMode === "sandwich-outer-range";
-      const exactByFields = exactDiameter || rangeBySandwichOuterDiameter;
+      const exactByFields = exactDiameter || exactBySandwichOuterDiameter || rangeBySandwichOuterDiameter;
       if (exactDiameter) {
         const outerDiameter = line.insulationMm !== undefined
           ? diameter + line.insulationMm * 2
           : null;
-        params.set("diameter", `${diameter}:${outerDiameter ?? ""}`);
+        params.set("diameter", exactBySandwichOuterDiameter
+          ? `${diameter + 100}:`
+          : `${diameter}:${outerDiameter ?? ""}`);
       }
       if (rangeBySandwichOuterDiameter) {
         params.set("preferred_diameter", `:${diameter + 100}`);
+      }
+      if (line.materialPreference === "stainless-standard") {
+        params.set("preferred_material", "stainless");
+        params.set("preferred_steel_grade", "AISI 304");
+        if (line.contour === "сэндвич") {
+          params.set("preferred_outer_material", "stainless");
+          params.set("preferred_outer_steel_grade", "AISI 304");
+        }
       }
       if (line.nominalLengthMm) params.set("length_mm", String(line.nominalLengthMm));
       if (line.contour) params.set("contour", line.contour);
       if (line.insulationMm !== undefined) params.set("insulation_mm", String(line.insulationMm));
       if (line.productKind === "отвод") params.set("angle_deg", "90");
-      const response = await fetch(`${assetBasePath}/api/v1/products?${params.toString()}`, { signal: controller.signal });
-      if (!response.ok) throw new Error("catalog request failed");
-      const payload = await response.json() as ProductListResponse;
-      return payload.items[0] ? [line.key, { item: payload.items[0], exactByFields }] as const : null;
+      const fetchProducts = async (requestParams: URLSearchParams) => {
+        const response = await fetch(`${assetBasePath}/api/v1/products?${requestParams.toString()}`, { signal: controller.signal });
+        if (!response.ok) throw new Error("catalog request failed");
+        return response.json() as Promise<ProductListResponse>;
+      };
+      const payload = await fetchProducts(params);
+      if (payload.items[0]) {
+        return [line.key, {
+          item: payload.items[0],
+          exactByFields,
+          lengthMatch: line.nominalLengthMm ? "exact" as const : undefined,
+          requestedLengthMm: line.nominalLengthMm,
+        }] as const;
+      }
+      if (line.catalogLengthMode !== "nearest" || !line.nominalLengthMm) return null;
+
+      const nearestParams = new URLSearchParams(params);
+      nearestParams.delete("length_mm");
+      nearestParams.set("preferred_length_mm", String(line.nominalLengthMm));
+      const nearestPayload = await fetchProducts(nearestParams);
+      const nearestItem = nearestPayload.items
+        .filter((item) => item.length_mm !== null)
+        .sort((left, right) => (
+          Math.abs((left.length_mm ?? 0) - line.nominalLengthMm!)
+          - Math.abs((right.length_mm ?? 0) - line.nominalLengthMm!)
+          || (left.length_mm ?? 0) - (right.length_mm ?? 0)
+          || (left.article ?? "").localeCompare(right.article ?? "", "ru")
+        ))[0];
+      return nearestItem ? [line.key, {
+        item: nearestItem,
+        exactByFields,
+        lengthMatch: "nearest" as const,
+        requestedLengthMm: line.nominalLengthMm,
+      }] as const : null;
     }))
       .then((entries) => {
         setCatalogMatches(Object.fromEntries(entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))));
@@ -1463,6 +1557,10 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           <div className="configurator-spec-list">
             {selectedBom.map((part) => {
               const catalogMatch = catalogMatches[part.key];
+              const materialLabel = catalogMatch ? catalogMaterialLabel(catalogMatch.item) : null;
+              const nearestLengthLabel = catalogMatch?.lengthMatch === "nearest" && catalogMatch.item.length_mm !== null
+                ? `Одностенная труба-разгон ${catalogMatch.item.length_mm} мм`
+                : part.label;
               return (
                 <div key={part.key} className="configurator-spec-row">
                   <div className="configurator-spec-media" aria-hidden={!catalogMatch?.item.primary_image}>
@@ -1480,8 +1578,11 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                     )}
                   </div>
                   <div>
-                    <strong>{part.label}</strong>
+                    <strong>{nearestLengthLabel}</strong>
                     <small>{part.selectionReason}</small>
+                    {catalogMatch?.lengthMatch === "nearest" ? (
+                      <small>Ближайшая стандартная длина к расчётным {catalogMatch.requestedLengthMm} мм; разницу нужно учесть при проверке итоговой высоты.</small>
+                    ) : null}
                     {part.quantityNote ? <small>{part.quantityNote}</small> : null}
                     {catalogMatch ? (
                       <>
@@ -1489,11 +1590,14 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                           {catalogMatch.item.diameter_mm !== null ? `Ø ${catalogMatch.item.diameter_mm}${catalogMatch.item.outer_diameter_mm !== null ? `/${catalogMatch.item.outer_diameter_mm}` : ""} мм` : null}
                           {catalogMatch.item.length_mm !== null ? ` · L ${catalogMatch.item.length_mm} мм` : null}
                           {catalogMatch.item.insulation_mm !== null ? ` · изоляция ${catalogMatch.item.insulation_mm} мм` : null}
+                          {materialLabel ? ` · ${materialLabel}` : null}
                           {` · ${formatCatalogPrice(catalogMatch.item.price_rub)}`}
                         </span>
                         <Link className="configurator-spec-sku" href={productSelectionPath(catalogMatch.item.slug, catalogMatch.item, catalogMatch.item.selected_sku)}>
                           {catalogMatch.item.article || catalogMatch.item.name}
-                          {!catalogMatch.exactByFields ? " · кандидат по типу, проверить размер" : " · точное исполнение"}
+                          {catalogMatch.lengthMatch === "nearest"
+                            ? ` · ближайшая длина к ${catalogMatch.requestedLengthMm} мм`
+                            : !catalogMatch.exactByFields ? " · кандидат по типу, проверить размер" : " · точное исполнение"}
                         </Link>
                       </>
                     ) : null}
