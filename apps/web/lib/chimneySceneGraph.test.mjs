@@ -7,8 +7,7 @@ const bom = [
   ["single-layout-pipe-1000", "труба", "Одностенная труба", 1, 1000, "одностенный", "wall/outdoor"],
   ["sandwich-pipe-500", "труба", "Сэндвич-труба 500", 1, 500, "сэндвич", "wall/outdoor"],
   ["sandwich-pipe-1000", "труба", "Сэндвич-труба 1000", 2, 1000, "сэндвич", "wall/outdoor"],
-  ["rear-connection-sliding-damper", "шибер", "Шибер выдвижной", 1, undefined, "одностенный", "transition"],
-  ["mono-sandwich-transition", "переход", "Переход на сэндвич", 1, undefined, "сэндвич", "transition"],
+  ["rear-connection-rotary-damper", "шибер", "Шибер поворотный", 1, undefined, "одностенный", "transition"],
   ["wall-passage", "проходной_узел", "Проход стены", 1, undefined, undefined, "wall_or_ceiling_pass"],
   ["outside-tee", "тройник", "Тройник 90°", 1, undefined, "сэндвич", "wall/outdoor"],
   ["tee-lower-support-plug", "заглушка", "Опорная заглушка", 1, undefined, "сэндвич", "outdoor/lower_branch"],
@@ -37,8 +36,7 @@ function validInput() {
     calculation: {
       routeKind: "wall-rear",
       fixedParts: [
-        { id: "sliding_damper", axis: "horizontal", nominalLengthMm: 180, effectiveMm: 130, startMm: 950, endMm: 1080 },
-        { id: "mono_sandwich_transition", axis: "horizontal", nominalLengthMm: 70, effectiveMm: 20, startMm: 1080, endMm: 1100 },
+        { id: "rotary_damper", axis: "horizontal", nominalLengthMm: 180, effectiveMm: 130, startMm: 950, endMm: 1080 },
       ],
       forbiddenZones: [{ kind: "wall", startMm: 1200, endMm: 1400 }],
       facadeConsolePositionsMm: [1900],
@@ -46,7 +44,7 @@ function validInput() {
     variant: {
       pipes: [
         { id: "single-1", axis: "horizontal", nominalMm: 1000, effectiveMm: 950, startMm: 0, endMm: 950, contour: "одностенный" },
-        { id: "horizontal-sandwich-1", axis: "horizontal", nominalMm: 500, effectiveMm: 450, startMm: 1100, endMm: 1550, contour: "сэндвич" },
+        { id: "horizontal-sandwich-1", axis: "horizontal", nominalMm: 500, effectiveMm: 450, startMm: 1080, endMm: 1530, contour: "сэндвич" },
         { id: "vertical-1", axis: "vertical", nominalMm: 1000, effectiveMm: 950, startMm: 0, endMm: 950, contour: "сэндвич" },
         { id: "vertical-2", axis: "vertical", nominalMm: 1000, effectiveMm: 950, startMm: 950, endMm: 1900, contour: "сэндвич" },
       ],
@@ -60,7 +58,7 @@ test("builds a validated scene graph from calculation, BOM and catalog reference
   const scene = buildExternalWallSceneGraph(validInput());
 
   assert.deepEqual(scene.errors, []);
-  assert.equal(scene.horizontalRunMm, 1550);
+  assert.equal(scene.horizontalRunMm, 1530);
   assert.equal(scene.verticalHeightMm, 1900);
   assert.equal(scene.nodes.filter((node) => node.geometryFamily === "wall_console").length, 1);
   assert.equal(scene.nodes.filter((node) => node.geometryFamily === "power_clamp").length, 1);
@@ -88,7 +86,7 @@ test("requires one continuous sandwich component across the complete wall passag
   assert.ok(scene.errors.some((error) => error.includes("одна цельная сэндвич-труба")));
 });
 
-test("stops scene generation when a catalog geometry asset is missing", () => {
+test("keeps calculated geometry when a catalog image is missing", () => {
   const input = validInput();
   input.catalogMatches["outside-tee"] = {
     ...input.catalogMatches["outside-tee"],
@@ -96,8 +94,21 @@ test("stops scene generation when a catalog geometry asset is missing", () => {
   };
   const scene = buildExternalWallSceneGraph(input);
 
-  assert.ok(scene.errors.some((error) => error.includes("нет изображения-источника геометрии")));
-  assert.equal(scene.nodes.some((node) => node.geometryFamily === "tee_90"), false);
+  assert.deepEqual(scene.errors, []);
+  assert.ok(scene.warnings.some((warning) => warning.includes("используется расчётная SVG-геометрия")));
+  assert.equal(scene.nodes.some((node) => node.geometryFamily === "tee_90"), true);
+});
+
+test("keeps calculated geometry when a BOM line has no catalog match", () => {
+  const input = validInput();
+  delete input.catalogMatches["rear-connection-rotary-damper"];
+  const scene = buildExternalWallSceneGraph(input);
+
+  assert.deepEqual(scene.errors, []);
+  assert.ok(scene.warnings.some((warning) => warning.includes("Нет каталожной привязки")));
+  const damper = scene.nodes.find((node) => node.geometryFamily === "rotary_damper");
+  assert.equal(damper.catalogReferenceStatus, "missing");
+  assert.equal(damper.productId, null);
 });
 
 test("stops rendering when scene quantity differs from BOM quantity", () => {

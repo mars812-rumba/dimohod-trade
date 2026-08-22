@@ -488,17 +488,12 @@ function EngineeringSceneProduct({ node, scale, originX, originY }: {
       </g>
     );
   }
-  if (node.geometryFamily === "sliding_damper") return (
+  if (node.geometryFamily === "rotary_damper") return (
     <g {...common} transform={`translate(${x} ${y})`}>
       <rect fill="url(#scene-steel)" height="20" rx="3" stroke="#26343d" width={length} x="0" y="-10" />
-      <rect fill="#d9dfe0" height="52" stroke="#26343d" width="7" x={length * 0.48} y="-26" />
-      <line stroke="#26343d" strokeWidth="5" x1={length * 0.48 + 7} x2={length * 0.48 + 35} y1="-22" y2="-22" />
-      <circle cx={length * 0.48 + 39} cy="-22" fill="#29363b" r="5" />
-    </g>
-  );
-  if (node.geometryFamily === "mono_sandwich_transition") return (
-    <g {...common} transform={`translate(${x} ${y})`}>
-      <path d={`M0,-10 L${length},-16 L${length},16 L0,10 Z`} fill="url(#scene-steel)" stroke="#26343d" />
+      <line stroke="#26343d" strokeWidth="4" x1={length * 0.5} x2={length * 0.5} y1="-10" y2="-35" />
+      <circle cx={length * 0.5} cy="-38" fill="#e46235" r="5" stroke="#923719" strokeWidth="2" />
+      <line stroke="#923719" strokeLinecap="round" strokeWidth="4" x1={length * 0.5} x2={length * 0.5 + 24} y1="-38" y2="-50" />
     </g>
   );
   if (node.geometryFamily === "tee_90") return (

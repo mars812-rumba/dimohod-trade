@@ -29,7 +29,7 @@
     "main": [
       "heater_outlet",
       "horizontal_internal_components",
-      "mono_sandwich_transition",
+      "rotary_damper",
       "continuous_wall_passage_pipe",
       "tee_90",
       "vertical_sandwich_stack",
@@ -46,7 +46,8 @@
   },
   "hard_checks": {
     "rendered_quantity_equals_bom": true,
-    "all_rendered_components_have_catalog_asset": true,
+    "all_rendered_components_have_geometry_family": true,
+    "missing_catalog_appearance_does_not_invalidate_engineering_geometry": true,
     "single_uniform_mm_to_svg_scale": true,
     "no_joint_strictly_inside_wall_passage": true,
     "support_plug_directly_below_tee": true,
@@ -57,7 +58,7 @@
     "reference_diagram_geometry_forbidden": true
   },
   "failure_policy": {
-    "missing_catalog_asset": "stop_render",
+    "missing_catalog_asset": "warn_and_render_calculated_geometry_without_sku",
     "missing_required_dimension": "stop_render",
     "bom_route_conflict": "stop_render",
     "joint_inside_passage": "recalculate_or_stop_render",

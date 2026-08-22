@@ -44,7 +44,7 @@ export type PlacedPipe = {
 };
 
 export type FixedRoutePart = {
-  id: "warmup" | "rotary_damper" | "sliding_damper" | "support_cap" | "mono_sandwich_transition";
+  id: "warmup" | "rotary_damper" | "support_cap";
   label: string;
   axis: RouteAxis;
   nominalLengthMm: number;
@@ -439,31 +439,17 @@ function addRouteNodes(
     });
   } else if (routeKind === "wall-rear") {
     const firstSandwichPipeIndex = bom.findIndex((line) => line.key.startsWith("sandwich-pipe-"));
-    bom.splice(firstSandwichPipeIndex >= 0 ? firstSandwichPipeIndex : bom.length, 0,
-      {
-        key: "rear-connection-sliding-damper",
-        productKind: "шибер",
-        label: "Одноконтурный шибер выдвижной",
-        quantity: 1,
-        contour: "одностенный",
-        zone: "transition",
-        selectionReason: "Установлен в рассчитанной горизонтальной цепочке после одноконтурных труб.",
-        requiresSku: true,
-        catalogSearch: "Одноконтурный шибер выдвижной",
-      },
-      {
-        key: "mono-sandwich-transition",
-        productKind: "переход",
-        label: "Переход одноконтурный → сэндвич",
-        quantity: 1,
-        contour: "сэндвич",
-        insulationMm: 50,
-        zone: "transition",
-        selectionReason: "Переводит одноконтурную часть в сэндвич до защищённой зоны стены.",
-        requiresSku: true,
-        catalogSearch: "Переход на сэндвич",
-      },
-    );
+    bom.splice(firstSandwichPipeIndex >= 0 ? firstSandwichPipeIndex : bom.length, 0, {
+      key: "rear-connection-rotary-damper",
+      productKind: "шибер",
+      label: "Одноконтурный шибер поворотный",
+      quantity: 1,
+      contour: "одностенный",
+      zone: "transition",
+      selectionReason: "Установлен в рассчитанной горизонтальной цепочке после одноконтурных труб.",
+      requiresSku: true,
+      catalogSearch: "Одноконтурный шибер поворотный",
+    });
   }
   bom.push({
     key: routeKind === "ceiling" ? "ceiling-passage" : "wall-passage",
@@ -734,7 +720,18 @@ function addRouteNodes(
       });
     }
   }
-  bom.push({ key: "termination", productKind: "оголовок", label: "Оголовок", quantity: 1, contour: "сэндвич", zone: "termination", selectionReason: "Завершает рассчитанную трассу.", requiresSku: true });
+  bom.push({
+    key: "termination",
+    productKind: "оголовок",
+    label: "Сэндвич-дефлектор-конус",
+    quantity: 1,
+    contour: "сэндвич",
+    zone: "termination",
+    selectionReason: "Завершает рассчитанную трассу.",
+    requiresSku: true,
+    catalogCategorySlug: "sendvich-ogolovki-i-deflektory",
+    catalogSearch: "Сэндвич-дефлектор-конус",
+  });
 }
 
 export function calculateChimney(input: CalculationInput): ChimneyCalculation {
@@ -873,9 +870,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
         + (positiveNumber(input.draft?.wallThickness) ?? 0)
         + (positiveNumber(input.draft?.facadeOffset) ?? 0);
       const rearDamperEffectiveMm = Math.max(0, Math.round(input.rotaryDamperHeightMm ?? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM));
-      const transitionNominalMm = Math.max(0, Math.round(input.supportCapLengthMm ?? 70));
-      const transitionEffectiveMm = effectiveComponentHeight(transitionNominalMm);
-      const singlePipeTargetMm = wallStartMm - rearDamperEffectiveMm - transitionEffectiveMm;
+      const singlePipeTargetMm = wallStartMm - rearDamperEffectiveMm;
       const horizontalSingle = solvePipeLayoutEndingAtOrBefore({
         axis: "horizontal",
         startMm: 0,
@@ -885,11 +880,10 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       });
       const damperStartMm = horizontalSingle?.coveredEndMm ?? 0;
       const damperEndMm = damperStartMm + rearDamperEffectiveMm;
-      const transitionEndMm = damperEndMm + transitionEffectiveMm;
-      const horizontalSandwich = horizontalSingle && wallEndMm > transitionEndMm
+      const horizontalSandwich = horizontalSingle && wallEndMm > damperEndMm
         ? solvePipeLayouts({
           axis: "horizontal",
-          startMm: transitionEndMm,
+          startMm: damperEndMm,
           targetMm: wallEndMm,
           forbiddenZones,
           fallbackZone: "wall_or_ceiling_pass",
@@ -914,34 +908,23 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       facadeConsolePositionsMm = wallRouteFacadeConsolePositions(installedOutdoorHeightMm);
       wallConsoleQuantity = 1 + facadeConsolePositionsMm.length;
       if (!horizontalSingle) {
-        errors.push("Не удалось подобрать стандартную длину одностенной трубы по расстоянию от патрубка до стены с учётом шибера и перехода на сэндвич.");
-      } else if (transitionEndMm > wallStartMm) {
-        errors.push("Переход на сэндвич попадает внутрь стены; увеличьте расстояние от патрубка до внутренней поверхности стены или уточните длины переходных элементов.");
+        errors.push("Не удалось подобрать стандартную длину одностенной трубы по расстоянию от патрубка до стены с учётом поворотного шибера.");
+      } else if (damperEndMm > wallStartMm) {
+        errors.push("Поворотный шибер попадает внутрь стены; увеличьте расстояние от патрубка до внутренней поверхности стены или уточните длину подключения.");
       } else if (!horizontalSandwich) {
         errors.push("Не найдена раскладка сэндвич-труб без стыка внутри стены.");
       } else if (!outdoorLayout) {
         errors.push("Не найдена раскладка наружных сэндвич-труб по заданной вертикальной высоте.");
       } else {
-        fixedParts.push(
-          {
-            id: "sliding_damper",
-            label: "Шибер выдвижной",
-            axis: "horizontal",
-            nominalLengthMm: ROTARY_DAMPER_OVERALL_LENGTH_MM,
-            effectiveMm: rearDamperEffectiveMm,
-            startMm: damperStartMm,
-            endMm: damperEndMm,
-          },
-          {
-            id: "mono_sandwich_transition",
-            label: "Переход одноконтурный → сэндвич",
-            axis: "horizontal",
-            nominalLengthMm: transitionNominalMm,
-            effectiveMm: transitionEffectiveMm,
-            startMm: damperEndMm,
-            endMm: transitionEndMm,
-          },
-        );
+        fixedParts.push({
+          id: "rotary_damper",
+          label: "Шибер поворотный",
+          axis: "horizontal",
+          nominalLengthMm: ROTARY_DAMPER_OVERALL_LENGTH_MM,
+          effectiveMm: rearDamperEffectiveMm,
+          startMm: damperStartMm,
+          endMm: damperEndMm,
+        });
         const horizontalSandwichPipes = horizontalSandwich.pipes.map((pipe, index) => ({
           ...pipe,
           id: `rear-horizontal-sandwich-pipe-${index + 1}`,
@@ -1050,22 +1033,17 @@ export function bomForVariant(calculation: ChimneyCalculation, variant: PipeLayo
   const pipeLines = summarizePipeBom([variant], calculation.routeKind);
   const fixedAndNodes = calculation.bom.filter((line) => !isLayoutPipe(line));
   if (calculation.routeKind === "wall-rear") {
-    const damperIndex = fixedAndNodes.findIndex((line) => line.key === "rear-connection-sliding-damper");
-    const transitionIndex = fixedAndNodes.findIndex((line) => line.key === "mono-sandwich-transition");
-    if (damperIndex >= 0 && transitionIndex >= 0) {
+    const damperIndex = fixedAndNodes.findIndex((line) => line.key === "rear-connection-rotary-damper");
+    if (damperIndex >= 0) {
       const singlePipeLines = pipeLines.filter((line) => line.contour === "одностенный");
       const sandwichPipeLines = pipeLines.filter((line) => line.contour === "сэндвич");
-      const assemblyStartIndex = Math.min(damperIndex, transitionIndex);
-      const remainingNodes = fixedAndNodes.filter((line) => (
-        line.key !== "rear-connection-sliding-damper" && line.key !== "mono-sandwich-transition"
-      ));
+      const remainingNodes = fixedAndNodes.filter((line) => line.key !== "rear-connection-rotary-damper");
       return withMaterialDefaults([
-        ...remainingNodes.slice(0, assemblyStartIndex),
+        ...remainingNodes.slice(0, damperIndex),
         ...singlePipeLines,
         fixedAndNodes[damperIndex],
-        fixedAndNodes[transitionIndex],
         ...sandwichPipeLines,
-        ...remainingNodes.slice(assemblyStartIndex),
+        ...remainingNodes.slice(damperIndex),
       ]);
     }
   }

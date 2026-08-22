@@ -33,9 +33,13 @@ def test_scene_graph_v2_separates_engineering_bom_catalog_and_style_authority() 
         "support_plug",
         "support_console",
     ]
+    assert "rotary_damper" in rules["external_wall_topology"]["main"]
+    assert "mono_sandwich_transition" not in rules["external_wall_topology"]["main"]
     assert rules["hard_checks"]["no_joint_strictly_inside_wall_passage"] is True
     assert rules["hard_checks"]["support_plug_forbidden_in_horizontal_route"] is True
-    assert rules["failure_policy"]["missing_catalog_asset"] == "stop_render"
+    assert rules["hard_checks"]["all_rendered_components_have_geometry_family"] is True
+    assert rules["hard_checks"]["missing_catalog_appearance_does_not_invalidate_engineering_geometry"] is True
+    assert rules["failure_policy"]["missing_catalog_asset"] == "warn_and_render_calculated_geometry_without_sku"
 
 
 def test_engineering_svg_contract_keeps_critical_geometry_invariants() -> None:

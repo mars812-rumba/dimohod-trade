@@ -5,8 +5,7 @@ export type EngineeringSceneOrientation = "horizontal" | "vertical" | "angle";
 export type EngineeringGeometryFamily =
   | "single_wall_pipe"
   | "sandwich_pipe"
-  | "sliding_damper"
-  | "mono_sandwich_transition"
+  | "rotary_damper"
   | "wall_passage"
   | "passage_accessory"
   | "tee_90"
@@ -19,8 +18,8 @@ export type EngineeringGeometryFamily =
 export type EngineeringSceneNode = {
   id: string;
   bomKey: string;
-  productId: string;
-  sku: string;
+  productId: string | null;
+  sku: string | null;
   componentType: string;
   variant: string;
   quantityIndex: number;
@@ -32,8 +31,9 @@ export type EngineeringSceneNode = {
   yMm: number;
   effectiveLengthMm: number;
   nominalLengthMm: number | null;
-  visualAsset: string;
-  visualGeometrySource: "catalog";
+  visualAsset: string | null;
+  visualGeometrySource: "calculation";
+  catalogReferenceStatus: "resolved" | "missing";
   geometryFamily: EngineeringGeometryFamily;
 };
 
@@ -110,8 +110,7 @@ function pipeBomKey(pipe: ScenePipe) {
 function geometryFamily(line: SceneBomLine): EngineeringGeometryFamily | null {
   if (line.key.startsWith("single-layout-pipe-")) return "single_wall_pipe";
   if (line.key.startsWith("sandwich-pipe-")) return "sandwich_pipe";
-  if (line.key === "rear-connection-sliding-damper") return "sliding_damper";
-  if (line.key === "mono-sandwich-transition") return "mono_sandwich_transition";
+  if (line.key === "rear-connection-rotary-damper") return "rotary_damper";
   if (line.key === "outside-tee") return "tee_90";
   if (line.key === "tee-lower-support-plug") return "support_plug";
   if (line.key === "tee-support-console") return "support_console";
@@ -131,24 +130,30 @@ function nodeZone(xMm: number, wallStartMm: number, wallEndMm: number): Engineer
 function catalogIdentity(
   line: SceneBomLine,
   match: SceneCatalogMatch | undefined,
-  errors: string[],
   warnings: string[],
 ) {
   if (!match) {
-    errors.push(`Нет каталожной привязки для «${line.label}».`);
-    return null;
+    warnings.push(`Нет каталожной привязки для «${line.label}»; элемент показан на схеме без SKU и цены.`);
+    return {
+      productId: null,
+      sku: null,
+      variant: line.label,
+      visualAsset: null,
+      catalogLengthMm: null,
+      catalogReferenceStatus: "missing" as const,
+    };
   }
   if (!match.item.primary_image?.url) {
-    errors.push(`У каталожного изделия «${match.item.name}» нет изображения-источника геометрии.`);
-    return null;
+    warnings.push(`У каталожного изделия «${match.item.name}» нет изображения; используется расчётная SVG-геометрия.`);
   }
   if (!match.exactByFields) warnings.push(`«${line.label}» сопоставлен с кандидатом каталога и требует подтверждения варианта.`);
   return {
     productId: match.item.id,
     sku: match.item.selected_sku ?? match.item.article ?? "",
     variant: match.item.name,
-    visualAsset: match.item.primary_image.url,
+    visualAsset: match.item.primary_image?.url ?? null,
     catalogLengthMm: match.item.length_mm,
+    catalogReferenceStatus: "resolved" as const,
   };
 }
 
@@ -229,8 +234,7 @@ export function buildExternalWallSceneGraph({
     effectiveLengthMm?: number;
     nominalLengthMm?: number | null;
   }) => {
-    const identity = catalogIdentity(line, catalogMatches[line.key], errors, warnings);
-    if (!identity) return;
+    const identity = catalogIdentity(line, catalogMatches[line.key], warnings);
     if (identity.catalogLengthMm !== null && nominalLengthMm !== null && identity.catalogLengthMm !== nominalLengthMm) {
       errors.push(`Длина «${line.label}» в BOM (${nominalLengthMm} мм) не совпадает с каталогом (${identity.catalogLengthMm} мм).`);
       return;
@@ -252,7 +256,8 @@ export function buildExternalWallSceneGraph({
       effectiveLengthMm,
       nominalLengthMm,
       visualAsset: identity.visualAsset,
-      visualGeometrySource: "catalog",
+      visualGeometrySource: "calculation",
+      catalogReferenceStatus: identity.catalogReferenceStatus,
       geometryFamily: family,
     });
   };
@@ -278,8 +283,7 @@ export function buildExternalWallSceneGraph({
   });
 
   const fixedKeyById: Record<string, string> = {
-    sliding_damper: "rear-connection-sliding-damper",
-    mono_sandwich_transition: "mono-sandwich-transition",
+    rotary_damper: "rear-connection-rotary-damper",
   };
   calculation.fixedParts.filter((part) => part.axis === "horizontal").forEach((part) => {
     const key = fixedKeyById[part.id];
