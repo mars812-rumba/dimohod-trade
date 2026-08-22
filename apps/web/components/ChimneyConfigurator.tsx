@@ -123,6 +123,7 @@ function DynamicWallTopScheme({
   const horizontalPipes = variant?.pipes.filter((pipe) => pipe.axis === "horizontal") ?? [];
   const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const horizontalNominalMm = horizontalPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
+  const consolePositionsMm = wallRouteFacadeConsolePositions(outdoorNominalMm);
   const stackTopY = 238;
   const stackBottomY = 1058;
   const stackHeight = stackBottomY - stackTopY;
@@ -159,6 +160,11 @@ function DynamicWallTopScheme({
           <stop offset="0.78" stopColor="#a2adaf" />
           <stop offset="1" stopColor="#566166" />
         </linearGradient>
+        <linearGradient id="dynamic-console-top" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stopColor="#f2f4f3" />
+          <stop offset="0.48" stopColor="#aab2b4" />
+          <stop offset="1" stopColor="#687277" />
+        </linearGradient>
         <filter id="dynamic-pipe-shadow" height="130%" width="150%" x="-25%" y="-15%">
           <feDropShadow dx="2" dy="4" floodColor="#182428" floodOpacity="0.2" stdDeviation="4" />
         </filter>
@@ -173,6 +179,7 @@ function DynamicWallTopScheme({
       />
 
       <g aria-label={`Наружные сэндвич-трубы: ${outdoorPipes.length}`}>
+        <rect fill="#fff" height={stackHeight - 80} width="122" x="535" y={stackTopY + 80} />
         <rect fill="#fff" height={stackHeight + 8} width="84" x="651" y={stackTopY - 4} />
         {outdoorPipes.map((pipe, index) => {
           const height = outdoorNominalMm > 0
@@ -205,6 +212,29 @@ function DynamicWallTopScheme({
           <rect className="dynamic-pipe-placeholder" height={stackHeight} width="68" x="659" y={stackTopY} />
         ) : null}
         <line stroke="#29363b" strokeWidth="4" x1="657" x2="729" y1={stackBottomY} y2={stackBottomY} />
+      </g>
+
+      <g aria-label={`Фасадные консоли с силовыми хомутами: ${consolePositionsMm.length}`}>
+        {consolePositionsMm.map((positionMm, index) => {
+          const ratio = outdoorNominalMm > 0 ? positionMm / outdoorNominalMm : 0;
+          const y = Math.max(stackTopY + 78, Math.min(stackBottomY - 88, stackBottomY - ratio * stackHeight));
+          return (
+            <g key={`${positionMm}-${index}`}>
+              <polygon
+                fill="url(#dynamic-console-top)"
+                filter="url(#dynamic-pipe-shadow)"
+                points={`660,${y + 8} 540,${y + 8} 540,${y + 68}`}
+                stroke="#3f494d"
+                strokeLinejoin="round"
+                strokeWidth="2"
+              />
+              <line stroke="#687277" strokeWidth="3" x1="646" x2="551" y1={y + 20} y2={y + 55} />
+              <rect fill="url(#dynamic-steel-vertical)" height="18" rx="5" stroke="#29363b" strokeWidth="2" width="84" x="651" y={y} />
+              <circle cx="658" cy={y + 9} fill="#303c41" r="3" />
+              <circle cx="728" cy={y + 9} fill="#303c41" r="3" />
+            </g>
+          );
+        })}
       </g>
 
       {horizontalPipes.length ? (
@@ -241,10 +271,10 @@ function DynamicWallTopScheme({
       ) : null}
 
       <g className="dynamic-scheme-summary" transform="translate(42 1420)">
-        <rect height="72" rx="18" width="560" />
+        <rect height="72" rx="18" width="720" />
         <text x="24" y="29">По выбранной смете</text>
         <text x="24" y="55">
-          наружные трубы — {outdoorPipes.length} шт. · горизонтальные — {horizontalPipes.length} шт.
+          трубы — {outdoorPipes.length} шт. · консоли — {consolePositionsMm.length + 1} шт. · силовые хомуты — {consolePositionsMm.length} шт.
         </text>
       </g>
     </svg>
