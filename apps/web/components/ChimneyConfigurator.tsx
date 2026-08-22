@@ -26,6 +26,7 @@ import {
   type ChimneyCalculation,
   type PipeLayoutVariant,
 } from "@/lib/chimneyCalculation";
+import { RouteImageViewer } from "@/components/RouteImageViewer";
 import { productSelectionPath } from "@/lib/productUrls";
 import type { ProductListItem, ProductListResponse } from "@/lib/api";
 import {
@@ -35,7 +36,6 @@ import {
   type EstimateMeasurement,
 } from "@/lib/chimneyEstimate";
 import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
-import { RouteImageViewer } from "./RouteImageViewer";
 
 type RouteType = "ceiling" | "wall";
 type StoveType = "bania" | "pech" | "kamin" | "tt-kotel" | "gaz";
@@ -1019,7 +1019,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     }
 
     const controller = new AbortController();
-    const diameterKinds = new Set(["труба", "отвод", "заглушка", "оголовок", "шибер", "декоративная_юбка"]);
+    const diameterKinds = new Set(["труба", "отвод", "тройник", "заглушка", "оголовок", "шибер", "декоративная_юбка"]);
     setCatalogMatchStatus("loading");
     Promise.all(selectedBom.filter((line) => line.requiresSku).map(async (line) => {
       const params = new URLSearchParams({ limit: "24", offset: "0", product_kind: line.productKind });
@@ -1101,8 +1101,11 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
 
   const totalQty = selectedBom.reduce((sum, item) => sum + item.quantity, 0);
   const stoveLabel = STOVE_OPTIONS.find((option) => option.id === stove)?.label ?? "Источник";
-  const sceneTitle =
-    route === "ceiling" ? "Схема: через перекрытие и кровлю" : "Схема: наружный монтаж по стене";
+  const sceneTitle = route === "ceiling"
+    ? "Схема: через перекрытие и кровлю"
+    : calculation.routeKind === "wall-rear"
+      ? "Схема: горизонтально через стену"
+      : "Схема: наружный монтаж по стене";
   const activeProfile = calculationProfiles.find((profile) => profile.id === activeProfileId);
   const measurementsHref = activeProfile
     ? calculationProfileMeasurementsHref(activeProfile.id)
@@ -1497,18 +1500,14 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                 </ul>
               </div>
             ) : calculation.routeKind === "wall-rear" ? (
-              <div className="configurator-reference-scheme">
+              <div className="configurator-wall-route-png">
                 <RouteImageViewer
-                  alt="Схема горизонтального подключения печи через стену к наружному дымоходу"
-                  previewClassName="configurator-reference-scheme-preview"
-                  previewSizes="(max-width: 860px) 80vw, 360px"
+                  alt="Схема горизонтального подключения дымохода через стену с тройником и пятью метровыми сэндвич-трубами"
+                  previewSizes="(max-width: 720px) calc(100vw - 56px), 460px"
                   quality={88}
-                  src="/images/home/banya-route-through-wall-direct.webp"
-                  title="Горизонтальный маршрут"
+                  src="/images/home/banya-route-through-wall-five-pipes.png"
+                  title="Горизонтальное подключение через стену"
                 />
-                <p>
-                  Типовая схема узлов. Фактические длины труб и состав комплекта указаны ниже и в спецификации.
-                </p>
               </div>
             ) : (
               <GeneratedChimneyScheme

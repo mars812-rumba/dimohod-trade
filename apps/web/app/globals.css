@@ -2266,32 +2266,20 @@ body.mobile-menu-open {
   height: auto;
 }
 
-.configurator-reference-scheme {
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  width: min(100%, 420px);
+.configurator-wall-route-png {
+  width: min(100%, 460px);
 }
 
-.configurator-reference-scheme-preview {
-  width: min(100%, 320px);
-  aspect-ratio: 853 / 1280;
-  border: 1px solid rgba(34, 32, 29, 0.12);
-  border-radius: 4px;
-  box-shadow: 0 14px 36px rgba(16, 33, 39, 0.12);
+.configurator-wall-route-png > button {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 14px;
+  box-shadow: 0 12px 34px rgba(34, 32, 29, 0.15);
 }
 
-.configurator-reference-scheme-preview img {
+.configurator-wall-route-png img {
   object-fit: contain;
-}
-
-.configurator-reference-scheme > p {
-  max-width: 38ch;
-  margin: 0;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.45;
-  text-align: center;
 }
 
 .configurator-svg-validation {
