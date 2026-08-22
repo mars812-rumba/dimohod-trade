@@ -544,6 +544,17 @@ function addRouteNodes(
       catalogSearch: "Одноконтурный отвод 90°",
     });
     bom.push({
+      key: "top-outlet-rotary-damper",
+      productKind: "шибер",
+      label: "Одноконтурный шибер поворотный",
+      quantity: 1,
+      contour: "одностенный",
+      zone: "transition",
+      selectionReason: "Установлен в горизонтальном подключении сразу после одноконтурного отвода 90° и перед опорной сэндвич-заглушкой.",
+      requiresSku: true,
+      catalogSearch: "Одноконтурный шибер поворотный",
+    });
+    bom.push({
       key: "support-cap",
       productKind: "заглушка",
       label: "Сэндвич-заглушка опорная",

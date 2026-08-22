@@ -130,7 +130,7 @@ function DynamicWallTopScheme({
   const stackTopY = 238;
   const stackBottomY = 1058;
   const stackHeight = stackBottomY - stackTopY;
-  const horizontalStartX = 310;
+  const horizontalStartX = 382;
   const horizontalEndX = 658;
   const horizontalWidth = horizontalEndX - horizontalStartX;
   let outdoorCursorY = stackBottomY;
@@ -145,7 +145,7 @@ function DynamicWallTopScheme({
     >
       <title id="dynamic-wall-top-title">Динамическая схема верхнего выхода через стену</title>
       <desc id="dynamic-wall-top-description">
-        Реалистичная схема верхнего выхода: после одноконтурного отвода 90 градусов установлена опорная сэндвич-заглушка, а количество труб и креплений соответствует выбранной раскладке конфигуратора.
+        Реалистичная схема верхнего выхода: после одноконтурного отвода 90 градусов установлены одноконтурный поворотный шибер и опорная сэндвич-заглушка, а количество труб и креплений соответствует выбранной раскладке конфигуратора.
       </desc>
       <defs>
         <linearGradient id="dynamic-steel-vertical" x1="0" x2="1">
@@ -260,17 +260,35 @@ function DynamicWallTopScheme({
       {horizontalPipes.length ? (
         <g aria-label={`Горизонтальные трубы: ${horizontalPipes.length}`}>
           <rect fill="#fff" height="76" width={horizontalEndX - 258} x="258" y="1050" />
-          <g aria-label="Сэндвич-заглушка опорная после отвода 90 градусов">
+          <g aria-label="Одноконтурный поворотный шибер после отвода 90 градусов">
+            <rect
+              fill="url(#dynamic-steel-horizontal)"
+              filter="url(#dynamic-pipe-shadow)"
+              height="44"
+              rx="5"
+              stroke="#3f4b4f"
+              strokeWidth="2"
+              width="72"
+              x="258"
+              y="1066"
+            />
+            <line stroke="#29363b" strokeWidth="4" x1="260" x2="260" y1="1063" y2="1113" />
+            <line stroke="#4b5b60" strokeWidth="3" x1="294" x2="294" y1="1066" y2="1049" />
+            <circle cx="294" cy="1047" fill="#e46235" r="5" stroke="#923719" strokeWidth="2" />
+            <line stroke="#923719" strokeLinecap="round" strokeWidth="4" x1="294" x2="312" y1="1047" y2="1035" />
+            <text className="dynamic-pipe-index" textAnchor="middle" x="294" y="1094">Ш</text>
+          </g>
+          <g aria-label="Сэндвич-заглушка опорная после поворотного шибера">
             <path
-              d="M258 1068 L310 1061 L310 1115 L258 1108 Z"
+              d="M330 1068 L382 1061 L382 1115 L330 1108 Z"
               fill="url(#dynamic-steel-horizontal)"
               filter="url(#dynamic-pipe-shadow)"
               stroke="#3f4b4f"
               strokeLinejoin="round"
               strokeWidth="2"
             />
-            <line stroke="#29363b" strokeWidth="4" x1="308" x2="308" y1="1058" y2="1118" />
-            <text className="dynamic-pipe-index" textAnchor="middle" x="284" y="1094">ОЗ</text>
+            <line stroke="#29363b" strokeWidth="4" x1="380" x2="380" y1="1058" y2="1118" />
+            <text className="dynamic-pipe-index" textAnchor="middle" x="356" y="1094">ОЗ</text>
           </g>
           {horizontalPipes.map((pipe, index) => {
             const width = horizontalNominalMm > 0
