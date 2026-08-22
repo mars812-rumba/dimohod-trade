@@ -28,7 +28,7 @@ import {
 } from "@/lib/chimneyCalculation";
 import {
   wallRouteFacadeConsolePositions,
-  wallTopRouteUpperConsolePositions,
+  wallTopRouteFacadeConsolePositions,
 } from "@/lib/wallRouteLayout";
 import { productSelectionPath } from "@/lib/productUrls";
 import type { ProductListItem, ProductListResponse } from "@/lib/api";
@@ -126,7 +126,7 @@ function DynamicWallTopScheme({
   const horizontalPipes = variant?.pipes.filter((pipe) => pipe.axis === "horizontal") ?? [];
   const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const horizontalNominalMm = horizontalPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
-  const consolePositionsMm = wallTopRouteUpperConsolePositions(outdoorNominalMm);
+  const consolePositionsMm = wallTopRouteFacadeConsolePositions(outdoorNominalMm);
   const stackTopY = 238;
   const stackBottomY = 1058;
   const stackHeight = stackBottomY - stackTopY;
@@ -234,7 +234,7 @@ function DynamicWallTopScheme({
         <line stroke="#29363b" strokeWidth="4" x1="657" x2="729" y1={stackBottomY} y2={stackBottomY} />
       </g>
 
-      <g aria-label={`Верхняя универсальная консоль с силовым хомутом: ${consolePositionsMm.length}`}>
+      <g aria-label={`Универсальные консоли с силовыми хомутами через каждые два метра: ${consolePositionsMm.length}`}>
         {consolePositionsMm.map((positionMm, index) => {
           const ratio = outdoorNominalMm > 0 ? positionMm / outdoorNominalMm : 0;
           const y = Math.max(stackTopY + 78, Math.min(stackBottomY - 88, stackBottomY - ratio * stackHeight));

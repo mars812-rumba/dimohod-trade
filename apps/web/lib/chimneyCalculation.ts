@@ -8,7 +8,7 @@ import {
   wallRearRouteConsoleQuantity,
   wallRearRoutePipePlan,
   wallRouteConsoleQuantity,
-  wallTopRouteUpperConsoleQuantity,
+  wallTopRouteFacadeConsoleQuantity,
 } from "./wallRouteLayout";
 
 export const PIPE_SOCKET_OVERLAP_MM = 50;
@@ -586,12 +586,12 @@ function addRouteNodes(
         label: "Консоль универсальная",
         quantity: wallConsoleQuantity,
         zone: "wall/outdoor",
-        selectionReason: "Одна универсальная консоль устанавливается наверху наружной трассы длиной от 2000 мм.",
+        selectionReason: "Универсальные консоли устанавливаются на наружной трассе через каждые полные 2000 мм без дополнительной консоли рядом с верхней.",
         requiresSku: true,
         catalogCategorySlug: "homuty-i-krepezh",
         catalogSearch: "Консоль универсальная",
         catalogDiameterMode: "sandwich-outer-range",
-        quantityNote: "Одна консоль в конце наружной трассы.",
+        quantityNote: "На отметках 2, 4, 6 м и далее; остаток менее 2 м отдельной верхней консоли не добавляет.",
       });
       bom.push({
         key: "outside-console-power-clamps",
@@ -599,12 +599,12 @@ function addRouteNodes(
         label: "Хомут силовой для консоли",
         quantity: wallConsoleQuantity,
         zone: "wall/outdoor",
-        selectionReason: "Один силовой хомут устанавливается на верхнюю универсальную консоль.",
+        selectionReason: "По одному силовому хомуту на каждую рассчитанную универсальную консоль.",
         requiresSku: true,
         catalogCategorySlug: "homuty-i-krepezh",
         catalogSearch: "Хомут силовой для консоли",
         catalogDiameterMode: "sandwich-outer-exact",
-        quantityNote: "Один хомут на верхнюю универсальную консоль.",
+        quantityNote: "Количество равно количеству универсальных консолей.",
       });
     }
   }
@@ -802,7 +802,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
         }];
         const outdoorPipeLengthMm = outdoor.pipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
         wallConsoleQuantity = routeKind === "wall-top"
-          ? wallTopRouteUpperConsoleQuantity(outdoorPipeLengthMm)
+          ? wallTopRouteFacadeConsoleQuantity(outdoorPipeLengthMm)
           : wallRouteConsoleQuantity(outdoorPipeLengthMm);
       }
     }
