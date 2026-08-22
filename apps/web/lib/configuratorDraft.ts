@@ -77,7 +77,7 @@ export function createEmptyScenarioDraft(
     connectionHeight: "",
     grateHeight: "",
     rearOutletBottomHeight: "",
-    warmupLength: "500",
+    warmupLength: "1000",
     rotaryDamperHeight: "130",
     supportCapHeight: "70",
     connectionDetails: "",
@@ -134,15 +134,10 @@ export function scenarioDraftConfiguratorHref(draft: ScenarioConfiguratorDraft):
   const connection = [
     draft.manufacturer.trim(),
     draft.model.trim(),
-    draft.diameter
-      ? `патрубок ${draft.diameter} мм`
-      : draft.diameterX || draft.diameterY
-        ? `патрубок X ${draft.diameterX || "?"} / Y ${draft.diameterY || "?"} мм`
-        : "",
+    draft.diameter ? `патрубок ${draft.diameter} мм` : "",
     draft.outlet === "rear" && draft.rearOutletBottomHeight
       ? `нижняя кромка патрубка ${draft.rearOutletBottomHeight} мм от пола`
       : draft.connectionHeight ? `верх отопителя ${draft.connectionHeight} мм от пола` : "",
-    draft.connectionDetails.trim(),
   ].filter(Boolean);
   if (connection.length) params.set("stoveModel", connection.join(" · "));
 
@@ -173,6 +168,8 @@ export function parseScenarioDraft(value: string | null): ScenarioConfiguratorDr
       if (!draft.diameterX && draft.diameterY) draft.diameter = draft.diameterY;
       if (draft.diameterX && draft.diameterX === draft.diameterY) draft.diameter = draft.diameterX;
     }
+    draft.diameterX = "";
+    draft.diameterY = "";
     return draft;
   } catch {
     return null;

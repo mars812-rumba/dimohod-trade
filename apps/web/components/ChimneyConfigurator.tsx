@@ -855,7 +855,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const [hasAttic, setHasAttic] = useState(false);
   const [roof, setRoof] = useState<RoofType>("pitched");
   const [heightM, setHeightM] = useState(5);
-  const [warmupLengthMm, setWarmupLengthMm] = useState(500);
+  const [warmupLengthMm, setWarmupLengthMm] = useState(1000);
   const rotaryDamperHeightMm = ROTARY_DAMPER_EFFECTIVE_LENGTH_MM;
   const [supportCapLengthMm, setSupportCapLengthMm] = useState(70);
   const [passageWoolKits, setPassageWoolKits] = useState(3);
@@ -934,11 +934,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       const connection = [
         transferredDraft.manufacturer.trim(),
         transferredDraft.model.trim(),
-        transferredDraft.diameter
-          ? `патрубок ${transferredDraft.diameter} мм`
-          : transferredDraft.diameterX || transferredDraft.diameterY
-            ? `патрубок X ${transferredDraft.diameterX || "?"} / Y ${transferredDraft.diameterY || "?"} мм`
-            : "",
+        transferredDraft.diameter ? `патрубок ${transferredDraft.diameter} мм` : "",
         transferredDraft.outlet === "rear" && transferredDraft.rearOutletBottomHeight
           ? `нижняя кромка патрубка ${transferredDraft.rearOutletBottomHeight} мм от пола`
           : transferredDraft.connectionHeight ? `верх отопителя ${transferredDraft.connectionHeight} мм от пола` : "",
@@ -1380,7 +1376,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
 
               <div className="configurator-inline-inputs">
                 <label className="configurator-text-field">
-                  <span className="configurator-label">Общая высота разгона, мм</span>
+                  <span className="configurator-label">Одноконтурная труба, мм</span>
                   <input
                     inputMode="numeric"
                     min="0"

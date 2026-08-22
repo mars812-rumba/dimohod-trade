@@ -55,6 +55,8 @@ function normalizeIntakeDraft(draft: ScenarioConfiguratorDraft): ScenarioConfigu
     scenario: objectType === "banya" ? "banya" : "dom",
     equipmentType,
     diameter,
+    diameterX: "",
+    diameterY: "",
     diameterSource,
   };
 }
@@ -188,11 +190,6 @@ export function BanyaIntakeFlow({
       src: `${assetBasePath}/images/measurements/stove-height-mobile.webp`,
       alt: "Вертикальная схема замера от чистового пола до верхней грани патрубка отопителя",
       title: "Как измерить высоту до патрубка",
-    },
-    grateHeight: {
-      src: `${assetBasePath}/images/measurements/grate-height-mobile.webp`,
-      alt: "Схема замера от чистового пола до уровня колосниковой решётки внутри топки",
-      title: "Как измерить высоту колосниковой решётки",
     },
     rearOutletHeight: {
       src: `${assetBasePath}/images/measurements/rear-outlet-bottom-height-mobile.webp`,
@@ -507,12 +504,6 @@ export function BanyaIntakeFlow({
                   <p>Измерьте расстояние от чистового пола до верхней грани штатного патрубка отопителя. Патрубок входит в размер, установленная сверху дымовая труба — нет.</p>
                 </MeasurementHelp>
               </MeasurementField> : null}
-              <MeasurementField draft={intake} field="grateHeight" label="Высота колосниковой решётки" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От чистового пола" unit="мм">
-                <MeasurementHelp scheme={schemes.grateHeight}>
-                  <p>Измерьте вертикально от чистового пола до уровня колосниковой решётки. Этот размер нужен для проверки минимальной высоты дымового канала до устья.</p>
-                  <p>Если у отопителя нет колосниковой решётки, оставьте поле на уточнение по паспорту оборудования — подменять его высотой печи нельзя.</p>
-                </MeasurementHelp>
-              </MeasurementField>
               {intake.outlet === "rear" ? <MeasurementField draft={intake} field="rearOutletBottomHeight" label="Высота нижней кромки патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От чистового пола" unit="мм">
                 <MeasurementHelp scheme={schemes.rearOutletHeight}>
                   <p>Измерьте вертикально от чистового пола до самой нижней точки наружной кромки заднего патрубка.</p>
@@ -536,10 +527,6 @@ export function BanyaIntakeFlow({
                 </MeasurementHelp>
               </MeasurementField>
               </> : null}
-              <label className={`${styles.field} ${styles.fieldWide}`}>
-                <span>Форма и особенности соединения</span>
-                <input onChange={(event) => update("connectionDetails", event.target.value)} placeholder="Например, овальный выход или переход — если известно" value={intake.connectionDetails} />
-              </label>
             </div>
           </section> : null}
 
@@ -554,7 +541,6 @@ export function BanyaIntakeFlow({
             <fieldset className={styles.routeChoices}>
               <legend className={styles.visuallyHidden}>Маршрут дымохода</legend>
               {content.routeOptions
-                .filter((option) => intake.outlet !== "top" || option.slug !== "through-wall-direct")
                 .map((option, index) => {
                   const value = option.slug === "through-wall-direct"
                     ? "wall-direct" as const

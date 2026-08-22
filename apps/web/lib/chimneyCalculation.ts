@@ -82,7 +82,7 @@ export type ChimneyCalculation = {
   floors: number;
   hasAttic: boolean;
   diameterMm: number | null;
-  diameterStatus: "known" | "oval" | "missing";
+  diameterStatus: "known" | "missing";
   roofAngleDeg: number | null;
   roofThicknessMm: number | null;
   floorThicknessesMm: number[];
@@ -135,18 +135,8 @@ function effectiveComponentHeight(nominalLengthMm: number): number {
 function measuredDiameter(draft: ScenarioConfiguratorDraft | null): Pick<ChimneyCalculation, "diameterMm" | "diameterStatus"> {
   if (!draft) return { diameterMm: null, diameterStatus: "missing" };
   const diameter = positiveNumber(draft.diameter);
-  if (diameter) return { diameterMm: Math.round(diameter), diameterStatus: "known" };
-
-  // Backward compatibility for profiles saved by the former X/Y form.
-  const x = positiveNumber(draft.diameterX);
-  const y = positiveNumber(draft.diameterY);
-  if (x && y) {
-    if (Math.round(x) !== Math.round(y)) return { diameterMm: null, diameterStatus: "oval" };
-    return { diameterMm: Math.round((x + y) / 2), diameterStatus: "known" };
-  }
-  const single = x ?? y;
-  return single
-    ? { diameterMm: Math.round(single), diameterStatus: "known" }
+  return diameter
+    ? { diameterMm: Math.round(diameter), diameterStatus: "known" }
     : { diameterMm: null, diameterStatus: "missing" };
 }
 
@@ -529,11 +519,11 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     : positiveNumber(input.draft?.connectionHeight) ?? 0;
   const routeLengthMm = input.heightM * 1000;
   const legacyRouteTargetMm = connectionHeightMm + routeLengthMm;
-  const warmupLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.warmupLengthMm ?? 500)) : 0;
+  const warmupLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.warmupLengthMm ?? 1000)) : 0;
   const rotaryDamperHeightMm = routeKind === "ceiling"
     ? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM
     : 0;
-  const singleWallWarmupPipeLengthMm = Math.max(0, warmupLengthMm - rotaryDamperHeightMm);
+  const singleWallWarmupPipeLengthMm = warmupLengthMm;
   const supportCapLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.supportCapLengthMm ?? 70)) : 0;
   const fixedParts: FixedRoutePart[] = [];
   let pipeStartMm = routeKind === "ceiling" ? connectionHeightMm : 0;
@@ -601,9 +591,6 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   if (routeKind === "ceiling" && input.roofType === "pitched" && !ridgeHorizontalDistanceMm) {
     reviewItems.unshift("Указать горизонтальное расстояние от оси дымохода до конька для расчёта высоты устья.");
   }
-  if (routeKind === "ceiling" && rotaryDamperHeightMm >= warmupLengthMm && warmupLengthMm > 0) {
-    errors.push("Высота поворотного шибера должна быть меньше общей высоты разгона.");
-  }
   fixedParts.forEach((part) => {
     if (part.nominalLengthMm <= PIPE_SOCKET_OVERLAP_MM) {
       errors.push(`Номинальная высота «${part.label}» должна быть больше зоны соединения ${PIPE_SOCKET_OVERLAP_MM} мм.`);
@@ -667,7 +654,6 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     passageWoolKits,
   );
   if (diameter.diameterStatus === "missing") reviewItems.unshift("Указать наружный диаметр патрубка для подбора SKU.");
-  if (diameter.diameterStatus === "oval") reviewItems.unshift("Замеры X и Y отличаются: соединение нужно проверить до подбора SKU.");
 
   return {
     routeKind,
