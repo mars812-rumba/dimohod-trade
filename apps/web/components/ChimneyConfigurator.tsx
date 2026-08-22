@@ -341,7 +341,13 @@ function DynamicWallRearScheme({
   const outdoorPipes = variant?.pipes.filter((pipe) => (
     pipe.axis === "vertical" && pipe.contour === "сэндвич"
   )) ?? [];
-  const horizontalPipes = variant?.pipes.filter((pipe) => pipe.axis === "horizontal") ?? [];
+  const horizontalSinglePipes = variant?.pipes.filter((pipe) => (
+    pipe.axis === "horizontal" && pipe.contour === "одностенный"
+  )) ?? [];
+  const horizontalSandwichPipes = variant?.pipes.filter((pipe) => (
+    pipe.axis === "horizontal" && pipe.contour === "сэндвич"
+  )) ?? [];
+  const horizontalSandwichNominalMm = horizontalSandwichPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const consolePositionsMm = wallRouteFacadeConsolePositions(outdoorNominalMm);
   const stackTopY = 318;
@@ -358,7 +364,7 @@ function DynamicWallRearScheme({
     >
       <title id="dynamic-wall-rear-title">Динамическая схема горизонтального подключения через стену</title>
       <desc id="dynamic-wall-rear-description">
-        Количество труб соответствует смете. На наружной колонне показаны универсальные консоли с силовыми хомутами через каждые два метра и отдельная опора под тройником.
+        После одноконтурной соединительной трубы показана опорная сэндвич-заглушка, затем сэндвич-трубы до наружного тройника. Количество труб соответствует смете.
       </desc>
       <defs>
         <linearGradient id="rear-dynamic-steel" x1="0" x2="1">
@@ -386,6 +392,68 @@ function DynamicWallRearScheme({
         x="0"
         y="0"
       />
+
+      <g aria-label="Горизонтальное подключение: одноконтурная труба, опорная заглушка и сэндвич-трубы">
+        {horizontalSinglePipes.length ? (
+          <g aria-label={`Одноконтурные соединительные трубы: ${horizontalSinglePipes.length}`}>
+            <rect
+              fill="url(#rear-dynamic-steel)"
+              height="42"
+              rx="5"
+              stroke="#39474c"
+              strokeWidth="2"
+              width="54"
+              x="422"
+              y="1033"
+            />
+            <line stroke="#263439" strokeWidth="4" x1="474" x2="474" y1="1030" y2="1078" />
+            <text className="dynamic-pipe-index" textAnchor="middle" x="449" y="1059">1К</text>
+          </g>
+        ) : null}
+        <g aria-label="Сэндвич-заглушка опорная после одноконтурной трубы">
+          <path
+            d="M370 1027 L422 1034 L422 1074 L370 1081 Z"
+            fill="url(#rear-dynamic-steel)"
+            filter="url(#rear-dynamic-shadow)"
+            stroke="#39474c"
+            strokeLinejoin="round"
+            strokeWidth="2"
+          />
+          <line stroke="#263439" strokeWidth="4" x1="371" x2="371" y1="1024" y2="1084" />
+          <text className="dynamic-pipe-index" textAnchor="middle" x="396" y="1059">ОЗ</text>
+        </g>
+        <g aria-label={`Горизонтальные сэндвич-трубы: ${horizontalSandwichPipes.length}`}>
+          {horizontalSandwichPipes.map((pipe, index) => {
+            const width = horizontalSandwichNominalMm > 0
+              ? 165 * (pipe.nominalMm / horizontalSandwichNominalMm)
+              : 165 / Math.max(1, horizontalSandwichPipes.length);
+            const previousWidth = horizontalSandwichPipes
+              .slice(0, index)
+              .reduce((sum, item) => sum + (
+                horizontalSandwichNominalMm > 0 ? 165 * (item.nominalMm / horizontalSandwichNominalMm) : 0
+              ), 0);
+            const x = 370 - previousWidth - width;
+            return (
+              <g key={`rear-horizontal-${pipe.id}`}>
+                <rect
+                  fill="url(#rear-dynamic-steel)"
+                  height="54"
+                  rx="5"
+                  stroke="#39474c"
+                  strokeWidth="2"
+                  width={Math.max(2, width - 3)}
+                  x={x + 2}
+                  y="1027"
+                />
+                <line stroke="#263439" strokeWidth="4" x1={x + 2} x2={x + 2} y1="1024" y2="1084" />
+                <text className="dynamic-pipe-index" textAnchor="middle" x={x + width / 2} y="1059">
+                  Г{index + 1}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      </g>
 
       <g aria-label={`Наружные сэндвич-трубы: ${outdoorPipes.length}`}>
         <rect fill="#fff" height={stackHeight + 8} width="102" x="119" y={stackTopY - 4} />
@@ -450,7 +518,7 @@ function DynamicWallRearScheme({
         <rect height="78" rx="18" width="650" />
         <text x="24" y="30">По выбранной смете</text>
         <text x="24" y="58">
-          сэндвич-трубы — {outdoorPipes.length} шт. · консоли — {consolePositionsMm.length + 1} шт. · силовые хомуты — {consolePositionsMm.length} шт.
+          сэндвич-трубы — {outdoorPipes.length + horizontalSandwichPipes.length} шт. · консоли — {consolePositionsMm.length + 1} шт. · силовые хомуты — {consolePositionsMm.length} шт.
         </text>
       </g>
     </svg>

@@ -375,6 +375,19 @@ function addRouteNodes(
       selectionReason: "Опорный переход перед сэндвич-участком задан схемой.",
       requiresSku: true,
     });
+  } else if (routeKind === "wall-rear") {
+    const firstSandwichPipeIndex = bom.findIndex((line) => line.key.startsWith("sandwich-pipe-"));
+    bom.splice(firstSandwichPipeIndex >= 0 ? firstSandwichPipeIndex : bom.length, 0, {
+      key: "support-cap",
+      productKind: "заглушка",
+      label: "Сэндвич-заглушка опорная",
+      quantity: 1,
+      contour: "сэндвич",
+      insulationMm: 50,
+      zone: "transition",
+      selectionReason: "Установлена после одноконтурной соединительной трубы и перед горизонтальным сэндвич-участком.",
+      requiresSku: true,
+    });
   }
   bom.push({
     key: routeKind === "ceiling" ? "ceiling-passage" : "wall-passage",
@@ -759,6 +772,20 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       );
       const connectionEffectiveMm = effectiveComponentHeight(plan.connectionPipeNominalMm);
       const outdoorEffectiveMm = effectiveComponentHeight(plan.outdoorPipeNominalMm);
+      const wallEndMm = (positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000)
+        + (positiveNumber(input.draft?.wallThickness) ?? 0)
+        + (positiveNumber(input.draft?.facadeOffset) ?? 0);
+      const horizontalSandwich = wallEndMm > connectionEffectiveMm
+        ? solvePipeLayouts({
+          axis: "horizontal",
+          startMm: connectionEffectiveMm,
+          targetMm: wallEndMm,
+          forbiddenZones,
+          fallbackZone: "wall_or_ceiling_pass",
+          contour: "сэндвич",
+          maxVariants: 1,
+        })[0]
+        : null;
       const horizontalPipe: PlacedPipe = {
         id: "horizontal-pipe-1",
         axis: "horizontal",
@@ -779,14 +806,16 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
         zone: "outdoor",
         contour: "сэндвич",
       }));
-      variants = [{
-        id: `rear-${plan.connectionPipeNominalMm}--outdoor-${plan.outdoorPipeQuantity}x${plan.outdoorPipeNominalMm}`,
-        label: `${plan.connectionPipeNominalMm} / ${plan.outdoorPipeQuantity} × ${plan.outdoorPipeNominalMm}`,
-        pipes: [horizontalPipe, ...outdoorPipes],
-        coveredEndMm: outdoorHeightMm,
-        reserveMm: 0,
-        jointPositionsMm: [horizontalPipe.endMm, ...outdoorPipes.map((pipe) => pipe.endMm)],
-      }];
+      if (wallEndMm <= connectionEffectiveMm || horizontalSandwich) {
+        variants = [{
+          id: `rear-${plan.connectionPipeNominalMm}--sandwich-${horizontalSandwich?.id ?? "none"}--outdoor-${plan.outdoorPipeQuantity}x${plan.outdoorPipeNominalMm}`,
+          label: `${plan.connectionPipeNominalMm} / ${horizontalSandwich ? `${horizontalSandwich.label} / ` : ""}${plan.outdoorPipeQuantity} × ${plan.outdoorPipeNominalMm}`,
+          pipes: [horizontalPipe, ...(horizontalSandwich?.pipes ?? []), ...outdoorPipes],
+          coveredEndMm: outdoorHeightMm,
+          reserveMm: horizontalSandwich?.reserveMm ?? 0,
+          jointPositionsMm: [horizontalPipe.endMm, ...(horizontalSandwich?.jointPositionsMm ?? []), ...outdoorPipes.map((pipe) => pipe.endMm)],
+        }];
+      }
     } else {
       const wallEndMm = (positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000)
         + (positiveNumber(input.draft?.wallThickness) ?? 0)
@@ -880,6 +909,20 @@ export function bomForVariant(calculation: ChimneyCalculation, variant: PipeLayo
   if (!variant) return withMaterialDefaults(calculation.bom.filter((line) => !isLayoutPipe(line)));
   const pipeLines = summarizePipeBom([variant], calculation.routeKind);
   const fixedAndNodes = calculation.bom.filter((line) => !isLayoutPipe(line));
+  if (calculation.routeKind === "wall-rear") {
+    const supportCapIndex = fixedAndNodes.findIndex((line) => line.key === "support-cap");
+    if (supportCapIndex >= 0) {
+      const singlePipeLines = pipeLines.filter((line) => line.contour === "одностенный");
+      const sandwichPipeLines = pipeLines.filter((line) => line.contour === "сэндвич");
+      return withMaterialDefaults([
+        ...fixedAndNodes.slice(0, supportCapIndex),
+        ...singlePipeLines,
+        fixedAndNodes[supportCapIndex],
+        ...sandwichPipeLines,
+        ...fixedAndNodes.slice(supportCapIndex + 1),
+      ]);
+    }
+  }
   const insertionIndex = fixedAndNodes.findIndex((line) => line.key === "ceiling-passage" || line.key === "wall-passage");
   if (insertionIndex < 0) return withMaterialDefaults([...fixedAndNodes, ...pipeLines]);
   return withMaterialDefaults([
