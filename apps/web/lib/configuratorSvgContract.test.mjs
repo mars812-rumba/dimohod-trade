@@ -6,6 +6,7 @@ const configuratorSource = await readFile(
   new URL("../components/ChimneyConfigurator.tsx", import.meta.url),
   "utf8",
 );
+const globalStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
 function componentSource(name, nextName) {
   const start = configuratorSource.indexOf(`function ${name}`);
@@ -24,14 +25,22 @@ test("wall-top configurator scene is a real inline SVG without a raster backdrop
   assert.doesNotMatch(source, /banya-route-through-wall-top-elbow\.png/);
 });
 
-test("direct wall route uses separate deterministic SVG panels and resolved SKU labels", () => {
+test("direct wall route is one continuous deterministic SVG with readable callouts", () => {
   const source = componentSource("DynamicWallRearScheme", "scenarioDraftSummary");
 
-  assert.match(source, /data-panel="horizontal-detail"/);
-  assert.match(source, /data-panel="vertical-overview"/);
-  assert.match(source, /horizontalScale = 520 \/ horizontalMaximumMm/);
-  assert.match(source, /verticalScale = 280 \/ verticalMaximumMm/);
-  assert.match(source, /node\.sku \?\? "SKU не найден"/);
-  assert.match(source, /Опорная заглушка показана только/);
+  assert.match(source, /data-scene="continuous-wall-route"/);
+  assert.match(source, /configurator-engineering-route-svg/);
+  assert.match(source, /horizontalScale = 350 \/ horizontalMaximumMm/);
+  assert.match(source, /verticalScale = 430 \/ verticalMaximumMm/);
+  assert.match(source, /Поворотный шибер/);
+  assert.match(source, /одна труба, без стыка/);
+  assert.match(source, /только нижняя ветвь/);
+  assert.doesNotMatch(source, /data-panel=/);
+  assert.doesNotMatch(source, /fontFamily="ui-monospace/);
   assert.doesNotMatch(source, /<image\b/);
+
+  assert.match(globalStyles, /\.configurator-generated-svg:not\(\.configurator-engineering-route-svg\) text/);
+  const routeTextRule = globalStyles.match(/\.configurator-engineering-route-svg text\s*\{([^}]*)\}/)?.[1] ?? "";
+  assert.doesNotMatch(routeTextRule, /font-size|font-weight|fill/);
+  assert.match(globalStyles, /\.configurator-wall-route-scheme\s*\{[^}]*560px/s);
 });
