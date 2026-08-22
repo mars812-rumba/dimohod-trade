@@ -123,7 +123,6 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
     draft.route === "ceiling" && draft.atticHeight ? `Высота чердака: ${draft.atticHeight} мм` : "",
     draft.route === "ceiling" && draft.ridgeHeight ? `Высота дома в коньке: ${draft.ridgeHeight} мм` : "",
     draft.route === "ceiling" && draft.ridgeHorizontalDistance ? `От оси дымохода до конька: ${draft.ridgeHorizontalDistance} мм` : "",
-    draft.route === "ceiling" && draft.grateHeight ? `Высота колосника: ${draft.grateHeight} мм` : "",
     draft.route === "ceiling" && draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
     draft.route === "ceiling" && draft.passageWoolKits ? `Комплекты ваты: ${draft.passageWoolKits} шт. (вручную)` : "",
     draft.route !== "ceiling" && draft.wallExitHeight ? `Точка выхода через стену: ${draft.wallExitHeight} м` : "",
@@ -943,7 +942,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         transferredDraft.outlet === "rear" && transferredDraft.rearOutletBottomHeight
           ? `нижняя кромка патрубка ${transferredDraft.rearOutletBottomHeight} мм от пола`
           : transferredDraft.connectionHeight ? `верх отопителя ${transferredDraft.connectionHeight} мм от пола` : "",
-        transferredDraft.connectionDetails.trim(),
       ].filter(Boolean);
       if (connection.length) setStoveModel(connection.join(" · "));
     }
@@ -992,7 +990,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     if (calculation.routeKind === "ceiling") {
       if (!calculation.ridgeHeightMm) issues.push("Не указана высота до внутренней нижней грани конька.");
       if (roof === "pitched" && !calculation.ridgeHorizontalDistanceMm) issues.push("Не указано горизонтальное расстояние от оси дымохода до конька.");
-      if (!calculation.grateHeightMm) issues.push("Не указана высота колосниковой решётки или подтверждённая исходная отметка канала.");
       if (!calculation.roofThicknessMm) issues.push("Не указана толщина кровельного пирога.");
       if (roof === "pitched" && calculation.roofAngleDeg === null) issues.push("Не указан угол скатной кровли.");
       if (calculation.floorThicknessesMm.length < calculation.floors) issues.push("Не заполнены толщины всех перекрытий.");
@@ -1132,7 +1129,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         { label: "Кровельный пирог", value: calculation.roofThicknessMm === null ? "требует уточнения" : `${calculation.roofThicknessMm} мм` },
         { label: "Высота до конька", value: calculation.ridgeHeightMm === null ? "требует уточнения" : `${calculation.ridgeHeightMm} мм` },
         { label: "Ось трубы от конька", value: calculation.ridgeHorizontalDistanceMm === null ? "требует уточнения" : `${calculation.ridgeHorizontalDistanceMm} мм` },
-        { label: "Высота колосника", value: calculation.grateHeightMm === null ? "требует уточнения" : `${calculation.grateHeightMm} мм` },
         { label: "Толщины перекрытий", value: calculation.floorThicknessesMm.length ? `${calculation.floorThicknessesMm.join(" / ")} мм` : "требуют уточнения" },
       );
     } else {
@@ -1474,13 +1470,8 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               <strong>Высота вертикального дымохода рассчитывается автоматически</strong>
               <span>
                 По положению относительно кровли: {calculation.roofTerminationRequirementMm ?? "нужны замеры"} мм.
-                По условию 5 м от колосниковой решётки: {calculation.fiveMeterRequirementMm ?? "нужен замер"} мм.
                 Итоговая минимальная отметка устья: {calculation.routeTargetMm} мм от чистого пола
-                {calculation.controllingTerminationRequirement === "five-meter"
-                  ? " — определяет условие 5 м от колосника."
-                  : calculation.controllingTerminationRequirement === "roof"
-                    ? " — определяет положение относительно кровли."
-                    : "."}
+                {calculation.roofTerminationRequirementMm === null ? "." : " — определяет положение относительно кровли."}
               </span>
             </div>
           )}

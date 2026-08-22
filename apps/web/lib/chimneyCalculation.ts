@@ -89,14 +89,11 @@ export type ChimneyCalculation = {
   passageWoolKits: number;
   rotaryDamperHeightMm: number;
   singleWallWarmupPipeLengthMm: number;
-  grateHeightMm: number | null;
   ridgeHeightMm: number | null;
   ridgeHorizontalDistanceMm: number | null;
   roofTerminationRequirementMm: number | null;
-  fiveMeterRequirementMm: number | null;
   tenDegreeLineHeightAtChimneyMm: number | null;
   terminationRule: RoofTerminationRule | null;
-  controllingTerminationRequirement: "roof" | "five-meter" | "incomplete" | null;
   terminationToRidgeDeltaMm: number | null;
   routeStartMm: number;
   routeTargetMm: number;
@@ -513,8 +510,6 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const ridgeHorizontalDistanceMm = measuredRidgeHorizontalDistanceMm
     ? Math.round(measuredRidgeHorizontalDistanceMm)
     : null;
-  const measuredGrateHeightMm = positiveNumber(input.draft?.grateHeight);
-  const grateHeightMm = measuredGrateHeightMm ? Math.round(measuredGrateHeightMm) : null;
   const routeKind: ChimneyRouteKind = input.route === "ceiling"
     ? "ceiling"
     : input.outlet === "horizontal" ? "wall-rear" : "wall-top";
@@ -575,7 +570,6 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
         ridgeHeightMm,
         ridgeHorizontalDistanceMm,
         roofOuterHeightAtChimneyMm: roofZoneForTermination?.endMm ?? null,
-        grateHeightMm,
       })
     : null;
   const routeTargetMm = routeKind === "ceiling"
@@ -606,9 +600,6 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   }
   if (routeKind === "ceiling" && input.roofType === "pitched" && !ridgeHorizontalDistanceMm) {
     reviewItems.unshift("Указать горизонтальное расстояние от оси дымохода до конька для расчёта высоты устья.");
-  }
-  if (routeKind === "ceiling" && !grateHeightMm) {
-    reviewItems.unshift("Указать высоту колосниковой решётки или подтвердить исходную отметку по паспорту отопителя.");
   }
   if (routeKind === "ceiling" && rotaryDamperHeightMm >= warmupLengthMm && warmupLengthMm > 0) {
     errors.push("Высота поворотного шибера должна быть меньше общей высоты разгона.");
@@ -689,14 +680,11 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     passageWoolKits,
     rotaryDamperHeightMm,
     singleWallWarmupPipeLengthMm,
-    grateHeightMm,
     ridgeHeightMm,
     ridgeHorizontalDistanceMm,
     roofTerminationRequirementMm: terminationHeight?.roofRequirementMm ?? null,
-    fiveMeterRequirementMm: terminationHeight?.fiveMeterRequirementMm ?? null,
     tenDegreeLineHeightAtChimneyMm: terminationHeight?.tenDegreeLineHeightAtChimneyMm ?? null,
     terminationRule: terminationHeight?.roofRule ?? null,
-    controllingTerminationRequirement: terminationHeight?.controllingRequirement ?? null,
     terminationToRidgeDeltaMm,
     routeStartMm: connectionHeightMm,
     routeTargetMm,
