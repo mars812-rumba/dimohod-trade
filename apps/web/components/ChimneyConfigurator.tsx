@@ -113,6 +113,122 @@ const ROOF_OPTIONS: Array<{ id: RoofType; label: string }> = [
 
 const ACTIVE_CALCULATION_PROFILE_KEY = "dimohod-trade:active-calculation-profile:v1";
 
+function SchemePartCallout({ x, y, label }: { x: number; y: number; label: string }) {
+  return (
+    <g aria-hidden="true" pointerEvents="none">
+      <line stroke="#1769aa" strokeWidth="2" x1={x} x2={x} y1={y + 12} y2={y + 25} />
+      <circle cx={x} cy={y} fill="#fff" r="12" stroke="#1769aa" strokeWidth="2" />
+      <text fill="#17343e" fontSize="11" fontWeight="800" textAnchor="middle" x={x} y={y + 4}>{label}</text>
+    </g>
+  );
+}
+
+function HorizontalPipeSegment({
+  x,
+  centerY,
+  width,
+  height,
+  gradientId,
+  filterId,
+  label,
+}: {
+  x: number;
+  centerY: number;
+  width: number;
+  height: number;
+  gradientId: string;
+  filterId?: string;
+  label?: string;
+}) {
+  const safeWidth = Math.max(4, width);
+  const radiusX = Math.min(5, safeWidth / 5);
+  const topY = centerY - height / 2;
+  const fill = `url(#${gradientId})`;
+  return (
+    <g>
+      <rect
+        fill={fill}
+        filter={filterId ? `url(#${filterId})` : undefined}
+        height={height}
+        rx={Math.min(8, height / 5)}
+        stroke="#344348"
+        strokeWidth="2"
+        width={safeWidth}
+        x={x}
+        y={topY}
+      />
+      <ellipse cx={x + radiusX} cy={centerY} fill={fill} rx={radiusX} ry={height / 2 - 1} stroke="#344348" strokeWidth="1.5" />
+      <ellipse cx={x + safeWidth - radiusX} cy={centerY} fill="none" rx={radiusX} ry={height / 2 - 1} stroke="#657277" strokeWidth="1.5" />
+      <rect fill={fill} height={height + 6} rx="3" stroke="#2d3b40" strokeWidth="1.5" width={Math.min(8, safeWidth / 4)} x={x + 2} y={topY - 3} />
+      {safeWidth > 18 ? (
+        <line opacity="0.72" stroke="#fff" strokeLinecap="round" strokeWidth="2" x1={x + 12} x2={x + safeWidth - 10} y1={topY + 9} y2={topY + 9} />
+      ) : null}
+      {label && safeWidth >= 28 ? <SchemePartCallout label={label} x={x + safeWidth / 2} y={topY - 18} /> : null}
+    </g>
+  );
+}
+
+function HorizontalTransitionAssembly({
+  flowStartX,
+  centerY,
+  direction,
+  gradientId,
+  filterId,
+}: {
+  flowStartX: number;
+  centerY: number;
+  direction: "left" | "right";
+  gradientId: string;
+  filterId: string;
+}) {
+  const damperWidth = 72;
+  const capWidth = 52;
+  const sign = direction === "right" ? 1 : -1;
+  const damperCenterX = flowStartX + sign * damperWidth / 2;
+  const capCenterX = flowStartX + sign * (damperWidth + capWidth / 2);
+  const transform = direction === "left" ? `translate(${flowStartX * 2} 0) scale(-1 1)` : undefined;
+  const fill = `url(#${gradientId})`;
+
+  return (
+    <g aria-label="Поворотный шибер и опорная сэндвич-заглушка">
+      <g transform={transform}>
+        <rect
+          fill={fill}
+          filter={`url(#${filterId})`}
+          height="44"
+          rx="8"
+          stroke="#344348"
+          strokeWidth="2"
+          width={damperWidth}
+          x={flowStartX}
+          y={centerY - 22}
+        />
+        <ellipse cx={flowStartX + 4} cy={centerY} fill={fill} rx="4" ry="21" stroke="#344348" strokeWidth="1.5" />
+        <rect fill={fill} height="52" rx="3" stroke="#2d3b40" strokeWidth="1.5" width="9" x={flowStartX + 4} y={centerY - 26} />
+        <rect fill={fill} height="52" rx="3" stroke="#2d3b40" strokeWidth="1.5" width="9" x={flowStartX + damperWidth - 11} y={centerY - 26} />
+        <line opacity="0.74" stroke="#fff" strokeLinecap="round" strokeWidth="2" x1={flowStartX + 15} x2={flowStartX + damperWidth - 15} y1={centerY - 11} y2={centerY - 11} />
+
+        <path
+          d={`M${flowStartX + damperWidth},${centerY - 20} L${flowStartX + damperWidth + 12},${centerY - 20} L${flowStartX + damperWidth + 19},${centerY - 27} L${flowStartX + damperWidth + capWidth - 7},${centerY - 27} L${flowStartX + damperWidth + capWidth},${centerY - 23} L${flowStartX + damperWidth + capWidth},${centerY + 23} L${flowStartX + damperWidth + capWidth - 7},${centerY + 27} L${flowStartX + damperWidth + 19},${centerY + 27} L${flowStartX + damperWidth + 12},${centerY + 20} Z`}
+          fill={fill}
+          filter={`url(#${filterId})`}
+          stroke="#344348"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <rect fill={fill} height="58" rx="3" stroke="#2d3b40" strokeWidth="1.5" width="9" x={flowStartX + damperWidth + capWidth - 10} y={centerY - 29} />
+        <line opacity="0.72" stroke="#fff" strokeLinecap="round" strokeWidth="2" x1={flowStartX + damperWidth + 21} x2={flowStartX + damperWidth + capWidth - 14} y1={centerY - 14} y2={centerY - 14} />
+      </g>
+
+      <line stroke="#4b5b60" strokeWidth="3" x1={damperCenterX} x2={damperCenterX} y1={centerY - 25} y2={centerY - 43} />
+      <circle cx={damperCenterX} cy={centerY - 45} fill="#e46235" r="5" stroke="#923719" strokeWidth="2" />
+      <line stroke="#923719" strokeLinecap="round" strokeWidth="4" x1={damperCenterX} x2={damperCenterX + 18} y1={centerY - 45} y2={centerY - 57} />
+      <SchemePartCallout label="Ш" x={damperCenterX} y={centerY - 75} />
+      <SchemePartCallout label="ОЗ" x={capCenterX} y={centerY - 75} />
+    </g>
+  );
+}
+
 function DynamicWallTopScheme({
   assetBasePath,
   variant,
@@ -260,36 +376,13 @@ function DynamicWallTopScheme({
       {horizontalPipes.length ? (
         <g aria-label={`Горизонтальные трубы: ${horizontalPipes.length}`}>
           <rect fill="#fff" height="76" width={horizontalEndX - 258} x="258" y="1050" />
-          <g aria-label="Одноконтурный поворотный шибер после отвода 90 градусов">
-            <rect
-              fill="url(#dynamic-steel-horizontal)"
-              filter="url(#dynamic-pipe-shadow)"
-              height="44"
-              rx="5"
-              stroke="#3f4b4f"
-              strokeWidth="2"
-              width="72"
-              x="258"
-              y="1066"
-            />
-            <line stroke="#29363b" strokeWidth="4" x1="260" x2="260" y1="1063" y2="1113" />
-            <line stroke="#4b5b60" strokeWidth="3" x1="294" x2="294" y1="1066" y2="1049" />
-            <circle cx="294" cy="1047" fill="#e46235" r="5" stroke="#923719" strokeWidth="2" />
-            <line stroke="#923719" strokeLinecap="round" strokeWidth="4" x1="294" x2="312" y1="1047" y2="1035" />
-            <text className="dynamic-pipe-index" textAnchor="middle" x="294" y="1094">Ш</text>
-          </g>
-          <g aria-label="Сэндвич-заглушка опорная после поворотного шибера">
-            <path
-              d="M330 1068 L382 1061 L382 1115 L330 1108 Z"
-              fill="url(#dynamic-steel-horizontal)"
-              filter="url(#dynamic-pipe-shadow)"
-              stroke="#3f4b4f"
-              strokeLinejoin="round"
-              strokeWidth="2"
-            />
-            <line stroke="#29363b" strokeWidth="4" x1="380" x2="380" y1="1058" y2="1118" />
-            <text className="dynamic-pipe-index" textAnchor="middle" x="356" y="1094">ОЗ</text>
-          </g>
+          <HorizontalTransitionAssembly
+            centerY={1088}
+            direction="right"
+            filterId="dynamic-pipe-shadow"
+            flowStartX={258}
+            gradientId="dynamic-steel-horizontal"
+          />
           {horizontalPipes.map((pipe, index) => {
             const width = horizontalNominalMm > 0
               ? horizontalWidth * (pipe.nominalMm / horizontalNominalMm)
@@ -297,23 +390,16 @@ function DynamicWallTopScheme({
             const x = horizontalCursorX;
             horizontalCursorX += width;
             return (
-              <g key={pipe.id}>
-                <rect
-                  fill="url(#dynamic-steel-horizontal)"
-                  filter="url(#dynamic-pipe-shadow)"
-                  height="54"
-                  rx="5"
-                  stroke="#3f4b4f"
-                  strokeWidth="2"
-                  width={Math.max(2, width - 4)}
-                  x={x + 2}
-                  y="1061"
-                />
-                <line stroke="#29363b" strokeWidth="4" x1={x + 3} x2={x + 3} y1="1058" y2="1118" />
-                <text className="dynamic-pipe-index" textAnchor="middle" x={x + width / 2} y="1094">
-                  Г{index + 1}
-                </text>
-              </g>
+              <HorizontalPipeSegment
+                centerY={1088}
+                filterId="dynamic-pipe-shadow"
+                gradientId="dynamic-steel-horizontal"
+                height={54}
+                key={pipe.id}
+                label={`Г${index + 1}`}
+                width={Math.max(2, width - 4)}
+                x={x + 2}
+              />
             );
           })}
           <line stroke="#29363b" strokeWidth="4" x1={horizontalEndX} x2={horizontalEndX} y1="1058" y2="1118" />
@@ -396,50 +482,24 @@ function DynamicWallRearScheme({
       <g aria-label="Горизонтальное подключение: одноконтурная труба, поворотный шибер, опорная заглушка и сэндвич-трубы">
         {horizontalSinglePipes.length ? (
           <g aria-label={`Одноконтурные соединительные трубы: ${horizontalSinglePipes.length}`}>
-            <rect
-              fill="url(#rear-dynamic-steel)"
-              height="42"
-              rx="5"
-              stroke="#39474c"
-              strokeWidth="2"
-              width="54"
-              x="422"
-              y="1033"
+            <HorizontalPipeSegment
+              centerY={1054}
+              filterId="rear-dynamic-shadow"
+              gradientId="rear-dynamic-steel"
+              height={42}
+              label="1К"
+              width={54}
+              x={422}
             />
-            <line stroke="#263439" strokeWidth="4" x1="474" x2="474" y1="1030" y2="1078" />
-            <text className="dynamic-pipe-index" textAnchor="middle" x="449" y="1059">1К</text>
           </g>
         ) : null}
-        <g aria-label="Одноконтурный поворотный шибер после соединительной трубы">
-          <rect
-            fill="url(#rear-dynamic-steel)"
-            filter="url(#rear-dynamic-shadow)"
-            height="44"
-            rx="5"
-            stroke="#39474c"
-            strokeWidth="2"
-            width="72"
-            x="350"
-            y="1032"
-          />
-          <line stroke="#263439" strokeWidth="4" x1="352" x2="352" y1="1029" y2="1079" />
-          <line stroke="#4b5b60" strokeWidth="3" x1="386" x2="386" y1="1032" y2="1015" />
-          <circle cx="386" cy="1013" fill="#e46235" r="5" stroke="#923719" strokeWidth="2" />
-          <line stroke="#923719" strokeLinecap="round" strokeWidth="4" x1="386" x2="404" y1="1013" y2="1001" />
-          <text className="dynamic-pipe-index" textAnchor="middle" x="386" y="1060">Ш</text>
-        </g>
-        <g aria-label="Сэндвич-заглушка опорная после поворотного шибера">
-          <path
-            d="M298 1027 L350 1034 L350 1074 L298 1081 Z"
-            fill="url(#rear-dynamic-steel)"
-            filter="url(#rear-dynamic-shadow)"
-            stroke="#39474c"
-            strokeLinejoin="round"
-            strokeWidth="2"
-          />
-          <line stroke="#263439" strokeWidth="4" x1="299" x2="299" y1="1024" y2="1084" />
-          <text className="dynamic-pipe-index" textAnchor="middle" x="324" y="1059">ОЗ</text>
-        </g>
+        <HorizontalTransitionAssembly
+          centerY={1054}
+          direction="left"
+          filterId="rear-dynamic-shadow"
+          flowStartX={422}
+          gradientId="rear-dynamic-steel"
+        />
         <g aria-label={`Горизонтальные сэндвич-трубы: ${horizontalSandwichPipes.length}`}>
           {horizontalSandwichPipes.map((pipe, index) => {
             const width = horizontalSandwichNominalMm > 0
@@ -452,22 +512,16 @@ function DynamicWallRearScheme({
               ), 0);
             const x = 298 - previousWidth - width;
             return (
-              <g key={`rear-horizontal-${pipe.id}`}>
-                <rect
-                  fill="url(#rear-dynamic-steel)"
-                  height="54"
-                  rx="5"
-                  stroke="#39474c"
-                  strokeWidth="2"
-                  width={Math.max(2, width - 3)}
-                  x={x + 2}
-                  y="1027"
-                />
-                <line stroke="#263439" strokeWidth="4" x1={x + 2} x2={x + 2} y1="1024" y2="1084" />
-                <text className="dynamic-pipe-index" textAnchor="middle" x={x + width / 2} y="1059">
-                  Г{index + 1}
-                </text>
-              </g>
+              <HorizontalPipeSegment
+                centerY={1054}
+                filterId="rear-dynamic-shadow"
+                gradientId="rear-dynamic-steel"
+                height={54}
+                key={`rear-horizontal-${pipe.id}`}
+                label={`Г${index + 1}`}
+                width={Math.max(2, width - 3)}
+                x={x + 2}
+              />
             );
           })}
         </g>
