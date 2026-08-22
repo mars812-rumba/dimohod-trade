@@ -26,7 +26,7 @@ import {
   type ChimneyCalculation,
   type PipeLayoutVariant,
 } from "@/lib/chimneyCalculation";
-import { RouteImageViewer } from "@/components/RouteImageViewer";
+import { wallRouteFacadeConsolePositions } from "@/lib/wallRouteLayout";
 import { productSelectionPath } from "@/lib/productUrls";
 import type { ProductListItem, ProductListResponse } from "@/lib/api";
 import {
@@ -245,6 +245,132 @@ function DynamicWallTopScheme({
         <text x="24" y="29">По выбранной смете</text>
         <text x="24" y="55">
           наружные трубы — {outdoorPipes.length} шт. · горизонтальные — {horizontalPipes.length} шт.
+        </text>
+      </g>
+    </svg>
+  );
+}
+
+function DynamicWallRearScheme({
+  assetBasePath,
+  variant,
+}: {
+  assetBasePath: string;
+  variant: PipeLayoutVariant | null;
+}) {
+  const outdoorPipes = variant?.pipes.filter((pipe) => (
+    pipe.axis === "vertical" && pipe.contour === "сэндвич"
+  )) ?? [];
+  const horizontalPipes = variant?.pipes.filter((pipe) => pipe.axis === "horizontal") ?? [];
+  const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
+  const consolePositionsMm = wallRouteFacadeConsolePositions(outdoorNominalMm);
+  const stackTopY = 318;
+  const stackBottomY = 1004;
+  const stackHeight = stackBottomY - stackTopY;
+  let outdoorCursorY = stackBottomY;
+
+  return (
+    <svg
+      aria-labelledby="dynamic-wall-rear-title dynamic-wall-rear-description"
+      className="configurator-dynamic-png-scheme"
+      role="img"
+      viewBox="0 0 1023 1537"
+    >
+      <title id="dynamic-wall-rear-title">Динамическая схема горизонтального подключения через стену</title>
+      <desc id="dynamic-wall-rear-description">
+        Количество труб соответствует смете. На наружной колонне показаны универсальные консоли с силовыми хомутами через каждые два метра и отдельная опора под тройником.
+      </desc>
+      <defs>
+        <linearGradient id="rear-dynamic-steel" x1="0" x2="1">
+          <stop offset="0" stopColor="#566166" />
+          <stop offset="0.18" stopColor="#c7ced0" />
+          <stop offset="0.42" stopColor="#f7f8f7" />
+          <stop offset="0.68" stopColor="#aeb8ba" />
+          <stop offset="0.86" stopColor="#eef1f0" />
+          <stop offset="1" stopColor="#4d585d" />
+        </linearGradient>
+        <linearGradient id="rear-dynamic-console" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stopColor="#f2f4f3" />
+          <stop offset="0.48" stopColor="#aab2b4" />
+          <stop offset="1" stopColor="#687277" />
+        </linearGradient>
+        <filter id="rear-dynamic-shadow" height="140%" width="160%" x="-30%" y="-20%">
+          <feDropShadow dx="2" dy="4" floodColor="#182428" floodOpacity="0.2" stdDeviation="4" />
+        </filter>
+      </defs>
+
+      <image
+        height="1537"
+        href={`${assetBasePath}/images/home/banya-route-through-wall-three-consoles.png`}
+        width="1023"
+        x="0"
+        y="0"
+      />
+
+      <g aria-label={`Наружные сэндвич-трубы: ${outdoorPipes.length}`}>
+        <rect fill="#fff" height={stackHeight + 8} width="102" x="119" y={stackTopY - 4} />
+        <rect fill="#fff" height={stackHeight + 36} width="73" x="216" y={stackTopY - 12} />
+        {outdoorPipes.map((pipe, index) => {
+          const height = outdoorNominalMm > 0
+            ? stackHeight * (pipe.nominalMm / outdoorNominalMm)
+            : stackHeight / Math.max(1, outdoorPipes.length);
+          outdoorCursorY -= height;
+          const y = outdoorCursorY;
+          return (
+            <g key={pipe.id}>
+              <rect
+                fill="url(#rear-dynamic-steel)"
+                filter="url(#rear-dynamic-shadow)"
+                height={Math.max(2, height - 4)}
+                rx="5"
+                stroke="#39474c"
+                strokeWidth="2"
+                width="72"
+                x="136"
+                y={y + 2}
+              />
+              <line stroke="#263439" strokeWidth="4" x1="133" x2="211" y1={y + 3} y2={y + 3} />
+              <line stroke="rgba(255,255,255,0.72)" strokeWidth="2" x1="143" x2="143" y1={y + 10} y2={y + height - 8} />
+              <text className="dynamic-pipe-index" textAnchor="middle" x="172" y={y + height / 2 + 5}>
+                {index + 1}
+              </text>
+            </g>
+          );
+        })}
+        {!outdoorPipes.length ? (
+          <rect className="dynamic-pipe-placeholder" height={stackHeight} width="72" x="136" y={stackTopY} />
+        ) : null}
+        <line stroke="#263439" strokeWidth="4" x1="133" x2="211" y1={stackBottomY} y2={stackBottomY} />
+      </g>
+
+      <g aria-label={`Фасадные консоли с силовыми хомутами: ${consolePositionsMm.length}`}>
+        {consolePositionsMm.map((positionMm, index) => {
+          const ratio = outdoorNominalMm > 0 ? positionMm / outdoorNominalMm : 0;
+          const y = Math.max(stackTopY + 78, Math.min(stackBottomY - 88, stackBottomY - ratio * stackHeight));
+          return (
+            <g key={`${positionMm}-${index}`}>
+              <polygon
+                fill="url(#rear-dynamic-console)"
+                filter="url(#rear-dynamic-shadow)"
+                points={`205,${y + 8} 282,${y + 8} 282,${y + 60}`}
+                stroke="#3f494d"
+                strokeLinejoin="round"
+                strokeWidth="2"
+              />
+              <line stroke="#687277" strokeWidth="3" x1="217" x2="272" y1={y + 19} y2={y + 48} />
+              <rect fill="url(#rear-dynamic-steel)" height="18" rx="5" stroke="#29363b" strokeWidth="2" width="84" x="130" y={y} />
+              <circle cx="137" cy={y + 9} fill="#303c41" r="3" />
+              <circle cx="207" cy={y + 9} fill="#303c41" r="3" />
+            </g>
+          );
+        })}
+      </g>
+
+      <g className="dynamic-scheme-summary" transform="translate(24 1427)">
+        <rect height="78" rx="18" width="650" />
+        <text x="24" y="30">По выбранной смете</text>
+        <text x="24" y="58">
+          сэндвич-трубы — {outdoorPipes.length} шт. · консоли — {consolePositionsMm.length + 1} шт. · силовые хомуты — {consolePositionsMm.length} шт.
         </text>
       </g>
     </svg>
@@ -1642,12 +1768,9 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               </div>
             ) : calculation.routeKind === "wall-rear" ? (
               <div className="configurator-wall-route-png">
-                <RouteImageViewer
-                  alt="Схема горизонтального подключения дымохода через стену с тройником и тремя универсальными консолями"
-                  previewSizes="(max-width: 720px) calc(100vw - 56px), 460px"
-                  quality={88}
-                  src="/images/home/banya-route-through-wall-three-consoles.png"
-                  title="Горизонтальное подключение через стену"
+                <DynamicWallRearScheme
+                  assetBasePath={assetBasePath}
+                  variant={selectedVariant}
                 />
               </div>
             ) : calculation.routeKind === "wall-top" ? (

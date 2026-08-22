@@ -514,6 +514,21 @@ function addRouteNodes(
       catalogDiameterMode: "sandwich-outer-range",
       quantityNote: `1 под тройником + ${Math.max(0, wallConsoleQuantity - 1)} на наружной колонне.`,
     });
+    if (wallConsoleQuantity > 1) {
+      bom.push({
+        key: "outside-console-power-clamps",
+        productKind: "крепеж",
+        label: "Хомут силовой для консоли",
+        quantity: wallConsoleQuantity - 1,
+        zone: "wall/outdoor",
+        selectionReason: "По одному силовому хомуту на каждую универсальную консоль наружной колонны; опора под тройником считается отдельно.",
+        requiresSku: true,
+        catalogCategorySlug: "homuty-i-krepezh",
+        catalogSearch: "Хомут силовой для консоли",
+        catalogDiameterMode: "sandwich-outer-exact",
+        quantityNote: "По одному на каждую фасадную консоль с шагом не более 2000 мм.",
+      });
+    }
   } else {
     bom.push({
       key: "top-outlet-elbow",
@@ -553,6 +568,21 @@ function addRouteNodes(
       catalogDiameterMode: "sandwich-outer-range",
       quantityNote: `1 под тройником + ${Math.max(0, wallConsoleQuantity - 1)} на наружной колонне.`,
     });
+    if (wallConsoleQuantity > 1) {
+      bom.push({
+        key: "outside-console-power-clamps",
+        productKind: "крепеж",
+        label: "Хомут силовой для консоли",
+        quantity: wallConsoleQuantity - 1,
+        zone: "wall/outdoor",
+        selectionReason: "По одному силовому хомуту на каждую универсальную консоль наружной колонны; опора под тройником считается отдельно.",
+        requiresSku: true,
+        catalogCategorySlug: "homuty-i-krepezh",
+        catalogSearch: "Хомут силовой для консоли",
+        catalogDiameterMode: "sandwich-outer-exact",
+        quantityNote: "По одному на каждую фасадную консоль с шагом не более 2000 мм.",
+      });
+    }
   }
   bom.push({ key: "termination", productKind: "оголовок", label: "Оголовок", quantity: 1, contour: "сэндвич", zone: "termination", selectionReason: "Завершает рассчитанную трассу.", requiresSku: true });
 }

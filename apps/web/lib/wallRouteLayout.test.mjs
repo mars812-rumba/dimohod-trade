@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  wallRouteFacadeConsolePositions,
   wallRearRouteConsoleQuantity,
   wallRearRoutePipePlan,
   wallRouteConsoleQuantity,
@@ -28,4 +29,10 @@ test("adds one tee support plus one console for every two metres of outdoor pipe
   assert.equal(wallRearRouteConsoleQuantity(5, 1000), 4);
   assert.equal(wallRouteConsoleQuantity(4000), 3);
   assert.equal(wallRouteConsoleQuantity(5000), 4);
+});
+
+test("places facade console and power-clamp pairs at intervals no longer than two metres", () => {
+  assert.deepEqual(wallRouteFacadeConsolePositions(0), []);
+  assert.deepEqual(wallRouteFacadeConsolePositions(4000), [2000, 4000]);
+  assert.deepEqual(wallRouteFacadeConsolePositions(5000), [2000, 4000, 5000]);
 });

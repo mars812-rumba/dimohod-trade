@@ -27,9 +27,16 @@ export function wallRearRouteConsoleQuantity(
   return wallRouteConsoleQuantity(outdoorPipeLengthMm);
 }
 
+export function wallRouteFacadeConsolePositions(outdoorPipeLengthMm: number): number[] {
+  const normalizedLengthMm = Math.max(0, Math.round(outdoorPipeLengthMm));
+  if (!normalizedLengthMm) return [];
+
+  const quantity = Math.ceil(normalizedLengthMm / WALL_CONSOLE_SPACING_MM);
+  return Array.from({ length: quantity }, (_, index) => (
+    Math.min((index + 1) * WALL_CONSOLE_SPACING_MM, normalizedLengthMm)
+  ));
+}
+
 export function wallRouteConsoleQuantity(outdoorPipeLengthMm: number): number {
-  const facadeConsoles = Math.ceil(
-    Math.max(0, Math.round(outdoorPipeLengthMm)) / WALL_CONSOLE_SPACING_MM,
-  );
-  return 1 + facadeConsoles;
+  return 1 + wallRouteFacadeConsolePositions(outdoorPipeLengthMm).length;
 }
