@@ -137,8 +137,12 @@ function effectiveComponentHeight(nominalLengthMm: number): number {
 
 function measuredDiameter(draft: ScenarioConfiguratorDraft | null): Pick<ChimneyCalculation, "diameterMm" | "diameterStatus"> {
   if (!draft) return { diameterMm: null, diameterStatus: "missing" };
-  const x = positiveNumber(draft.diameterX || draft.diameter);
-  const y = positiveNumber(draft.diameterY || draft.diameter);
+  const diameter = positiveNumber(draft.diameter);
+  if (diameter) return { diameterMm: Math.round(diameter), diameterStatus: "known" };
+
+  // Backward compatibility for profiles saved by the former X/Y form.
+  const x = positiveNumber(draft.diameterX);
+  const y = positiveNumber(draft.diameterY);
   if (x && y) {
     if (Math.round(x) !== Math.round(y)) return { diameterMm: null, diameterStatus: "oval" };
     return { diameterMm: Math.round((x + y) / 2), diameterStatus: "known" };

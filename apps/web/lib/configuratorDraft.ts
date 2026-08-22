@@ -10,7 +10,7 @@ export type ScenarioConfiguratorDraft = {
   objectType: MeasurementObjectType;
   equipmentStatus: EquipmentStatus;
   passportStatus: PassportStatus;
-  equipmentType: "" | "pech" | "kamin" | "tt-kotel" | "gaz";
+  equipmentType: "" | "bania" | "pech" | "kamin" | "tt-kotel" | "gaz";
   manufacturer: string;
   model: string;
   outlet: "" | "top" | "rear";
@@ -134,9 +134,11 @@ export function scenarioDraftConfiguratorHref(draft: ScenarioConfiguratorDraft):
   const connection = [
     draft.manufacturer.trim(),
     draft.model.trim(),
-    draft.diameterX || draft.diameterY
-      ? `патрубок X ${draft.diameterX || "?"} / Y ${draft.diameterY || "?"} мм`
-      : draft.diameter ? `патрубок ${draft.diameter} мм` : "",
+    draft.diameter
+      ? `патрубок ${draft.diameter} мм`
+      : draft.diameterX || draft.diameterY
+        ? `патрубок X ${draft.diameterX || "?"} / Y ${draft.diameterY || "?"} мм`
+        : "",
     draft.outlet === "rear" && draft.rearOutletBottomHeight
       ? `нижняя кромка патрубка ${draft.rearOutletBottomHeight} мм от пола`
       : draft.connectionHeight ? `верх отопителя ${draft.connectionHeight} мм от пола` : "",
@@ -164,9 +166,13 @@ export function parseScenarioDraft(value: string | null): ScenarioConfiguratorDr
     const parsed = JSON.parse(value) as Partial<ScenarioConfiguratorDraft>;
     if (parsed.scenario !== "banya" && parsed.scenario !== "dom") return null;
     const draft = { ...createEmptyScenarioDraft(parsed.scenario), ...parsed };
-    // Older profiles stored one diameter field. Keep it visible after migration.
-    if (!draft.diameterX && draft.diameter) draft.diameterX = draft.diameter;
-    if (!draft.diameterY && draft.diameter) draft.diameterY = draft.diameter;
+    // Profiles from the X/Y form can migrate only when they contain one
+    // unambiguous outer diameter. Different values still require a new measure.
+    if (!draft.diameter) {
+      if (draft.diameterX && !draft.diameterY) draft.diameter = draft.diameterX;
+      if (!draft.diameterX && draft.diameterY) draft.diameter = draft.diameterY;
+      if (draft.diameterX && draft.diameterX === draft.diameterY) draft.diameter = draft.diameterX;
+    }
     return draft;
   } catch {
     return null;

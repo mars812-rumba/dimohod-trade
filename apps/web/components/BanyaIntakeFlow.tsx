@@ -31,6 +31,34 @@ type BanyaIntakeFlowProps = {
   onProfileSaved?: () => void;
 };
 
+function normalizeIntakeDraft(draft: ScenarioConfiguratorDraft): ScenarioConfiguratorDraft {
+  const objectType = draft.objectType === "banya" ? "banya" : "house";
+  const equipmentType = draft.equipmentType === "bania"
+    || draft.equipmentType === "pech"
+    || draft.equipmentType === "tt-kotel"
+    ? draft.equipmentType
+    : "";
+  const legacyDiameter = !draft.diameter
+    && ((draft.diameterX && !draft.diameterY)
+      || (!draft.diameterX && draft.diameterY)
+      || (draft.diameterX && draft.diameterX === draft.diameterY))
+    ? draft.diameterX || draft.diameterY
+    : "";
+  const diameter = draft.diameter || legacyDiameter;
+  const diameterSource = draft.diameterSource === "passport"
+    ? diameter ? "measured" : "unknown"
+    : draft.diameterSource;
+
+  return {
+    ...draft,
+    objectType,
+    scenario: objectType === "banya" ? "banya" : "dom",
+    equipmentType,
+    diameter,
+    diameterSource,
+  };
+}
+
 const statusLabels: Record<DraftFieldStatus, string> = {
   known: "✓ известно",
   measure: "○ нужно измерить",
@@ -139,10 +167,10 @@ export function BanyaIntakeFlow({
   const initialScenario = initialObjectType && initialObjectType !== "banya"
     ? "dom"
     : content.slug === "dom" ? "dom" : "banya";
-  const emptyDraft = {
+  const emptyDraft = normalizeIntakeDraft({
     ...createEmptyScenarioDraft(initialScenario),
     ...(initialObjectType ? { objectType: initialObjectType } : {}),
-  };
+  });
   const storageKey = "dimohod-trade:measurements-intake:v2";
   const requestedProfileId = initialProfileId;
   const requestedRoute = initialRoute;
@@ -172,8 +200,8 @@ export function BanyaIntakeFlow({
       title: "Как измерить высоту заднего патрубка",
     },
     outletDiameter: {
-      src: `${assetBasePath}/images/measurements/stove-outlet-diameter-mobile.webp`,
-      alt: "Вертикальная схема наружного замера патрубка по осям X и Y",
+      src: `${assetBasePath}/images/measurements/stove-outlet-outer-diameter-photo.webp`,
+      alt: "Рулетка проходит через центр патрубка от одной наружной кромки до другой",
       title: "Как измерить наружный диаметр патрубка",
     },
     roomHeight: {
@@ -237,11 +265,11 @@ export function BanyaIntakeFlow({
       const route = requestedRoute === "ceiling" || requestedRoute === "wall" || requestedRoute === "wall-direct"
         ? requestedRoute
         : mergedDraft.route;
-      setIntake({
+      setIntake(normalizeIntakeDraft({
         ...mergedDraft,
         route,
         floorThickness: mergedDraft.floorThickness || emptyDraft.floorThickness,
-      });
+      }));
       if (requestedProfile) {
         setActiveProfileId(requestedProfile.id);
         setProfileName(requestedProfile.name);
@@ -367,8 +395,6 @@ export function BanyaIntakeFlow({
                 {[
                   ["banya", "Баня"],
                   ["house", "Дом"],
-                  ["boiler-room", "Котельная"],
-                  ["other", "Другое"],
                 ].map(([value, label]) => (
                   <label key={value}>
                     <input
@@ -416,10 +442,9 @@ export function BanyaIntakeFlow({
                 <legend>Тип отопителя</legend>
                 <div className={styles.choiceRow}>
                   {[
-                    ["pech", isHome ? "Отопительная печь" : "Банная печь"],
-                    ["kamin", "Камин"],
+                    ["bania", "Банная печь"],
+                    ["pech", "Печь"],
                     ["tt-kotel", "Твердотопливный котёл"],
-                    ["gaz", "Газовый котёл"],
                   ].map(([value, label]) => (
                     <label key={label}>
                       <input
@@ -432,74 +457,11 @@ export function BanyaIntakeFlow({
                     </label>
                   ))}
                 </div>
-                {isHome ? <p className={styles.choiceContext}>
-                  {intake.equipmentType === "gaz" ? (
-                    <>
-                      Для газового котла сначала откройте{" "}
-                      <Link href="/solutions/gazovyy-kotel">отдельный сценарий</Link>:
-                      допустимый вариант подключения проверяется по документации модели.
-                    </>
-                  ) : (
-                    <>
-                      Подробные вопросы по оборудованию: <Link href="/solutions/pech">печь</Link>,{" "}
-                      <Link href="/solutions/kamin">камин</Link> или{" "}
-                      <Link href="/solutions/tverdotoplivny-kotel">твердотопливный котёл</Link>.
-                    </>
-                  )}
-                </p> : null}
               </fieldset>
             ) : null}
-            {intake.equipmentStatus !== "not-selected" ? <>
-            <fieldset className={styles.choiceFieldset}>
-              <legend>Есть паспорт или инструкция отопителя?</legend>
-              <div className={styles.choiceRow}>
-                {[["yes", "Да"], ["no", "Нет"], ["unknown", "Пока не знаю"]].map(([value, label]) => (
-                  <label key={value}>
-                    <input
-                      checked={intake.passportStatus === value}
-                      name="passport-status"
-                      onChange={() => update("passportStatus", value as ScenarioConfiguratorDraft["passportStatus"])}
-                      type="radio"
-                    />
-                    <span>{label}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            <div className={styles.fieldGrid}>
-              <div className={styles.measurementField}>
-                <label className={styles.field}>
-                  <span>Производитель</span>
-                  <input autoComplete="organization" onChange={(event) => updateMeasurement("manufacturer", event.target.value)} placeholder="Укажите, если известен" value={intake.manufacturer} />
-                </label>
-                <div className={styles.fieldMeta}>
-                  <span data-status={draftFieldStatus(intake, "manufacturer")}>{statusLabels[draftFieldStatus(intake, "manufacturer")]}</span>
-                </div>
-              </div>
-              <div className={styles.measurementField}>
-                <label className={styles.field}>
-                  <span>Модель</span>
-                  <input onChange={(event) => updateMeasurement("model", event.target.value)} placeholder="Можно указать позже" value={intake.model} />
-                </label>
-                <div className={styles.fieldMeta}>
-                  <span data-status={draftFieldStatus(intake, "model")}>{statusLabels[draftFieldStatus(intake, "model")]}</span>
-                  {draftFieldStatus(intake, "model") !== "known" ? <button onClick={() => toggleDeferred("model")} type="button">{draftFieldStatus(intake, "model") === "later" ? "Вернуть к уточнению" : "Уточнить позже"}</button> : null}
-                </div>
-              </div>
-            </div>
-            <details className={styles.inlineHelp}>
-              <summary>
-                <span>Зачем нужна точная модель?</span>
-                <ChevronDown size={19} aria-hidden />
-              </summary>
-              <div>
-                <p>В паспорте конкретного оборудования проверяют разрешённое топливо, размер, форму и направление выходного патрубка, а также требования производителя к дымовому каналу и его обслуживанию.</p>
-                <p>Если модель ещё не выбрана, маршрут можно начать собирать сейчас, а соединительные параметры оставить для уточнения.</p>
-              </div>
-            </details>
-            </> : (
+            {intake.equipmentStatus === "not-selected" ? (
               <p className={styles.choiceContext}>Можно продолжить с замерами здания. Данные отопителя добавите после выбора оборудования.</p>
-            )}
+            ) : null}
           </section>
 
           {intake.equipmentStatus !== "not-selected" ? <section className={styles.intakeStep} aria-labelledby="outlet-step-title">
@@ -559,7 +521,7 @@ export function BanyaIntakeFlow({
               <fieldset className={`${styles.choiceFieldset} ${styles.fieldWide}`}>
                 <legend>Откуда известен диаметр?</legend>
                 <div className={styles.choiceRow}>
-                  {[["passport", "Из паспорта"], ["measured", "Измерен"], ["unknown", "Пока неизвестен"]].map(([value, label]) => (
+                  {[["measured", "Измерен"], ["unknown", "Пока неизвестен"]].map(([value, label]) => (
                     <label key={value}>
                       <input checked={intake.diameterSource === value} name="diameter-source" onChange={() => update("diameterSource", value as ScenarioConfiguratorDraft["diameterSource"])} type="radio" />
                       <span>{label}</span>
@@ -568,14 +530,9 @@ export function BanyaIntakeFlow({
                 </div>
               </fieldset>
               {intake.diameterSource !== "unknown" ? <>
-              <MeasurementField draft={intake} field="diameterX" label="Наружный диаметр по оси X" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По горизонтали" unit="мм">
+              <MeasurementField draft={intake} field="diameter" label="Наружный диаметр патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От внешнего края до внешнего края" unit="мм">
                 <MeasurementHelp scheme={schemes.outletDiameter}>
-                  <p>Измерьте патрубок от внешней стенки до внешней стенки строго через центр по горизонтали.</p>
-                </MeasurementHelp>
-              </MeasurementField>
-              <MeasurementField draft={intake} field="diameterY" label="Наружный диаметр по оси Y" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По вертикали" unit="мм">
-                <MeasurementHelp scheme={schemes.outletDiameter}>
-                  <p>Повторите наружный замер через центр по вертикали. Разница между X и Y покажет овальность патрубка.</p>
+                  <p>Приложите рулетку через центр патрубка и измерьте расстояние от одной наружной кромки до другой. Внутреннее отверстие не измеряйте.</p>
                 </MeasurementHelp>
               </MeasurementField>
               </> : null}

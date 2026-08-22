@@ -906,9 +906,8 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     }
     if (transferredDraft.outlet) setOutlet(transferredDraft.outlet === "top" ? "vertical" : "horizontal");
 
-    const draftStove = transferredDraft.scenario === "banya"
-      ? "bania"
-      : (transferredDraft.equipmentType || "pech");
+    const draftStove = transferredDraft.equipmentType
+      || (transferredDraft.scenario === "banya" ? "bania" : "pech");
     setStove(draftStove as StoveType);
 
     const draftFloors = Number(transferredDraft.levels);
@@ -936,9 +935,11 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       const connection = [
         transferredDraft.manufacturer.trim(),
         transferredDraft.model.trim(),
-        transferredDraft.diameterX || transferredDraft.diameterY
-          ? `патрубок X ${transferredDraft.diameterX || "?"} / Y ${transferredDraft.diameterY || "?"} мм`
-          : transferredDraft.diameter ? `патрубок ${transferredDraft.diameter} мм` : "",
+        transferredDraft.diameter
+          ? `патрубок ${transferredDraft.diameter} мм`
+          : transferredDraft.diameterX || transferredDraft.diameterY
+            ? `патрубок X ${transferredDraft.diameterX || "?"} / Y ${transferredDraft.diameterY || "?"} мм`
+            : "",
         transferredDraft.outlet === "rear" && transferredDraft.rearOutletBottomHeight
           ? `нижняя кромка патрубка ${transferredDraft.rearOutletBottomHeight} мм от пола`
           : transferredDraft.connectionHeight ? `верх отопителя ${transferredDraft.connectionHeight} мм от пола` : "",
