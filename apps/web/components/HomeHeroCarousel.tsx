@@ -53,7 +53,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
-  const mobileImagePath = `${assetBasePath}/images/home/hero-projects/${fileName.replace(".webp", ".mobile.webp")}`;
 
   return (
     <section
@@ -77,18 +76,16 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
 
       <div className={styles.carouselFrame}>
         <div className={styles.imageStage} aria-live="off">
-          <picture key={imagePath}>
-            <source media="(max-width: 720px)" srcSet={mobileImagePath} type="image/webp" />
-            <Image
-              className={styles.slideImage}
-              src={imagePath}
-              alt={`Концептуальная визуализация: ${alt.toLocaleLowerCase("ru-RU")}`}
-              fill
-              priority={activeIndex === 0}
-              unoptimized
-              sizes="100vw"
-            />
-          </picture>
+          <Image
+            key={imagePath}
+            className={styles.slideImage}
+            src={imagePath}
+            alt={`Концептуальная визуализация: ${alt.toLocaleLowerCase("ru-RU")}`}
+            fill
+            priority={activeIndex === 0}
+            unoptimized
+            sizes="100vw"
+          />
         </div>
 
         <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
