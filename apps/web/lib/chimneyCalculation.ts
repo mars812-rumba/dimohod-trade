@@ -235,6 +235,68 @@ export function solvePipeLayouts({
     .slice(0, maxVariants);
 }
 
+function solvePipeLayoutEndingAtOrBefore({
+  axis,
+  startMm,
+  targetMm,
+  fallbackZone,
+  contour,
+}: {
+  axis: RouteAxis;
+  startMm: number;
+  targetMm: number;
+  fallbackZone: PlacedPipe["zone"];
+  contour: PlacedPipe["contour"];
+}): PipeLayoutVariant | null {
+  const availableMm = Math.max(0, Math.round(targetMm - startMm));
+  if (availableMm < PIPE_LENGTHS[PIPE_LENGTHS.length - 1].effectiveMm) return null;
+
+  const bestAtLength = new Map<number, Array<(typeof PIPE_LENGTHS)[number]>>([[0, []]]);
+  const reachableLengths = [0];
+  for (let cursorIndex = 0; cursorIndex < reachableLengths.length; cursorIndex += 1) {
+    const coveredMm = reachableLengths[cursorIndex];
+    const current = bestAtLength.get(coveredMm)!;
+    for (const pipeLength of PIPE_LENGTHS) {
+      const nextCoveredMm = coveredMm + pipeLength.effectiveMm;
+      if (nextCoveredMm > availableMm) continue;
+      const next = [...current, pipeLength];
+      const known = bestAtLength.get(nextCoveredMm);
+      const nextShortCount = next.filter((item) => item.nominalMm < 1000).length;
+      const knownShortCount = known?.filter((item) => item.nominalMm < 1000).length ?? Number.POSITIVE_INFINITY;
+      if (known && (known.length < next.length || (known.length === next.length && knownShortCount <= nextShortCount))) continue;
+      if (!known) reachableLengths.push(nextCoveredMm);
+      bestAtLength.set(nextCoveredMm, next);
+    }
+  }
+
+  const coveredMm = Math.max(...bestAtLength.keys());
+  if (!coveredMm) return null;
+  const selectedLengths = bestAtLength.get(coveredMm)!;
+  let cursorMm = startMm;
+  const pipes = selectedLengths.map((item, index) => {
+    const pipeStartMm = cursorMm;
+    cursorMm += item.effectiveMm;
+    return {
+      id: `${axis}-${contour === "сэндвич" ? "sandwich" : "single"}-pipe-${index + 1}`,
+      axis,
+      nominalMm: item.nominalMm,
+      effectiveMm: item.effectiveMm,
+      startMm: pipeStartMm,
+      endMm: cursorMm,
+      zone: fallbackZone,
+      contour,
+    } satisfies PlacedPipe;
+  });
+  return {
+    id: selectedLengths.map((item) => item.nominalMm).join("-"),
+    label: selectedLengths.map((item) => item.nominalMm).join(" + "),
+    pipes,
+    coveredEndMm: cursorMm,
+    reserveMm: targetMm - cursorMm,
+    jointPositionsMm: pipes.map((pipe) => pipe.endMm),
+  };
+}
+
 function ceilingForbiddenZones(
   draft: ScenarioConfiguratorDraft | null,
   floors: number,
@@ -783,15 +845,29 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
         plan.outdoorPipeQuantity,
         plan.outdoorPipeNominalMm,
       );
-      const connectionEffectiveMm = effectiveComponentHeight(plan.connectionPipeNominalMm);
       const outdoorEffectiveMm = effectiveComponentHeight(plan.outdoorPipeNominalMm);
-      const wallEndMm = (positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000)
+      const wallStartMm = positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000;
+      const wallEndMm = wallStartMm
         + (positiveNumber(input.draft?.wallThickness) ?? 0)
         + (positiveNumber(input.draft?.facadeOffset) ?? 0);
-      const horizontalSandwich = wallEndMm > connectionEffectiveMm
+      const rearDamperEffectiveMm = Math.max(0, Math.round(input.rotaryDamperHeightMm ?? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM));
+      const rearSupportCapNominalMm = Math.max(0, Math.round(input.supportCapLengthMm ?? 70));
+      const rearSupportCapEffectiveMm = effectiveComponentHeight(rearSupportCapNominalMm);
+      const singlePipeTargetMm = wallStartMm - rearDamperEffectiveMm - rearSupportCapEffectiveMm;
+      const horizontalSingle = solvePipeLayoutEndingAtOrBefore({
+        axis: "horizontal",
+        startMm: 0,
+        targetMm: singlePipeTargetMm,
+        fallbackZone: "indoor_warm",
+        contour: "одностенный",
+      });
+      const damperStartMm = horizontalSingle?.coveredEndMm ?? 0;
+      const damperEndMm = damperStartMm + rearDamperEffectiveMm;
+      const supportCapEndMm = damperEndMm + rearSupportCapEffectiveMm;
+      const horizontalSandwich = horizontalSingle && wallEndMm > supportCapEndMm
         ? solvePipeLayouts({
           axis: "horizontal",
-          startMm: connectionEffectiveMm,
+          startMm: supportCapEndMm,
           targetMm: wallEndMm,
           forbiddenZones,
           fallbackZone: "wall_or_ceiling_pass",
@@ -799,16 +875,6 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
           maxVariants: 1,
         })[0]
         : null;
-      const horizontalPipe: PlacedPipe = {
-        id: "horizontal-pipe-1",
-        axis: "horizontal",
-        nominalMm: plan.connectionPipeNominalMm,
-        effectiveMm: connectionEffectiveMm,
-        startMm: 0,
-        endMm: connectionEffectiveMm,
-        zone: "wall_or_ceiling_pass",
-        contour: "одностенный",
-      };
       const outdoorPipes: PlacedPipe[] = Array.from({ length: plan.outdoorPipeQuantity }, (_, index) => ({
         id: `outdoor-pipe-${index + 1}`,
         axis: "vertical",
@@ -819,14 +885,44 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
         zone: "outdoor",
         contour: "сэндвич",
       }));
-      if (wallEndMm <= connectionEffectiveMm || horizontalSandwich) {
+      if (!horizontalSingle) {
+        errors.push("Не удалось подобрать стандартную длину одностенной трубы по расстоянию от патрубка до стены с учётом шибера и опорной заглушки.");
+      } else if (supportCapEndMm > wallStartMm) {
+        errors.push("Переход на сэндвич попадает внутрь стены; увеличьте расстояние от патрубка до внутренней поверхности стены или уточните длины переходных элементов.");
+      } else if (!horizontalSandwich) {
+        errors.push("Не найдена раскладка сэндвич-труб без стыка внутри стены.");
+      } else {
+        fixedParts.push(
+          {
+            id: "rotary_damper",
+            label: "Шибер поворотный",
+            axis: "horizontal",
+            nominalLengthMm: ROTARY_DAMPER_OVERALL_LENGTH_MM,
+            effectiveMm: rearDamperEffectiveMm,
+            startMm: damperStartMm,
+            endMm: damperEndMm,
+          },
+          {
+            id: "support_cap",
+            label: "Опорная заглушка",
+            axis: "horizontal",
+            nominalLengthMm: rearSupportCapNominalMm,
+            effectiveMm: rearSupportCapEffectiveMm,
+            startMm: damperEndMm,
+            endMm: supportCapEndMm,
+          },
+        );
+        const horizontalSandwichPipes = horizontalSandwich.pipes.map((pipe, index) => ({
+          ...pipe,
+          id: `rear-horizontal-sandwich-pipe-${index + 1}`,
+        }));
         variants = [{
-          id: `rear-${plan.connectionPipeNominalMm}--sandwich-${horizontalSandwich?.id ?? "none"}--outdoor-${plan.outdoorPipeQuantity}x${plan.outdoorPipeNominalMm}`,
-          label: `${plan.connectionPipeNominalMm} / ${horizontalSandwich ? `${horizontalSandwich.label} / ` : ""}${plan.outdoorPipeQuantity} × ${plan.outdoorPipeNominalMm}`,
-          pipes: [horizontalPipe, ...(horizontalSandwich?.pipes ?? []), ...outdoorPipes],
+          id: `rear-${horizontalSingle.id}--sandwich-${horizontalSandwich.id}--outdoor-${plan.outdoorPipeQuantity}x${plan.outdoorPipeNominalMm}`,
+          label: `${horizontalSingle.label} / ${horizontalSandwich.label} / ${plan.outdoorPipeQuantity} × ${plan.outdoorPipeNominalMm}`,
+          pipes: [...horizontalSingle.pipes, ...horizontalSandwichPipes, ...outdoorPipes],
           coveredEndMm: outdoorHeightMm,
-          reserveMm: horizontalSandwich?.reserveMm ?? 0,
-          jointPositionsMm: [horizontalPipe.endMm, ...(horizontalSandwich?.jointPositionsMm ?? []), ...outdoorPipes.map((pipe) => pipe.endMm)],
+          reserveMm: horizontalSandwich.reserveMm,
+          jointPositionsMm: [...horizontalSingle.jointPositionsMm, ...horizontalSandwich.jointPositionsMm, ...outdoorPipes.map((pipe) => pipe.endMm)],
         }];
       }
     } else {

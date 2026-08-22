@@ -24,6 +24,7 @@ import {
   PIPE_SOCKET_OVERLAP_MM,
   ROTARY_DAMPER_EFFECTIVE_LENGTH_MM,
   type ChimneyCalculation,
+  type ChimneyBomLine,
   type PipeLayoutVariant,
 } from "@/lib/chimneyCalculation";
 import {
@@ -51,6 +52,42 @@ type ChimneyConfiguratorProps = {
 
 function catalogMediaUrl(url: string, assetBasePath: string) {
   return url.startsWith("/media/") ? `${assetBasePath}${url}` : url;
+}
+
+function configuratorStudioProductImage(
+  part: ChimneyBomLine,
+  catalogMatch: CatalogEstimateMatch | undefined,
+  assetBasePath: string,
+): { src: string; alt: string; width: number; height: number } | null {
+  const catalogName = catalogMatch?.item.name.toLocaleLowerCase("ru-RU") ?? "";
+  const partLabel = part.label.toLocaleLowerCase("ru-RU");
+  const imageBase = `${assetBasePath}/images/configurator/products`;
+
+  if (part.key === "support-cap" || /сэндвич.*заглушк.*опор/.test(`${partLabel} ${catalogName}`)) {
+    return {
+      src: `${imageBase}/sandwich-support-cap-studio-card-v1.webp`,
+      alt: "Сэндвич-заглушка опорная из нержавеющей стали",
+      width: 640,
+      height: 640,
+    };
+  }
+  if (part.productKind === "труба" && part.contour === "сэндвич") {
+    return {
+      src: `${imageBase}/sandwich-pipe-studio-card-v1.webp`,
+      alt: "Сэндвич-труба дымохода из нержавеющей стали",
+      width: 640,
+      height: 640,
+    };
+  }
+  if (/выдвиж/.test(`${partLabel} ${catalogName}`) && /шибер/.test(`${partLabel} ${catalogName}`)) {
+    return {
+      src: `${imageBase}/withdrawable-damper-studio-card-v1.webp`,
+      alt: "Выдвижной шибер дымохода из нержавеющей стали",
+      width: 640,
+      height: 640,
+    };
+  }
+  return null;
 }
 
 function formatCatalogPrice(value: string | null) {
@@ -433,13 +470,24 @@ function DynamicWallRearScheme({
   const horizontalSandwichPipes = variant?.pipes.filter((pipe) => (
     pipe.axis === "horizontal" && pipe.contour === "сэндвич"
   )) ?? [];
-  const horizontalSandwichNominalMm = horizontalSandwichPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
+  const horizontalSingleEffectiveMm = horizontalSinglePipes.reduce((sum, pipe) => sum + pipe.effectiveMm, 0);
+  const horizontalSandwichEffectiveMm = horizontalSandwichPipes.reduce((sum, pipe) => sum + pipe.effectiveMm, 0);
+  const horizontalEffectiveMm = horizontalSingleEffectiveMm + horizontalSandwichEffectiveMm;
+  const horizontalPipeVisualWidth = 147;
+  const horizontalSingleVisualWidth = horizontalEffectiveMm > 0
+    ? Math.max(44, Math.min(103, horizontalPipeVisualWidth * (horizontalSingleEffectiveMm / horizontalEffectiveMm)))
+    : 54;
+  const horizontalSandwichVisualWidth = horizontalPipeVisualWidth - horizontalSingleVisualWidth;
+  const horizontalRouteRightX = 476;
+  const transitionStartX = horizontalRouteRightX - horizontalSingleVisualWidth;
+  const sandwichSectionRightX = transitionStartX - 124;
   const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const consolePositionsMm = wallRouteFacadeConsolePositions(outdoorNominalMm);
   const stackTopY = 318;
   const stackBottomY = 1004;
   const stackHeight = stackBottomY - stackTopY;
   let outdoorCursorY = stackBottomY;
+  let horizontalSingleCursorX = horizontalRouteRightX;
 
   return (
     <svg
@@ -482,35 +530,46 @@ function DynamicWallRearScheme({
       <g aria-label="Горизонтальное подключение: одноконтурная труба, поворотный шибер, опорная заглушка и сэндвич-трубы">
         {horizontalSinglePipes.length ? (
           <g aria-label={`Одноконтурные соединительные трубы: ${horizontalSinglePipes.length}`}>
-            <HorizontalPipeSegment
-              centerY={1054}
-              filterId="rear-dynamic-shadow"
-              gradientId="rear-dynamic-steel"
-              height={42}
-              label="1К"
-              width={54}
-              x={422}
-            />
+            {horizontalSinglePipes.map((pipe, index) => {
+              const width = horizontalSingleEffectiveMm > 0
+                ? horizontalSingleVisualWidth * (pipe.effectiveMm / horizontalSingleEffectiveMm)
+                : horizontalSingleVisualWidth / horizontalSinglePipes.length;
+              horizontalSingleCursorX -= width;
+              return (
+                <HorizontalPipeSegment
+                  centerY={1054}
+                  filterId="rear-dynamic-shadow"
+                  gradientId="rear-dynamic-steel"
+                  height={42}
+                  key={`rear-horizontal-single-${pipe.id}`}
+                  label={`О${index + 1}`}
+                  width={Math.max(2, width - 2)}
+                  x={horizontalSingleCursorX + 1}
+                />
+              );
+            })}
           </g>
         ) : null}
         <HorizontalTransitionAssembly
           centerY={1054}
           direction="left"
           filterId="rear-dynamic-shadow"
-          flowStartX={422}
+          flowStartX={transitionStartX}
           gradientId="rear-dynamic-steel"
         />
         <g aria-label={`Горизонтальные сэндвич-трубы: ${horizontalSandwichPipes.length}`}>
           {horizontalSandwichPipes.map((pipe, index) => {
-            const width = horizontalSandwichNominalMm > 0
-              ? 93 * (pipe.nominalMm / horizontalSandwichNominalMm)
-              : 93 / Math.max(1, horizontalSandwichPipes.length);
+            const width = horizontalSandwichEffectiveMm > 0
+              ? horizontalSandwichVisualWidth * (pipe.effectiveMm / horizontalSandwichEffectiveMm)
+              : horizontalSandwichVisualWidth / Math.max(1, horizontalSandwichPipes.length);
             const previousWidth = horizontalSandwichPipes
               .slice(0, index)
               .reduce((sum, item) => sum + (
-                horizontalSandwichNominalMm > 0 ? 93 * (item.nominalMm / horizontalSandwichNominalMm) : 0
+                horizontalSandwichEffectiveMm > 0
+                  ? horizontalSandwichVisualWidth * (item.effectiveMm / horizontalSandwichEffectiveMm)
+                  : 0
               ), 0);
-            const x = 298 - previousWidth - width;
+            const x = sandwichSectionRightX - previousWidth - width;
             return (
               <HorizontalPipeSegment
                 centerY={1054}
@@ -2076,18 +2135,31 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               const catalogMatch = catalogMatches[part.key];
               const estimateLine = estimate.lines.find((line) => line.key === part.key);
               const materialLabel = catalogMatch ? catalogMaterialLabel(catalogMatch.item) : null;
+              const studioProductImage = configuratorStudioProductImage(part, catalogMatch, assetBasePath);
+              const catalogProductImage = catalogMatch?.item.primary_image
+                ? {
+                  src: catalogMediaUrl(catalogMatch.item.primary_image.thumbnail_url ?? catalogMatch.item.primary_image.url, assetBasePath),
+                  alt: catalogMatch.item.primary_image.alt ?? "",
+                  width: catalogMatch.item.primary_image.width ?? undefined,
+                  height: catalogMatch.item.primary_image.height ?? undefined,
+                }
+                : null;
+              const productImage = studioProductImage ?? catalogProductImage;
               const nearestLengthLabel = catalogMatch?.lengthMatch === "nearest" && catalogMatch.item.length_mm !== null
                 ? `Одностенная труба-разгон ${catalogMatch.item.length_mm} мм`
                 : part.label;
               return (
                 <div key={part.key} className="configurator-spec-row">
-                  <div className="configurator-spec-media" aria-hidden={!catalogMatch?.item.primary_image}>
-                    {catalogMatch?.item.primary_image ? (
+                  <div
+                    className={`configurator-spec-media${studioProductImage ? " is-studio" : ""}`}
+                    aria-hidden={!productImage}
+                  >
+                    {productImage ? (
                       <img
-                        src={catalogMediaUrl(catalogMatch.item.primary_image.thumbnail_url ?? catalogMatch.item.primary_image.url, assetBasePath)}
-                        alt={catalogMatch.item.primary_image.alt ?? ""}
-                        width={catalogMatch.item.primary_image.width ?? undefined}
-                        height={catalogMatch.item.primary_image.height ?? undefined}
+                        src={productImage.src}
+                        alt={productImage.alt}
+                        width={productImage.width}
+                        height={productImage.height}
                         loading="lazy"
                         decoding="async"
                       />
