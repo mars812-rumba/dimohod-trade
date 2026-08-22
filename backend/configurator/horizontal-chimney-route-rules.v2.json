@@ -1,0 +1,152 @@
+{
+  "task": "horizontal_chimney_route_generation",
+  "version": "2.0",
+  "priority": "ABSOLUTE_ENGINEERING_LOGIC",
+  "goal": "Generate the horizontal chimney route strictly from configurator dimensions, calculated BOM and real catalog component geometry. The horizontal route must be deterministic and must never be drawn from visual guesswork.",
+  "scenario": "horizontal_route_to_external_wall",
+  "architecture": {
+    "configurator": "SOURCE_OF_TRUTH_FOR_LENGTHS_AND_ROUTE_GEOMETRY",
+    "bom": "SOURCE_OF_TRUTH_FOR_COMPONENT_TYPES_VARIANTS_AND_QUANTITY",
+    "catalog_assets": "SOURCE_OF_TRUTH_FOR_COMPONENT_APPEARANCE",
+    "existing_diagram": "SOURCE_OF_TRUTH_FOR_VISUAL_STYLE_ONLY"
+  },
+  "absolute_rules": [
+    "Never calculate component geometry from the reference image.",
+    "Never copy horizontal component positions from an old diagram.",
+    "Never invent a component that does not exist in BOM.",
+    "Never omit a component that exists in the calculated horizontal BOM.",
+    "Never stretch a product illustration to imitate another pipe length.",
+    "Never place a connection joint inside the protected wall passage zone.",
+    "Never use the support plug as part of the horizontal route.",
+    "Never confuse a sliding damper with a rotary damper.",
+    "Never draw a generic elbow instead of the real catalog elbow."
+  ],
+  "owner_confirmed_overrides": {
+    "damper_type": "rotary",
+    "fake_single_to_sandwich_transition": "forbidden",
+    "support_plug_position": "external_tee_lower_branch_only",
+    "direct_rear_outlet_elbow": "forbidden",
+    "top_outlet_elbow": "required_from_bom"
+  },
+  "input_contract": {
+    "route_type": "horizontal",
+    "dimensions": {
+      "heater_outlet_axis_x_mm": 0,
+      "heater_outlet_axis_y_mm": "FROM_CONFIGURATOR",
+      "distance_heater_to_wall_mm": "FROM_CONFIGURATOR",
+      "wall_thickness_mm": "FROM_CONFIGURATOR",
+      "passage_clearance_before_wall_mm": "FROM_CONFIGURATOR_OR_RULE",
+      "passage_clearance_after_wall_mm": "FROM_CONFIGURATOR_OR_RULE",
+      "total_horizontal_route_mm": "CALCULATE",
+      "tee_axis_x_mm": "CALCULATE"
+    },
+    "appliance": {
+      "outlet_orientation": "horizontal_or_vertical",
+      "outlet_diameter_mm": "FROM_CONFIGURATOR",
+      "requires_90_elbow": "FROM_CONFIGURATOR"
+    },
+    "available_pipe_lengths_mm": [1000, 500, 350, 250],
+    "joint_overlap_mm": "FROM_PRODUCT_DATA",
+    "no_joint_zone": {
+      "enabled": true,
+      "type": "wall_passage",
+      "start_x_mm": "CALCULATE",
+      "end_x_mm": "CALCULATE"
+    }
+  },
+  "route_topology": {
+    "main_horizontal_chain": [
+      "heater",
+      "heater_outlet_component",
+      "rotary_damper_if_required",
+      "single_wall_pipe_segments",
+      "continuous_sandwich_wall_passage_pipe",
+      "external_tee"
+    ],
+    "external_tee_branches": {
+      "up": "external_vertical_sandwich_stack",
+      "down": "support_plug_and_support_console",
+      "side": "horizontal_route_from_heater"
+    }
+  },
+  "component_order_rules": {
+    "heater_outlet_component": {
+      "if_outlet_is_vertical": ["90_degree_elbow", "rotary_damper", "single_wall_pipe_segments"],
+      "if_outlet_is_horizontal": ["rotary_damper", "single_wall_pipe_segments"]
+    },
+    "rotary_damper": {
+      "position": "inside_building_before_wall_passage",
+      "must_be_accessible": true,
+      "must_not_be_inside_wall": true,
+      "must_not_be_inside_protected_passage_zone": true
+    },
+    "single_wall_pipe_segments": {
+      "position": "inside_building",
+      "selection_source": "CALCULATED_BOM",
+      "length_source": "REAL_PRODUCT_EFFECTIVE_LENGTH"
+    },
+    "wall_passage_component": {
+      "must_cross_entire_wall": true,
+      "must_cross_protected_zone_without_joint": true
+    },
+    "external_tee": {
+      "position": "outside_wall",
+      "centerline_source": "CALCULATED_ROUTE_END"
+    }
+  },
+  "horizontal_length_solver": {
+    "priority": "CRITICAL",
+    "instruction": "Calculate the required effective horizontal length first, then allocate actual BOM components to that length."
+  },
+  "rendering": {
+    "format": "inline_svg",
+    "raster_background_forbidden": true,
+    "horizontal_detail_scale": "derived_from_total_horizontal_route_mm",
+    "vertical_overview_scale": "derived_from_external_vertical_stack_mm",
+    "cross_panel_uniform_scale_required": false,
+    "sku_labels_source": "resolved_catalog_match",
+    "pipe_count_must_be_split_by_axis": true
+  },
+  "catalog_sku_contract_d100": {
+    "rotary_damper": {
+      "sku": "DT-GOLYE-09-11-D100",
+      "url": "/product/odnostennyi-shiber-povorotnyi-d100?sku=DT-GOLYE-09-11-D100"
+    },
+    "sandwich_pipes": {
+      "250": {
+        "sku": "DT-SW50-21-04-D100-200",
+        "url": "/product/sendvich-truba-d100-200?sku=DT-SW50-21-04-D100-200"
+      },
+      "350": {
+        "sku": "DT-SW50-21-03-D100-200",
+        "url": "/product/sendvich-truba-d100-200?sku=DT-SW50-21-03-D100-200"
+      },
+      "500": {
+        "sku": "DT-SW50-21-02-D100-200",
+        "url": "/product/sendvich-truba-d100-200?sku=DT-SW50-21-02-D100-200"
+      },
+      "1000": {
+        "sku": "DT-SW50-21-00-D100-200",
+        "url": "/product/sendvich-truba-d100-200?sku=DT-SW50-21-00-D100-200"
+      }
+    },
+    "support_plug": {
+      "sku": "DT-SW50-21-11-D100-200",
+      "url": "/product/sendvich-zaglushka-opornaya-d100-200?sku=DT-SW50-21-11-D100-200"
+    },
+    "external_tee_90": {
+      "sku": "DT-SW50-21-08-D100-200",
+      "url": "/product/sendvich-troi-nik-s-k-o-90gr-d100-200?sku=DT-SW50-21-08-D100-200"
+    },
+    "terminal": {
+      "sku": "DT-SW50-21-15-D100-200",
+      "url": "/product/sendvich-ogolovok-deflektor-konus-d100-200?sku=DT-SW50-21-15-D100-200"
+    },
+    "decorative_skirt_catalog": "/catalog/uzly-prohoda-sten-i-perekrytiy"
+  },
+  "sandwich_pipe_media_groups_mm": {
+    "photo_1": [1000],
+    "photo_2": [150, 250, 350],
+    "photo_3": [500, 750]
+  }
+}

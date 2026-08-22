@@ -505,14 +505,16 @@ function DynamicWallTopScheme({ variant }: { variant: PipeLayoutVariant | null }
   );
 }
 
-function EngineeringSceneProduct({ node, scale, originX, originY }: {
+function EngineeringSceneProduct({ node, scale, originX, originY, projectedX, projectedY }: {
   node: EngineeringSceneNode;
   scale: number;
   originX: number;
   originY: number;
+  projectedX?: number;
+  projectedY?: number;
 }) {
-  const x = originX + node.xMm * scale;
-  const y = originY - node.yMm * scale;
+  const x = projectedX ?? originX + node.xMm * scale;
+  const y = projectedY ?? originY - node.yMm * scale;
   const length = Math.max(8, node.effectiveLengthMm * scale);
   const sandwich = node.geometryFamily === "sandwich_pipe";
   const pipeWidth = sandwich ? 30 : 20;
@@ -562,12 +564,12 @@ function EngineeringSceneProduct({ node, scale, originX, originY }: {
   );
   if (node.geometryFamily === "support_console" || node.geometryFamily === "wall_console") return (
     <g {...common} transform={`translate(${x} ${y})`}>
-      <rect fill="#202629" height="72" rx="2" stroke="#111719" width="9" x="24" y="-36" />
-      <rect fill="#202629" height="8" rx="2" stroke="#111719" width="78" x="28" y="-22" />
-      <rect fill="#202629" height="8" rx="2" stroke="#111719" width="78" x="28" y="14" />
-      <path d="M32,14 L78,-18 M32,20 L82,-14" fill="none" stroke="#111719" strokeWidth="5" />
-      <circle cx="29" cy="-29" fill="#d8ddde" r="2.5" />
-      <circle cx="29" cy="29" fill="#d8ddde" r="2.5" />
+      <rect fill="#202629" height="62" rx="2" stroke="#111719" width="8" x="-94" y="-31" />
+      <rect fill="#202629" height="7" rx="2" stroke="#111719" width="70" x="-86" y="-20" />
+      <rect fill="#202629" height="7" rx="2" stroke="#111719" width="70" x="-86" y="13" />
+      <path d="M-82,13 L-24,-16 M-78,20 L-20,-13" fill="none" stroke="#111719" strokeWidth="4" />
+      <circle cx="-90" cy="-24" fill="#d8ddde" r="2.5" />
+      <circle cx="-90" cy="24" fill="#d8ddde" r="2.5" />
     </g>
   );
   if (node.geometryFamily === "power_clamp") return (
@@ -586,21 +588,34 @@ function EngineeringSceneProduct({ node, scale, originX, originY }: {
 }
 
 function DynamicWallRearScheme({ scene }: { scene: EngineeringSceneGraph }) {
-  const maximumHorizontalMm = Math.max(scene.horizontalRunMm, 1000);
-  const maximumVerticalMm = Math.max(scene.verticalHeightMm + 300, 1000);
-  const scale = Math.min(610 / maximumHorizontalMm, 610 / maximumVerticalMm);
-  const originX = 96;
-  const originY = 730;
-  const wallX = originX + scene.wallPassage.startMm * scale;
-  const wallWidth = Math.max(14, (scene.wallPassage.endMm - scene.wallPassage.startMm) * scale);
   const passageNodes = scene.nodes.filter((node) => node.geometryFamily === "wall_passage" || node.geometryFamily === "passage_accessory");
   const productNodes = scene.nodes.filter((node) => node.geometryFamily !== "wall_passage" && node.geometryFamily !== "passage_accessory");
-  const summary = scene.summary.map((line) => `${line.label} — ${line.quantity}`).join("; ");
+  const horizontalNodes = productNodes.filter((node) => (
+    node.orientation === "horizontal"
+    && (node.geometryFamily === "single_wall_pipe" || node.geometryFamily === "sandwich_pipe" || node.geometryFamily === "rotary_damper")
+  ));
+  const teeNode = productNodes.find((node) => node.geometryFamily === "tee_90");
+  const verticalNodes = productNodes.filter((node) => !horizontalNodes.includes(node));
+  const verticalPipeNodes = verticalNodes.filter((node) => node.geometryFamily === "sandwich_pipe");
+  const facadeSupports = verticalNodes.filter((node) => node.geometryFamily === "wall_console");
+  const horizontalMaximumMm = Math.max(scene.horizontalRunMm, 1000);
+  const verticalMaximumMm = Math.max(scene.verticalHeightMm, 1000);
+  const horizontalScale = 520 / horizontalMaximumMm;
+  const verticalScale = 280 / verticalMaximumMm;
+  const horizontalOriginX = 94;
+  const horizontalAxisY = 244;
+  const verticalAxisX = 426;
+  const verticalOriginY = 775;
+  const wallX = horizontalOriginX + scene.wallPassage.startMm * horizontalScale;
+  const wallWidth = Math.max(16, (scene.wallPassage.endMm - scene.wallPassage.startMm) * horizontalScale);
+  const horizontalLegendNodes = [...horizontalNodes, ...(teeNode ? [teeNode] : [])];
+  const horizontalPipeCount = horizontalNodes.filter((node) => node.geometryFamily === "single_wall_pipe" || node.geometryFamily === "sandwich_pipe").length;
+  const uniqueVerticalPipes = Array.from(new Map(verticalPipeNodes.map((node) => [node.bomKey, node])).values());
 
   return (
-    <svg aria-labelledby="engineering-wall-title engineering-wall-desc" className="configurator-generated-svg" role="img" viewBox="0 0 1024 860">
+    <svg aria-labelledby="engineering-wall-title engineering-wall-desc" className="configurator-generated-svg" role="img" viewBox="0 0 760 980">
       <title id="engineering-wall-title">Расчётная схема наружного дымохода через стену</title>
-      <desc id="engineering-wall-desc">{`Горизонтальный участок ${scene.horizontalRunMm} мм, вертикальный участок ${scene.verticalHeightMm} мм. ${summary}`}</desc>
+      <desc id="engineering-wall-desc">{`Горизонтальный участок ${scene.horizontalRunMm} мм содержит ${horizontalPipeCount} труб; наружная вертикаль ${scene.verticalHeightMm} мм содержит ${verticalPipeNodes.length} труб. Горизонтальный узел и наружная колонна показаны в отдельных масштабах.`}</desc>
       <defs>
         <pattern height="20" id="scene-grid" patternUnits="userSpaceOnUse" width="20">
           <path d="M20 0H0V20" fill="none" stroke="#dfe8eb" strokeWidth="1" />
@@ -613,56 +628,98 @@ function DynamicWallRearScheme({ scene }: { scene: EngineeringSceneGraph }) {
           <stop offset="1" stopColor="#536066" />
         </linearGradient>
       </defs>
-      <rect fill="#fff" height="860" rx="24" width="1024" />
-      <rect fill="url(#scene-grid)" height="720" opacity="0.72" rx="18" width="730" x="24" y="24" />
-      <path d={`M24 730 H${wallX} V170 H24 Z`} fill="#f2eadb" stroke="#9c8a70" strokeWidth="2" />
-      <rect fill="#d9bd91" height="620" opacity="0.75" stroke="#8e7555" strokeWidth="2" width={wallWidth} x={wallX} y="110" />
-      <text fill="#6e5b43" fontSize="14" textAnchor="middle" x={wallX + wallWidth / 2} y="96">СТЕНА</text>
-      <rect fill="#313a3d" height="72" rx="6" width="74" x={originX - 64} y={originY - 34} />
-      <rect fill="#171d1f" height="30" rx="3" width="42" x={originX - 48} y={originY - 16} />
-      <text fill="#ffffff" fontSize="12" textAnchor="middle" x={originX - 27} y={originY + 52}>ОТОПИТЕЛЬ</text>
+      <rect fill="#fff" height="980" rx="24" width="760" />
+      <text fill="#173d4c" fontSize="24" fontWeight="800" x="28" y="38">Прямой выход через стену</text>
+      <text fill="#53656d" fontSize="13" x="28" y="60">Координаты из расчёта · состав из BOM · SKU из каталога</text>
 
-      <g aria-label="Защищённый проход стены">
+      <g data-panel="horizontal-detail">
+        <rect fill="url(#scene-grid)" height="340" opacity="0.72" rx="18" stroke="#cbd8dc" width="704" x="28" y="78" />
+        <text fill="#173d4c" fontSize="15" fontWeight="750" x="46" y="105">1. Горизонтальный узел · отдельный масштаб</text>
+        <text fill="#53656d" fontSize="12" x="46" y="124">{`Патрубок X=0 → стена ${scene.wallPassage.startMm}–${scene.wallPassage.endMm} мм → ось тройника ${scene.horizontalRunMm} мм`}</text>
+        <path d={`M28 382 H${wallX} V142 H28 Z`} fill="#f2eadb" stroke="#9c8a70" strokeWidth="2" />
+        <rect fill="#d9bd91" height="254" opacity="0.78" stroke="#8e7555" strokeWidth="2" width={wallWidth} x={wallX} y="128" />
+        <text fill="#6e5b43" fontSize="11" textAnchor="middle" transform={`rotate(-90 ${wallX + wallWidth / 2} 170)`} x={wallX + wallWidth / 2} y="170">СТЕНА</text>
+        <g aria-label="Отопитель с задним патрубком">
+          <rect fill="#313a3d" height="96" rx="7" stroke="#12191c" strokeWidth="3" width="78" x="16" y={horizontalAxisY - 48} />
+          <rect fill="#171d1f" height="42" rx="3" width="48" x="30" y={horizontalAxisY - 22} />
+          <path d={`M40 ${horizontalAxisY + 12} L49 ${horizontalAxisY - 13} L57 ${horizontalAxisY + 6} L66 ${horizontalAxisY - 8} L70 ${horizontalAxisY + 12} Z`} fill="#e56835" />
+          <text fill="#ffffff" fontSize="10" fontWeight="700" textAnchor="middle" x="55" y={horizontalAxisY + 68}>ОТОПИТЕЛЬ</text>
+        </g>
+
+        <g aria-label="Защищённый проход стены">
         {passageNodes.map((node, index) => (
           <g data-catalog-asset={node.visualAsset} data-product-id={node.productId} key={node.id}>
             {node.geometryFamily === "wall_passage" ? (
-              <rect fill="none" height="62" stroke="#2f78a3" strokeDasharray="7 4" strokeWidth="3" width={wallWidth + 14} x={wallX - 7} y={originY - 31} />
+                <rect fill="none" height="68" stroke="#2f78a3" strokeDasharray="7 4" strokeWidth="3" width={wallWidth + 14} x={wallX - 7} y={horizontalAxisY - 34} />
             ) : (
-              <rect fill="none" height={46 + index * 4} opacity="0.75" stroke="#6a8795" strokeWidth="2" width={Math.max(8, wallWidth - index * 3)} x={wallX + index * 1.5} y={originY - 23 - index * 2} />
+                <rect fill="none" height={50 + index * 4} opacity="0.75" stroke="#6a8795" strokeWidth="2" width={Math.max(8, wallWidth - index * 3)} x={wallX + index * 1.5} y={horizontalAxisY - 25 - index * 2} />
             )}
           </g>
         ))}
-      </g>
+        </g>
 
-      <g aria-label="Компоненты, построенные из scene graph">
-        {productNodes.map((node) => <EngineeringSceneProduct key={node.id} node={node} originX={originX} originY={originY} scale={scale} />)}
-      </g>
+        <g aria-label="Горизонтальные компоненты из scene graph">
+          {horizontalNodes.map((node) => <EngineeringSceneProduct key={node.id} node={node} originX={horizontalOriginX} originY={horizontalAxisY} scale={horizontalScale} />)}
+          {teeNode ? <EngineeringSceneProduct node={teeNode} originX={horizontalOriginX} originY={horizontalAxisY} scale={horizontalScale} /> : null}
+        </g>
 
-      <g fill="#1f2d35" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace" fontSize="12">
-        {productNodes.map((node, index) => {
-          const x = originX + node.xMm * scale;
-          const y = originY - node.yMm * scale;
+        <g fill="#1f2d35" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace" fontSize="10.5">
+          {horizontalLegendNodes.slice(0, 6).map((node, index) => {
+            const x = horizontalOriginX + node.xMm * horizontalScale;
+            const labelY = index % 2 === 0 ? 316 : 348;
           return (
             <g key={`label-${node.id}`}>
-              <line stroke="#2f78a3" strokeWidth="1.5" x1={x} x2={x + 24} y1={y} y2={y - 24} />
-              <circle cx={x + 32} cy={y - 32} fill="#fff" r="12" stroke="#2f78a3" strokeWidth="2" />
-              <text textAnchor="middle" x={x + 32} y={y - 28}>{index + 1}</text>
+                <line stroke="#2f78a3" strokeWidth="1.3" x1={x} x2={x} y1={horizontalAxisY + 20} y2={labelY - 16} />
+                <circle cx={x} cy={labelY - 7} fill="#fff" r="9" stroke="#2f78a3" strokeWidth="1.5" />
+                <text fontWeight="800" textAnchor="middle" x={x} y={labelY - 3}>{index + 1}</text>
+                <text textAnchor="middle" x={x} y={labelY + 11}>{node.sku ?? "SKU не найден"}</text>
             </g>
           );
         })}
+        </g>
       </g>
 
-      <g transform="translate(776 42)">
-        <text fill="#173d4c" fontSize="18" fontWeight="700">Состав схемы</text>
-        {scene.summary.slice(0, 18).map((line, index) => (
-          <text fill="#35484f" fontSize="11" key={line.bomKey} x="0" y={30 + index * 19}>{`${line.label} · ${line.quantity} шт.`}</text>
-        ))}
+      <g data-panel="vertical-overview">
+        <rect fill="url(#scene-grid)" height="488" opacity="0.72" rx="18" stroke="#cbd8dc" width="704" x="28" y="436" />
+        <text fill="#173d4c" fontSize="15" fontWeight="750" x="46" y="464">2. Наружная колонна · отдельный масштаб</text>
+        <text fill="#53656d" fontSize="12" x="46" y="483">{`Тройник Y=0 → оголовок ${scene.verticalHeightMm} мм · ${verticalPipeNodes.length} сэндвич-труб · ${facadeSupports.length} фасадных консолей`}</text>
+        <rect fill="#f2eadb" height="376" stroke="#9c8a70" strokeWidth="2" width="116" x={verticalAxisX - 116} y="510" />
+        <line stroke="#8e7555" strokeWidth="4" x1={verticalAxisX - 8} x2={verticalAxisX - 8} y1="510" y2="886" />
+        <text fill="#6e5b43" fontSize="11" textAnchor="middle" transform={`rotate(-90 ${verticalAxisX - 88} 698)`} x={verticalAxisX - 88} y="698">НАРУЖНАЯ СТЕНА</text>
+
+        <g aria-label="Вертикальные компоненты из scene graph">
+          {verticalNodes.map((node) => (
+            <EngineeringSceneProduct
+              key={`vertical-${node.id}`}
+              node={node}
+              originX={verticalAxisX}
+              originY={verticalOriginY}
+              projectedX={verticalAxisX}
+              projectedY={node.geometryFamily === "support_plug"
+                ? 835
+                : node.geometryFamily === "support_console"
+                  ? 885
+                  : undefined}
+              scale={verticalScale}
+            />
+          ))}
+        </g>
+
+        <g fill="#1f2d35" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace" fontSize="11">
+          {uniqueVerticalPipes.map((node, index) => (
+            <g key={`vertical-legend-${node.bomKey}`}>
+              <rect fill="#fff" height="42" rx="7" stroke="#c2d0d4" width="226" x="492" y={526 + index * 50} />
+              <text fontWeight="800" x="504" y={543 + index * 50}>{`${node.nominalLengthMm} мм`}</text>
+              <text fill="#53656d" x="504" y={559 + index * 50}>{node.sku ?? "SKU не найден"}</text>
+            </g>
+          ))}
+          <text fill="#53656d" x="492" y="742">Опорная заглушка показана только</text>
+          <text fill="#53656d" x="492" y="758">на нижней ветви тройника.</text>
+        </g>
       </g>
-      <g transform="translate(40 790)">
-        <text fill="#173d4c" fontSize="14" fontWeight="700">Расчётные координаты</text>
-        <text fill="#53656d" fontSize="12" y="22">{`X: патрубок 0 → стена ${scene.wallPassage.startMm}–${scene.wallPassage.endMm} → тройник ${scene.horizontalRunMm} мм`}</text>
-        <text fill="#53656d" fontSize="12" y="42">{`Y: тройник 0 → оголовок ${scene.verticalHeightMm} мм`}</text>
-      </g>
+
+      <text fill="#173d4c" fontSize="12" fontWeight="750" x="30" y="952">{`Трубы по осям: горизонталь ${horizontalPipeCount} шт. · наружная вертикаль ${verticalPipeNodes.length} шт.`}</text>
+      <text fill="#53656d" fontSize="11" textAnchor="end" x="730" y="952">Масштабы панелей различаются; координаты внутри каждой панели пропорциональны миллиметрам.</text>
     </svg>
   );
 }
@@ -1576,6 +1633,8 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     [completeBom, removedBomKeys],
   );
   const selectedPipeQuantity = selectedVariant?.pipes.length ?? 0;
+  const selectedHorizontalPipeQuantity = selectedVariant?.pipes.filter((pipe) => pipe.axis === "horizontal").length ?? 0;
+  const selectedVerticalPipeQuantity = selectedVariant?.pipes.filter((pipe) => pipe.axis === "vertical").length ?? 0;
   const selectedCoveredMm = selectedVariant
     ? selectedVariant.pipes.reduce((sum, pipe) => sum + pipe.effectiveMm, 0)
     : 0;
@@ -2058,7 +2117,13 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         <div className="configurator-schematic-pane">
           <div className="configurator-schematic-top">
             <span>{sceneTitle}</span>
-            <strong>{calculation.status === "invalid" ? "Есть конфликт" : `${selectedPipeQuantity} труб`}</strong>
+            <strong>
+              {calculation.status === "invalid"
+                ? "Есть конфликт"
+                : calculation.routeKind === "wall-rear"
+                  ? `Горизонталь ${selectedHorizontalPipeQuantity} · вертикаль ${selectedVerticalPipeQuantity}`
+                  : `${selectedPipeQuantity} труб`}
+            </strong>
           </div>
           <div className="configurator-svg-wrap">
             {diagramValidationErrors.length ? (

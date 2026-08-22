@@ -69,6 +69,20 @@ test("builds a validated scene graph from calculation, BOM and catalog reference
   assert.ok(plug.yMm < tee.yMm);
 });
 
+test("keeps the direct rear-outlet chain ordered and the support plug off the horizontal route", () => {
+  const scene = buildExternalWallSceneGraph(validInput());
+  const horizontalMain = scene.nodes
+    .filter((node) => node.branch === "main" && node.orientation === "horizontal")
+    .sort((left, right) => left.xMm - right.xMm)
+    .map((node) => node.geometryFamily);
+  const plug = scene.nodes.find((node) => node.geometryFamily === "support_plug");
+
+  assert.deepEqual(horizontalMain, ["single_wall_pipe", "rotary_damper", "sandwich_pipe"]);
+  assert.equal(scene.nodes.some((node) => node.geometryFamily === "rotary_damper"), true);
+  assert.equal(plug.branch, "lower");
+  assert.equal(plug.orientation, "vertical");
+});
+
 test("rejects a pipe joint inside the protected wall passage", () => {
   const input = validInput();
   input.variant.pipes[1].endMm = 1300;

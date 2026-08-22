@@ -5,6 +5,7 @@ from pathlib import Path
 RULES_PATH = Path(__file__).parents[1] / "configurator" / "svg-route-generation-rules.v1.json"
 CONFIGURATOR_RULES_PATH = Path(__file__).parents[1] / "configurator" / "configurator-rules.v1.json"
 SCENE_GRAPH_RULES_PATH = Path(__file__).parents[1] / "configurator" / "engineering-scene-graph-rules.v2.json"
+HORIZONTAL_ROUTE_RULES_PATH = Path(__file__).parents[1] / "configurator" / "horizontal-chimney-route-rules.v2.json"
 
 
 def load_rules() -> dict:
@@ -17,6 +18,10 @@ def load_configurator_rules() -> dict:
 
 def load_scene_graph_rules() -> dict:
     return json.loads(SCENE_GRAPH_RULES_PATH.read_text(encoding="utf-8"))
+
+
+def load_horizontal_route_rules() -> dict:
+    return json.loads(HORIZONTAL_ROUTE_RULES_PATH.read_text(encoding="utf-8"))
 
 
 def test_scene_graph_v2_separates_engineering_bom_catalog_and_style_authority() -> None:
@@ -39,7 +44,41 @@ def test_scene_graph_v2_separates_engineering_bom_catalog_and_style_authority() 
     assert rules["hard_checks"]["support_plug_forbidden_in_horizontal_route"] is True
     assert rules["hard_checks"]["all_rendered_components_have_geometry_family"] is True
     assert rules["hard_checks"]["missing_catalog_appearance_does_not_invalidate_engineering_geometry"] is True
+    assert rules["hard_checks"]["separate_horizontal_and_vertical_panel_scales"] is True
+    assert rules["hard_checks"]["uniform_scale_inside_each_panel"] is True
     assert rules["failure_policy"]["missing_catalog_asset"] == "warn_and_render_calculated_geometry_without_sku"
+
+
+def test_horizontal_route_contract_keeps_owner_confirmed_skus_and_topology() -> None:
+    rules = load_horizontal_route_rules()
+    overrides = rules["owner_confirmed_overrides"]
+    catalog = rules["catalog_sku_contract_d100"]
+
+    assert rules["version"] == "2.0"
+    assert overrides["damper_type"] == "rotary"
+    assert overrides["fake_single_to_sandwich_transition"] == "forbidden"
+    assert overrides["support_plug_position"] == "external_tee_lower_branch_only"
+    assert rules["route_topology"]["main_horizontal_chain"] == [
+        "heater",
+        "heater_outlet_component",
+        "rotary_damper_if_required",
+        "single_wall_pipe_segments",
+        "continuous_sandwich_wall_passage_pipe",
+        "external_tee",
+    ]
+    assert catalog["rotary_damper"]["sku"] == "DT-GOLYE-09-11-D100"
+    assert catalog["sandwich_pipes"]["250"]["sku"] == "DT-SW50-21-04-D100-200"
+    assert catalog["sandwich_pipes"]["350"]["sku"] == "DT-SW50-21-03-D100-200"
+    assert catalog["sandwich_pipes"]["500"]["sku"] == "DT-SW50-21-02-D100-200"
+    assert catalog["sandwich_pipes"]["1000"]["sku"] == "DT-SW50-21-00-D100-200"
+    assert catalog["support_plug"]["sku"] == "DT-SW50-21-11-D100-200"
+    assert catalog["external_tee_90"]["sku"] == "DT-SW50-21-08-D100-200"
+    assert catalog["terminal"]["sku"] == "DT-SW50-21-15-D100-200"
+    assert rules["sandwich_pipe_media_groups_mm"] == {
+        "photo_1": [1000],
+        "photo_2": [150, 250, 350],
+        "photo_3": [500, 750],
+    }
 
 
 def test_engineering_svg_contract_keeps_critical_geometry_invariants() -> None:
