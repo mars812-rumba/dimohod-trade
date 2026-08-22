@@ -35,6 +35,7 @@ import {
   type EstimateMeasurement,
 } from "@/lib/chimneyEstimate";
 import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
+import { RouteImageViewer } from "./RouteImageViewer";
 
 type RouteType = "ceiling" | "wall";
 type StoveType = "bania" | "pech" | "kamin" | "tt-kotel" | "gaz";
@@ -1494,6 +1495,20 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                 <ul>
                   {svgValidationErrors.map((issue) => <li key={issue}>{issue}</li>)}
                 </ul>
+              </div>
+            ) : calculation.routeKind === "wall-rear" ? (
+              <div className="configurator-reference-scheme">
+                <RouteImageViewer
+                  alt="Схема горизонтального подключения печи через стену к наружному дымоходу"
+                  previewClassName="configurator-reference-scheme-preview"
+                  previewSizes="(max-width: 860px) 80vw, 360px"
+                  quality={88}
+                  src="/images/home/banya-route-through-wall-direct.webp"
+                  title="Горизонтальный маршрут"
+                />
+                <p>
+                  Типовая схема узлов. Фактические длины труб и состав комплекта указаны ниже и в спецификации.
+                </p>
               </div>
             ) : (
               <GeneratedChimneyScheme
