@@ -1509,6 +1509,16 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                   title="Горизонтальное подключение через стену"
                 />
               </div>
+            ) : calculation.routeKind === "wall-top" ? (
+              <div className="configurator-wall-route-png">
+                <RouteImageViewer
+                  alt="Схема подключения от верхнего патрубка через отвод 90 градусов, стену и наружный тройник"
+                  previewSizes="(max-width: 720px) calc(100vw - 56px), 460px"
+                  quality={88}
+                  src="/images/home/banya-route-through-wall-top-elbow.png"
+                  title="Верхний выход через стену"
+                />
+              </div>
             ) : (
               <GeneratedChimneyScheme
                 calculation={calculation}

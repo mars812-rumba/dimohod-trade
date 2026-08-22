@@ -4,7 +4,11 @@ import {
   type RoofTerminationRule,
 } from "./chimneyTermination";
 import { calculatePitchedRoofPassage } from "./roofGeometry";
-import { wallRearRouteConsoleQuantity, wallRearRoutePipePlan } from "./wallRouteLayout";
+import {
+  wallRearRouteConsoleQuantity,
+  wallRearRoutePipePlan,
+  wallRouteConsoleQuantity,
+} from "./wallRouteLayout";
 
 export const PIPE_SOCKET_OVERLAP_MM = 50;
 export const ROTARY_DAMPER_EFFECTIVE_LENGTH_MM = 130;
@@ -331,7 +335,7 @@ function addRouteNodes(
   singleWallWarmupPipeLengthMm: number,
   rotaryDamperHeightMm: number,
   passageWoolKits: number,
-  wallRearConsoleQuantity: number,
+  wallConsoleQuantity: number,
 ) {
   if (routeKind === "ceiling") {
     if (singleWallWarmupPipeLengthMm > 0) {
@@ -501,17 +505,54 @@ function addRouteNodes(
       key: "outside-support-consoles",
       productKind: "консоль",
       label: "Консоль универсальная",
-      quantity: wallRearConsoleQuantity,
+      quantity: wallConsoleQuantity,
       zone: "wall/outdoor",
       selectionReason: "Одна консоль служит опорой под тройником; остальные устанавливаются на наружной сэндвич-колонне с шагом 2000 мм.",
       requiresSku: true,
       catalogCategorySlug: "homuty-i-krepezh",
       catalogSearch: "Консоль универсальная",
       catalogDiameterMode: "sandwich-outer-range",
-      quantityNote: `1 под тройником + ${Math.max(0, wallRearConsoleQuantity - 1)} на наружной колонне.`,
+      quantityNote: `1 под тройником + ${Math.max(0, wallConsoleQuantity - 1)} на наружной колонне.`,
     });
   } else {
-    bom.push({ key: "outside-elbow", productKind: "отвод", label: "Сэндвич-отвод 90°", quantity: 2, zone: "wall/outdoor", selectionReason: "Количество определяется поворотами выбранного маршрута.", requiresSku: true });
+    bom.push({
+      key: "top-outlet-elbow",
+      productKind: "отвод",
+      label: "Одноконтурный отвод 90°",
+      quantity: 1,
+      contour: "одностенный",
+      zone: "indoor_warm",
+      selectionReason: "Один отвод меняет направление трассы от верхнего патрубка отопителя к стеновому проходу.",
+      requiresSku: true,
+      catalogCategorySlug: "odnokonturnye-otvody",
+      catalogSearch: "Одноконтурный отвод 90°",
+    });
+    bom.push({
+      key: "outside-tee",
+      productKind: "тройник",
+      label: "Сэндвич-тройник с К/О 90°",
+      quantity: 1,
+      contour: "сэндвич",
+      insulationMm: 50,
+      zone: "wall/outdoor",
+      selectionReason: "Наружный тройник соединяет стеновой проход с вертикальной сэндвич-колонной и оставляет нижний сервисный узел.",
+      requiresSku: true,
+      catalogCategorySlug: "sendvich-troyniki",
+      catalogSearch: "Сэндвич-тройник с К/О 90°",
+    });
+    bom.push({
+      key: "outside-support-consoles",
+      productKind: "консоль",
+      label: "Консоль универсальная",
+      quantity: wallConsoleQuantity,
+      zone: "wall/outdoor",
+      selectionReason: "Одна консоль служит опорой под тройником; остальные устанавливаются на наружной сэндвич-колонне с шагом 2000 мм.",
+      requiresSku: true,
+      catalogCategorySlug: "homuty-i-krepezh",
+      catalogSearch: "Консоль универсальная",
+      catalogDiameterMode: "sandwich-outer-range",
+      quantityNote: `1 под тройником + ${Math.max(0, wallConsoleQuantity - 1)} на наружной колонне.`,
+    });
   }
   bom.push({ key: "termination", productKind: "оголовок", label: "Оголовок", quantity: 1, contour: "сэндвич", zone: "termination", selectionReason: "Завершает рассчитанную трассу.", requiresSku: true });
 }
@@ -640,14 +681,14 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   }
 
   let variants: PipeLayoutVariant[] = [];
-  let wallRearConsoleQuantity = 0;
+  let wallConsoleQuantity = 0;
   if (!errors.length) {
     if (routeKind === "ceiling") {
       variants = solvePipeLayouts({ axis: "vertical", startMm: pipeStartMm, targetMm: routeTargetMm, forbiddenZones, fallbackZone: hasAttic ? "attic_or_cold_zone" : "indoor_warm" });
     } else if (routeKind === "wall-rear") {
       const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
       const plan = wallRearRoutePipePlan(outdoorHeightMm);
-      wallRearConsoleQuantity = wallRearRouteConsoleQuantity(
+      wallConsoleQuantity = wallRearRouteConsoleQuantity(
         plan.outdoorPipeQuantity,
         plan.outdoorPipeNominalMm,
       );
@@ -705,6 +746,9 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
           reserveMm: (indoor?.reserveMm ?? 0) + horizontal.reserveMm + outdoor.reserveMm,
           jointPositionsMm: [...(indoor?.jointPositionsMm ?? []), ...horizontal.jointPositionsMm, ...outdoor.jointPositionsMm],
         }];
+        wallConsoleQuantity = wallRouteConsoleQuantity(
+          outdoor.pipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0),
+        );
       }
     }
   }
@@ -719,7 +763,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     singleWallWarmupPipeLengthMm,
     rotaryDamperHeightMm,
     passageWoolKits,
-    wallRearConsoleQuantity,
+    wallConsoleQuantity,
   );
   if (diameter.diameterStatus === "missing") reviewItems.unshift("Указать наружный диаметр патрубка для подбора SKU.");
 

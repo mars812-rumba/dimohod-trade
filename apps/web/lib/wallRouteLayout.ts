@@ -24,6 +24,12 @@ export function wallRearRouteConsoleQuantity(
 ): number {
   const outdoorPipeLengthMm = Math.max(0, Math.round(outdoorPipeQuantity))
     * Math.max(0, Math.round(outdoorPipeNominalMm));
-  const facadeConsoles = Math.ceil(outdoorPipeLengthMm / WALL_CONSOLE_SPACING_MM);
+  return wallRouteConsoleQuantity(outdoorPipeLengthMm);
+}
+
+export function wallRouteConsoleQuantity(outdoorPipeLengthMm: number): number {
+  const facadeConsoles = Math.ceil(
+    Math.max(0, Math.round(outdoorPipeLengthMm)) / WALL_CONSOLE_SPACING_MM,
+  );
   return 1 + facadeConsoles;
 }

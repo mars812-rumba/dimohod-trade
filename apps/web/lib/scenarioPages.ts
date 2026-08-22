@@ -177,7 +177,7 @@ export const banyaScenario: ScenarioPageContent = {
       title: "Через стену и по фасаду",
       description:
         "От верхнего патрубка трасса меняет направление, выходит через стену и поднимается по фасаду.",
-      image: "/images/home/banya-route-through-wall.webp",
+      image: "/images/home/banya-route-through-wall-top-elbow.png",
       imagePresentation: "portrait-scheme",
       href: "/zamery?edit=1&object=banya&route=wall",
       linkLabel: "Выбрать этот вариант",
@@ -918,7 +918,7 @@ export const homeScenario: ScenarioPageContent = {
       title: "Через стену и по фасаду",
       description:
         "Дымоход выходит через стену и далее поднимается снаружи по фасаду дома.",
-      image: "/images/home/banya-route-through-wall.webp",
+      image: "/images/home/banya-route-through-wall-top-elbow.png",
     },
     {
       slug: "through-wall-direct",
