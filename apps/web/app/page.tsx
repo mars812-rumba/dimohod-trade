@@ -942,6 +942,7 @@ export default async function HomePage() {
               <strong>Разделы сайта</strong>
               <Link href="/catalog">Каталог</Link>
               <Link href="/solutions">Решения</Link>
+              <Link href="/guides">Статьи</Link>
               <a href="#calculator">Конфигуратор</a>
               <a href="tel:+79650756555">Контакты</a>
             </nav>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { IconArrowRight as ArrowRight } from "@tabler/icons-react";
 import { SolutionHouseGallery } from "@/components/SolutionHouseGallery";
 import { scenarioPages } from "@/lib/scenarioPages";
 import styles from "@/components/ScenarioPageTemplate.module.css";
@@ -153,6 +153,10 @@ export default function SolutionsPage() {
               <p>
                 Если вы уже знаете нужные изделия, перейдите сразу в{" "}
                 <Link href="/catalog">каталог дымоходов и комплектующих</Link>.
+              </p>
+              <p>
+                Разобраться в маршрутах через стену и кровлю, составе комплекта и роли
+                тройника можно в <Link href="/guides">практических статьях о дымоходах</Link>.
               </p>
             </div>
           </article>

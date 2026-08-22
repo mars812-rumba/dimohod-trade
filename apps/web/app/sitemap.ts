@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getCatalogTree, getProductSeoPages, type CategoryNode } from "@/lib/api";
 import { productPublicPath } from "@/lib/productUrls";
 import { scenarioPages } from "@/lib/scenarioPages";
+import { guideArticles } from "@/lib/guideArticles";
 
 export const dynamic = "force-dynamic";
 
@@ -21,13 +22,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/") },
     { url: absoluteUrl("/catalog") },
     { url: absoluteUrl("/solutions") },
+    { url: absoluteUrl("/guides") },
     { url: absoluteUrl("/solutions/banya/zamery") },
+    { url: absoluteUrl("/zamery") },
     { url: absoluteUrl("/privacy") },
     { url: absoluteUrl("/consent-personal-data") },
     { url: absoluteUrl("/cookie-policy") },
     { url: absoluteUrl("/user-agreement") },
     ...Object.keys(scenarioPages).map((slug) => ({
       url: absoluteUrl(`/solutions/${slug}`),
+    })),
+    ...guideArticles.map(({ slug }) => ({
+      url: absoluteUrl(`/guides/${slug}`),
     })),
   ];
 

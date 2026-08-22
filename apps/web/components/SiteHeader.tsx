@@ -118,6 +118,7 @@ export function SiteHeader() {
         <nav className="top-nav" aria-label="Основная навигация">
           <Link href="/catalog">Каталог</Link>
           <Link href="/solutions">Решения</Link>
+          <Link href="/guides">Статьи</Link>
           <Link href="/solutions/banya">Для бани</Link>
           <Link href="/solutions/dom">Для дома</Link>
         </nav>
@@ -201,6 +202,7 @@ export function SiteHeader() {
                 </Link>
               </div>
             </details>
+            <Link href="/guides" onClick={closeMenu}>Статьи и инструкции</Link>
             <Link className="mobile-menu-feature-link" href="/zamery" onClick={closeMenu}>
               <span><Ruler aria-hidden size={17} /> Мои замеры</span>
             </Link>
