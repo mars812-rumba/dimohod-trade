@@ -8,6 +8,7 @@ import {
   wallRearRouteConsoleQuantity,
   wallRearRoutePipePlan,
   wallRouteConsoleQuantity,
+  wallTopRouteUpperConsoleQuantity,
 } from "./wallRouteLayout";
 
 export const PIPE_SOCKET_OVERLAP_MM = 50;
@@ -567,31 +568,43 @@ function addRouteNodes(
       catalogSearch: "Сэндвич-тройник с К/О 90°",
     });
     bom.push({
-      key: "outside-support-consoles",
-      productKind: "консоль",
-      label: "Консоль универсальная",
-      quantity: wallConsoleQuantity,
+      key: "outside-support-platform",
+      productKind: "опорная_площадка",
+      label: "Сэндвич-опорная площадка",
+      quantity: 1,
       zone: "wall/outdoor",
-      selectionReason: "Одна консоль служит опорой под тройником; остальные устанавливаются на наружной сэндвич-колонне с шагом 2000 мм.",
+      selectionReason: "Установлена непосредственно под наружным сэндвич-тройником.",
       requiresSku: true,
       catalogCategorySlug: "homuty-i-krepezh",
-      catalogSearch: "Консоль универсальная",
+      catalogSearch: "Сэндвич-опорная площадка",
       catalogDiameterMode: "sandwich-outer-range",
-      quantityNote: `1 под тройником + ${Math.max(0, wallConsoleQuantity - 1)} на наружной колонне.`,
     });
-    if (wallConsoleQuantity > 1) {
+    if (wallConsoleQuantity > 0) {
+      bom.push({
+        key: "outside-support-consoles",
+        productKind: "консоль",
+        label: "Консоль универсальная",
+        quantity: wallConsoleQuantity,
+        zone: "wall/outdoor",
+        selectionReason: "Одна универсальная консоль устанавливается наверху наружной трассы длиной от 2000 мм.",
+        requiresSku: true,
+        catalogCategorySlug: "homuty-i-krepezh",
+        catalogSearch: "Консоль универсальная",
+        catalogDiameterMode: "sandwich-outer-range",
+        quantityNote: "Одна консоль в конце наружной трассы.",
+      });
       bom.push({
         key: "outside-console-power-clamps",
         productKind: "крепеж",
         label: "Хомут силовой для консоли",
-        quantity: wallConsoleQuantity - 1,
+        quantity: wallConsoleQuantity,
         zone: "wall/outdoor",
-        selectionReason: "По одному силовому хомуту на каждую универсальную консоль наружной колонны; опора под тройником считается отдельно.",
+        selectionReason: "Один силовой хомут устанавливается на верхнюю универсальную консоль.",
         requiresSku: true,
         catalogCategorySlug: "homuty-i-krepezh",
         catalogSearch: "Хомут силовой для консоли",
         catalogDiameterMode: "sandwich-outer-exact",
-        quantityNote: "По одному на каждую фасадную консоль с шагом не более 2000 мм.",
+        quantityNote: "Один хомут на верхнюю универсальную консоль.",
       });
     }
   }
@@ -787,9 +800,10 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
           reserveMm: (indoor?.reserveMm ?? 0) + horizontal.reserveMm + outdoor.reserveMm,
           jointPositionsMm: [...(indoor?.jointPositionsMm ?? []), ...horizontal.jointPositionsMm, ...outdoor.jointPositionsMm],
         }];
-        wallConsoleQuantity = wallRouteConsoleQuantity(
-          outdoor.pipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0),
-        );
+        const outdoorPipeLengthMm = outdoor.pipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
+        wallConsoleQuantity = routeKind === "wall-top"
+          ? wallTopRouteUpperConsoleQuantity(outdoorPipeLengthMm)
+          : wallRouteConsoleQuantity(outdoorPipeLengthMm);
       }
     }
   }

@@ -40,3 +40,12 @@ export function wallRouteFacadeConsolePositions(outdoorPipeLengthMm: number): nu
 export function wallRouteConsoleQuantity(outdoorPipeLengthMm: number): number {
   return 1 + wallRouteFacadeConsolePositions(outdoorPipeLengthMm).length;
 }
+
+export function wallTopRouteUpperConsolePositions(outdoorPipeLengthMm: number): number[] {
+  const normalizedLengthMm = Math.max(0, Math.round(outdoorPipeLengthMm));
+  return normalizedLengthMm >= WALL_CONSOLE_SPACING_MM ? [normalizedLengthMm] : [];
+}
+
+export function wallTopRouteUpperConsoleQuantity(outdoorPipeLengthMm: number): number {
+  return wallTopRouteUpperConsolePositions(outdoorPipeLengthMm).length;
+}

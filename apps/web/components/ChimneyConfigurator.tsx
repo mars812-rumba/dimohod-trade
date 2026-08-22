@@ -26,7 +26,10 @@ import {
   type ChimneyCalculation,
   type PipeLayoutVariant,
 } from "@/lib/chimneyCalculation";
-import { wallRouteFacadeConsolePositions } from "@/lib/wallRouteLayout";
+import {
+  wallRouteFacadeConsolePositions,
+  wallTopRouteUpperConsolePositions,
+} from "@/lib/wallRouteLayout";
 import { productSelectionPath } from "@/lib/productUrls";
 import type { ProductListItem, ProductListResponse } from "@/lib/api";
 import {
@@ -123,7 +126,7 @@ function DynamicWallTopScheme({
   const horizontalPipes = variant?.pipes.filter((pipe) => pipe.axis === "horizontal") ?? [];
   const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const horizontalNominalMm = horizontalPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
-  const consolePositionsMm = wallRouteFacadeConsolePositions(outdoorNominalMm);
+  const consolePositionsMm = wallTopRouteUpperConsolePositions(outdoorNominalMm);
   const stackTopY = 238;
   const stackBottomY = 1058;
   const stackHeight = stackBottomY - stackTopY;
@@ -178,6 +181,23 @@ function DynamicWallTopScheme({
         y="0"
       />
 
+      <g aria-label="Сэндвич-опорная площадка под тройником">
+        <rect fill="#fff" height="138" width="124" x="534" y="1172" />
+        <rect
+          fill="url(#dynamic-console-top)"
+          filter="url(#dynamic-pipe-shadow)"
+          height="22"
+          rx="4"
+          stroke="#3f494d"
+          strokeWidth="2"
+          width="116"
+          x="635"
+          y="1160"
+        />
+        <circle cx="646" cy="1171" fill="#303c41" r="3" />
+        <circle cx="740" cy="1171" fill="#303c41" r="3" />
+      </g>
+
       <g aria-label={`Наружные сэндвич-трубы: ${outdoorPipes.length}`}>
         <rect fill="#fff" height={stackHeight - 80} width="122" x="535" y={stackTopY + 80} />
         <rect fill="#fff" height={stackHeight + 8} width="84" x="651" y={stackTopY - 4} />
@@ -214,7 +234,7 @@ function DynamicWallTopScheme({
         <line stroke="#29363b" strokeWidth="4" x1="657" x2="729" y1={stackBottomY} y2={stackBottomY} />
       </g>
 
-      <g aria-label={`Фасадные консоли с силовыми хомутами: ${consolePositionsMm.length}`}>
+      <g aria-label={`Верхняя универсальная консоль с силовым хомутом: ${consolePositionsMm.length}`}>
         {consolePositionsMm.map((positionMm, index) => {
           const ratio = outdoorNominalMm > 0 ? positionMm / outdoorNominalMm : 0;
           const y = Math.max(stackTopY + 78, Math.min(stackBottomY - 88, stackBottomY - ratio * stackHeight));
@@ -283,10 +303,10 @@ function DynamicWallTopScheme({
       ) : null}
 
       <g className="dynamic-scheme-summary" transform="translate(42 1420)">
-        <rect height="72" rx="18" width="720" />
+        <rect height="72" rx="18" width="900" />
         <text x="24" y="29">По выбранной смете</text>
         <text x="24" y="55">
-          трубы — {outdoorPipes.length} шт. · консоли — {consolePositionsMm.length + 1} шт. · силовые хомуты — {consolePositionsMm.length} шт.
+          трубы — {outdoorPipes.length} шт. · площадка — 1 шт. · консоли — {consolePositionsMm.length} шт. · силовые хомуты — {consolePositionsMm.length} шт.
         </text>
       </g>
     </svg>
