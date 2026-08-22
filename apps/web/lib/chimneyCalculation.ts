@@ -4,6 +4,7 @@ import {
   type RoofTerminationRule,
 } from "./chimneyTermination";
 import { calculatePitchedRoofPassage } from "./roofGeometry";
+import { wallRearRoutePipePlan } from "./wallRouteLayout";
 
 export const PIPE_SOCKET_OVERLAP_MM = 50;
 export const ROTARY_DAMPER_EFFECTIVE_LENGTH_MM = 130;
@@ -614,6 +615,39 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   if (!errors.length) {
     if (routeKind === "ceiling") {
       variants = solvePipeLayouts({ axis: "vertical", startMm: pipeStartMm, targetMm: routeTargetMm, forbiddenZones, fallbackZone: hasAttic ? "attic_or_cold_zone" : "indoor_warm" });
+    } else if (routeKind === "wall-rear") {
+      const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
+      const plan = wallRearRoutePipePlan(outdoorHeightMm);
+      const connectionEffectiveMm = effectiveComponentHeight(plan.connectionPipeNominalMm);
+      const outdoorEffectiveMm = effectiveComponentHeight(plan.outdoorPipeNominalMm);
+      const horizontalPipe: PlacedPipe = {
+        id: "horizontal-pipe-1",
+        axis: "horizontal",
+        nominalMm: plan.connectionPipeNominalMm,
+        effectiveMm: connectionEffectiveMm,
+        startMm: 0,
+        endMm: connectionEffectiveMm,
+        zone: "wall_or_ceiling_pass",
+        contour: "одностенный",
+      };
+      const outdoorPipes: PlacedPipe[] = Array.from({ length: plan.outdoorPipeQuantity }, (_, index) => ({
+        id: `outdoor-pipe-${index + 1}`,
+        axis: "vertical",
+        nominalMm: plan.outdoorPipeNominalMm,
+        effectiveMm: outdoorEffectiveMm,
+        startMm: index * outdoorEffectiveMm,
+        endMm: (index + 1) * outdoorEffectiveMm,
+        zone: "outdoor",
+        contour: "сэндвич",
+      }));
+      variants = [{
+        id: `rear-${plan.connectionPipeNominalMm}--outdoor-${plan.outdoorPipeQuantity}x${plan.outdoorPipeNominalMm}`,
+        label: `${plan.connectionPipeNominalMm} / ${plan.outdoorPipeQuantity} × ${plan.outdoorPipeNominalMm}`,
+        pipes: [horizontalPipe, ...outdoorPipes],
+        coveredEndMm: outdoorHeightMm,
+        reserveMm: 0,
+        jointPositionsMm: [horizontalPipe.endMm, ...outdoorPipes.map((pipe) => pipe.endMm)],
+      }];
     } else {
       const wallEndMm = (positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000)
         + (positiveNumber(input.draft?.wallThickness) ?? 0)
