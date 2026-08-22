@@ -4,6 +4,7 @@ from pathlib import Path
 
 RULES_PATH = Path(__file__).parents[1] / "configurator" / "svg-route-generation-rules.v1.json"
 CONFIGURATOR_RULES_PATH = Path(__file__).parents[1] / "configurator" / "configurator-rules.v1.json"
+SCENE_GRAPH_RULES_PATH = Path(__file__).parents[1] / "configurator" / "engineering-scene-graph-rules.v2.json"
 
 
 def load_rules() -> dict:
@@ -12,6 +13,29 @@ def load_rules() -> dict:
 
 def load_configurator_rules() -> dict:
     return json.loads(CONFIGURATOR_RULES_PATH.read_text(encoding="utf-8"))
+
+
+def load_scene_graph_rules() -> dict:
+    return json.loads(SCENE_GRAPH_RULES_PATH.read_text(encoding="utf-8"))
+
+
+def test_scene_graph_v2_separates_engineering_bom_catalog_and_style_authority() -> None:
+    rules = load_scene_graph_rules()
+
+    assert rules["schema_version"] == "2.0"
+    assert rules["sources"] == {
+        "configurator": "engineering_geometry",
+        "bom": "components_variants_and_quantities",
+        "catalog_product_assets": "component_appearance",
+        "existing_successful_diagram": "visual_style_only",
+    }
+    assert rules["external_wall_topology"]["tee_lower_branch"] == [
+        "support_plug",
+        "support_console",
+    ]
+    assert rules["hard_checks"]["no_joint_strictly_inside_wall_passage"] is True
+    assert rules["hard_checks"]["support_plug_forbidden_in_horizontal_route"] is True
+    assert rules["failure_policy"]["missing_catalog_asset"] == "stop_render"
 
 
 def test_engineering_svg_contract_keeps_critical_geometry_invariants() -> None:

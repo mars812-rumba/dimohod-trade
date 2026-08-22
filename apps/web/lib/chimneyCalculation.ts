@@ -5,8 +5,7 @@ import {
 } from "./chimneyTermination";
 import { calculatePitchedRoofPassage } from "./roofGeometry";
 import {
-  wallRearRouteConsoleQuantity,
-  wallRearRoutePipePlan,
+  wallRouteFacadeConsolePositions,
   wallRouteConsoleQuantity,
   wallTopRouteFacadeConsoleQuantity,
 } from "./wallRouteLayout";
@@ -45,7 +44,7 @@ export type PlacedPipe = {
 };
 
 export type FixedRoutePart = {
-  id: "warmup" | "rotary_damper" | "support_cap";
+  id: "warmup" | "rotary_damper" | "sliding_damper" | "support_cap" | "mono_sandwich_transition";
   label: string;
   axis: RouteAxis;
   nominalLengthMm: number;
@@ -105,6 +104,7 @@ export type ChimneyCalculation = {
   routeTargetMm: number;
   fixedParts: FixedRoutePart[];
   forbiddenZones: ForbiddenJointZone[];
+  facadeConsolePositionsMm: number[];
   variants: PipeLayoutVariant[];
   selectedVariant: PipeLayoutVariant | null;
   bom: ChimneyBomLine[];
@@ -441,26 +441,27 @@ function addRouteNodes(
     const firstSandwichPipeIndex = bom.findIndex((line) => line.key.startsWith("sandwich-pipe-"));
     bom.splice(firstSandwichPipeIndex >= 0 ? firstSandwichPipeIndex : bom.length, 0,
       {
-        key: "rear-connection-rotary-damper",
+        key: "rear-connection-sliding-damper",
         productKind: "шибер",
-        label: "Одноконтурный шибер поворотный",
+        label: "Одноконтурный шибер выдвижной",
         quantity: 1,
         contour: "одностенный",
         zone: "transition",
-        selectionReason: "Установлен после одноконтурной соединительной трубы и перед опорной сэндвич-заглушкой.",
+        selectionReason: "Установлен в рассчитанной горизонтальной цепочке после одноконтурных труб.",
         requiresSku: true,
-        catalogSearch: "Одноконтурный шибер поворотный",
+        catalogSearch: "Одноконтурный шибер выдвижной",
       },
       {
-        key: "support-cap",
-        productKind: "заглушка",
-        label: "Сэндвич-заглушка опорная",
+        key: "mono-sandwich-transition",
+        productKind: "переход",
+        label: "Переход одноконтурный → сэндвич",
         quantity: 1,
         contour: "сэндвич",
         insulationMm: 50,
         zone: "transition",
-        selectionReason: "Установлена после поворотного шибера и перед горизонтальным сэндвич-участком.",
+        selectionReason: "Переводит одноконтурную часть в сэндвич до защищённой зоны стены.",
         requiresSku: true,
+        catalogSearch: "Переход на сэндвич",
       },
     );
   }
@@ -591,31 +592,57 @@ function addRouteNodes(
       catalogSearch: "Сэндвич-тройник с К/О 90°",
     });
     bom.push({
-      key: "outside-support-consoles",
+      key: "tee-lower-support-plug",
+      productKind: "заглушка",
+      label: "Сэндвич-заглушка опорная",
+      quantity: 1,
+      contour: "сэндвич",
+      insulationMm: 50,
+      zone: "outdoor/lower_branch",
+      selectionReason: "Нижняя ветвь наружного тройника; не входит в горизонтальный маршрут и располагается непосредственно под тройником.",
+      requiresSku: true,
+      catalogSearch: "Сэндвич-заглушка опорная",
+    });
+    bom.push({
+      key: "tee-support-console",
       productKind: "консоль",
-      label: "Консоль универсальная",
-      quantity: wallConsoleQuantity,
-      zone: "wall/outdoor",
-      selectionReason: "Одна консоль служит опорой под тройником; остальные устанавливаются на наружной сэндвич-колонне с шагом 2000 мм.",
+      label: "Консоль универсальная под тройник",
+      quantity: 1,
+      zone: "outdoor/support",
+      selectionReason: "Единственная отдельная опора нижнего узла тройника.",
       requiresSku: true,
       catalogCategorySlug: "homuty-i-krepezh",
       catalogSearch: "Консоль универсальная",
       catalogDiameterMode: "sandwich-outer-range",
-      quantityNote: `1 под тройником + ${Math.max(0, wallConsoleQuantity - 1)} на наружной колонне.`,
+      quantityNote: "Одна консоль непосредственно под тройником.",
     });
-    if (wallConsoleQuantity > 1) {
+    const facadeConsoleQuantity = Math.max(0, wallConsoleQuantity - 1);
+    if (facadeConsoleQuantity > 0) {
+      bom.push({
+        key: "outside-support-consoles",
+        productKind: "консоль",
+        label: "Консоль универсальная фасадная",
+        quantity: facadeConsoleQuantity,
+        zone: "outdoor/support",
+        selectionReason: "Количество и высотные отметки рассчитаны по наружной вертикальной колонне; верхняя консоль не дублируется.",
+        requiresSku: true,
+        catalogCategorySlug: "homuty-i-krepezh",
+        catalogSearch: "Консоль универсальная",
+        catalogDiameterMode: "sandwich-outer-range",
+        quantityNote: "Только фасадные консоли; опора под тройником считается отдельной строкой.",
+      });
       bom.push({
         key: "outside-console-power-clamps",
         productKind: "крепеж",
         label: "Хомут силовой для консоли",
-        quantity: wallConsoleQuantity - 1,
+        quantity: facadeConsoleQuantity,
         zone: "wall/outdoor",
         selectionReason: "По одному силовому хомуту на каждую универсальную консоль наружной колонны; опора под тройником считается отдельно.",
         requiresSku: true,
         catalogCategorySlug: "homuty-i-krepezh",
         catalogSearch: "Хомут силовой для консоли",
         catalogDiameterMode: "sandwich-outer-exact",
-        quantityNote: "По одному на каждую фасадную консоль с шагом не более 2000 мм.",
+        quantityNote: "По одному на каждую рассчитанную фасадную консоль.",
       });
     }
   } else {
@@ -835,25 +862,20 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
 
   let variants: PipeLayoutVariant[] = [];
   let wallConsoleQuantity = 0;
+  let facadeConsolePositionsMm: number[] = [];
   if (!errors.length) {
     if (routeKind === "ceiling") {
       variants = solvePipeLayouts({ axis: "vertical", startMm: pipeStartMm, targetMm: routeTargetMm, forbiddenZones, fallbackZone: hasAttic ? "attic_or_cold_zone" : "indoor_warm" });
     } else if (routeKind === "wall-rear") {
       const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
-      const plan = wallRearRoutePipePlan(outdoorHeightMm);
-      wallConsoleQuantity = wallRearRouteConsoleQuantity(
-        plan.outdoorPipeQuantity,
-        plan.outdoorPipeNominalMm,
-      );
-      const outdoorEffectiveMm = effectiveComponentHeight(plan.outdoorPipeNominalMm);
       const wallStartMm = positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000;
       const wallEndMm = wallStartMm
         + (positiveNumber(input.draft?.wallThickness) ?? 0)
         + (positiveNumber(input.draft?.facadeOffset) ?? 0);
       const rearDamperEffectiveMm = Math.max(0, Math.round(input.rotaryDamperHeightMm ?? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM));
-      const rearSupportCapNominalMm = Math.max(0, Math.round(input.supportCapLengthMm ?? 70));
-      const rearSupportCapEffectiveMm = effectiveComponentHeight(rearSupportCapNominalMm);
-      const singlePipeTargetMm = wallStartMm - rearDamperEffectiveMm - rearSupportCapEffectiveMm;
+      const transitionNominalMm = Math.max(0, Math.round(input.supportCapLengthMm ?? 70));
+      const transitionEffectiveMm = effectiveComponentHeight(transitionNominalMm);
+      const singlePipeTargetMm = wallStartMm - rearDamperEffectiveMm - transitionEffectiveMm;
       const horizontalSingle = solvePipeLayoutEndingAtOrBefore({
         axis: "horizontal",
         startMm: 0,
@@ -863,11 +885,11 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       });
       const damperStartMm = horizontalSingle?.coveredEndMm ?? 0;
       const damperEndMm = damperStartMm + rearDamperEffectiveMm;
-      const supportCapEndMm = damperEndMm + rearSupportCapEffectiveMm;
-      const horizontalSandwich = horizontalSingle && wallEndMm > supportCapEndMm
+      const transitionEndMm = damperEndMm + transitionEffectiveMm;
+      const horizontalSandwich = horizontalSingle && wallEndMm > transitionEndMm
         ? solvePipeLayouts({
           axis: "horizontal",
-          startMm: supportCapEndMm,
+          startMm: transitionEndMm,
           targetMm: wallEndMm,
           forbiddenZones,
           fallbackZone: "wall_or_ceiling_pass",
@@ -875,27 +897,35 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
           maxVariants: 1,
         })[0]
         : null;
-      const outdoorPipes: PlacedPipe[] = Array.from({ length: plan.outdoorPipeQuantity }, (_, index) => ({
-        id: `outdoor-pipe-${index + 1}`,
+      const outdoorLayout = solvePipeLayouts({
         axis: "vertical",
-        nominalMm: plan.outdoorPipeNominalMm,
-        effectiveMm: outdoorEffectiveMm,
-        startMm: index * outdoorEffectiveMm,
-        endMm: (index + 1) * outdoorEffectiveMm,
-        zone: "outdoor",
+        startMm: 0,
+        targetMm: outdoorHeightMm,
+        forbiddenZones: [],
+        fallbackZone: "outdoor",
         contour: "сэндвич",
-      }));
+        maxVariants: 1,
+      })[0];
+      const outdoorPipes: PlacedPipe[] = outdoorLayout?.pipes.map((pipe, index) => ({
+        ...pipe,
+        id: `outdoor-pipe-${index + 1}`,
+      })) ?? [];
+      const installedOutdoorHeightMm = outdoorPipes.at(-1)?.endMm ?? 0;
+      facadeConsolePositionsMm = wallRouteFacadeConsolePositions(installedOutdoorHeightMm);
+      wallConsoleQuantity = 1 + facadeConsolePositionsMm.length;
       if (!horizontalSingle) {
-        errors.push("Не удалось подобрать стандартную длину одностенной трубы по расстоянию от патрубка до стены с учётом шибера и опорной заглушки.");
-      } else if (supportCapEndMm > wallStartMm) {
+        errors.push("Не удалось подобрать стандартную длину одностенной трубы по расстоянию от патрубка до стены с учётом шибера и перехода на сэндвич.");
+      } else if (transitionEndMm > wallStartMm) {
         errors.push("Переход на сэндвич попадает внутрь стены; увеличьте расстояние от патрубка до внутренней поверхности стены или уточните длины переходных элементов.");
       } else if (!horizontalSandwich) {
         errors.push("Не найдена раскладка сэндвич-труб без стыка внутри стены.");
+      } else if (!outdoorLayout) {
+        errors.push("Не найдена раскладка наружных сэндвич-труб по заданной вертикальной высоте.");
       } else {
         fixedParts.push(
           {
-            id: "rotary_damper",
-            label: "Шибер поворотный",
+            id: "sliding_damper",
+            label: "Шибер выдвижной",
             axis: "horizontal",
             nominalLengthMm: ROTARY_DAMPER_OVERALL_LENGTH_MM,
             effectiveMm: rearDamperEffectiveMm,
@@ -903,13 +933,13 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
             endMm: damperEndMm,
           },
           {
-            id: "support_cap",
-            label: "Опорная заглушка",
+            id: "mono_sandwich_transition",
+            label: "Переход одноконтурный → сэндвич",
             axis: "horizontal",
-            nominalLengthMm: rearSupportCapNominalMm,
-            effectiveMm: rearSupportCapEffectiveMm,
+            nominalLengthMm: transitionNominalMm,
+            effectiveMm: transitionEffectiveMm,
             startMm: damperEndMm,
-            endMm: supportCapEndMm,
+            endMm: transitionEndMm,
           },
         );
         const horizontalSandwichPipes = horizontalSandwich.pipes.map((pipe, index) => ({
@@ -917,11 +947,11 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
           id: `rear-horizontal-sandwich-pipe-${index + 1}`,
         }));
         variants = [{
-          id: `rear-${horizontalSingle.id}--sandwich-${horizontalSandwich.id}--outdoor-${plan.outdoorPipeQuantity}x${plan.outdoorPipeNominalMm}`,
-          label: `${horizontalSingle.label} / ${horizontalSandwich.label} / ${plan.outdoorPipeQuantity} × ${plan.outdoorPipeNominalMm}`,
+          id: `rear-${horizontalSingle.id}--sandwich-${horizontalSandwich.id}--outdoor-${outdoorLayout.id}`,
+          label: `${horizontalSingle.label} / ${horizontalSandwich.label} / ${outdoorLayout.label}`,
           pipes: [...horizontalSingle.pipes, ...horizontalSandwichPipes, ...outdoorPipes],
-          coveredEndMm: outdoorHeightMm,
-          reserveMm: horizontalSandwich.reserveMm,
+          coveredEndMm: outdoorLayout.coveredEndMm,
+          reserveMm: horizontalSandwich.reserveMm + outdoorLayout.reserveMm,
           jointPositionsMm: [...horizontalSingle.jointPositionsMm, ...horizontalSandwich.jointPositionsMm, ...outdoorPipes.map((pipe) => pipe.endMm)],
         }];
       }
@@ -992,6 +1022,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     routeTargetMm,
     fixedParts,
     forbiddenZones,
+    facadeConsolePositionsMm,
     variants,
     selectedVariant: variants[0] ?? null,
     bom,
@@ -1019,20 +1050,20 @@ export function bomForVariant(calculation: ChimneyCalculation, variant: PipeLayo
   const pipeLines = summarizePipeBom([variant], calculation.routeKind);
   const fixedAndNodes = calculation.bom.filter((line) => !isLayoutPipe(line));
   if (calculation.routeKind === "wall-rear") {
-    const rotaryDamperIndex = fixedAndNodes.findIndex((line) => line.key === "rear-connection-rotary-damper");
-    const supportCapIndex = fixedAndNodes.findIndex((line) => line.key === "support-cap");
-    if (rotaryDamperIndex >= 0 && supportCapIndex >= 0) {
+    const damperIndex = fixedAndNodes.findIndex((line) => line.key === "rear-connection-sliding-damper");
+    const transitionIndex = fixedAndNodes.findIndex((line) => line.key === "mono-sandwich-transition");
+    if (damperIndex >= 0 && transitionIndex >= 0) {
       const singlePipeLines = pipeLines.filter((line) => line.contour === "одностенный");
       const sandwichPipeLines = pipeLines.filter((line) => line.contour === "сэндвич");
-      const assemblyStartIndex = Math.min(rotaryDamperIndex, supportCapIndex);
+      const assemblyStartIndex = Math.min(damperIndex, transitionIndex);
       const remainingNodes = fixedAndNodes.filter((line) => (
-        line.key !== "rear-connection-rotary-damper" && line.key !== "support-cap"
+        line.key !== "rear-connection-sliding-damper" && line.key !== "mono-sandwich-transition"
       ));
       return withMaterialDefaults([
         ...remainingNodes.slice(0, assemblyStartIndex),
         ...singlePipeLines,
-        fixedAndNodes[rotaryDamperIndex],
-        fixedAndNodes[supportCapIndex],
+        fixedAndNodes[damperIndex],
+        fixedAndNodes[transitionIndex],
         ...sandwichPipeLines,
         ...remainingNodes.slice(assemblyStartIndex),
       ]);

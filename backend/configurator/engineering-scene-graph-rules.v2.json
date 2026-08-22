@@ -1,0 +1,66 @@
+{
+  "schema_version": "2.0",
+  "status": "absolute_deterministic_contract",
+  "task": "dynamic_chimney_engineering_scheme",
+  "sources": {
+    "configurator": "engineering_geometry",
+    "bom": "components_variants_and_quantities",
+    "catalog_product_assets": "component_appearance",
+    "existing_successful_diagram": "visual_style_only"
+  },
+  "pipeline": [
+    "read_configurator_result",
+    "read_calculated_bom",
+    "resolve_every_rendered_bom_item_to_catalog_product",
+    "build_engineering_topology",
+    "calculate_positions_in_mm",
+    "validate_no_joint_zones",
+    "validate_component_quantities",
+    "create_scene_graph",
+    "render_svg"
+  ],
+  "coordinate_system": {
+    "units": "mm",
+    "origin": "heater_outlet_axis",
+    "positive_x": "toward_outside_wall",
+    "positive_y": "up"
+  },
+  "external_wall_topology": {
+    "main": [
+      "heater_outlet",
+      "horizontal_internal_components",
+      "mono_sandwich_transition",
+      "continuous_wall_passage_pipe",
+      "tee_90",
+      "vertical_sandwich_stack",
+      "terminal"
+    ],
+    "tee_lower_branch": [
+      "support_plug",
+      "support_console"
+    ],
+    "vertical_support_branch": [
+      "wall_consoles",
+      "power_clamps"
+    ]
+  },
+  "hard_checks": {
+    "rendered_quantity_equals_bom": true,
+    "all_rendered_components_have_catalog_asset": true,
+    "single_uniform_mm_to_svg_scale": true,
+    "no_joint_strictly_inside_wall_passage": true,
+    "support_plug_directly_below_tee": true,
+    "support_plug_forbidden_in_horizontal_route": true,
+    "one_support_console_under_tee": true,
+    "duplicate_wall_console_coordinates_forbidden": true,
+    "stretching_component_to_fake_another_length_forbidden": true,
+    "reference_diagram_geometry_forbidden": true
+  },
+  "failure_policy": {
+    "missing_catalog_asset": "stop_render",
+    "missing_required_dimension": "stop_render",
+    "bom_route_conflict": "stop_render",
+    "joint_inside_passage": "recalculate_or_stop_render",
+    "quantity_conflict": "stop_render"
+  }
+}

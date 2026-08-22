@@ -28,9 +28,13 @@ import {
   type PipeLayoutVariant,
 } from "@/lib/chimneyCalculation";
 import {
-  wallRouteFacadeConsolePositions,
   wallTopRouteFacadeConsolePositions,
 } from "@/lib/wallRouteLayout";
+import {
+  buildExternalWallSceneGraph,
+  type EngineeringSceneGraph,
+  type EngineeringSceneNode,
+} from "@/lib/chimneySceneGraph";
 import { productSelectionPath } from "@/lib/productUrls";
 import type { ProductListItem, ProductListResponse } from "@/lib/api";
 import {
@@ -454,203 +458,168 @@ function DynamicWallTopScheme({
   );
 }
 
-function DynamicWallRearScheme({
-  assetBasePath,
-  variant,
-}: {
-  assetBasePath: string;
-  variant: PipeLayoutVariant | null;
+function EngineeringSceneProduct({ node, scale, originX, originY }: {
+  node: EngineeringSceneNode;
+  scale: number;
+  originX: number;
+  originY: number;
 }) {
-  const outdoorPipes = variant?.pipes.filter((pipe) => (
-    pipe.axis === "vertical" && pipe.contour === "сэндвич"
-  )) ?? [];
-  const horizontalSinglePipes = variant?.pipes.filter((pipe) => (
-    pipe.axis === "horizontal" && pipe.contour === "одностенный"
-  )) ?? [];
-  const horizontalSandwichPipes = variant?.pipes.filter((pipe) => (
-    pipe.axis === "horizontal" && pipe.contour === "сэндвич"
-  )) ?? [];
-  const horizontalSingleEffectiveMm = horizontalSinglePipes.reduce((sum, pipe) => sum + pipe.effectiveMm, 0);
-  const horizontalSandwichEffectiveMm = horizontalSandwichPipes.reduce((sum, pipe) => sum + pipe.effectiveMm, 0);
-  const horizontalEffectiveMm = horizontalSingleEffectiveMm + horizontalSandwichEffectiveMm;
-  const horizontalPipeVisualWidth = 147;
-  const horizontalSingleVisualWidth = horizontalEffectiveMm > 0
-    ? Math.max(44, Math.min(103, horizontalPipeVisualWidth * (horizontalSingleEffectiveMm / horizontalEffectiveMm)))
-    : 54;
-  const horizontalSandwichVisualWidth = horizontalPipeVisualWidth - horizontalSingleVisualWidth;
-  const horizontalRouteRightX = 476;
-  const transitionStartX = horizontalRouteRightX - horizontalSingleVisualWidth;
-  const sandwichSectionRightX = transitionStartX - 124;
-  const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
-  const consolePositionsMm = wallRouteFacadeConsolePositions(outdoorNominalMm);
-  const stackTopY = 318;
-  const stackBottomY = 1004;
-  const stackHeight = stackBottomY - stackTopY;
-  let outdoorCursorY = stackBottomY;
-  let horizontalSingleCursorX = horizontalRouteRightX;
+  const x = originX + node.xMm * scale;
+  const y = originY - node.yMm * scale;
+  const length = Math.max(8, node.effectiveLengthMm * scale);
+  const sandwich = node.geometryFamily === "sandwich_pipe";
+  const pipeWidth = sandwich ? 30 : 20;
+  const common = {
+    "data-product-id": node.productId,
+    "data-sku": node.sku,
+    "data-catalog-asset": node.visualAsset,
+  };
+
+  if (node.geometryFamily === "single_wall_pipe" || node.geometryFamily === "sandwich_pipe") {
+    return node.orientation === "horizontal" ? (
+      <g {...common} transform={`translate(${x} ${y})`}>
+        <rect fill="url(#scene-steel)" height={pipeWidth} rx="3" stroke="#26343d" width={length} x="0" y={-pipeWidth / 2} />
+        <line stroke="#26343d" strokeWidth="3" x1={length} x2={length} y1={-pipeWidth / 2 - 2} y2={pipeWidth / 2 + 2} />
+      </g>
+    ) : (
+      <g {...common} transform={`translate(${x} ${y})`}>
+        <rect fill="url(#scene-steel)" height={length} rx="3" stroke="#26343d" width={pipeWidth} x={-pipeWidth / 2} y={-length} />
+        <line stroke="#26343d" strokeWidth="3" x1={-pipeWidth / 2 - 2} x2={pipeWidth / 2 + 2} y1={-length} y2={-length} />
+      </g>
+    );
+  }
+  if (node.geometryFamily === "sliding_damper") return (
+    <g {...common} transform={`translate(${x} ${y})`}>
+      <rect fill="url(#scene-steel)" height="20" rx="3" stroke="#26343d" width={length} x="0" y="-10" />
+      <rect fill="#d9dfe0" height="52" stroke="#26343d" width="7" x={length * 0.48} y="-26" />
+      <line stroke="#26343d" strokeWidth="5" x1={length * 0.48 + 7} x2={length * 0.48 + 35} y1="-22" y2="-22" />
+      <circle cx={length * 0.48 + 39} cy="-22" fill="#29363b" r="5" />
+    </g>
+  );
+  if (node.geometryFamily === "mono_sandwich_transition") return (
+    <g {...common} transform={`translate(${x} ${y})`}>
+      <path d={`M0,-10 L${length},-16 L${length},16 L0,10 Z`} fill="url(#scene-steel)" stroke="#26343d" />
+    </g>
+  );
+  if (node.geometryFamily === "tee_90") return (
+    <g {...common} transform={`translate(${x} ${y})`}>
+      <rect fill="url(#scene-steel)" height="92" rx="6" stroke="#26343d" width="34" x="-17" y="-46" />
+      <path d="M-62,-17 H0 V17 H-62" fill="url(#scene-steel)" stroke="#26343d" />
+      <line stroke="#26343d" strokeWidth="3" x1="-20" x2="20" y1="-46" y2="-46" />
+    </g>
+  );
+  if (node.geometryFamily === "support_plug") return (
+    <g {...common} transform={`translate(${x} ${y})`}>
+      <rect fill="url(#scene-steel)" height="12" rx="2" stroke="#26343d" width="76" x="-38" y="-6" />
+      <path d="M-38,5 v13 h8 M38,5 v13 h-8" fill="none" stroke="#26343d" strokeWidth="3" />
+      <ellipse cx="0" cy="-8" fill="url(#scene-steel)" rx="24" ry="7" stroke="#26343d" />
+      <rect fill="url(#scene-steel)" height="28" stroke="#26343d" width="48" x="-24" y="-36" />
+      <ellipse cx="0" cy="-36" fill="#c7ced0" rx="24" ry="7" stroke="#26343d" />
+      <rect fill="url(#scene-steel)" height="18" stroke="#26343d" width="30" x="-15" y="6" />
+    </g>
+  );
+  if (node.geometryFamily === "support_console" || node.geometryFamily === "wall_console") return (
+    <g {...common} transform={`translate(${x} ${y})`}>
+      <rect fill="#202629" height="72" rx="2" stroke="#111719" width="9" x="24" y="-36" />
+      <rect fill="#202629" height="8" rx="2" stroke="#111719" width="78" x="28" y="-22" />
+      <rect fill="#202629" height="8" rx="2" stroke="#111719" width="78" x="28" y="14" />
+      <path d="M32,14 L78,-18 M32,20 L82,-14" fill="none" stroke="#111719" strokeWidth="5" />
+      <circle cx="29" cy="-29" fill="#d8ddde" r="2.5" />
+      <circle cx="29" cy="29" fill="#d8ddde" r="2.5" />
+    </g>
+  );
+  if (node.geometryFamily === "power_clamp") return (
+    <g {...common} transform={`translate(${x} ${y})`}>
+      <ellipse cx="0" cy="0" fill="none" rx="25" ry="10" stroke="#26343d" strokeWidth="5" />
+      <line stroke="#26343d" strokeWidth="4" x1="24" x2="55" y1="0" y2="0" />
+    </g>
+  );
+  if (node.geometryFamily === "terminal") return (
+    <g {...common} transform={`translate(${x} ${y})`}>
+      <path d="M-28,-8 H28 L12,-34 H-12 Z" fill="url(#scene-steel)" stroke="#26343d" />
+      <rect fill="url(#scene-steel)" height="16" stroke="#26343d" width="30" x="-15" y="-8" />
+    </g>
+  );
+  return null;
+}
+
+function DynamicWallRearScheme({ scene }: { scene: EngineeringSceneGraph }) {
+  const maximumHorizontalMm = Math.max(scene.horizontalRunMm, 1000);
+  const maximumVerticalMm = Math.max(scene.verticalHeightMm + 300, 1000);
+  const scale = Math.min(610 / maximumHorizontalMm, 610 / maximumVerticalMm);
+  const originX = 96;
+  const originY = 730;
+  const wallX = originX + scene.wallPassage.startMm * scale;
+  const wallWidth = Math.max(14, (scene.wallPassage.endMm - scene.wallPassage.startMm) * scale);
+  const passageNodes = scene.nodes.filter((node) => node.geometryFamily === "wall_passage" || node.geometryFamily === "passage_accessory");
+  const productNodes = scene.nodes.filter((node) => node.geometryFamily !== "wall_passage" && node.geometryFamily !== "passage_accessory");
+  const summary = scene.summary.map((line) => `${line.label} — ${line.quantity}`).join("; ");
 
   return (
-    <svg
-      aria-labelledby="dynamic-wall-rear-title dynamic-wall-rear-description"
-      className="configurator-dynamic-png-scheme"
-      role="img"
-      viewBox="0 0 1023 1537"
-    >
-      <title id="dynamic-wall-rear-title">Динамическая схема горизонтального подключения через стену</title>
-      <desc id="dynamic-wall-rear-description">
-        После одноконтурной соединительной трубы показаны поворотный шибер и опорная сэндвич-заглушка, затем сэндвич-трубы до наружного тройника. Количество труб соответствует смете.
-      </desc>
+    <svg aria-labelledby="engineering-wall-title engineering-wall-desc" className="configurator-generated-svg" role="img" viewBox="0 0 1024 860">
+      <title id="engineering-wall-title">Расчётная схема наружного дымохода через стену</title>
+      <desc id="engineering-wall-desc">{`Горизонтальный участок ${scene.horizontalRunMm} мм, вертикальный участок ${scene.verticalHeightMm} мм. ${summary}`}</desc>
       <defs>
-        <linearGradient id="rear-dynamic-steel" x1="0" x2="1">
-          <stop offset="0" stopColor="#566166" />
-          <stop offset="0.18" stopColor="#c7ced0" />
-          <stop offset="0.42" stopColor="#f7f8f7" />
-          <stop offset="0.68" stopColor="#aeb8ba" />
-          <stop offset="0.86" stopColor="#eef1f0" />
-          <stop offset="1" stopColor="#4d585d" />
+        <pattern height="20" id="scene-grid" patternUnits="userSpaceOnUse" width="20">
+          <path d="M20 0H0V20" fill="none" stroke="#dfe8eb" strokeWidth="1" />
+        </pattern>
+        <linearGradient id="scene-steel" x1="0" x2="1">
+          <stop offset="0" stopColor="#647176" />
+          <stop offset="0.25" stopColor="#dce2e3" />
+          <stop offset="0.5" stopColor="#f8faf9" />
+          <stop offset="0.78" stopColor="#aab4b7" />
+          <stop offset="1" stopColor="#536066" />
         </linearGradient>
-        <linearGradient id="rear-dynamic-console" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stopColor="#f2f4f3" />
-          <stop offset="0.48" stopColor="#aab2b4" />
-          <stop offset="1" stopColor="#687277" />
-        </linearGradient>
-        <filter id="rear-dynamic-shadow" height="140%" width="160%" x="-30%" y="-20%">
-          <feDropShadow dx="2" dy="4" floodColor="#182428" floodOpacity="0.2" stdDeviation="4" />
-        </filter>
       </defs>
+      <rect fill="#fff" height="860" rx="24" width="1024" />
+      <rect fill="url(#scene-grid)" height="720" opacity="0.72" rx="18" width="730" x="24" y="24" />
+      <path d={`M24 730 H${wallX} V170 H24 Z`} fill="#f2eadb" stroke="#9c8a70" strokeWidth="2" />
+      <rect fill="#d9bd91" height="620" opacity="0.75" stroke="#8e7555" strokeWidth="2" width={wallWidth} x={wallX} y="110" />
+      <text fill="#6e5b43" fontSize="14" textAnchor="middle" x={wallX + wallWidth / 2} y="96">СТЕНА</text>
+      <rect fill="#313a3d" height="72" rx="6" width="74" x={originX - 64} y={originY - 34} />
+      <rect fill="#171d1f" height="30" rx="3" width="42" x={originX - 48} y={originY - 16} />
+      <text fill="#ffffff" fontSize="12" textAnchor="middle" x={originX - 27} y={originY + 52}>ОТОПИТЕЛЬ</text>
 
-      <image
-        height="1537"
-        href={`${assetBasePath}/images/home/banya-route-through-wall-three-consoles.png`}
-        width="1023"
-        x="0"
-        y="0"
-      />
-
-      <g aria-label="Горизонтальное подключение: одноконтурная труба, поворотный шибер, опорная заглушка и сэндвич-трубы">
-        {horizontalSinglePipes.length ? (
-          <g aria-label={`Одноконтурные соединительные трубы: ${horizontalSinglePipes.length}`}>
-            {horizontalSinglePipes.map((pipe, index) => {
-              const width = horizontalSingleEffectiveMm > 0
-                ? horizontalSingleVisualWidth * (pipe.effectiveMm / horizontalSingleEffectiveMm)
-                : horizontalSingleVisualWidth / horizontalSinglePipes.length;
-              horizontalSingleCursorX -= width;
-              return (
-                <HorizontalPipeSegment
-                  centerY={1054}
-                  filterId="rear-dynamic-shadow"
-                  gradientId="rear-dynamic-steel"
-                  height={42}
-                  key={`rear-horizontal-single-${pipe.id}`}
-                  label={`О${index + 1}`}
-                  width={Math.max(2, width - 2)}
-                  x={horizontalSingleCursorX + 1}
-                />
-              );
-            })}
+      <g aria-label="Защищённый проход стены">
+        {passageNodes.map((node, index) => (
+          <g data-catalog-asset={node.visualAsset} data-product-id={node.productId} key={node.id}>
+            {node.geometryFamily === "wall_passage" ? (
+              <rect fill="none" height="62" stroke="#2f78a3" strokeDasharray="7 4" strokeWidth="3" width={wallWidth + 14} x={wallX - 7} y={originY - 31} />
+            ) : (
+              <rect fill="none" height={46 + index * 4} opacity="0.75" stroke="#6a8795" strokeWidth="2" width={Math.max(8, wallWidth - index * 3)} x={wallX + index * 1.5} y={originY - 23 - index * 2} />
+            )}
           </g>
-        ) : null}
-        <HorizontalTransitionAssembly
-          centerY={1054}
-          direction="left"
-          filterId="rear-dynamic-shadow"
-          flowStartX={transitionStartX}
-          gradientId="rear-dynamic-steel"
-        />
-        <g aria-label={`Горизонтальные сэндвич-трубы: ${horizontalSandwichPipes.length}`}>
-          {horizontalSandwichPipes.map((pipe, index) => {
-            const width = horizontalSandwichEffectiveMm > 0
-              ? horizontalSandwichVisualWidth * (pipe.effectiveMm / horizontalSandwichEffectiveMm)
-              : horizontalSandwichVisualWidth / Math.max(1, horizontalSandwichPipes.length);
-            const previousWidth = horizontalSandwichPipes
-              .slice(0, index)
-              .reduce((sum, item) => sum + (
-                horizontalSandwichEffectiveMm > 0
-                  ? horizontalSandwichVisualWidth * (item.effectiveMm / horizontalSandwichEffectiveMm)
-                  : 0
-              ), 0);
-            const x = sandwichSectionRightX - previousWidth - width;
-            return (
-              <HorizontalPipeSegment
-                centerY={1054}
-                filterId="rear-dynamic-shadow"
-                gradientId="rear-dynamic-steel"
-                height={54}
-                key={`rear-horizontal-${pipe.id}`}
-                label={`Г${index + 1}`}
-                width={Math.max(2, width - 3)}
-                x={x + 2}
-              />
-            );
-          })}
-        </g>
+        ))}
       </g>
 
-      <g aria-label={`Наружные сэндвич-трубы: ${outdoorPipes.length}`}>
-        <rect fill="#fff" height={stackHeight + 8} width="102" x="119" y={stackTopY - 4} />
-        <rect fill="#fff" height={stackHeight + 36} width="73" x="216" y={stackTopY - 12} />
-        {outdoorPipes.map((pipe, index) => {
-          const height = outdoorNominalMm > 0
-            ? stackHeight * (pipe.nominalMm / outdoorNominalMm)
-            : stackHeight / Math.max(1, outdoorPipes.length);
-          outdoorCursorY -= height;
-          const y = outdoorCursorY;
-          return (
-            <g key={pipe.id}>
-              <rect
-                fill="url(#rear-dynamic-steel)"
-                filter="url(#rear-dynamic-shadow)"
-                height={Math.max(2, height - 4)}
-                rx="5"
-                stroke="#39474c"
-                strokeWidth="2"
-                width="72"
-                x="136"
-                y={y + 2}
-              />
-              <line stroke="#263439" strokeWidth="4" x1="133" x2="211" y1={y + 3} y2={y + 3} />
-              <line stroke="rgba(255,255,255,0.72)" strokeWidth="2" x1="143" x2="143" y1={y + 10} y2={y + height - 8} />
-              <text className="dynamic-pipe-index" textAnchor="middle" x="172" y={y + height / 2 + 5}>
-                {index + 1}
-              </text>
-            </g>
-          );
-        })}
-        {!outdoorPipes.length ? (
-          <rect className="dynamic-pipe-placeholder" height={stackHeight} width="72" x="136" y={stackTopY} />
-        ) : null}
-        <line stroke="#263439" strokeWidth="4" x1="133" x2="211" y1={stackBottomY} y2={stackBottomY} />
+      <g aria-label="Компоненты, построенные из scene graph">
+        {productNodes.map((node) => <EngineeringSceneProduct key={node.id} node={node} originX={originX} originY={originY} scale={scale} />)}
       </g>
 
-      <g aria-label={`Фасадные консоли с силовыми хомутами: ${consolePositionsMm.length}`}>
-        {consolePositionsMm.map((positionMm, index) => {
-          const ratio = outdoorNominalMm > 0 ? positionMm / outdoorNominalMm : 0;
-          const y = Math.max(stackTopY + 78, Math.min(stackBottomY - 88, stackBottomY - ratio * stackHeight));
+      <g fill="#1f2d35" fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace" fontSize="12">
+        {productNodes.map((node, index) => {
+          const x = originX + node.xMm * scale;
+          const y = originY - node.yMm * scale;
           return (
-            <g key={`${positionMm}-${index}`}>
-              <polygon
-                fill="url(#rear-dynamic-console)"
-                filter="url(#rear-dynamic-shadow)"
-                points={`205,${y + 8} 282,${y + 8} 282,${y + 60}`}
-                stroke="#3f494d"
-                strokeLinejoin="round"
-                strokeWidth="2"
-              />
-              <line stroke="#687277" strokeWidth="3" x1="217" x2="272" y1={y + 19} y2={y + 48} />
-              <rect fill="url(#rear-dynamic-steel)" height="18" rx="5" stroke="#29363b" strokeWidth="2" width="84" x="130" y={y} />
-              <circle cx="137" cy={y + 9} fill="#303c41" r="3" />
-              <circle cx="207" cy={y + 9} fill="#303c41" r="3" />
+            <g key={`label-${node.id}`}>
+              <line stroke="#2f78a3" strokeWidth="1.5" x1={x} x2={x + 24} y1={y} y2={y - 24} />
+              <circle cx={x + 32} cy={y - 32} fill="#fff" r="12" stroke="#2f78a3" strokeWidth="2" />
+              <text textAnchor="middle" x={x + 32} y={y - 28}>{index + 1}</text>
             </g>
           );
         })}
       </g>
 
-      <g className="dynamic-scheme-summary" transform="translate(24 1427)">
-        <rect height="78" rx="18" width="650" />
-        <text x="24" y="30">По выбранной смете</text>
-        <text x="24" y="58">
-          сэндвич-трубы — {outdoorPipes.length + horizontalSandwichPipes.length} шт. · консоли — {consolePositionsMm.length + 1} шт. · силовые хомуты — {consolePositionsMm.length} шт.
-        </text>
+      <g transform="translate(776 42)">
+        <text fill="#173d4c" fontSize="18" fontWeight="700">Состав схемы</text>
+        {scene.summary.slice(0, 18).map((line, index) => (
+          <text fill="#35484f" fontSize="11" key={line.bomKey} x="0" y={30 + index * 19}>{`${line.label} · ${line.quantity} шт.`}</text>
+        ))}
+      </g>
+      <g transform="translate(40 790)">
+        <text fill="#173d4c" fontSize="14" fontWeight="700">Расчётные координаты</text>
+        <text fill="#53656d" fontSize="12" y="22">{`X: патрубок 0 → стена ${scene.wallPassage.startMm}–${scene.wallPassage.endMm} → тройник ${scene.horizontalRunMm} мм`}</text>
+        <text fill="#53656d" fontSize="12" y="42">{`Y: тройник 0 → оголовок ${scene.verticalHeightMm} мм`}</text>
       </g>
     </svg>
   );
@@ -1547,6 +1516,19 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     () => completeBom.filter((line) => !removedBomKeys.includes(line.key)),
     [completeBom, removedBomKeys],
   );
+  const rearSceneGraph = useMemo(() => (
+    calculation.routeKind === "wall-rear" && catalogMatchStatus === "ready"
+      ? buildExternalWallSceneGraph({ calculation, variant: selectedVariant, bom: selectedBom, catalogMatches })
+      : null
+  ), [calculation, catalogMatchStatus, catalogMatches, selectedBom, selectedVariant]);
+  const diagramValidationErrors = useMemo(() => {
+    const issues = [...svgValidationErrors];
+    if (calculation.routeKind === "wall-rear") {
+      if (catalogMatchStatus === "error") issues.push("Не удалось получить каталожные изделия для построения схемы.");
+      if (catalogMatchStatus === "ready") issues.push(...(rearSceneGraph?.errors ?? ["Scene graph не сформирован."]));
+    }
+    return [...new Set(issues)];
+  }, [calculation.routeKind, catalogMatchStatus, rearSceneGraph, svgValidationErrors]);
   const removedBom = useMemo(
     () => completeBom.filter((line) => line.removable && removedBomKeys.includes(line.key)),
     [completeBom, removedBomKeys],
@@ -2037,20 +2019,22 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             <strong>{calculation.status === "invalid" ? "Есть конфликт" : `${selectedPipeQuantity} труб`}</strong>
           </div>
           <div className="configurator-svg-wrap">
-            {svgValidationErrors.length ? (
+            {diagramValidationErrors.length ? (
               <div className="configurator-svg-validation" role="alert">
                 <strong>Инженерная схема не сформирована</strong>
-                <span>Сначала исправьте геометрию:</span>
+                <span>Детерминированная проверка остановила рендер:</span>
                 <ul>
-                  {svgValidationErrors.map((issue) => <li key={issue}>{issue}</li>)}
+                  {diagramValidationErrors.map((issue) => <li key={issue}>{issue}</li>)}
                 </ul>
+              </div>
+            ) : calculation.routeKind === "wall-rear" && catalogMatchStatus !== "ready" ? (
+              <div className="configurator-svg-validation" role="status">
+                <strong>Собираем расчётную сцену</strong>
+                <span>Проверяем BOM и привязываем каждую отображаемую деталь к каталогу.</span>
               </div>
             ) : calculation.routeKind === "wall-rear" ? (
               <div className="configurator-wall-route-png">
-                <DynamicWallRearScheme
-                  assetBasePath={assetBasePath}
-                  variant={selectedVariant}
-                />
+                <DynamicWallRearScheme scene={rearSceneGraph!} />
               </div>
             ) : calculation.routeKind === "wall-top" ? (
               <div className="configurator-wall-route-png">
@@ -2068,7 +2052,25 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               />
             )}
           </div>
-          {calculation.routeKind === "ceiling" && !svgValidationErrors.length ? (
+          {rearSceneGraph && !rearSceneGraph.errors.length ? (
+            <details className="configurator-note">
+              <summary><strong>Промежуточный инженерный расчёт</strong></summary>
+              <p>
+                Система координат: патрубок X=0, ось тройника X={rearSceneGraph.horizontalRunMm} мм,
+                стена X={rearSceneGraph.wallPassage.startMm}–{rearSceneGraph.wallPassage.endMm} мм,
+                оголовок Y={rearSceneGraph.verticalHeightMm} мм.
+              </p>
+              <ol>
+                {rearSceneGraph.nodes.map((node) => (
+                  <li key={`calculation-${node.id}`}>
+                    {node.variant}: X={node.xMm} мм, Y={node.yMm} мм; ветвь {node.branch};
+                    положение получено из расчёта и строки BOM «{node.bomKey}».
+                  </li>
+                ))}
+              </ol>
+            </details>
+          ) : null}
+          {calculation.routeKind === "ceiling" && !diagramValidationErrors.length ? (
             <VerticalPassageDetails
               calculation={calculation}
               roofType={roof}
