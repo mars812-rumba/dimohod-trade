@@ -543,6 +543,17 @@ function addRouteNodes(
       catalogSearch: "Одноконтурный отвод 90°",
     });
     bom.push({
+      key: "support-cap",
+      productKind: "заглушка",
+      label: "Сэндвич-заглушка опорная",
+      quantity: 1,
+      contour: "сэндвич",
+      insulationMm: 50,
+      zone: "transition",
+      selectionReason: "Установлена сразу после одноконтурного отвода 90° и переводит подключение на сэндвич-контур.",
+      requiresSku: true,
+    });
+    bom.push({
       key: "outside-tee",
       productKind: "тройник",
       label: "Сэндвич-тройник с К/О 90°",

@@ -127,7 +127,7 @@ function DynamicWallTopScheme({
   const stackTopY = 238;
   const stackBottomY = 1058;
   const stackHeight = stackBottomY - stackTopY;
-  const horizontalStartX = 258;
+  const horizontalStartX = 310;
   const horizontalEndX = 658;
   const horizontalWidth = horizontalEndX - horizontalStartX;
   let outdoorCursorY = stackBottomY;
@@ -142,7 +142,7 @@ function DynamicWallTopScheme({
     >
       <title id="dynamic-wall-top-title">Динамическая схема верхнего выхода через стену</title>
       <desc id="dynamic-wall-top-description">
-        Количество и пропорции секций труб соответствуют выбранной раскладке конфигуратора.
+        Реалистичная схема верхнего выхода: после одноконтурного отвода 90 градусов установлена опорная сэндвич-заглушка, а количество труб и креплений соответствует выбранной раскладке конфигуратора.
       </desc>
       <defs>
         <linearGradient id="dynamic-steel-vertical" x1="0" x2="1">
@@ -239,7 +239,19 @@ function DynamicWallTopScheme({
 
       {horizontalPipes.length ? (
         <g aria-label={`Горизонтальные трубы: ${horizontalPipes.length}`}>
-          <rect fill="#fff" height="76" width={horizontalWidth} x={horizontalStartX} y="1050" />
+          <rect fill="#fff" height="76" width={horizontalEndX - 258} x="258" y="1050" />
+          <g aria-label="Сэндвич-заглушка опорная после отвода 90 градусов">
+            <path
+              d="M258 1068 L310 1061 L310 1115 L258 1108 Z"
+              fill="url(#dynamic-steel-horizontal)"
+              filter="url(#dynamic-pipe-shadow)"
+              stroke="#3f4b4f"
+              strokeLinejoin="round"
+              strokeWidth="2"
+            />
+            <line stroke="#29363b" strokeWidth="4" x1="308" x2="308" y1="1058" y2="1118" />
+            <text className="dynamic-pipe-index" textAnchor="middle" x="284" y="1094">ОЗ</text>
+          </g>
           {horizontalPipes.map((pipe, index) => {
             const width = horizontalNominalMm > 0
               ? horizontalWidth * (pipe.nominalMm / horizontalNominalMm)
