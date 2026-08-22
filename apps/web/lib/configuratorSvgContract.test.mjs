@@ -6,8 +6,6 @@ const configuratorSource = await readFile(
   new URL("../components/ChimneyConfigurator.tsx", import.meta.url),
   "utf8",
 );
-const globalStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-
 function componentSource(name, nextName) {
   const start = configuratorSource.indexOf(`function ${name}`);
   const end = configuratorSource.indexOf(`function ${nextName}`, start + 1);
@@ -21,26 +19,23 @@ test("wall-top configurator scene is a real inline SVG without a raster backdrop
 
   assert.match(source, /<svg\b/);
   assert.match(source, /расчётная SVG-схема/);
+  assert.match(source, /outlet\?: "top" \| "rear"/);
   assert.doesNotMatch(source, /<image\b/);
   assert.doesNotMatch(source, /banya-route-through-wall-top-elbow\.png/);
 });
 
-test("direct wall route is one continuous deterministic SVG with readable callouts", () => {
-  const source = componentSource("DynamicWallRearScheme", "scenarioDraftSummary");
+test("direct rear route reuses the 90-degree SVG template with a lowered part3", () => {
+  const source = componentSource("DynamicWallTopScheme", "EngineeringSceneProduct");
 
-  assert.match(source, /data-scene="continuous-wall-route"/);
-  assert.match(source, /configurator-engineering-route-svg/);
-  assert.match(source, /horizontalScale = 350 \/ horizontalMaximumMm/);
-  assert.match(source, /verticalScale = 430 \/ verticalMaximumMm/);
+  assert.match(source, /const horizontalAxisY = rearOutlet \? 1200 : 1088/);
+  assert.match(source, /const routeDeltaY = horizontalAxisY - 1088/);
+  assert.match(source, /!rearOutlet \? \(/);
+  assert.match(source, /aria-label="Отвод 90 градусов"/);
   assert.match(source, /Поворотный шибер/);
-  assert.match(source, /одна труба, без стыка/);
-  assert.match(source, /только нижняя ветвь/);
-  assert.doesNotMatch(source, /data-panel=/);
-  assert.doesNotMatch(source, /fontFamily="ui-monospace/);
+  assert.match(source, /horizontalPipes\.map/);
+  assert.match(source, /outdoorPipes\.map/);
+  assert.match(source, /consolePositionsMm\.map/);
   assert.doesNotMatch(source, /<image\b/);
 
-  assert.match(globalStyles, /\.configurator-generated-svg:not\(\.configurator-engineering-route-svg\) text/);
-  const routeTextRule = globalStyles.match(/\.configurator-engineering-route-svg text\s*\{([^}]*)\}/)?.[1] ?? "";
-  assert.doesNotMatch(routeTextRule, /font-size|font-weight|fill/);
-  assert.match(globalStyles, /\.configurator-wall-route-scheme\s*\{[^}]*560px/s);
+  assert.match(configuratorSource, /<DynamicWallTopScheme outlet="rear" variant=\{selectedVariant\} \/>/);
 });
