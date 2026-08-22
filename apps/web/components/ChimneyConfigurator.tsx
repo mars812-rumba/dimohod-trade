@@ -364,7 +364,7 @@ function DynamicWallRearScheme({
     >
       <title id="dynamic-wall-rear-title">Динамическая схема горизонтального подключения через стену</title>
       <desc id="dynamic-wall-rear-description">
-        После одноконтурной соединительной трубы показана опорная сэндвич-заглушка, затем сэндвич-трубы до наружного тройника. Количество труб соответствует смете.
+        После одноконтурной соединительной трубы показаны поворотный шибер и опорная сэндвич-заглушка, затем сэндвич-трубы до наружного тройника. Количество труб соответствует смете.
       </desc>
       <defs>
         <linearGradient id="rear-dynamic-steel" x1="0" x2="1">
@@ -393,7 +393,7 @@ function DynamicWallRearScheme({
         y="0"
       />
 
-      <g aria-label="Горизонтальное подключение: одноконтурная труба, опорная заглушка и сэндвич-трубы">
+      <g aria-label="Горизонтальное подключение: одноконтурная труба, поворотный шибер, опорная заглушка и сэндвич-трубы">
         {horizontalSinglePipes.length ? (
           <g aria-label={`Одноконтурные соединительные трубы: ${horizontalSinglePipes.length}`}>
             <rect
@@ -410,29 +410,47 @@ function DynamicWallRearScheme({
             <text className="dynamic-pipe-index" textAnchor="middle" x="449" y="1059">1К</text>
           </g>
         ) : null}
-        <g aria-label="Сэндвич-заглушка опорная после одноконтурной трубы">
+        <g aria-label="Одноконтурный поворотный шибер после соединительной трубы">
+          <rect
+            fill="url(#rear-dynamic-steel)"
+            filter="url(#rear-dynamic-shadow)"
+            height="44"
+            rx="5"
+            stroke="#39474c"
+            strokeWidth="2"
+            width="72"
+            x="350"
+            y="1032"
+          />
+          <line stroke="#263439" strokeWidth="4" x1="352" x2="352" y1="1029" y2="1079" />
+          <line stroke="#4b5b60" strokeWidth="3" x1="386" x2="386" y1="1032" y2="1015" />
+          <circle cx="386" cy="1013" fill="#e46235" r="5" stroke="#923719" strokeWidth="2" />
+          <line stroke="#923719" strokeLinecap="round" strokeWidth="4" x1="386" x2="404" y1="1013" y2="1001" />
+          <text className="dynamic-pipe-index" textAnchor="middle" x="386" y="1060">Ш</text>
+        </g>
+        <g aria-label="Сэндвич-заглушка опорная после поворотного шибера">
           <path
-            d="M370 1027 L422 1034 L422 1074 L370 1081 Z"
+            d="M298 1027 L350 1034 L350 1074 L298 1081 Z"
             fill="url(#rear-dynamic-steel)"
             filter="url(#rear-dynamic-shadow)"
             stroke="#39474c"
             strokeLinejoin="round"
             strokeWidth="2"
           />
-          <line stroke="#263439" strokeWidth="4" x1="371" x2="371" y1="1024" y2="1084" />
-          <text className="dynamic-pipe-index" textAnchor="middle" x="396" y="1059">ОЗ</text>
+          <line stroke="#263439" strokeWidth="4" x1="299" x2="299" y1="1024" y2="1084" />
+          <text className="dynamic-pipe-index" textAnchor="middle" x="324" y="1059">ОЗ</text>
         </g>
         <g aria-label={`Горизонтальные сэндвич-трубы: ${horizontalSandwichPipes.length}`}>
           {horizontalSandwichPipes.map((pipe, index) => {
             const width = horizontalSandwichNominalMm > 0
-              ? 165 * (pipe.nominalMm / horizontalSandwichNominalMm)
-              : 165 / Math.max(1, horizontalSandwichPipes.length);
+              ? 93 * (pipe.nominalMm / horizontalSandwichNominalMm)
+              : 93 / Math.max(1, horizontalSandwichPipes.length);
             const previousWidth = horizontalSandwichPipes
               .slice(0, index)
               .reduce((sum, item) => sum + (
-                horizontalSandwichNominalMm > 0 ? 165 * (item.nominalMm / horizontalSandwichNominalMm) : 0
+                horizontalSandwichNominalMm > 0 ? 93 * (item.nominalMm / horizontalSandwichNominalMm) : 0
               ), 0);
-            const x = 370 - previousWidth - width;
+            const x = 298 - previousWidth - width;
             return (
               <g key={`rear-horizontal-${pipe.id}`}>
                 <rect

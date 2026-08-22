@@ -377,17 +377,30 @@ function addRouteNodes(
     });
   } else if (routeKind === "wall-rear") {
     const firstSandwichPipeIndex = bom.findIndex((line) => line.key.startsWith("sandwich-pipe-"));
-    bom.splice(firstSandwichPipeIndex >= 0 ? firstSandwichPipeIndex : bom.length, 0, {
-      key: "support-cap",
-      productKind: "заглушка",
-      label: "Сэндвич-заглушка опорная",
-      quantity: 1,
-      contour: "сэндвич",
-      insulationMm: 50,
-      zone: "transition",
-      selectionReason: "Установлена после одноконтурной соединительной трубы и перед горизонтальным сэндвич-участком.",
-      requiresSku: true,
-    });
+    bom.splice(firstSandwichPipeIndex >= 0 ? firstSandwichPipeIndex : bom.length, 0,
+      {
+        key: "rear-connection-rotary-damper",
+        productKind: "шибер",
+        label: "Одноконтурный шибер поворотный",
+        quantity: 1,
+        contour: "одностенный",
+        zone: "transition",
+        selectionReason: "Установлен после одноконтурной соединительной трубы и перед опорной сэндвич-заглушкой.",
+        requiresSku: true,
+        catalogSearch: "Одноконтурный шибер поворотный",
+      },
+      {
+        key: "support-cap",
+        productKind: "заглушка",
+        label: "Сэндвич-заглушка опорная",
+        quantity: 1,
+        contour: "сэндвич",
+        insulationMm: 50,
+        zone: "transition",
+        selectionReason: "Установлена после поворотного шибера и перед горизонтальным сэндвич-участком.",
+        requiresSku: true,
+      },
+    );
   }
   bom.push({
     key: routeKind === "ceiling" ? "ceiling-passage" : "wall-passage",
@@ -910,16 +923,22 @@ export function bomForVariant(calculation: ChimneyCalculation, variant: PipeLayo
   const pipeLines = summarizePipeBom([variant], calculation.routeKind);
   const fixedAndNodes = calculation.bom.filter((line) => !isLayoutPipe(line));
   if (calculation.routeKind === "wall-rear") {
+    const rotaryDamperIndex = fixedAndNodes.findIndex((line) => line.key === "rear-connection-rotary-damper");
     const supportCapIndex = fixedAndNodes.findIndex((line) => line.key === "support-cap");
-    if (supportCapIndex >= 0) {
+    if (rotaryDamperIndex >= 0 && supportCapIndex >= 0) {
       const singlePipeLines = pipeLines.filter((line) => line.contour === "одностенный");
       const sandwichPipeLines = pipeLines.filter((line) => line.contour === "сэндвич");
+      const assemblyStartIndex = Math.min(rotaryDamperIndex, supportCapIndex);
+      const remainingNodes = fixedAndNodes.filter((line) => (
+        line.key !== "rear-connection-rotary-damper" && line.key !== "support-cap"
+      ));
       return withMaterialDefaults([
-        ...fixedAndNodes.slice(0, supportCapIndex),
+        ...remainingNodes.slice(0, assemblyStartIndex),
         ...singlePipeLines,
+        fixedAndNodes[rotaryDamperIndex],
         fixedAndNodes[supportCapIndex],
         ...sandwichPipeLines,
-        ...fixedAndNodes.slice(supportCapIndex + 1),
+        ...remainingNodes.slice(assemblyStartIndex),
       ]);
     }
   }
