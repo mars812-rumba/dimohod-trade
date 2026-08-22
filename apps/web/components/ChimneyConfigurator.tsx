@@ -488,17 +488,23 @@ function EngineeringSceneProduct({ node, scale, originX, originY }: {
       </g>
     );
   }
-  if (node.geometryFamily === "sliding_damper") return (
+  if (node.geometryFamily === "rotary_damper") return (
     <g {...common} transform={`translate(${x} ${y})`}>
       <rect fill="url(#scene-steel)" height="20" rx="3" stroke="#26343d" width={length} x="0" y="-10" />
-      <rect fill="#d9dfe0" height="52" stroke="#26343d" width="7" x={length * 0.48} y="-26" />
-      <line stroke="#26343d" strokeWidth="5" x1={length * 0.48 + 7} x2={length * 0.48 + 35} y1="-22" y2="-22" />
-      <circle cx={length * 0.48 + 39} cy="-22" fill="#29363b" r="5" />
+      <ellipse cx={length * 0.5} cy="0" fill="#c5ccce" rx="5" ry="10" stroke="#26343d" />
+      <circle cx={length * 0.5} cy="0" fill="#eef1f1" r="4" stroke="#26343d" />
+      <line stroke="#26343d" strokeLinecap="round" strokeWidth="5" x1={length * 0.5} x2={length * 0.5 + 25} y1="-3" y2="-31" />
+      <rect fill="#29363b" height="8" rx="4" transform={`rotate(-48 ${length * 0.5 + 29} -35)`} width="22" x={length * 0.5 + 18} y="-39" />
+      <line stroke="#26343d" strokeWidth="3" x1="0" x2="0" y1="-12" y2="12" />
+      <line stroke="#26343d" strokeWidth="3" x1={length} x2={length} y1="-12" y2="12" />
     </g>
   );
-  if (node.geometryFamily === "mono_sandwich_transition") return (
+  if (node.geometryFamily === "support_cap_transition") return (
     <g {...common} transform={`translate(${x} ${y})`}>
-      <path d={`M0,-10 L${length},-16 L${length},16 L0,10 Z`} fill="url(#scene-steel)" stroke="#26343d" />
+      <rect fill="url(#scene-steel)" height="20" rx="2" stroke="#26343d" width={Math.max(8, length * 0.42)} x="0" y="-10" />
+      <rect fill="url(#scene-steel)" height="34" rx="3" stroke="#26343d" width={Math.max(8, length * 0.58)} x={length * 0.42} y="-17" />
+      <rect fill="#d7dcdd" height="58" rx="2" stroke="#26343d" strokeWidth="2" width="7" x={Math.max(0, length * 0.42 - 3.5)} y="-29" />
+      <line stroke="#26343d" strokeWidth="3" x1={length} x2={length} y1="-19" y2="19" />
     </g>
   );
   if (node.geometryFamily === "tee_90") return (
@@ -506,16 +512,6 @@ function EngineeringSceneProduct({ node, scale, originX, originY }: {
       <rect fill="url(#scene-steel)" height="92" rx="6" stroke="#26343d" width="34" x="-17" y="-46" />
       <path d="M-62,-17 H0 V17 H-62" fill="url(#scene-steel)" stroke="#26343d" />
       <line stroke="#26343d" strokeWidth="3" x1="-20" x2="20" y1="-46" y2="-46" />
-    </g>
-  );
-  if (node.geometryFamily === "support_plug") return (
-    <g {...common} transform={`translate(${x} ${y})`}>
-      <rect fill="url(#scene-steel)" height="12" rx="2" stroke="#26343d" width="76" x="-38" y="-6" />
-      <path d="M-38,5 v13 h8 M38,5 v13 h-8" fill="none" stroke="#26343d" strokeWidth="3" />
-      <ellipse cx="0" cy="-8" fill="url(#scene-steel)" rx="24" ry="7" stroke="#26343d" />
-      <rect fill="url(#scene-steel)" height="28" stroke="#26343d" width="48" x="-24" y="-36" />
-      <ellipse cx="0" cy="-36" fill="#c7ced0" rx="24" ry="7" stroke="#26343d" />
-      <rect fill="url(#scene-steel)" height="18" stroke="#26343d" width="30" x="-15" y="6" />
     </g>
   );
   if (node.geometryFamily === "support_console" || node.geometryFamily === "wall_console") return (

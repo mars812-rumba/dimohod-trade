@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, Boxes, Layers3, Ruler, type LucideIcon } from "lucide-react";
+import {
+  IconArrowRight as ArrowRight,
+  IconBoxMultiple as Boxes,
+  IconStack3 as Layers3,
+  IconRuler as Ruler,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import { getCatalogTree, type CategoryNode } from "@/lib/api";
 
 // The backend is not reachable from the isolated Next.js image build. Render the
@@ -44,7 +50,7 @@ function CategoryCard({ category }: { category: CategoryNode }) {
       ? { icon: Layers3, label: "Марка стали", value: steelGrades.join(" / ") }
       : null,
   ].filter(
-    (fact): fact is { icon: LucideIcon; label: string; value: string } => fact !== null,
+    (fact): fact is { icon: TablerIcon; label: string; value: string } => fact !== null,
   );
 
   return (

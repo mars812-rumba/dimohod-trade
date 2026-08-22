@@ -1,22 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight,
-  AlertTriangle,
-  Building2,
-  Camera,
-  Check,
-  ChevronDown,
-  FileText,
-  FlameKindling,
-  Home,
-  Map,
-  NotebookTabs,
-  Ruler,
-  ShieldCheck,
-  Wrench,
-  type LucideIcon,
-} from "lucide-react";
+  IconAlertTriangle as AlertTriangle,
+  IconArrowRight as ArrowRight,
+  IconBuilding as Building2,
+  IconCamera as Camera,
+  IconCheck as Check,
+  IconChevronDown as ChevronDown,
+  IconFileText as FileText,
+  IconFlame as FlameKindling,
+  IconHome as Home,
+  IconMap as Map,
+  IconNotebook as NotebookTabs,
+  IconRuler as Ruler,
+  IconShieldCheck as ShieldCheck,
+  IconTool as Wrench,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import {
   scenarioConfiguratorHref,
   type ScenarioIconName,
@@ -26,7 +26,7 @@ import { BanyaIntakeFlow } from "./BanyaIntakeFlow";
 import { RouteImageViewer } from "./RouteImageViewer";
 import styles from "./ScenarioPageTemplate.module.css";
 
-const iconByName: Record<ScenarioIconName, LucideIcon> = {
+const iconByName: Record<ScenarioIconName, TablerIcon> = {
   building: Building2,
   camera: Camera,
   file: FileText,

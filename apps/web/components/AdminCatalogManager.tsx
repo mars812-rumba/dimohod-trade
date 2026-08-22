@@ -1,7 +1,16 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
-import { ImagePlus, Link2, Plus, RefreshCcw, Save, Sparkles, Trash2, X } from "lucide-react";
+import {
+  IconLink as Link2,
+  IconPhotoPlus as ImagePlus,
+  IconPlus as Plus,
+  IconRefresh as RefreshCcw,
+  IconDeviceFloppy as Save,
+  IconSparkles as Sparkles,
+  IconTrash as Trash2,
+  IconX as X,
+} from "@tabler/icons-react";
 import { DimensionScheme } from "./DimensionScheme";
 import styles from "./AdminCatalogManager.module.css";
 

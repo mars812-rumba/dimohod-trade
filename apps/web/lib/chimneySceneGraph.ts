@@ -5,12 +5,11 @@ export type EngineeringSceneOrientation = "horizontal" | "vertical" | "angle";
 export type EngineeringGeometryFamily =
   | "single_wall_pipe"
   | "sandwich_pipe"
-  | "sliding_damper"
-  | "mono_sandwich_transition"
+  | "rotary_damper"
+  | "support_cap_transition"
   | "wall_passage"
   | "passage_accessory"
   | "tee_90"
-  | "support_plug"
   | "support_console"
   | "wall_console"
   | "power_clamp"
@@ -110,10 +109,9 @@ function pipeBomKey(pipe: ScenePipe) {
 function geometryFamily(line: SceneBomLine): EngineeringGeometryFamily | null {
   if (line.key.startsWith("single-layout-pipe-")) return "single_wall_pipe";
   if (line.key.startsWith("sandwich-pipe-")) return "sandwich_pipe";
-  if (line.key === "rear-connection-sliding-damper") return "sliding_damper";
-  if (line.key === "mono-sandwich-transition") return "mono_sandwich_transition";
+  if (line.key === "rear-connection-rotary-damper") return "rotary_damper";
+  if (line.key === "support-cap") return "support_cap_transition";
   if (line.key === "outside-tee") return "tee_90";
-  if (line.key === "tee-lower-support-plug") return "support_plug";
   if (line.key === "tee-support-console") return "support_console";
   if (line.key === "outside-support-consoles") return "wall_console";
   if (line.key === "outside-console-power-clamps") return "power_clamp";
@@ -278,8 +276,8 @@ export function buildExternalWallSceneGraph({
   });
 
   const fixedKeyById: Record<string, string> = {
-    sliding_damper: "rear-connection-sliding-damper",
-    mono_sandwich_transition: "mono-sandwich-transition",
+    rotary_damper: "rear-connection-rotary-damper",
+    support_cap: "support-cap",
   };
   calculation.fixedParts.filter((part) => part.axis === "horizontal").forEach((part) => {
     const key = fixedKeyById[part.id];
@@ -294,9 +292,6 @@ export function buildExternalWallSceneGraph({
 
   const teeLine = bomByKey.get("outside-tee");
   if (teeLine) addNode({ line: teeLine, index: 0, family: "tee_90", orientation: "vertical", xMm: horizontalRunMm, yMm: 0 });
-
-  const supportPlugLine = bomByKey.get("tee-lower-support-plug");
-  if (supportPlugLine) addNode({ line: supportPlugLine, index: 0, family: "support_plug", parentNode: "outside-tee-1", branch: "lower", orientation: "vertical", xMm: horizontalRunMm, yMm: -150 });
 
   const teeConsoleLine = bomByKey.get("tee-support-console");
   if (teeConsoleLine) addNode({ line: teeConsoleLine, index: 0, family: "support_console", parentNode: "outside-tee-1", branch: "support", orientation: "horizontal", xMm: horizontalRunMm, yMm: -220 });
@@ -331,10 +326,11 @@ export function buildExternalWallSceneGraph({
     if (rendered !== line.quantity) errors.push(`Количество «${line.label}»: BOM ${line.quantity}, scene graph ${rendered}.`);
   });
 
-  const supportPlug = nodes.find((node) => node.geometryFamily === "support_plug");
-  const tee = nodes.find((node) => node.geometryFamily === "tee_90");
-  if (supportPlug && tee && (supportPlug.xMm !== tee.xMm || supportPlug.yMm >= tee.yMm)) errors.push("Опорная заглушка должна находиться строго под тройником.");
-  if (supportPlug?.zone === "wall_passage") errors.push("Опорная заглушка попала в защищённую зону стены.");
+  const supportCap = nodes.find((node) => node.geometryFamily === "support_cap_transition");
+  if (supportCap?.orientation !== "horizontal" || supportCap.branch !== "main") {
+    errors.push("Опорная заглушка должна быть горизонтальным переходом одноконтурный → сэндвич.");
+  }
+  if (supportCap?.zone === "wall_passage") errors.push("Опорная заглушка попала в защищённую зону стены.");
 
   const consoleCoordinates = nodes
     .filter((node) => node.geometryFamily === "wall_console")

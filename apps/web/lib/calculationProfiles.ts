@@ -16,6 +16,7 @@ export type CeilingRouteMeasurements = {
   hasAttic: boolean;
   atticHeight: string;
   ridgeHeight: string;
+  ridgeHorizontalDistance: string;
   routeHeight: string;
   roofAngle: string;
   roofThickness: string;
@@ -87,6 +88,7 @@ export function routeMeasurementsFromDraft(draft: ScenarioConfiguratorDraft): Ty
       hasAttic: draft.hasAttic,
       atticHeight: draft.atticHeight,
       ridgeHeight: draft.ridgeHeight,
+      ridgeHorizontalDistance: draft.ridgeHorizontalDistance,
       routeHeight: draft.routeHeight,
       roofAngle: draft.roofAngle,
       roofThickness: draft.roofThickness,

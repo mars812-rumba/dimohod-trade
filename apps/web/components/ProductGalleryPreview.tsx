@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Sparkles } from "lucide-react";
+import { IconSparkles as Sparkles } from "@tabler/icons-react";
 import { useState } from "react";
 import type { MediaItem } from "@/lib/api";
 import type { SteelBadge } from "@/lib/steelSelection";

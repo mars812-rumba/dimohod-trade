@@ -1,7 +1,7 @@
-import type { LucideIcon } from "lucide-react";
+import type { TablerIcon } from "@tabler/icons-react";
 
 type ScenarioCardProps = {
-  icon: LucideIcon;
+  icon: TablerIcon;
   title: string;
   text: string;
 };
@@ -15,4 +15,3 @@ export function ScenarioCard({ icon: Icon, title, text }: ScenarioCardProps) {
     </article>
   );
 }
-

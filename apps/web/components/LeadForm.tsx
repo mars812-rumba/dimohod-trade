@@ -1,7 +1,11 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { CheckCircle2, Paperclip, Send } from "lucide-react";
+import {
+  IconCircleCheck as CheckCircle2,
+  IconPaperclip as Paperclip,
+  IconSend as Send,
+} from "@tabler/icons-react";
 import { PersonalDataConsent } from "./PersonalDataConsent";
 
 type LeadFormProps = {

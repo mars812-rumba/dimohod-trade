@@ -52,6 +52,7 @@ services:
     volumes:
       - ./backend/app:/app/app
       - ./backend/alembic:/app/alembic
+      - ./backend/configurator:/app/configurator:ro
       - ./backend/tests:/app/tests
       - ./storage:/app/storage
 

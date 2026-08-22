@@ -18,7 +18,7 @@ type ShowcaseSlide = {
 
 const previewSlides: ShowcaseSlide[] = [
   {
-    image: "/images/home/guided-showcase/measure-outlet-cropped.webp",
+    image: "/images/home/guided-showcase/measure-outlet-external-diameter.webp",
     alt: "Вопрос о размере патрубка с раскрытой наглядной подсказкой по измерению",
     title: "Ответьте на несколько вопросов об объекте",
     text: "Подсказки и схемы покажут, какие размеры нужны. Данные можно сохранить и продолжить заполнение в удобное время.",

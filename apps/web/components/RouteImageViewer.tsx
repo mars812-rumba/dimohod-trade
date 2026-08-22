@@ -1,7 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowLeft, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  IconArrowLeft as ArrowLeft,
+  IconZoomIn as ZoomIn,
+  IconZoomOut as ZoomOut,
+} from "@tabler/icons-react";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import styles from "./RouteImageViewer.module.css";
 

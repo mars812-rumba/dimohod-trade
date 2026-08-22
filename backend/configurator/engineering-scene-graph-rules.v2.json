@@ -29,14 +29,14 @@
     "main": [
       "heater_outlet",
       "horizontal_internal_components",
-      "mono_sandwich_transition",
+      "rotary_damper",
+      "support_cap_transition",
       "continuous_wall_passage_pipe",
       "tee_90",
       "vertical_sandwich_stack",
       "terminal"
     ],
     "tee_lower_branch": [
-      "support_plug",
       "support_console"
     ],
     "vertical_support_branch": [
@@ -49,8 +49,9 @@
     "all_rendered_components_have_catalog_asset": true,
     "single_uniform_mm_to_svg_scale": true,
     "no_joint_strictly_inside_wall_passage": true,
-    "support_plug_directly_below_tee": true,
-    "support_plug_forbidden_in_horizontal_route": true,
+    "support_cap_is_mono_sandwich_transition": true,
+    "support_cap_required_in_horizontal_route": true,
+    "duplicate_support_cap_forbidden": true,
     "one_support_console_under_tee": true,
     "duplicate_wall_console_coordinates_forbidden": true,
     "stretching_component_to_fake_another_length_forbidden": true,

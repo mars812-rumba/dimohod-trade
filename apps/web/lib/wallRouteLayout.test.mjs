@@ -33,17 +33,18 @@ test("adds one tee support plus one console for every two metres of outdoor pipe
   assert.equal(wallRouteConsoleQuantity(5000), 4);
 });
 
-test("places facade console and power-clamp pairs at intervals no longer than two metres", () => {
+test("anchors the last facade console at the roof and works downward in two-metre steps", () => {
   assert.deepEqual(wallRouteFacadeConsolePositions(0), []);
+  assert.deepEqual(wallRouteFacadeConsolePositions(1800), [1800]);
   assert.deepEqual(wallRouteFacadeConsolePositions(4000), [2000, 4000]);
-  assert.deepEqual(wallRouteFacadeConsolePositions(5000), [2000, 4000, 5000]);
+  assert.deepEqual(wallRouteFacadeConsolePositions(5000), [1000, 3000, 5000]);
 });
 
 test("wall-top route places consoles every two metres without an adjacent extra console at the top", () => {
-  assert.deepEqual(wallTopRouteFacadeConsolePositions(1999), []);
+  assert.deepEqual(wallTopRouteFacadeConsolePositions(1999), [1999]);
   assert.deepEqual(wallTopRouteFacadeConsolePositions(2000), [2000]);
-  assert.deepEqual(wallTopRouteFacadeConsolePositions(5000), [2000, 4000]);
+  assert.deepEqual(wallTopRouteFacadeConsolePositions(5000), [1000, 3000, 5000]);
   assert.deepEqual(wallTopRouteFacadeConsolePositions(6000), [2000, 4000, 6000]);
-  assert.equal(wallTopRouteFacadeConsoleQuantity(1999), 0);
-  assert.equal(wallTopRouteFacadeConsoleQuantity(5000), 2);
+  assert.equal(wallTopRouteFacadeConsoleQuantity(1999), 1);
+  assert.equal(wallTopRouteFacadeConsoleQuantity(5000), 3);
 });

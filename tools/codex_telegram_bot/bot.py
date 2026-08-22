@@ -32,7 +32,7 @@ from typing import Any
 
 TELEGRAM_MESSAGE_LIMIT = 4096
 MAX_TELEGRAM_UPLOAD_BYTES = 49 * 1024 * 1024
-MARKDOWN_EXTENSIONS = {".md", ".markdown"}
+AGENT_DOCUMENT_EXTENSIONS = {".md", ".markdown", ".svg"}
 DEFAULT_TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe"
 DEFAULT_VISION_MODEL = "gpt-5.6-luna"
 DEFAULT_IMAGE_MODEL = "gpt-image-2"
@@ -40,6 +40,8 @@ DEFAULT_IMAGE_SIZE = "1024x1024"
 DEFAULT_IMAGE_QUALITY = "medium"
 DEFAULT_CODEX_MODEL_KEY = "sol_medium"
 MEDIA_GROUP_SETTLE_SECONDS = 1.2
+TEXT_BATCH_SETTLE_SECONDS = 4.0
+TEXT_BATCH_MAX_MESSAGES = 50
 CONTEXT_HISTORY_ITEMS = 5
 CONTEXT_HISTORY_BUDGET = 12000
 PROJECT_INSTRUCTIONS = """Работай только над проектом Dimohod Trade в текущем каталоге.
@@ -338,13 +340,13 @@ def safe_project_file(project_root: Path, requested_path: str) -> Path:
     return candidate
 
 
-def safe_markdown_filename(filename: str) -> str:
-    """Return a filesystem-safe Markdown filename received from Telegram."""
+def safe_agent_document_filename(filename: str) -> str:
+    """Return a safe supported-document filename received from Telegram."""
     name = Path(filename.strip()).name
     if not name or name in {".", ".."}:
         raise ValueError("У файла нет имени")
-    if Path(name).suffix.lower() not in MARKDOWN_EXTENSIONS:
-        raise ValueError("Поддерживаются только файлы .md и .markdown")
+    if Path(name).suffix.lower() not in AGENT_DOCUMENT_EXTENSIONS:
+        raise ValueError("Поддерживаются только файлы .md, .markdown и .svg")
     safe_name = re.sub(r"[^\w.() -]+", "_", name, flags=re.UNICODE).strip(" .")
     if not safe_name:
         raise ValueError("Некорректное имя файла")
@@ -711,6 +713,14 @@ class PhotoAlbum:
     project_key: str
     caption: str = ""
     photos: list[list[dict[str, Any]]] = field(default_factory=list)
+    timer: threading.Timer | None = None
+
+
+@dataclass
+class TextBatch:
+    chat_id: int
+    first_message_id: int
+    messages: list[str] = field(default_factory=list)
     timer: threading.Timer | None = None
 
 
@@ -1104,8 +1114,8 @@ HELP_TEXT = """Я управляю Codex в проектах Dimohod Trade и Su
 /apis — выбрать OpenAI API key для голоса, фото и изображений
 /status — ветка, изменения и активная задача
 /file path/to/file — прислать файл из проекта
-/file path/to/file.md — получить Markdown-файл из проекта
-Можно отправить боту документ `.md` или `.markdown`: он сохранит файл и передаст его в Codex.
+/file path/to/file.svg — получить файл из проекта
+Можно отправить боту `.md`, `.markdown` или `.svg`: он сохранит файл и передаст его в Codex.
 /image описание — сгенерировать изображение и прислать в чат
 /commit сообщение — подготовить commit изменений
 /publish сообщение — тесты → commit → push
@@ -1115,6 +1125,7 @@ HELP_TEXT = """Я управляю Codex в проектах Dimohod Trade и Su
 /confirm — подтвердить подготовленное действие
 /abort — отменить подготовленное действие
 /new — начать новую сессию Codex
+/send — сразу отправить Codex накопленные сообщения
 /cancel — остановить текущую задачу
 /id — показать ваш Telegram user ID
 /help — эта справка
@@ -1448,13 +1459,6 @@ class ReleaseManager:
             for path in target_paths
             if not is_protected_commit_path(path, self.config.protected_paths)
         ]
-        if paths is not None:
-            unrelated_staged = [path for path in already_staged if path not in target_paths]
-            if unrelated_staged:
-                raise RuntimeError(
-                    "В Git index уже есть посторонние изменения; безопасный commit остановлен:\n"
-                    + "\n".join(unrelated_staged)
-                )
         if not target_paths:
             if skip_if_empty:
                 return "Новых разрешённых изменений нет — commit пропущен."
@@ -1465,21 +1469,27 @@ class ReleaseManager:
             timeout=60,
         )
         staged = self.staged_paths()
-        if not staged:
+        staged_for_commit = (
+            staged
+            if paths is None
+            else [path for path in staged if path in target_paths]
+        )
+        if not staged_for_commit:
             if skip_if_empty:
                 return "Новых разрешённых изменений нет — commit пропущен."
             raise RuntimeError("Нет разрешённых изменений для commit")
         protected = [
             path
-            for path in staged
+            for path in staged_for_commit
             if is_protected_commit_path(path, self.config.protected_paths)
         ]
         if protected:
             raise RuntimeError("Защищённые пути попали в staged:\n" + "\n".join(protected))
-        commit_output = run_host_command(
-            ["git", "commit", "-m", message], self.project_root, timeout=120
-        )
-        paths_preview = "\n".join(f"• {path}" for path in staged[:40])
+        commit_command = ["git", "commit", "-m", message]
+        if paths is not None:
+            commit_command.extend(["--", *target_paths])
+        commit_output = run_host_command(commit_command, self.project_root, timeout=120)
+        paths_preview = "\n".join(f"• {path}" for path in staged_for_commit[:40])
         return "\n".join(part for part in (add_output, commit_output, paths_preview) if part)
 
     def push(self) -> str:
@@ -1674,6 +1684,8 @@ class BotApplication:
         self.photo_albums: dict[tuple[int, str], PhotoAlbum] = {}
         self.media_processing_chats: set[int] = set()
         self.photo_album_lock = threading.Lock()
+        self.text_batches: dict[int, TextBatch] = {}
+        self.text_batch_lock = threading.Lock()
         self.executor = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="codex-bot")
 
     def selected_openai_key_index(self, chat_id: int) -> int:
@@ -2173,9 +2185,19 @@ class BotApplication:
                         self.state.thread_slot(project.key, model_key),
                     )
                     self.api.send_message(chat_id, "Новая сессия Codex будет создана со следующей задачей.")
+            elif command == "/send":
+                if not self.flush_text_batch(chat_id):
+                    self.api.send_message(chat_id, "Нет накопленных сообщений.", message_id)
             elif command == "/cancel":
+                batch_cancelled = self.cancel_text_batch(chat_id)
                 cancelled = self.runner.cancel(chat_id)
-                self.api.send_message(chat_id, "Останавливаю задачу…" if cancelled else "Активной задачи нет.")
+                if cancelled:
+                    reply = "Останавливаю задачу…"
+                elif batch_cancelled:
+                    reply = "Накопленные сообщения отменены."
+                else:
+                    reply = "Активной задачи нет."
+                self.api.send_message(chat_id, reply)
             else:
                 self.api.send_message(chat_id, "Неизвестная команда. Используйте /help", message_id)
             return
@@ -2197,7 +2219,7 @@ class BotApplication:
         if message.get("document"):
             document = message["document"]
             try:
-                filename = safe_markdown_filename(str(document.get("file_name") or ""))
+                filename = safe_agent_document_filename(str(document.get("file_name") or ""))
                 file_size = int(document.get("file_size") or 0)
                 if file_size > MAX_TELEGRAM_UPLOAD_BYTES:
                     raise ValueError("Файл слишком большой")
@@ -2209,7 +2231,7 @@ class BotApplication:
                 return
             project_key = self.active_project(chat_id).key
             self.executor.submit(
-                self.process_markdown_document,
+                self.process_agent_document,
                 chat_id,
                 message_id,
                 str(document["file_id"]),
@@ -2251,7 +2273,63 @@ class BotApplication:
                 else:
                     self.executor.submit(self.process_image_generation, chat_id, message_id, image_prompt)
                 return
-            self.route_user_text(chat_id, message_id, text)
+            self.queue_user_text(chat_id, message_id, text)
+
+    def queue_user_text(self, chat_id: int, message_id: int, text: str) -> None:
+        """Debounce consecutive Telegram messages into one Codex prompt."""
+        if self.runner.is_running(chat_id) or self.release_for(self.active_project(chat_id).key).is_running():
+            self.api.send_message(
+                chat_id,
+                "Уже выполняется задача или release. Дождитесь завершения либо используйте /cancel",
+                message_id,
+            )
+            return
+        flush_now = False
+        with self.text_batch_lock:
+            batch = self.text_batches.get(chat_id)
+            if batch is None:
+                batch = TextBatch(chat_id=chat_id, first_message_id=message_id)
+                self.text_batches[chat_id] = batch
+            batch.messages.append(text)
+            if batch.timer:
+                batch.timer.cancel()
+            flush_now = len(batch.messages) >= TEXT_BATCH_MAX_MESSAGES
+            if not flush_now:
+                batch.timer = threading.Timer(
+                    TEXT_BATCH_SETTLE_SECONDS, self.flush_text_batch, args=(chat_id,)
+                )
+                batch.timer.daemon = True
+                batch.timer.start()
+        if flush_now:
+            self.flush_text_batch(chat_id)
+
+    def flush_text_batch(self, chat_id: int) -> bool:
+        with self.text_batch_lock:
+            batch = self.text_batches.pop(chat_id, None)
+            if batch and batch.timer:
+                batch.timer.cancel()
+        if not batch:
+            return False
+        if len(batch.messages) == 1:
+            prompt = batch.messages[0]
+        else:
+            joined = "\n\n".join(
+                f"Сообщение {index}:\n{message}"
+                for index, message in enumerate(batch.messages, start=1)
+            )
+            prompt = (
+                "Пользователь отправил несколько последовательных сообщений. "
+                "Воспринимай их как одну задачу, сохраняя порядок:\n\n" + joined
+            )
+        self.route_user_text(chat_id, batch.first_message_id, prompt)
+        return True
+
+    def cancel_text_batch(self, chat_id: int) -> bool:
+        with self.text_batch_lock:
+            batch = self.text_batches.pop(chat_id, None)
+            if batch and batch.timer:
+                batch.timer.cancel()
+        return batch is not None
 
     def send_requested_file(self, chat_id: int, message_id: int | None, requested_path: str) -> None:
         project = self.active_project(chat_id)
@@ -2333,7 +2411,7 @@ class BotApplication:
         except Exception as exc:
             self.api.edit_message(chat_id, status_id, f"Не удалось распознать голосовое:\n{exc}")
 
-    def process_markdown_document(
+    def process_agent_document(
         self,
         chat_id: int,
         message_id: int,
@@ -2342,7 +2420,9 @@ class BotApplication:
         caption: str,
         project_key: str,
     ) -> None:
-        status_id = self.api.send_message(chat_id, "📄 Сохраняю Markdown-файл…", message_id)
+        is_svg = Path(filename).suffix.lower() == ".svg"
+        document_label = "SVG-файл" if is_svg else "Markdown-файл"
+        status_id = self.api.send_message(chat_id, f"📄 Сохраняю {document_label}…", message_id)
         try:
             project = self.projects[project_key]
             destination = (
@@ -2358,17 +2438,29 @@ class BotApplication:
                 raise ValueError("Файл слишком большой")
             relative_path = destination.relative_to(project.root)
             self.api.edit_message(chat_id, status_id, f"📄 Файл сохранён: {relative_path}")
-            prompt = (
-                "Пользователь отправил Markdown-файл через Telegram.\n"
-                f"Локальный путь: {relative_path}\n"
-                f"Исходное имя: {filename}\n"
-                f"Подпись пользователя: {caption or '(без подписи)'}\n\n"
-                "Прочитай файл и выполни указания пользователя. Если подписи нет, кратко опиши "
-                "содержимое и спроси, что с ним сделать."
-            )
+            if is_svg:
+                prompt = (
+                    "Пользователь отправил SVG-файл через Telegram.\n"
+                    f"Локальный путь: {relative_path}\n"
+                    f"Исходное имя: {filename}\n"
+                    f"Подпись пользователя: {caption or '(без подписи)'}\n\n"
+                    "Используй skill technical-svg-drawing и доступные Inkscape/build123d MCP. "
+                    "Сохрани исходник, проверь SVG и выполни задачу из подписи. Не выдавай размеры, "
+                    "полученные только из пикселей, за точные. Если подписи или размерных данных "
+                    "недостаточно, проанализируй файл и кратко перечисли, что нужно уточнить."
+                )
+            else:
+                prompt = (
+                    "Пользователь отправил Markdown-файл через Telegram.\n"
+                    f"Локальный путь: {relative_path}\n"
+                    f"Исходное имя: {filename}\n"
+                    f"Подпись пользователя: {caption or '(без подписи)'}\n\n"
+                    "Прочитай файл и выполни указания пользователя. Если подписи нет, кратко опиши "
+                    "содержимое и спроси, что с ним сделать."
+                )
             self.submit_codex(chat_id, message_id, prompt, project_key=project_key)
         except Exception as exc:
-            self.api.edit_message(chat_id, status_id, f"Не удалось принять Markdown-файл:\n{exc}")
+            self.api.edit_message(chat_id, status_id, f"Не удалось принять {document_label}:\n{exc}")
 
     def process_photo(self, chat_id: int, message_id: int, photos: list[dict[str, Any]], caption: str) -> None:
         self.process_photos(

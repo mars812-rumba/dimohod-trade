@@ -1,7 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
+import {
+  IconChevronLeft as ChevronLeft,
+  IconChevronRight as ChevronRight,
+  IconMaximize as Maximize2,
+  IconX as X,
+} from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import styles from "./ScenarioPageTemplate.module.css";
 

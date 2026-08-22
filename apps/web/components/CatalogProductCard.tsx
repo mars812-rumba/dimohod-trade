@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { IconArrowRight as ArrowRight, IconSparkles as Sparkles } from "@tabler/icons-react";
 import type { ProductListItem } from "@/lib/api";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productSelectionPath } from "@/lib/productUrls";

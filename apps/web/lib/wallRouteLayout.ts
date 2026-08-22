@@ -33,7 +33,7 @@ export function wallRouteFacadeConsolePositions(outdoorPipeLengthMm: number): nu
 
   const quantity = Math.ceil(normalizedLengthMm / WALL_CONSOLE_SPACING_MM);
   return Array.from({ length: quantity }, (_, index) => (
-    Math.min((index + 1) * WALL_CONSOLE_SPACING_MM, normalizedLengthMm)
+    normalizedLengthMm - (quantity - index - 1) * WALL_CONSOLE_SPACING_MM
   ));
 }
 
@@ -42,11 +42,7 @@ export function wallRouteConsoleQuantity(outdoorPipeLengthMm: number): number {
 }
 
 export function wallTopRouteFacadeConsolePositions(outdoorPipeLengthMm: number): number[] {
-  const normalizedLengthMm = Math.max(0, Math.round(outdoorPipeLengthMm));
-  const quantity = Math.floor(normalizedLengthMm / WALL_CONSOLE_SPACING_MM);
-  return Array.from({ length: quantity }, (_, index) => (
-    (index + 1) * WALL_CONSOLE_SPACING_MM
-  ));
+  return wallRouteFacadeConsolePositions(outdoorPipeLengthMm);
 }
 
 export function wallTopRouteFacadeConsoleQuantity(outdoorPipeLengthMm: number): number {

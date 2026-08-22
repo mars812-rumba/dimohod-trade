@@ -1,2 +1,15 @@
 sandbox_mode = "danger-full-access"
 approval_policy = "on-request"
+
+[mcp_servers.build123d]
+command = "/home/codex-mcp-tools/build123d-venv/bin/build123d-mcp"
+args = ["--exec-timeout", "120", "--memory-limit-mb", "2048"]
+env = { PYTHONDONTWRITEBYTECODE = "1" }
+
+[mcp_servers.inkscape]
+command = "/home/codex-mcp-tools/inkscape-venv/bin/inkscape-mcp"
+args = ["--mode", "stdio", "--log-level", "INFO"]
+env = { INKSCAPE_PATH = "/usr/bin/inkscape", INKSCAPE_ALLOWED_DIRS = "/home/dimohod-trade", INKSCAPE_DISABLE_NETWORK = "true", INKSCAPE_DISABLE_EXTENSIONS = "true", XDG_CONFIG_HOME = "/home/dimohod-trade/.codex-telegram/inkscape-config", PYTHONDONTWRITEBYTECODE = "1" }
+
+[mcp_servers.openseo]
+url = "https://app.openseo.so/mcp"

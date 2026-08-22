@@ -41,7 +41,7 @@ from tools.codex_telegram_bot.bot import (
     recovery_context_prompt,
     natural_image_prompt,
     safe_project_file,
-    safe_markdown_filename,
+    safe_agent_document_filename,
     split_message,
     task_changed_paths,
 )
@@ -95,11 +95,12 @@ class BotUtilitiesTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 safe_project_file(root, "../secret.txt")
 
-    def test_safe_markdown_filename_accepts_markdown_and_blocks_other_files(self) -> None:
-        self.assertEqual(safe_markdown_filename("docs/ТЗ проекта.md"), "ТЗ проекта.md")
-        self.assertEqual(safe_markdown_filename("NOTES.MARKDOWN"), "NOTES.MARKDOWN")
+    def test_safe_agent_document_filename_accepts_supported_files_and_blocks_others(self) -> None:
+        self.assertEqual(safe_agent_document_filename("docs/ТЗ проекта.md"), "ТЗ проекта.md")
+        self.assertEqual(safe_agent_document_filename("NOTES.MARKDOWN"), "NOTES.MARKDOWN")
+        self.assertEqual(safe_agent_document_filename("drawings/узел.svg"), "узел.svg")
         with self.assertRaises(ValueError):
-            safe_markdown_filename("secrets.env")
+            safe_agent_document_filename("secrets.env")
 
     def test_extract_openai_output_text_supports_responses_shape(self) -> None:
         result = {
@@ -247,6 +248,46 @@ class BotUtilitiesTest(unittest.TestCase):
         self.assertEqual(manager.skip_flags, [True])
         self.assertIn("commit skipped", output)
         self.assertIn("deploy ok", output)
+
+    def test_scoped_commit_leaves_unrelated_staged_changes_untouched(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            subprocess.run(["git", "init", "-b", "ui/replit-port"], cwd=root, check=True, capture_output=True)
+            subprocess.run(["git", "config", "user.email", "test@example.test"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            (root / "current.txt").write_text("base\n", encoding="utf-8")
+            (root / "unrelated.txt").write_text("base\n", encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-m", "base"], cwd=root, check=True, capture_output=True)
+
+            (root / "unrelated.txt").write_text("staged earlier\n", encoding="utf-8")
+            subprocess.run(["git", "add", "unrelated.txt"], cwd=root, check=True)
+            (root / "current.txt").write_text("current task\n", encoding="utf-8")
+
+            config = replace(
+                build_project_configs(root)["dimohod"],
+                remote_deploy_host=None,
+                protected_paths=(),
+            )
+            manager = ReleaseManager(root, config=config)
+            manager.commit("scoped update", paths=("current.txt",))
+
+            committed = subprocess.run(
+                ["git", "show", "--pretty=", "--name-only", "HEAD"],
+                cwd=root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.splitlines()
+            staged = subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                cwd=root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.splitlines()
+            self.assertEqual(committed, ["current.txt"])
+            self.assertEqual(staged, ["unrelated.txt"])
 
     def test_remote_deploy_syncs_code_storage_and_runs_fixed_script(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -467,6 +508,40 @@ class BotUtilitiesTest(unittest.TestCase):
             self.assertTrue(app.has_pending_album(1))
             assert album.timer is not None
             album.timer.cancel()
+
+    def test_text_batch_combines_consecutive_messages_in_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            state = StateStore(root / "state.json")
+            runner = CodexRunner(root, "/bin/codex", state)
+            app = BotApplication(
+                object(), state, runner, root, None, "transcribe", "vision",
+                "image", "1024x1024", "medium",
+            )
+            with patch.object(app, "route_user_text") as route:
+                app.queue_user_text(1, 10, "сначала изучи проект")
+                app.queue_user_text(1, 11, "потом исправь форму")
+                self.assertEqual(app.text_batches[1].messages, [
+                    "сначала изучи проект", "потом исправь форму"
+                ])
+                self.assertTrue(app.flush_text_batch(1))
+                prompt = route.call_args.args[2]
+                self.assertIn("Сообщение 1:\nсначала изучи проект", prompt)
+                self.assertIn("Сообщение 2:\nпотом исправь форму", prompt)
+                self.assertNotIn(1, app.text_batches)
+
+    def test_text_batch_cancel_drops_pending_messages(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            state = StateStore(root / "state.json")
+            runner = CodexRunner(root, "/bin/codex", state)
+            app = BotApplication(
+                object(), state, runner, root, None, "transcribe", "vision",
+                "image", "1024x1024", "medium",
+            )
+            app.queue_user_text(1, 10, "черновик задачи")
+            self.assertTrue(app.cancel_text_batch(1))
+            self.assertFalse(app.cancel_text_batch(1))
 
     def test_openai_quota_falls_back_and_persists_next_key(self) -> None:
         class FakeAPI:

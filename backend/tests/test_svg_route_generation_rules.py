@@ -30,11 +30,11 @@ def test_scene_graph_v2_separates_engineering_bom_catalog_and_style_authority() 
         "existing_successful_diagram": "visual_style_only",
     }
     assert rules["external_wall_topology"]["tee_lower_branch"] == [
-        "support_plug",
         "support_console",
     ]
     assert rules["hard_checks"]["no_joint_strictly_inside_wall_passage"] is True
-    assert rules["hard_checks"]["support_plug_forbidden_in_horizontal_route"] is True
+    assert rules["hard_checks"]["support_cap_is_mono_sandwich_transition"] is True
+    assert rules["hard_checks"]["support_cap_required_in_horizontal_route"] is True
     assert rules["failure_policy"]["missing_catalog_asset"] == "stop_render"
 
 

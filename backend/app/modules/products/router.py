@@ -330,7 +330,79 @@ def sku_matches_filters(
         and (angle_deg is None or sku.angle_deg == angle_deg)
         and (insulation_mm is None or sku.insulation_mm == insulation_mm)
         and (contour is None or (sku.contour or "").casefold().strip() == contour.casefold().strip())
-)
+    )
+
+
+def sku_matches_preferred_filters(
+    sku,
+    *,
+    diameter_mm: int | None,
+    outer_diameter_mm: int | None,
+    steel_grade: str | None,
+    material: str | None,
+    outer_steel_grade: str | None,
+    outer_material: str | None,
+) -> bool:
+    if sku_matches_filters(
+        sku,
+        diameter_mm=diameter_mm,
+        outer_diameter_mm=outer_diameter_mm,
+        steel_grade=steel_grade,
+        material=material,
+        outer_steel_grade=outer_steel_grade,
+        outer_material=outer_material,
+        length_mm=None,
+        wall_thickness_mm=None,
+        outer_wall_thickness_mm=None,
+        angle_deg=None,
+        insulation_mm=None,
+        contour=None,
+    ):
+        return True
+
+    requested_connection_diameter = outer_diameter_mm or diameter_mm
+    attributes = sku.attributes or {}
+    diameter_min = attributes.get("diameter_min_mm")
+    diameter_max = attributes.get("diameter_max_mm")
+    range_matches = (
+        requested_connection_diameter is not None
+        and sku.diameter_mm is None
+        and sku.outer_diameter_mm is None
+        and not isinstance(diameter_min, bool)
+        and not isinstance(diameter_max, bool)
+        and isinstance(diameter_min, (int, float))
+        and isinstance(diameter_max, (int, float))
+        and diameter_min <= requested_connection_diameter <= diameter_max
+    )
+    if not range_matches:
+        return False
+
+    return sku_matches_filters(
+        sku,
+        diameter_mm=None,
+        outer_diameter_mm=None,
+        steel_grade=steel_grade,
+        material=material,
+        outer_steel_grade=outer_steel_grade,
+        outer_material=outer_material,
+        length_mm=None,
+        wall_thickness_mm=None,
+        outer_wall_thickness_mm=None,
+        angle_deg=None,
+        insulation_mm=None,
+        contour=None,
+    )
+
+
+def nearest_length_pool(skus: list[SKU], preferred_length_mm: int | None) -> list[SKU]:
+    """Keep only real SKU variants whose catalogue length is closest to the request."""
+    if preferred_length_mm is None:
+        return skus
+    with_length = [sku for sku in skus if sku.length_mm is not None]
+    if not with_length:
+        return skus
+    smallest_delta = min(abs(sku.length_mm - preferred_length_mm) for sku in with_length)
+    return [sku for sku in with_length if abs(sku.length_mm - preferred_length_mm) == smallest_delta]
 
 
 def _decimal_attribute(value: object) -> Decimal | None:
@@ -485,6 +557,7 @@ async def read_products(
     insulation_mm: int | None = Query(default=None, ge=0, le=10000),
     contour: str | None = Query(default=None, min_length=1, max_length=32),
     preferred_diameter: str | None = Query(default=None, pattern=r"^(?:\d+:\d*|\d*:\d+)$"),
+    preferred_length_mm: int | None = Query(default=None, ge=0, le=100000),
     preferred_steel_grade: str | None = Query(default=None, min_length=1, max_length=32),
     preferred_material: str | None = Query(default=None, min_length=1, max_length=32),
     preferred_outer_steel_grade: str | None = Query(default=None, min_length=1, max_length=32),
@@ -538,7 +611,7 @@ async def read_products(
         preferred_skus = [
             sku
             for sku in active_skus
-            if sku_matches_filters(
+            if sku_matches_preferred_filters(
                 sku,
                 diameter_mm=preferred_diameter_mm,
                 outer_diameter_mm=preferred_outer_diameter_mm,
@@ -546,15 +619,9 @@ async def read_products(
                 material=preferred_material,
                 outer_steel_grade=preferred_outer_steel_grade,
                 outer_material=preferred_outer_material,
-                length_mm=None,
-                wall_thickness_mm=None,
-                outer_wall_thickness_mm=None,
-                angle_deg=None,
-                insulation_mm=None,
-                contour=None,
             )
         ]
-        representative_pool = preferred_skus or active_skus
+        representative_pool = nearest_length_pool(preferred_skus or active_skus, preferred_length_mm)
         prices = [sku.price_rub for sku in representative_pool if sku.price_rub is not None]
         price_rub: Decimal | None = min(prices) if prices else None
         representative_sku = next(

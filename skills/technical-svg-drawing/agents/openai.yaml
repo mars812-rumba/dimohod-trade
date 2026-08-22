@@ -1,0 +1,15 @@
+interface:
+  display_name: "Technical SVG Drawing"
+  short_description: "Turn SVG artwork into checked technical drawings"
+  default_prompt: "Use $technical-svg-drawing to turn this SVG into a dimensioned technical drawing and verify the result."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "build123d"
+      description: "Exact CAD geometry, dimensions, projections, validation, and SVG/DXF export"
+      transport: "stdio"
+    - type: "mcp"
+      value: "inkscape"
+      description: "Headless SVG inspection, editing, measurement, validation, and rendering"
+      transport: "stdio"

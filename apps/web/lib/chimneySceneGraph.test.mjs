@@ -7,11 +7,10 @@ const bom = [
   ["single-layout-pipe-1000", "труба", "Одностенная труба", 1, 1000, "одностенный", "wall/outdoor"],
   ["sandwich-pipe-500", "труба", "Сэндвич-труба 500", 1, 500, "сэндвич", "wall/outdoor"],
   ["sandwich-pipe-1000", "труба", "Сэндвич-труба 1000", 2, 1000, "сэндвич", "wall/outdoor"],
-  ["rear-connection-sliding-damper", "шибер", "Шибер выдвижной", 1, undefined, "одностенный", "transition"],
-  ["mono-sandwich-transition", "переход", "Переход на сэндвич", 1, undefined, "сэндвич", "transition"],
+  ["rear-connection-rotary-damper", "шибер", "Шибер поворотный", 1, undefined, "одностенный", "transition"],
+  ["support-cap", "заглушка", "Сэндвич-заглушка опорная", 1, undefined, "сэндвич", "transition"],
   ["wall-passage", "проходной_узел", "Проход стены", 1, undefined, undefined, "wall_or_ceiling_pass"],
   ["outside-tee", "тройник", "Тройник 90°", 1, undefined, "сэндвич", "wall/outdoor"],
-  ["tee-lower-support-plug", "заглушка", "Опорная заглушка", 1, undefined, "сэндвич", "outdoor/lower_branch"],
   ["tee-support-console", "консоль", "Консоль под тройник", 1, undefined, undefined, "outdoor/support"],
   ["outside-support-consoles", "консоль", "Фасадная консоль", 1, undefined, undefined, "outdoor/support"],
   ["outside-console-power-clamps", "крепеж", "Силовой хомут", 1, undefined, undefined, "outdoor/support"],
@@ -27,7 +26,7 @@ const catalogMatches = Object.fromEntries(bom.map((line) => [line.key, {
     selected_sku: `sku-${line.key}`,
     article: `article-${line.key}`,
     name: line.label,
-    length_mm: line.nominalLengthMm ?? (line.key.includes("damper") ? 180 : line.key.includes("transition") ? 70 : null),
+    length_mm: line.nominalLengthMm ?? (line.key.includes("damper") ? 180 : line.key === "support-cap" ? 70 : null),
     primary_image: { url: `/media/${line.key}.webp` },
   },
 }]));
@@ -37,8 +36,8 @@ function validInput() {
     calculation: {
       routeKind: "wall-rear",
       fixedParts: [
-        { id: "sliding_damper", axis: "horizontal", nominalLengthMm: 180, effectiveMm: 130, startMm: 950, endMm: 1080 },
-        { id: "mono_sandwich_transition", axis: "horizontal", nominalLengthMm: 70, effectiveMm: 20, startMm: 1080, endMm: 1100 },
+        { id: "rotary_damper", axis: "horizontal", nominalLengthMm: 180, effectiveMm: 130, startMm: 950, endMm: 1080 },
+        { id: "support_cap", axis: "horizontal", nominalLengthMm: 70, effectiveMm: 20, startMm: 1080, endMm: 1100 },
       ],
       forbiddenZones: [{ kind: "wall", startMm: 1200, endMm: 1400 }],
       facadeConsolePositionsMm: [1900],
@@ -64,11 +63,13 @@ test("builds a validated scene graph from calculation, BOM and catalog reference
   assert.equal(scene.verticalHeightMm, 1900);
   assert.equal(scene.nodes.filter((node) => node.geometryFamily === "wall_console").length, 1);
   assert.equal(scene.nodes.filter((node) => node.geometryFamily === "power_clamp").length, 1);
-  const tee = scene.nodes.find((node) => node.geometryFamily === "tee_90");
-  const plug = scene.nodes.find((node) => node.geometryFamily === "support_plug");
-  assert.equal(plug.parentNode, tee.id);
-  assert.equal(plug.xMm, tee.xMm);
-  assert.ok(plug.yMm < tee.yMm);
+  const supportCap = scene.nodes.find((node) => node.geometryFamily === "support_cap_transition");
+  assert.equal(scene.nodes.filter((node) => node.geometryFamily === "support_cap_transition").length, 1);
+  assert.equal(supportCap.orientation, "horizontal");
+  assert.equal(supportCap.branch, "main");
+  assert.equal(supportCap.xMm, 1080);
+  assert.equal(supportCap.effectiveLengthMm, 20);
+  assert.equal(scene.nodes.some((node) => node.branch === "lower"), false);
 });
 
 test("rejects a pipe joint inside the protected wall passage", () => {

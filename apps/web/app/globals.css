@@ -3094,6 +3094,14 @@ body.mobile-menu-open {
   object-fit: contain;
 }
 
+.configurator-spec-media.is-studio {
+  background: #fff;
+}
+
+.configurator-spec-media.is-studio img {
+  padding: 3px;
+}
+
 .configurator-spec-row strong,
 .configurator-spec-row small {
   display: block;
