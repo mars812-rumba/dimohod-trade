@@ -1051,7 +1051,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       if (line.nominalLengthMm) params.set("length_mm", String(line.nominalLengthMm));
       if (line.contour) params.set("contour", line.contour);
       if (line.insulationMm !== undefined) params.set("insulation_mm", String(line.insulationMm));
-      if (line.productKind === "отвод") params.set("angle_deg", "90");
+      if (line.productKind === "отвод" || line.productKind === "тройник") params.set("angle_deg", "90");
       const fetchProducts = async (requestParams: URLSearchParams) => {
         const response = await fetch(`${assetBasePath}/api/v1/products?${requestParams.toString()}`, { signal: controller.signal });
         if (!response.ok) throw new Error("catalog request failed");

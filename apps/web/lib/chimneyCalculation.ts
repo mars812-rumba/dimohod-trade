@@ -482,8 +482,35 @@ function addRouteNodes(
       catalogDiameterMode: "sandwich-outer-range",
       removable: true,
     });
+  } else if (routeKind === "wall-rear") {
+    bom.push({
+      key: "outside-tee",
+      productKind: "тройник",
+      label: "Сэндвич-тройник с К/О 90°",
+      quantity: 1,
+      contour: "сэндвич",
+      insulationMm: 50,
+      zone: "wall/outdoor",
+      selectionReason: "Узел соединяет горизонтальное подключение с наружным вертикальным участком выбранного маршрута.",
+      requiresSku: true,
+      catalogCategorySlug: "sendvich-troyniki",
+      catalogSearch: "Сэндвич-тройник с К/О 90°",
+    });
+    bom.push({
+      key: "outside-support-consoles",
+      productKind: "консоль",
+      label: "Консоль универсальная",
+      quantity: 2,
+      zone: "wall/outdoor",
+      selectionReason: "Две консоли предусмотрены принятой схемой: нижняя опора под тройником и верхнее крепление наружной вертикальной колонны.",
+      requiresSku: true,
+      catalogCategorySlug: "homuty-i-krepezh",
+      catalogSearch: "Консоль универсальная",
+      catalogDiameterMode: "sandwich-outer-range",
+      quantityNote: "1 под тройником + 1 на наружной колонне.",
+    });
   } else {
-    bom.push({ key: "outside-elbow", productKind: "отвод", label: "Сэндвич-отвод 90°", quantity: routeKind === "wall-top" ? 2 : 1, zone: "wall/outdoor", selectionReason: "Количество определяется поворотами выбранного маршрута.", requiresSku: true });
+    bom.push({ key: "outside-elbow", productKind: "отвод", label: "Сэндвич-отвод 90°", quantity: 2, zone: "wall/outdoor", selectionReason: "Количество определяется поворотами выбранного маршрута.", requiresSku: true });
   }
   bom.push({ key: "termination", productKind: "оголовок", label: "Оголовок", quantity: 1, contour: "сэндвич", zone: "termination", selectionReason: "Завершает рассчитанную трассу.", requiresSku: true });
 }
