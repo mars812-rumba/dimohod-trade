@@ -1502,10 +1502,10 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             ) : calculation.routeKind === "wall-rear" ? (
               <div className="configurator-wall-route-png">
                 <RouteImageViewer
-                  alt="Схема горизонтального подключения дымохода через стену с тройником и пятью метровыми сэндвич-трубами"
+                  alt="Схема горизонтального подключения дымохода через стену с тройником и тремя универсальными консолями"
                   previewSizes="(max-width: 720px) calc(100vw - 56px), 460px"
                   quality={88}
-                  src="/images/home/banya-route-through-wall-five-pipes.png"
+                  src="/images/home/banya-route-through-wall-three-consoles.png"
                   title="Горизонтальное подключение через стену"
                 />
               </div>
