@@ -110,6 +110,147 @@ const ROOF_OPTIONS: Array<{ id: RoofType; label: string }> = [
 
 const ACTIVE_CALCULATION_PROFILE_KEY = "dimohod-trade:active-calculation-profile:v1";
 
+function DynamicWallTopScheme({
+  assetBasePath,
+  variant,
+}: {
+  assetBasePath: string;
+  variant: PipeLayoutVariant | null;
+}) {
+  const outdoorPipes = variant?.pipes.filter((pipe) => (
+    pipe.axis === "vertical" && pipe.contour === "сэндвич"
+  )) ?? [];
+  const horizontalPipes = variant?.pipes.filter((pipe) => pipe.axis === "horizontal") ?? [];
+  const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
+  const horizontalNominalMm = horizontalPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
+  const stackTopY = 238;
+  const stackBottomY = 1058;
+  const stackHeight = stackBottomY - stackTopY;
+  const horizontalStartX = 258;
+  const horizontalEndX = 658;
+  const horizontalWidth = horizontalEndX - horizontalStartX;
+  let outdoorCursorY = stackBottomY;
+  let horizontalCursorX = horizontalStartX;
+
+  return (
+    <svg
+      aria-labelledby="dynamic-wall-top-title dynamic-wall-top-description"
+      className="configurator-dynamic-png-scheme"
+      role="img"
+      viewBox="0 0 1024 1536"
+    >
+      <title id="dynamic-wall-top-title">Динамическая схема верхнего выхода через стену</title>
+      <desc id="dynamic-wall-top-description">
+        Количество и пропорции секций труб соответствуют выбранной раскладке конфигуратора.
+      </desc>
+      <defs>
+        <linearGradient id="dynamic-steel-vertical" x1="0" x2="1">
+          <stop offset="0" stopColor="#667176" />
+          <stop offset="0.16" stopColor="#c7ced0" />
+          <stop offset="0.38" stopColor="#f7f8f7" />
+          <stop offset="0.62" stopColor="#aeb8ba" />
+          <stop offset="0.82" stopColor="#eef1f0" />
+          <stop offset="1" stopColor="#5b666a" />
+        </linearGradient>
+        <linearGradient id="dynamic-steel-horizontal" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="#667176" />
+          <stop offset="0.2" stopColor="#dfe4e3" />
+          <stop offset="0.48" stopColor="#fafbfa" />
+          <stop offset="0.78" stopColor="#a2adaf" />
+          <stop offset="1" stopColor="#566166" />
+        </linearGradient>
+        <filter id="dynamic-pipe-shadow" height="130%" width="150%" x="-25%" y="-15%">
+          <feDropShadow dx="2" dy="4" floodColor="#182428" floodOpacity="0.2" stdDeviation="4" />
+        </filter>
+      </defs>
+
+      <image
+        height="1536"
+        href={`${assetBasePath}/images/home/banya-route-through-wall-top-elbow.png`}
+        width="1024"
+        x="0"
+        y="0"
+      />
+
+      <g aria-label={`Наружные сэндвич-трубы: ${outdoorPipes.length}`}>
+        <rect fill="#fff" height={stackHeight + 8} width="84" x="651" y={stackTopY - 4} />
+        {outdoorPipes.map((pipe, index) => {
+          const height = outdoorNominalMm > 0
+            ? stackHeight * (pipe.nominalMm / outdoorNominalMm)
+            : stackHeight / Math.max(1, outdoorPipes.length);
+          outdoorCursorY -= height;
+          const y = outdoorCursorY;
+          return (
+            <g key={pipe.id}>
+              <rect
+                fill="url(#dynamic-steel-vertical)"
+                filter="url(#dynamic-pipe-shadow)"
+                height={Math.max(2, height - 4)}
+                rx="5"
+                stroke="#3f4b4f"
+                strokeWidth="2"
+                width="68"
+                x="659"
+                y={y + 2}
+              />
+              <line stroke="#29363b" strokeWidth="4" x1="657" x2="729" y1={y + 3} y2={y + 3} />
+              <line stroke="rgba(255,255,255,0.72)" strokeWidth="2" x1="664" x2="664" y1={y + 10} y2={y + height - 8} />
+              <text className="dynamic-pipe-index" textAnchor="middle" x="693" y={y + height / 2 + 5}>
+                {index + 1}
+              </text>
+            </g>
+          );
+        })}
+        {!outdoorPipes.length ? (
+          <rect className="dynamic-pipe-placeholder" height={stackHeight} width="68" x="659" y={stackTopY} />
+        ) : null}
+        <line stroke="#29363b" strokeWidth="4" x1="657" x2="729" y1={stackBottomY} y2={stackBottomY} />
+      </g>
+
+      {horizontalPipes.length ? (
+        <g aria-label={`Горизонтальные трубы: ${horizontalPipes.length}`}>
+          <rect fill="#fff" height="76" width={horizontalWidth} x={horizontalStartX} y="1050" />
+          {horizontalPipes.map((pipe, index) => {
+            const width = horizontalNominalMm > 0
+              ? horizontalWidth * (pipe.nominalMm / horizontalNominalMm)
+              : horizontalWidth / horizontalPipes.length;
+            const x = horizontalCursorX;
+            horizontalCursorX += width;
+            return (
+              <g key={pipe.id}>
+                <rect
+                  fill="url(#dynamic-steel-horizontal)"
+                  filter="url(#dynamic-pipe-shadow)"
+                  height="54"
+                  rx="5"
+                  stroke="#3f4b4f"
+                  strokeWidth="2"
+                  width={Math.max(2, width - 4)}
+                  x={x + 2}
+                  y="1061"
+                />
+                <line stroke="#29363b" strokeWidth="4" x1={x + 3} x2={x + 3} y1="1058" y2="1118" />
+                <text className="dynamic-pipe-index" textAnchor="middle" x={x + width / 2} y="1094">
+                  Г{index + 1}
+                </text>
+              </g>
+            );
+          })}
+          <line stroke="#29363b" strokeWidth="4" x1={horizontalEndX} x2={horizontalEndX} y1="1058" y2="1118" />
+        </g>
+      ) : null}
+
+      <g className="dynamic-scheme-summary" transform="translate(42 1420)">
+        <rect height="72" rx="18" width="560" />
+        <text x="24" y="29">По выбранной смете</text>
+        <text x="24" y="55">
+          наружные трубы — {outdoorPipes.length} шт. · горизонтальные — {horizontalPipes.length} шт.
+        </text>
+      </g>
+    </svg>
+  );
+}
+
 function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[] {
   if (!draft) return [];
   const values = [
@@ -1511,12 +1652,9 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               </div>
             ) : calculation.routeKind === "wall-top" ? (
               <div className="configurator-wall-route-png">
-                <RouteImageViewer
-                  alt="Схема подключения от верхнего патрубка через отвод 90 градусов, стену и наружный тройник"
-                  previewSizes="(max-width: 720px) calc(100vw - 56px), 460px"
-                  quality={88}
-                  src="/images/home/banya-route-through-wall-top-elbow.png"
-                  title="Верхний выход через стену"
+                <DynamicWallTopScheme
+                  assetBasePath={assetBasePath}
+                  variant={selectedVariant}
                 />
               </div>
             ) : (
