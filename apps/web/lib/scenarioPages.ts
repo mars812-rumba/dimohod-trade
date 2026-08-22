@@ -184,7 +184,7 @@ export const banyaScenario: ScenarioPageContent = {
     },
     {
       slug: "through-wall-direct",
-      title: "Прямо через стену",
+      title: "Горизонтальный маршрут",
       description:
         "Задний или боковой патрубок соединяется с проходом стены, затем трасса поднимается снаружи.",
       image: "/images/home/banya-route-through-wall-direct.webp",
@@ -919,6 +919,13 @@ export const homeScenario: ScenarioPageContent = {
       description:
         "Дымоход выходит через стену и далее поднимается снаружи по фасаду дома.",
       image: "/images/home/banya-route-through-wall.webp",
+    },
+    {
+      slug: "through-wall-direct",
+      title: "Горизонтальный маршрут",
+      description:
+        "Задний патрубок направлен к проходу стены, затем дымоход поднимается снаружи по фасаду дома.",
+      image: "/images/home/banya-route-through-wall-direct.webp",
     },
   ],
   selectionQuestions: [
