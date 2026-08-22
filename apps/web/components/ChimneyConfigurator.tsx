@@ -270,13 +270,7 @@ function HorizontalTransitionAssembly({
   );
 }
 
-function DynamicWallTopScheme({
-  assetBasePath,
-  variant,
-}: {
-  assetBasePath: string;
-  variant: PipeLayoutVariant | null;
-}) {
+function DynamicWallTopScheme({ variant }: { variant: PipeLayoutVariant | null }) {
   const outdoorPipes = variant?.pipes.filter((pipe) => (
     pipe.axis === "vertical" && pipe.contour === "сэндвич"
   )) ?? [];
@@ -284,7 +278,7 @@ function DynamicWallTopScheme({
   const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const horizontalNominalMm = horizontalPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const consolePositionsMm = wallTopRouteFacadeConsolePositions(outdoorNominalMm);
-  const stackTopY = 238;
+  const stackTopY = 220;
   const stackBottomY = 1058;
   const stackHeight = stackBottomY - stackTopY;
   const horizontalStartX = 382;
@@ -296,13 +290,13 @@ function DynamicWallTopScheme({
   return (
     <svg
       aria-labelledby="dynamic-wall-top-title dynamic-wall-top-description"
-      className="configurator-dynamic-png-scheme"
+      className="configurator-dynamic-svg-scheme"
       role="img"
       viewBox="0 0 1024 1536"
     >
       <title id="dynamic-wall-top-title">Динамическая схема верхнего выхода через стену</title>
       <desc id="dynamic-wall-top-description">
-        Реалистичная схема верхнего выхода: после одноконтурного отвода 90 градусов установлены одноконтурный поворотный шибер и опорная сэндвич-заглушка, а количество труб и креплений соответствует выбранной раскладке конфигуратора.
+        Векторная расчётная схема верхнего выхода: после одноконтурного отвода 90 градусов установлены одноконтурный поворотный шибер и опорная сэндвич-заглушка, а количество труб и креплений соответствует выбранной раскладке конфигуратора.
       </desc>
       <defs>
         <linearGradient id="dynamic-steel-vertical" x1="0" x2="1">
@@ -325,21 +319,77 @@ function DynamicWallTopScheme({
           <stop offset="0.48" stopColor="#aab2b4" />
           <stop offset="1" stopColor="#687277" />
         </linearGradient>
+        <linearGradient id="dynamic-roof" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stopColor="#6f4a2e" />
+          <stop offset="0.5" stopColor="#bd8050" />
+          <stop offset="1" stopColor="#664028" />
+        </linearGradient>
+        <linearGradient id="dynamic-stove" x1="0" x2="1">
+          <stop offset="0" stopColor="#151b1e" />
+          <stop offset="0.5" stopColor="#3d474b" />
+          <stop offset="1" stopColor="#121719" />
+        </linearGradient>
+        <radialGradient id="dynamic-fire" cx="50%" cy="72%" r="72%">
+          <stop offset="0" stopColor="#ffd45b" />
+          <stop offset="0.42" stopColor="#f26a21" />
+          <stop offset="1" stopColor="#55170d" />
+        </radialGradient>
+        <pattern height="24" id="dynamic-grid" patternUnits="userSpaceOnUse" width="24">
+          <path d="M24 0H0V24" fill="none" stroke="#dfe8eb" strokeWidth="1" />
+        </pattern>
         <filter id="dynamic-pipe-shadow" height="130%" width="150%" x="-25%" y="-15%">
           <feDropShadow dx="2" dy="4" floodColor="#182428" floodOpacity="0.2" stdDeviation="4" />
         </filter>
       </defs>
 
-      <image
-        height="1536"
-        href={`${assetBasePath}/images/home/banya-route-through-wall-top-elbow.png`}
-        width="1024"
-        x="0"
-        y="0"
-      />
+      <rect fill="#fff" height="1536" width="1024" />
+      <rect fill="url(#dynamic-grid)" height="1340" opacity="0.58" rx="28" width="944" x="40" y="36" />
+
+      <g aria-label="Здание и отопитель, построенные векторными примитивами">
+        <text fill="#173d4c" fontSize="38" fontWeight="850" x="64" y="92">Наружный дымоход через стену</text>
+        <text fill="#53656d" fontSize="21" x="64" y="128">Верхний выход отопителя · расчётная SVG-схема</text>
+
+        <path d="M54 570 L535 278 L610 332 L136 630 Z" fill="url(#dynamic-roof)" stroke="#3d2a20" strokeLinejoin="round" strokeWidth="10" />
+        <path d="M61 555 L535 262 L619 324" fill="none" stroke="#252b2d" strokeLinecap="round" strokeLinejoin="round" strokeWidth="24" />
+        <path d="M112 608 L538 350 V1348 H112 Z" fill="#f3ecdf" stroke="#9b866e" strokeWidth="3" />
+        <rect fill="#d9b47c" height="998" stroke="#795b37" strokeWidth="3" width="52" x="520" y="350" />
+        <path d="M528 350 V1348 M546 350 V1348 M564 350 V1348" opacity="0.35" stroke="#8b673d" strokeWidth="3" />
+        <rect fill="#8b5d37" height="22" width="506" x="88" y="1348" />
+
+        <g aria-label="Отопитель">
+          <rect fill="url(#dynamic-stove)" height="228" rx="14" stroke="#0d1214" strokeWidth="5" width="178" x="104" y="1120" />
+          <rect fill="#101517" height="112" rx="8" stroke="#718087" strokeWidth="4" width="126" x="130" y="1150" />
+          <path d="M151 1244 C132 1208 163 1192 164 1160 C191 1188 185 1203 197 1218 C209 1197 222 1186 224 1165 C252 1203 241 1232 226 1244 Z" fill="url(#dynamic-fire)" />
+          <rect fill="#20292c" height="38" rx="5" width="126" x="130" y="1282" />
+          <circle cx="242" cy="1200" fill="#aeb8ba" r="5" />
+          <rect fill="url(#dynamic-steel-vertical)" height="38" rx="5" stroke="#344348" strokeWidth="3" width="52" x="207" y="1084" />
+        </g>
+
+        <g aria-label="Отвод 90 градусов">
+          <path d="M233 1120 V1112 Q233 1088 257 1088 H286" fill="none" stroke="#344348" strokeLinecap="round" strokeLinejoin="round" strokeWidth="52" />
+          <path d="M233 1120 V1112 Q233 1088 257 1088 H286" fill="none" stroke="url(#dynamic-steel-horizontal)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="46" />
+        </g>
+
+        <g aria-label="Проход стены">
+          <rect fill="#efc758" height="88" opacity="0.85" stroke="#9d7118" strokeWidth="3" width="74" x="510" y="1044" />
+          <rect fill="none" height="108" stroke="#657277" strokeWidth="5" width="104" x="495" y="1034" />
+          <line stroke="#657277" strokeWidth="4" x1="505" x2="505" y1="1026" y2="1150" />
+          <line stroke="#657277" strokeWidth="4" x1="589" x2="589" y1="1026" y2="1150" />
+        </g>
+      </g>
+
+      <g aria-label="Сэндвич-тройник и оголовок">
+        <rect fill="url(#dynamic-steel-vertical)" filter="url(#dynamic-pipe-shadow)" height="116" rx="6" stroke="#3f4b4f" strokeWidth="3" width="68" x="659" y="1046" />
+        <path d="M620 1061 H675 V1115 H620 L603 1088 Z" fill="url(#dynamic-steel-horizontal)" stroke="#3f4b4f" strokeLinejoin="round" strokeWidth="3" />
+        <line stroke="#29363b" strokeWidth="4" x1="657" x2="729" y1="1048" y2="1048" />
+        <line stroke="#29363b" strokeWidth="4" x1="657" x2="729" y1="1160" y2="1160" />
+        <path d="M662 222 H724 L711 192 H675 Z" fill="url(#dynamic-steel-vertical)" stroke="#344348" strokeWidth="3" />
+        <path d="M650 190 H736 L712 160 H674 Z" fill="url(#dynamic-steel-horizontal)" stroke="#344348" strokeLinejoin="round" strokeWidth="3" />
+        <line stroke="#344348" strokeWidth="5" x1="674" x2="674" y1="192" y2="220" />
+        <line stroke="#344348" strokeWidth="5" x1="712" x2="712" y1="192" y2="220" />
+      </g>
 
       <g aria-label="Сэндвич-опорная площадка под тройником">
-        <rect fill="#fff" height="138" width="124" x="534" y="1172" />
         <rect
           fill="url(#dynamic-console-top)"
           filter="url(#dynamic-pipe-shadow)"
@@ -356,8 +406,6 @@ function DynamicWallTopScheme({
       </g>
 
       <g aria-label={`Наружные сэндвич-трубы: ${outdoorPipes.length}`}>
-        <rect fill="#fff" height={stackHeight - 80} width="122" x="535" y={stackTopY + 80} />
-        <rect fill="#fff" height={stackHeight + 8} width="84" x="651" y={stackTopY - 4} />
         {outdoorPipes.map((pipe, index) => {
           const height = outdoorNominalMm > 0
             ? stackHeight * (pipe.nominalMm / outdoorNominalMm)
@@ -416,7 +464,6 @@ function DynamicWallTopScheme({
 
       {horizontalPipes.length ? (
         <g aria-label={`Горизонтальные трубы: ${horizontalPipes.length}`}>
-          <rect fill="#fff" height="76" width={horizontalEndX - 258} x="258" y="1050" />
           <HorizontalTransitionAssembly
             centerY={1088}
             direction="right"
@@ -2028,15 +2075,12 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                 <span>Проверяем BOM и привязываем каждую отображаемую деталь к каталогу.</span>
               </div>
             ) : calculation.routeKind === "wall-rear" ? (
-              <div className="configurator-wall-route-png">
+              <div className="configurator-wall-route-scheme">
                 <DynamicWallRearScheme scene={rearSceneGraph!} />
               </div>
             ) : calculation.routeKind === "wall-top" ? (
-              <div className="configurator-wall-route-png">
-                <DynamicWallTopScheme
-                  assetBasePath={assetBasePath}
-                  variant={selectedVariant}
-                />
+              <div className="configurator-wall-route-scheme">
+                <DynamicWallTopScheme variant={selectedVariant} />
               </div>
             ) : (
               <GeneratedChimneyScheme
