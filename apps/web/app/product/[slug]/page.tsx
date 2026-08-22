@@ -187,12 +187,18 @@ function productJsonLd(product: Product, sku: SKU | null) {
       )
     : [];
   const image = productImage(product, sku);
+  const availability = {
+    in_stock: "https://schema.org/InStock",
+    out_of_stock: "https://schema.org/OutOfStock",
+    on_order: "https://schema.org/BackOrder",
+  }[sku?.stock_status ?? ""];
   const offer = sku?.price_rub && Number(sku.price_rub) > 0
     ? {
         "@type": "Offer",
         url: canonicalUrl,
         priceCurrency: "RUB",
         price: sku.price_rub,
+        availability,
       }
     : undefined;
   const variant = sku
@@ -223,6 +229,20 @@ function productJsonLd(product: Product, sku: SKU | null) {
         brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
         variesBy: ["https://schema.org/size", "https://schema.org/material"],
         hasVariant: variant ? [variant] : undefined,
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Главная", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Каталог", item: absoluteUrl("/catalog") },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: product.category.name,
+            item: absoluteUrl(`/catalog/${product.category.slug}`),
+          },
+          { "@type": "ListItem", position: 4, name: product.name, item: canonicalUrl },
+        ],
       },
     ],
   };
@@ -255,6 +275,12 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
       description,
       url: absoluteUrl(canonicalPath),
       images: image ? [{ url: image, alt: product.name }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
     },
   };
 }

@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import {
+  IconAdjustmentsHorizontal as SlidersHorizontal,
+  IconArrowLeft as ArrowLeft,
+  IconArrowRight as ArrowRight,
+  IconChevronDown as ChevronDown,
+  IconX as X,
+} from "@tabler/icons-react";
 import { notFound } from "next/navigation";
 import { CatalogProductCard } from "@/components/CatalogProductCard";
 import { CatalogVariantFilters } from "@/components/CatalogVariantFilters";
@@ -39,6 +45,9 @@ async function categoryBySlug(slug: string) {
 }
 
 function absoluteUrl(path: string) {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
   return new URL(`${appBasePath}${path}`, appUrl).toString();
 }
 
@@ -83,8 +92,8 @@ function isPipeCategory(category: CategoryNode) {
   return /(?:труб|trub)/iu.test(`${category.name} ${category.slug}`);
 }
 
-export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const { category: slug } = await params;
+export async function generateMetadata({ params, searchParams }: CategoryPageProps): Promise<Metadata> {
+  const [{ category: slug }, query] = await Promise.all([params, searchParams]);
   const category = await categoryBySlug(slug);
   if (!category) {
     return { title: "Категория не найдена | Дымоход Трейд" };
@@ -93,10 +102,29 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const description =
     category.description ??
     `${category.name}: выбор изделий по диаметру, материалу и марке стали в каталоге Дымоход Трейд.`;
+  const canonical = absoluteUrl(`/catalog/${category.slug}`);
+  const image = category.cover?.url ? absoluteUrl(category.cover.url) : undefined;
   return {
     title,
     description,
-    alternates: { canonical: absoluteUrl(`/catalog/${category.slug}`) },
+    alternates: { canonical },
+    robots: Object.values(query).some(Boolean)
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
+    openGraph: {
+      type: "website",
+      locale: "ru_RU",
+      title,
+      description,
+      url: canonical,
+      images: image ? [{ url: image, alt: category.cover?.alt ?? category.name }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
   };
 }
 
@@ -207,9 +235,24 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     preferredOuterMaterial,
   });
   const totalPages = Math.max(1, Math.ceil(productResponse.total / PAGE_SIZE));
+  const categoryUrl = absoluteUrl(`/catalog/${category.slug}`);
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Главная", item: absoluteUrl("/") },
+      { "@type": "ListItem", position: 2, name: "Каталог", item: absoluteUrl("/catalog") },
+      { "@type": "ListItem", position: 3, name: category.name, item: categoryUrl },
+    ],
+  };
 
   return (
-    <main className="page catalog-page">
+    <>
+      <script
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+        type="application/ld+json"
+      />
+      <main className="page catalog-page">
       <section className="section catalog-category-page">
         <nav className="breadcrumb" aria-label="Навигация">
           <Link href="/">Главная</Link>
@@ -299,6 +342,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           )}
         </nav>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

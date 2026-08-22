@@ -3,31 +3,30 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft,
-  ArrowRight,
-  Calculator,
-  CheckCircle2,
-  ChevronDown,
-  CircleDot,
-  Cog,
-  FileText,
-  Info,
-  Layers3,
-  Link2,
-  ListChecks,
-  Mail,
-  MapPin,
-  Package,
-  Phone,
-  Ruler,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  Truck,
-  Wrench,
-  XCircle,
-  type LucideIcon,
-} from "lucide-react";
+  IconArrowLeft as ArrowLeft,
+  IconArrowRight as ArrowRight,
+  IconCalculator as Calculator,
+  IconChevronDown as ChevronDown,
+  IconCircleCheck as CheckCircle2,
+  IconCircleDot as CircleDot,
+  IconCircleX as XCircle,
+  IconFileText as FileText,
+  IconInfoCircle as Info,
+  IconStack3 as Layers3,
+  IconLink as Link2,
+  IconListCheck as ListChecks,
+  IconMail as Mail,
+  IconMapPin as MapPin,
+  IconPackage as Package,
+  IconPhone as Phone,
+  IconRuler as Ruler,
+  IconSettings as Cog,
+  IconShieldCheck as ShieldCheck,
+  IconSparkles as Sparkles,
+  IconTargetArrow as Target,
+  IconTool as Wrench,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import { DimensionScheme } from "@/components/DimensionScheme";
 import { LeadForm } from "@/components/LeadForm";
 import { YandexRatingBadge } from "@/components/YandexRatingBadge";
@@ -627,27 +626,17 @@ function buildVariantDimensions(skus: Product["skus"]): VariantDimension[] {
 
 const faqItems = [
   {
-    q: "Подойдет ли для банной печи?",
-    a: "Для банных печей используются сэндвич-трубы с утеплителем 50 мм и температурным классом от 600 °C. Уточните диаметр патрубка вашей печи, и мы подберем конкретную серию.",
+    q: "Как выбрать нужный вариант?",
+    a: "Сверьте диаметр, контур, материал, толщину стали и размеры выбранного SKU. Если товар входит в общую трассу, безопаснее проверить весь комплект, а не одну деталь отдельно.",
   },
   {
-    q: "Чем AISI 304 отличается от 430?",
-    a: "AISI 304 - нержавейка с никелем, устойчива к кислотному конденсату. AISI 430 дешевле и чаще применяется для сухих газов и менее агрессивных условий.",
+    q: "Совпадения диаметра достаточно для совместимости?",
+    a: "Нет. Карточка показывает подтверждённые правила совместимости, если они есть в каталоге. Перед заказом специалист проверяет соединение с соседними элементами и исходные данные трассы.",
   },
   {
-    q: "Нужен ли проходной узел через деревянное перекрытие?",
-    a: "Да, при проходе через горючие конструкции нужна противопожарная разделка. В калькуляторе этот узел будет добавляться автоматически по сценарию монтажа.",
+    q: "Можно рассчитать комплект с этим товаром?",
+    a: "Да. Перейдите к замерам, укажите отопитель и маршрут. Конфигуратор соберёт предварительный состав, который затем можно передать специалисту на проверку.",
   },
-  {
-    q: "Можно ли состыковать с другой серией или брендом?",
-    a: "Совместимость по диаметру не гарантирует совместимость по типу соединения. Лучше составить список элементов, а мы проверим связку перед заказом.",
-  },
-];
-
-const docs = [
-  { icon: FileText, label: "Сертификат пожарной безопасности", note: "PDF" },
-  { icon: ShieldCheck, label: "Паспорт изделия", note: "PDF" },
-  { icon: FileText, label: "Инструкция по монтажу", note: "PDF" },
 ];
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -918,7 +907,7 @@ const seoSectionHeadings = new Set([
   "Расчёт комплекта",
 ]);
 
-const seoSectionIcons: Record<string, LucideIcon> = {
+const seoSectionIcons: Record<string, TablerIcon> = {
   "Назначение": Target,
   "Где применяется": MapPin,
   "Совместимость": Link2,
@@ -1534,22 +1523,6 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
           ) : null}
 
           <section className="product-section">
-            <h2 className="product-section-title">Документы</h2>
-            <div className="doc-list">
-              {docs.map((doc) => {
-                const Icon = doc.icon;
-                return (
-                  <button key={doc.label} className="doc-row" type="button">
-                    <Icon size={18} color="var(--accent)" />
-                    <span className="doc-label">{doc.label}</span>
-                    <span className="doc-note">{doc.note}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="product-section">
             <h2 className="product-section-title">Вопросы и ответы</h2>
             <div className="faq-list">
               {faqItems.map((item) => (
@@ -1692,9 +1665,9 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
             >
               Оставить заявку
             </button>
-            <button className="button secondary full-button" type="button">
-              Добавить в комплект
-            </button>
+            <Link className="button secondary full-button" href="/zamery?edit=1">
+              Рассчитать полный комплект
+            </Link>
           </div>
 
           {showLeadForm ? (
@@ -1710,12 +1683,8 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
 
           <div className="delivery-info">
             <div className="delivery-row">
-              <Truck size={15} color="var(--ok)" />
-              <span>Отправка из Санкт-Петербурга</span>
-            </div>
-            <div className="delivery-row">
-              <CheckCircle2 size={15} color="var(--ok)" />
-              <span>Наличие уточняется при заказе</span>
+              <Info size={15} color="var(--ok)" />
+              <span>Наличие и условия получения заказа уточняются менеджером</span>
             </div>
           </div>
 

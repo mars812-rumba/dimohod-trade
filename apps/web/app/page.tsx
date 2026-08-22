@@ -54,6 +54,57 @@ export const metadata: Metadata = {
   title: "Дымоход Трейд — подбор комплекта дымохода",
   description:
     "Соберите в конфигураторе комплект дымохода для бани, печи, камина или котла. Уточним маршрут, исходные данные и позиции перед заказом.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    url: "/",
+    title: "Дымоход Трейд — подбор комплекта дымохода",
+    description: "Подбор дымохода по отопителю и маршруту: схема, состав комплекта и предварительная смета.",
+    images: [{
+      url: "/images/home/hero-projects/log-house-facade.webp",
+      width: 1600,
+      height: 900,
+      alt: "Концептуальная визуализация наружного маршрута дымохода",
+    }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Дымоход Трейд — подбор комплекта дымохода",
+    description: "Подбор дымохода по отопителю и маршруту: схема, состав комплекта и предварительная смета.",
+    images: ["/images/home/hero-projects/log-house-facade.webp"],
+  },
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://dimohod-trade.pro/#organization",
+      name: "Дымоход Трейд",
+      legalName: "ООО «Дымоходы-трейд плюс»",
+      url: "https://dimohod-trade.pro/",
+      logo: "https://dimohod-trade.pro/brand/logo-original.jpg",
+      telephone: "+7 965 075-65-55",
+      email: "office@dimohod-trade.pro",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "ул. 2-й Луч, 4, корп. 2",
+        addressLocality: "Санкт-Петербург",
+        addressCountry: "RU",
+      },
+      sameAs: ["https://yandex.ru/maps/org/dymokhod_treyd/1368513691/"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://dimohod-trade.pro/#website",
+      url: "https://dimohod-trade.pro/",
+      name: "Дымоход Трейд",
+      inLanguage: "ru-RU",
+      publisher: { "@id": "https://dimohod-trade.pro/#organization" },
+    },
+  ],
 };
 
 const scenarios = [
@@ -104,6 +155,27 @@ const scenarios = [
     text: "Документация модели и разрешённая производителем конфигурация системы.",
     image: "/images/home/scenario-gaz-user.webp",
     href: "/solutions/gazovyy-kotel",
+  },
+];
+
+const routeExamples = [
+  {
+    title: "Наружный маршрут через стену",
+    text: "Подготовьте размеры подключения, стены и наружного участка — они лягут в основу схемы и предварительного состава.",
+    image: "/images/home/hero-projects/log-house-facade.webp",
+    href: "/solutions/banya",
+  },
+  {
+    title: "Вертикальный маршрут через кровлю",
+    text: "Сценарий помогает последовательно собрать исходные данные по помещениям, перекрытиям и кровле.",
+    image: "/images/home/hero-projects/roof-chimney.webp",
+    href: "/solutions/dom",
+  },
+  {
+    title: "Подключение отопительного котла",
+    text: "Начните с точной модели оборудования и параметров патрубка, затем опишите маршрут дымохода.",
+    image: "/images/home/hero-projects/boiler-room.webp",
+    href: "/solutions/tverdotoplivny-kotel",
   },
 ];
 
@@ -223,15 +295,15 @@ const featuredProductCard = {
   installation: [
     {
       title: "В перекрытиях",
-      text: "При прокладке дымохода внутри помещения через перекрытия изделия крепят хомутом к перекрытию. В месте прохода предусматривают гильзовку и устройство пожарной отсечки. Исполнение проходного узла проверяют перед монтажом.",
+      text: "Для расчёта нужны материал и толщина перекрытия, положение прохода и размеры помещений. Состав узла подтверждают после проверки этих данных.",
     },
     {
       title: "В стенах",
-      text: "При проходе через стену предусматривают гильзовку и устройство пожарной отсечки. Соединения изделий не размещают внутри стены: стыки оставляют доступными для осмотра.",
+      text: "Укажите материал и толщину стены, расстояние от отопителя и точку выхода. Эти данные влияют на схему и состав комплекта.",
     },
     {
       title: "По наружной стене",
-      text: "При наружном монтаже по вертикальной схеме изделия крепят к универсальным консолям через силовой хомут. Стыки фиксируют клёпками или фирменным широким хомутом; широкий хомут можно выбрать для более аккуратного внешнего вида.",
+      text: "Для предварительной схемы понадобятся высота наружного участка, отступ от фасада и особенности кровли. Крепёж подбирают вместе с остальными позициями трассы.",
     },
   ],
 };
@@ -314,6 +386,10 @@ export default async function HomePage() {
   const { compatibleProducts, previewBadges } = homeProductDemo;
   return (
     <>
+      <script
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c") }}
+        type="application/ld+json"
+      />
       <main className={styles.main}>
         <HomeHeroCarousel assetBasePath={basePath} />
         <HomeGuidedShowcase assetBasePath={basePath} />
@@ -595,6 +671,45 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className={styles.routeExamplesSection} aria-labelledby="route-examples-title">
+        <div className={styles.shell}>
+          <div className={styles.routeExamplesHeading}>
+            <div>
+              <h2 id="route-examples-title">Три маршрута, с которых удобно начать расчёт.</h2>
+              <p>
+                Выберите похожую задачу и подготовьте исходные данные. Иллюстрации ниже — временные
+                концептуальные рендеры, а не фотографии выполненных объектов.
+              </p>
+            </div>
+            <Link className={styles.secondaryButton} href="/solutions">
+              Все сценарии <ArrowRight size={17} aria-hidden />
+            </Link>
+          </div>
+          <div className={styles.routeExamplesGrid}>
+            {routeExamples.map((item) => (
+              <Link className={styles.routeExample} href={item.href} key={item.title}>
+                <span className={styles.routeExampleMedia}>
+                  <Image
+                    alt={`Концептуальная визуализация: ${item.title.toLocaleLowerCase("ru-RU")}`}
+                    fill
+                    loading="lazy"
+                    quality={76}
+                    sizes="(max-width: 720px) calc(100vw - 32px), (max-width: 1020px) 50vw, 33vw"
+                    src={assetUrl(item.image)}
+                  />
+                  <small>Визуализация</small>
+                </span>
+                <span className={styles.routeExampleBody}>
+                  <h3>{item.title}</h3>
+                  <span>{item.text}</span>
+                  <b>Подготовить расчёт <ArrowRight size={15} aria-hidden /></b>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className={styles.safetySection}>
         <div className={styles.shell}>
           <div className={styles.safetyGrid}>
@@ -652,12 +767,12 @@ export default async function HomePage() {
       <section className={styles.trustSection}>
         <div className={styles.shell}>
           <div className={styles.sectionHeading}>
-            <div><p className={styles.overline}>Документы и ответственность</p><h2>Проверяем комплект до оплаты.</h2></div>
-            <p>Не обещаем совместимость без исходных данных. Для выбранных позиций инженер уточнит доступные паспорта, документы и условия гарантии производителя.</p>
+            <div><p className={styles.overline}>Проверка перед заказом</p><h2>Сначала сверяем исходные данные и состав.</h2></div>
+            <p>Не обещаем совместимость без параметров отопителя и трассы. Предварительный расчёт становится основанием для проверки специалистом.</p>
           </div>
           <div className={styles.trustGrid}>
-            <article><FileCheck2 size={24} /><strong>Документы на изделия</strong><span>Уточняем доступный комплект документов для конкретных выбранных позиций.</span></article>
-            <article><ShieldCheck size={24} /><strong>Гарантия без общих обещаний</strong><span>Условия зависят от производителя и позиции — фиксируем их в предложении.</span></article>
+            <article><Boxes size={24} /><strong>Конкретные позиции</strong><span>Сверяем выбранные SKU, их параметры и количество в предварительном составе.</span></article>
+            <article><ShieldCheck size={24} /><strong>Без неподтверждённых обещаний</strong><span>Не публикуем общие условия, пока они не подтверждены для конкретного заказа.</span></article>
             <article><Wrench size={24} /><strong>Инженерная проверка</strong><span>Собранный в конфигураторе комплект не становится заказом, пока специалист не проверит исходные данные.</span></article>
           </div>
           <div className={styles.companyLine}><MapPin size={16} /><span>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2</span><FileCheck2 size={16} /><span>ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span></div>

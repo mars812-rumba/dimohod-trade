@@ -60,7 +60,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
       className={styles.hero}
       role="region"
       aria-roledescription="карусель"
-      aria-label="Примеры установленных дымоходов"
+      aria-label="Визуализации вариантов дымоходных систем"
       onTouchStart={(event) => {
         touchStartX.current = event.touches[0]?.clientX ?? null;
       }}
@@ -72,7 +72,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
       }}
     >
       <h1 className={styles.headline}>
-        Безопасный, совместимый с вашим отопителем дымоход от производителя.
+        Дымоход под ваш отопитель — со схемой и проверкой комплекта.
       </h1>
 
       <div className={styles.carouselFrame}>
@@ -82,7 +82,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             <Image
               className={styles.slideImage}
               src={imagePath}
-              alt={alt}
+              alt={`Концептуальная визуализация: ${alt.toLocaleLowerCase("ru-RU")}`}
               fill
               priority={activeIndex === 0}
               unoptimized
@@ -90,6 +90,8 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             />
           </picture>
         </div>
+
+        <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
 
         <Link className={styles.cta} href="/zamery?edit=1">
           <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
