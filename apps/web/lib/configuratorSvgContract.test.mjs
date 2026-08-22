@@ -39,3 +39,11 @@ test("direct rear route reuses the 90-degree SVG template with a lowered part3",
 
   assert.match(configuratorSource, /<DynamicWallTopScheme outlet="rear" variant=\{selectedVariant\} \/>/);
 });
+
+test("BOM previews use the matched catalog SKU media instead of missing hardcoded assets", () => {
+  assert.match(configuratorSource, /catalogMatch\?\.item\.primary_image/);
+  assert.match(configuratorSource, /const productImage = catalogProductImage/);
+  assert.doesNotMatch(configuratorSource, /\/images\/configurator\/products/);
+  assert.doesNotMatch(configuratorSource, /sandwich-pipe-studio-card/);
+  assert.doesNotMatch(configuratorSource, /sandwich-support-cap-studio-card/);
+});

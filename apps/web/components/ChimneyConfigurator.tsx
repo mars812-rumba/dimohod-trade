@@ -58,42 +58,6 @@ function catalogMediaUrl(url: string, assetBasePath: string) {
   return url.startsWith("/media/") ? `${assetBasePath}${url}` : url;
 }
 
-function configuratorStudioProductImage(
-  part: ChimneyBomLine,
-  catalogMatch: CatalogEstimateMatch | undefined,
-  assetBasePath: string,
-): { src: string; alt: string; width: number; height: number } | null {
-  const catalogName = catalogMatch?.item.name.toLocaleLowerCase("ru-RU") ?? "";
-  const partLabel = part.label.toLocaleLowerCase("ru-RU");
-  const imageBase = `${assetBasePath}/images/configurator/products`;
-
-  if (part.key === "support-cap" || /сэндвич.*заглушк.*опор/.test(`${partLabel} ${catalogName}`)) {
-    return {
-      src: `${imageBase}/sandwich-support-cap-studio-card-v1.webp`,
-      alt: "Сэндвич-заглушка опорная из нержавеющей стали",
-      width: 640,
-      height: 640,
-    };
-  }
-  if (part.productKind === "труба" && part.contour === "сэндвич") {
-    return {
-      src: `${imageBase}/sandwich-pipe-studio-card-v1.webp`,
-      alt: "Сэндвич-труба дымохода из нержавеющей стали",
-      width: 640,
-      height: 640,
-    };
-  }
-  if (/выдвиж/.test(`${partLabel} ${catalogName}`) && /шибер/.test(`${partLabel} ${catalogName}`)) {
-    return {
-      src: `${imageBase}/withdrawable-damper-studio-card-v1.webp`,
-      alt: "Выдвижной шибер дымохода из нержавеющей стали",
-      width: 640,
-      height: 640,
-    };
-  }
-  return null;
-}
-
 function formatCatalogPrice(value: string | null) {
   if (value === null || Number(value) <= 0) return "Цена по запросу";
   return new Intl.NumberFormat("ru-RU", {
@@ -2317,7 +2281,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               const catalogMatch = catalogMatches[part.key];
               const estimateLine = estimate.lines.find((line) => line.key === part.key);
               const materialLabel = catalogMatch ? catalogMaterialLabel(catalogMatch.item) : null;
-              const studioProductImage = configuratorStudioProductImage(part, catalogMatch, assetBasePath);
               const catalogProductImage = catalogMatch?.item.primary_image
                 ? {
                   src: catalogMediaUrl(catalogMatch.item.primary_image.thumbnail_url ?? catalogMatch.item.primary_image.url, assetBasePath),
@@ -2326,14 +2289,14 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                   height: catalogMatch.item.primary_image.height ?? undefined,
                 }
                 : null;
-              const productImage = studioProductImage ?? catalogProductImage;
+              const productImage = catalogProductImage;
               const nearestLengthLabel = catalogMatch?.lengthMatch === "nearest" && catalogMatch.item.length_mm !== null
                 ? `Одностенная труба-разгон ${catalogMatch.item.length_mm} мм`
                 : part.label;
               return (
                 <div key={part.key} className="configurator-spec-row">
                   <div
-                    className={`configurator-spec-media${studioProductImage ? " is-studio" : ""}`}
+                    className="configurator-spec-media"
                     aria-hidden={!productImage}
                   >
                     {productImage ? (
