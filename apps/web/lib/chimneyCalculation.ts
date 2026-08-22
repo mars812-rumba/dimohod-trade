@@ -179,9 +179,10 @@ export function solvePipeLayouts({
     { endMm: startMm, lengths: [] },
   ];
   const results: PipeLayoutVariant[] = [];
-  const bestDepthAtEnd = new Map<number, number>();
+  const bestDepthAtEnd = new Map<number, number>([[startMm, 0]]);
+  const resultLimit = Math.max(16, maxVariants * 8);
 
-  while (queue.length && results.length < 120) {
+  while (queue.length && results.length < resultLimit) {
     const current = queue.shift()!;
     if (current.lengths.length >= 48) continue;
     for (const length of PIPE_LENGTHS) {
@@ -217,7 +218,7 @@ export function solvePipeLayouts({
       }
 
       const knownDepth = bestDepthAtEnd.get(endMm);
-      if (knownDepth !== undefined && knownDepth < lengths.length - 1) continue;
+      if (knownDepth !== undefined && knownDepth <= lengths.length) continue;
       bestDepthAtEnd.set(endMm, lengths.length);
       queue.push({ endMm, lengths });
     }
