@@ -47,3 +47,19 @@ test("BOM previews use the matched catalog SKU media instead of missing hardcode
   assert.doesNotMatch(configuratorSource, /sandwich-pipe-studio-card/);
   assert.doesNotMatch(configuratorSource, /sandwich-support-cap-studio-card/);
 });
+
+test("changing only pipe quantity does not refetch every catalog match", () => {
+  const signatureStart = configuratorSource.indexOf("const catalogLookupSignature");
+  const sceneStart = configuratorSource.indexOf("const rearSceneGraph", signatureStart);
+  assert.notEqual(signatureStart, -1);
+  assert.notEqual(sceneStart, -1);
+
+  const signatureSource = configuratorSource.slice(signatureStart, sceneStart);
+  assert.match(signatureSource, /line\.nominalLengthMm/);
+  assert.match(signatureSource, /line\.contour/);
+  assert.doesNotMatch(signatureSource, /line\.quantity/);
+  assert.match(
+    configuratorSource,
+    /\[assetBasePath, calculation\.diameterMm, calculation\.diameterStatus, catalogLookupSignature\]/,
+  );
+});

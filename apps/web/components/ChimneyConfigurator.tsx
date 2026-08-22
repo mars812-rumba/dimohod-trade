@@ -1655,6 +1655,22 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     () => completeBom.filter((line) => !removedBomKeys.includes(line.key)),
     [completeBom, removedBomKeys],
   );
+  const catalogLookupSignature = useMemo(() => JSON.stringify(
+    selectedBom
+      .filter((line) => line.requiresSku)
+      .map((line) => [
+        line.key,
+        line.productKind,
+        line.nominalLengthMm ?? null,
+        line.contour ?? null,
+        line.insulationMm ?? null,
+        line.catalogCategorySlug ?? null,
+        line.catalogSearch ?? null,
+        line.catalogDiameterMode ?? null,
+        line.catalogLengthMode ?? null,
+        line.materialPreference ?? null,
+      ]),
+  ), [selectedBom]);
   const rearSceneGraph = useMemo(() => (
     calculation.routeKind === "wall-rear" && catalogMatchStatus === "ready"
       ? buildExternalWallSceneGraph({ calculation, variant: selectedVariant, bom: selectedBom, catalogMatches })
@@ -1766,7 +1782,9 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         setCatalogMatchStatus("error");
       });
     return () => controller.abort();
-  }, [assetBasePath, calculation.diameterMm, calculation.diameterStatus, selectedBom]);
+  // Quantity changes do not alter a catalog SKU. Keep the existing matches and
+  // refetch only when fields that participate in catalog lookup have changed.
+  }, [assetBasePath, calculation.diameterMm, calculation.diameterStatus, catalogLookupSignature]);
 
   const totalQty = selectedBom.reduce((sum, item) => sum + item.quantity, 0);
   const stoveLabel = STOVE_OPTIONS.find((option) => option.id === stove)?.label ?? "Источник";
