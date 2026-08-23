@@ -9,6 +9,8 @@ import {
   IconCheck as Check,
   IconChevronRight as ChevronRight,
   IconCircleDot as CircleDot,
+  IconCertificate as Certificate,
+  IconDownload as Download,
   IconFileCheck as FileCheck2,
   IconFlame as FlameKindling,
   IconGauge as Gauge,
@@ -38,6 +40,7 @@ import {
   getProductPreview,
   type CompatibleProduct,
 } from "@/lib/api";
+import { homeDocuments } from "@/lib/homeDocuments";
 import {
   cookiePolicyPath,
   personalDataConsentPath,
@@ -864,6 +867,62 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.documentsSection} aria-labelledby="documents-title">
+        <div className={styles.shell}>
+          <div className={styles.sectionHeading}>
+            <div>
+              <p className={styles.overline}>Документы производителя</p>
+              <h2 id="documents-title">Сертификаты и документы.</h2>
+            </div>
+            <p>
+              Основной сертификат описывает область выпускаемой продукции. Документы на металл
+              относятся к указанным в них партиям и размещены для ознакомления.
+            </p>
+          </div>
+          <div className={styles.documentsGrid}>
+            {homeDocuments.map((document) => (
+              <article
+                className={`${styles.documentCard} ${document.featured ? styles.documentCardFeatured : ""}`}
+                key={document.id}
+              >
+                <a
+                  className={styles.documentPreview}
+                  href={assetUrl(document.previewUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Открыть документ: ${document.title}`}
+                >
+                  <Image
+                    src={document.previewUrl}
+                    alt={`Превью документа «${document.title}»`}
+                    width={document.featured ? 800 : 905}
+                    height={document.featured ? 1141 : 1280}
+                  />
+                  {document.featured ? (
+                    <span className={styles.documentSeal}>
+                      <Certificate size={16} aria-hidden /> Основной сертификат
+                    </span>
+                  ) : null}
+                </a>
+                <div className={styles.documentBody}>
+                  <span>{document.eyebrow}</span>
+                  <h3>{document.title}</h3>
+                  <p>{document.description}</p>
+                  <div className={styles.documentActions}>
+                    <a href={assetUrl(document.previewUrl)} target="_blank" rel="noopener noreferrer">
+                      Открыть <ArrowRight size={15} aria-hidden />
+                    </a>
+                    <a href={assetUrl(document.originalUrl)} download>
+                      <Download size={15} aria-hidden /> Скачать оригинал
+                    </a>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       </section>

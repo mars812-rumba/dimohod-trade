@@ -10,8 +10,6 @@ import {
   IconCircleCheck as CheckCircle2,
   IconCircleDot as CircleDot,
   IconCircleX as XCircle,
-  IconCertificate as Certificate,
-  IconDownload as Download,
   IconFileText as FileText,
   IconInfoCircle as Info,
   IconStack3 as Layers3,
@@ -33,7 +31,6 @@ import { DimensionScheme } from "@/components/DimensionScheme";
 import { LeadForm } from "@/components/LeadForm";
 import { YandexRatingBadge } from "@/components/YandexRatingBadge";
 import type { CompatibleProduct, Product } from "@/lib/api";
-import { documentsForSku } from "@/lib/productDocuments";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productPublicPath, productSelectionPath } from "@/lib/productUrls";
 import {
@@ -1122,7 +1119,6 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const contour = activeSku?.contour ?? product.contour;
   const insulationMm = activeSku?.insulation_mm ?? product.insulation_mm;
   const compatibilityMessages = activeSku?.compatibility_messages ?? [];
-  const productDocuments = documentsForSku(product, activeSku);
   const compatibleProductFamilies = groupCompatibleProducts(compatibleProducts);
   const hasCompatibleLengthChoices = compatibleProductFamilies.some(
     (items) => new Set(items.map((item) => item.length_mm).filter((value) => value !== null)).size > 1,
@@ -1397,56 +1393,6 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
               ))}
             </div>
           </section>
-
-          {productDocuments.length > 0 ? (
-            <section className="product-section" aria-labelledby="product-documents-title">
-              <h2 className="product-section-title product-section-title-with-icon" id="product-documents-title">
-                <Certificate size={22} aria-hidden="true" />
-                Сертификаты и документы
-              </h2>
-              <p className="product-documents-intro">
-                Документы показаны по материалу и области действия. Документы на металл относятся к
-                указанным в них партиям и приводятся справочно.
-              </p>
-              <div className="product-documents-grid">
-                {productDocuments.map((document) => (
-                  <article className="product-document-card" key={document.id}>
-                    <a
-                      className="product-document-preview"
-                      href={`${appBasePath}${document.previewUrl}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={`Открыть документ: ${document.title}`}
-                    >
-                      <img
-                        src={`${appBasePath}${document.previewUrl}`}
-                        alt={`Превью документа «${document.title}»`}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </a>
-                    <div className="product-document-body">
-                      <span className={`product-document-kind product-document-kind-${document.kind}`}>
-                        {document.kind === "certificate" ? "Сертификат" : "Документ на металл"}
-                      </span>
-                      <h3>{document.title}</h3>
-                      <strong>{document.status}</strong>
-                      <p>{document.note}</p>
-                      <div className="product-document-actions">
-                        <a href={`${appBasePath}${document.previewUrl}`} target="_blank" rel="noreferrer">
-                          Открыть
-                        </a>
-                        <a href={`${appBasePath}${document.originalUrl}`} download>
-                          <Download size={16} aria-hidden="true" />
-                          Скачать оригинал
-                        </a>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ) : null}
 
           <section className="product-section">
             <h2 className="product-section-title">Совместимость</h2>
