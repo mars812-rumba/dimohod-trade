@@ -60,7 +60,11 @@ function ScenarioRouteSection({
               "Это отправная точка. Точный состав появится после проверки размеров и маршрута."}
           </p>
         </div>
-        <div className={styles.routeGrid}>
+        <div
+          className={`${styles.routeGrid} ${
+            content.slug === "banya" ? styles.routeGridEqual : ""
+          }`}
+        >
           {content.routeOptions.map((option) => (
             <article className={styles.routeOption} key={option.slug}>
               {option.image ? (
