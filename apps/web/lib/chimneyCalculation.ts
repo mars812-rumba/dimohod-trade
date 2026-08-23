@@ -440,17 +440,31 @@ function addRouteNodes(
     });
   } else if (routeKind === "wall-rear") {
     const firstSandwichPipeIndex = bom.findIndex((line) => line.key.startsWith("sandwich-pipe-"));
-    bom.splice(firstSandwichPipeIndex >= 0 ? firstSandwichPipeIndex : bom.length, 0, {
-      key: "rear-connection-rotary-damper",
-      productKind: "шибер",
-      label: "Одноконтурный шибер поворотный",
-      quantity: 1,
-      contour: "одностенный",
-      zone: "transition",
-      selectionReason: "Установлен в рассчитанной горизонтальной цепочке после одноконтурных труб.",
-      requiresSku: true,
-      catalogSearch: "Одноконтурный шибер поворотный",
-    });
+    bom.splice(firstSandwichPipeIndex >= 0 ? firstSandwichPipeIndex : bom.length, 0,
+      {
+        key: "rear-connection-rotary-damper",
+        productKind: "шибер",
+        label: "Одноконтурный шибер поворотный",
+        quantity: 1,
+        contour: "одностенный",
+        zone: "transition",
+        selectionReason: "Установлен непосредственно на заднем патрубке отопителя перед опорной сэндвич-заглушкой.",
+        requiresSku: true,
+        catalogSearch: "Одноконтурный шибер поворотный",
+      },
+      {
+        key: "support-cap",
+        productKind: "заглушка",
+        label: "Сэндвич-заглушка опорная",
+        quantity: 1,
+        contour: "сэндвич",
+        insulationMm: 50,
+        zone: "transition",
+        selectionReason: "Установлена сразу после шибера и переводит заднее подключение на сэндвич-контур.",
+        requiresSku: true,
+        catalogSearch: "Сэндвич-заглушка опорная",
+      },
+    );
   }
   bom.push({
     key: routeKind === "ceiling" ? "ceiling-passage" : "wall-passage",
@@ -579,16 +593,16 @@ function addRouteNodes(
       catalogSearch: "Сэндвич-тройник с К/О 90°",
     });
     bom.push({
-      key: "tee-lower-support-plug",
-      productKind: "заглушка",
-      label: "Сэндвич-заглушка опорная",
+      key: "outside-support-platform",
+      productKind: "опорная_площадка",
+      label: "Сэндвич-опорная площадка",
       quantity: 1,
-      contour: "сэндвич",
-      insulationMm: 50,
-      zone: "outdoor/lower_branch",
-      selectionReason: "Нижняя ветвь наружного тройника; не входит в горизонтальный маршрут и располагается непосредственно под тройником.",
+      zone: "outdoor/support",
+      selectionReason: "Установлена непосредственно под наружным сэндвич-тройником.",
       requiresSku: true,
-      catalogSearch: "Сэндвич-заглушка опорная",
+      catalogCategorySlug: "homuty-i-krepezh",
+      catalogSearch: "Сэндвич-опорная площадка",
+      catalogDiameterMode: "sandwich-outer-range",
     });
     bom.push({
       key: "tee-support-console",
@@ -691,6 +705,19 @@ function addRouteNodes(
       catalogCategorySlug: "homuty-i-krepezh",
       catalogSearch: "Сэндвич-опорная площадка",
       catalogDiameterMode: "sandwich-outer-range",
+    });
+    bom.push({
+      key: "outside-platform-support-console",
+      productKind: "консоль",
+      label: "Консоль универсальная под опорную площадку",
+      quantity: 1,
+      zone: "wall/outdoor",
+      selectionReason: "Установлена непосредственно под опорной площадкой наружного тройника.",
+      requiresSku: true,
+      catalogCategorySlug: "homuty-i-krepezh",
+      catalogSearch: "Консоль универсальная",
+      catalogDiameterMode: "sandwich-outer-range",
+      quantityNote: "Одна консоль непосредственно под опорной площадкой.",
     });
     if (wallConsoleQuantity > 0) {
       bom.push({
@@ -871,20 +898,16 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
         + (positiveNumber(input.draft?.wallThickness) ?? 0)
         + (positiveNumber(input.draft?.facadeOffset) ?? 0);
       const rearDamperEffectiveMm = Math.max(0, Math.round(input.rotaryDamperHeightMm ?? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM));
-      const singlePipeTargetMm = wallStartMm - rearDamperEffectiveMm;
-      const horizontalSingle = solvePipeLayoutEndingAtOrBefore({
-        axis: "horizontal",
-        startMm: 0,
-        targetMm: singlePipeTargetMm,
-        fallbackZone: "indoor_warm",
-        contour: "одностенный",
-      });
-      const damperStartMm = horizontalSingle?.coveredEndMm ?? 0;
+      const rearSupportCapNominalMm = Math.max(0, Math.round(input.supportCapLengthMm ?? 70));
+      const rearSupportCapEffectiveMm = effectiveComponentHeight(rearSupportCapNominalMm);
+      const damperStartMm = 0;
       const damperEndMm = damperStartMm + rearDamperEffectiveMm;
-      const horizontalSandwich = horizontalSingle && wallEndMm > damperEndMm
+      const supportCapStartMm = damperEndMm;
+      const supportCapEndMm = supportCapStartMm + rearSupportCapEffectiveMm;
+      const horizontalSandwich = rearSupportCapEffectiveMm > 0 && wallEndMm > supportCapEndMm
         ? solvePipeLayouts({
           axis: "horizontal",
-          startMm: damperEndMm,
+          startMm: supportCapEndMm,
           targetMm: wallEndMm,
           forbiddenZones,
           fallbackZone: "wall_or_ceiling_pass",
@@ -908,10 +931,10 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       const installedOutdoorHeightMm = outdoorPipes.at(-1)?.endMm ?? 0;
       facadeConsolePositionsMm = wallRouteFacadeConsolePositions(installedOutdoorHeightMm);
       wallConsoleQuantity = 1 + facadeConsolePositionsMm.length;
-      if (!horizontalSingle) {
-        errors.push("Не удалось подобрать стандартную длину одностенной трубы по расстоянию от патрубка до стены с учётом поворотного шибера.");
-      } else if (damperEndMm > wallStartMm) {
-        errors.push("Поворотный шибер попадает внутрь стены; увеличьте расстояние от патрубка до внутренней поверхности стены или уточните длину подключения.");
+      if (rearSupportCapEffectiveMm <= 0) {
+        errors.push(`Номинальная длина опорной заглушки должна быть больше зоны соединения ${PIPE_SOCKET_OVERLAP_MM} мм.`);
+      } else if (supportCapEndMm > wallStartMm) {
+        errors.push("Шибер с опорной заглушкой попадают внутрь стены; увеличьте расстояние от патрубка до внутренней поверхности стены.");
       } else if (!horizontalSandwich) {
         errors.push("Не найдена раскладка сэндвич-труб без стыка внутри стены.");
       } else if (!outdoorLayout) {
@@ -926,17 +949,26 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
           startMm: damperStartMm,
           endMm: damperEndMm,
         });
+        fixedParts.push({
+          id: "support_cap",
+          label: "Опорная заглушка",
+          axis: "horizontal",
+          nominalLengthMm: rearSupportCapNominalMm,
+          effectiveMm: rearSupportCapEffectiveMm,
+          startMm: supportCapStartMm,
+          endMm: supportCapEndMm,
+        });
         const horizontalSandwichPipes = horizontalSandwich.pipes.map((pipe, index) => ({
           ...pipe,
           id: `rear-horizontal-sandwich-pipe-${index + 1}`,
         }));
         variants = [{
-          id: `rear-${horizontalSingle.id}--sandwich-${horizontalSandwich.id}--outdoor-${outdoorLayout.id}`,
-          label: `${horizontalSingle.label} / ${horizontalSandwich.label} / ${outdoorLayout.label}`,
-          pipes: [...horizontalSingle.pipes, ...horizontalSandwichPipes, ...outdoorPipes],
+          id: `rear-transition--sandwich-${horizontalSandwich.id}--outdoor-${outdoorLayout.id}`,
+          label: `Шибер + опорная заглушка / ${horizontalSandwich.label} / ${outdoorLayout.label}`,
+          pipes: [...horizontalSandwichPipes, ...outdoorPipes],
           coveredEndMm: outdoorLayout.coveredEndMm,
           reserveMm: horizontalSandwich.reserveMm + outdoorLayout.reserveMm,
-          jointPositionsMm: [...horizontalSingle.jointPositionsMm, ...horizontalSandwich.jointPositionsMm, ...outdoorPipes.map((pipe) => pipe.endMm)],
+          jointPositionsMm: [...horizontalSandwich.jointPositionsMm, ...outdoorPipes.map((pipe) => pipe.endMm)],
         }];
       }
     } else {
@@ -1033,21 +1065,6 @@ export function bomForVariant(calculation: ChimneyCalculation, variant: PipeLayo
   if (!variant) return withMaterialDefaults(calculation.bom.filter((line) => !isLayoutPipe(line)));
   const pipeLines = summarizePipeBom([variant], calculation.routeKind);
   const fixedAndNodes = calculation.bom.filter((line) => !isLayoutPipe(line));
-  if (calculation.routeKind === "wall-rear") {
-    const damperIndex = fixedAndNodes.findIndex((line) => line.key === "rear-connection-rotary-damper");
-    if (damperIndex >= 0) {
-      const singlePipeLines = pipeLines.filter((line) => line.contour === "одностенный");
-      const sandwichPipeLines = pipeLines.filter((line) => line.contour === "сэндвич");
-      const remainingNodes = fixedAndNodes.filter((line) => line.key !== "rear-connection-rotary-damper");
-      return withMaterialDefaults([
-        ...remainingNodes.slice(0, damperIndex),
-        ...singlePipeLines,
-        fixedAndNodes[damperIndex],
-        ...sandwichPipeLines,
-        ...remainingNodes.slice(damperIndex),
-      ]);
-    }
-  }
   const insertionIndex = fixedAndNodes.findIndex((line) => line.key === "ceiling-passage" || line.key === "wall-passage");
   if (insertionIndex < 0) return withMaterialDefaults([...fixedAndNodes, ...pipeLines]);
   return withMaterialDefaults([

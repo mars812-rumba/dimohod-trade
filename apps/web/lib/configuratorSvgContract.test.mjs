@@ -31,7 +31,10 @@ test("direct rear route reuses the 90-degree SVG template with a lowered part3",
   assert.match(source, /const routeDeltaY = horizontalAxisY - 1088/);
   assert.match(source, /!rearOutlet \? \(/);
   assert.match(source, /aria-label="Отвод 90 градусов"/);
-  assert.match(source, /Поворотный шибер/);
+  assert.match(configuratorSource, /Поворотный шибер/);
+  assert.match(source, /Универсальная консоль под опорной площадкой/);
+  assert.match(source, /flowStartX=\{282\}/);
+  assert.match(configuratorSource, /label="ОЗ"/);
   assert.match(source, /horizontalPipes\.map/);
   assert.match(source, /outdoorPipes\.map/);
   assert.match(source, /consolePositionsMm\.map/);

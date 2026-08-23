@@ -254,7 +254,7 @@ function DynamicWallTopScheme({
   const routeDeltaY = horizontalAxisY - 1088;
   const stackBottomY = 1058 + routeDeltaY;
   const stackHeight = stackBottomY - stackTopY;
-  const horizontalStartX = rearOutlet ? 354 : 382;
+  const horizontalStartX = rearOutlet ? 406 : 382;
   const horizontalEndX = 658;
   const horizontalWidth = horizontalEndX - horizontalStartX;
   let outdoorCursorY = stackBottomY;
@@ -390,6 +390,17 @@ function DynamicWallTopScheme({
         <circle cx="646" cy="1171" fill="#303c41" r="3" />
         <circle cx="740" cy="1171" fill="#303c41" r="3" />
       </g>
+      <g aria-label="Универсальная консоль под опорной площадкой" transform={`translate(0 ${routeDeltaY})`}>
+        <polygon
+          fill="url(#dynamic-console-top)"
+          filter="url(#dynamic-pipe-shadow)"
+          points="635,1182 572,1182 572,1234"
+          stroke="#3f494d"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <line stroke="#687277" strokeWidth="3" x1="627" x2="580" y1="1192" y2="1225" />
+      </g>
 
       <g aria-label={`Наружные сэндвич-трубы: ${outdoorPipes.length}`}>
         {outdoorPipes.map((pipe, index) => {
@@ -451,15 +462,13 @@ function DynamicWallTopScheme({
       {horizontalPipes.length ? (
         <g aria-label={`Горизонтальные трубы: ${horizontalPipes.length}`}>
           {rearOutlet ? (
-            <g aria-label="Поворотный шибер">
-              <rect fill="url(#dynamic-steel-horizontal)" filter="url(#dynamic-pipe-shadow)" height="44" rx="8" stroke="#344348" strokeWidth="2" width="72" x="282" y={horizontalAxisY - 22} />
-              <rect fill="url(#dynamic-steel-horizontal)" height="52" rx="3" stroke="#2d3b40" strokeWidth="1.5" width="9" x="286" y={horizontalAxisY - 26} />
-              <rect fill="url(#dynamic-steel-horizontal)" height="52" rx="3" stroke="#2d3b40" strokeWidth="1.5" width="9" x="341" y={horizontalAxisY - 26} />
-              <line stroke="#4b5b60" strokeWidth="3" x1="318" x2="318" y1={horizontalAxisY - 25} y2={horizontalAxisY - 43} />
-              <circle cx="318" cy={horizontalAxisY - 45} fill="#e46235" r="5" stroke="#923719" strokeWidth="2" />
-              <line stroke="#923719" strokeLinecap="round" strokeWidth="4" x1="318" x2="336" y1={horizontalAxisY - 45} y2={horizontalAxisY - 57} />
-              <SchemePartCallout label="Ш" x={318} y={horizontalAxisY - 75} />
-            </g>
+            <HorizontalTransitionAssembly
+              centerY={horizontalAxisY}
+              direction="right"
+              filterId="dynamic-pipe-shadow"
+              flowStartX={282}
+              gradientId="dynamic-steel-horizontal"
+            />
           ) : (
             <HorizontalTransitionAssembly
               centerY={horizontalAxisY}
@@ -496,7 +505,7 @@ function DynamicWallTopScheme({
         <rect height="72" rx="18" width="900" />
         <text x="24" y="29">По выбранной смете</text>
         <text x="24" y="55">
-          трубы — {outdoorPipes.length} шт. · площадка — 1 шт. · консоли — {consolePositionsMm.length} шт. · силовые хомуты — {consolePositionsMm.length} шт.
+          трубы — {outdoorPipes.length + horizontalPipes.length} шт. · площадка — 1 шт. · консоли — {consolePositionsMm.length + 1} шт. · силовые хомуты — {consolePositionsMm.length} шт.
         </text>
       </g>
     </svg>
@@ -543,6 +552,16 @@ function EngineeringSceneProduct({ node, scale, originX, originY, projectedX, pr
       <line stroke="#923719" strokeLinecap="round" strokeWidth="4" x1={length * 0.5} x2={length * 0.5 + 24} y1="-38" y2="-50" />
     </g>
   );
+  if (node.geometryFamily === "transition_support_cap") return (
+    <g {...common} transform={`translate(${x} ${y})`}>
+      <path
+        d={`M0,-10 H${Math.max(8, length * 0.35)} L${length * 0.55},-15 H${length} V15 H${length * 0.55} L${Math.max(8, length * 0.35)},10 H0 Z`}
+        fill="url(#scene-steel)"
+        stroke="#26343d"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
   if (node.geometryFamily === "tee_90") return (
     <g {...common} transform={`translate(${x} ${y})`}>
       <rect fill="url(#scene-steel)" height="92" rx="6" stroke="#26343d" width="34" x="-17" y="-46" />
@@ -558,6 +577,13 @@ function EngineeringSceneProduct({ node, scale, originX, originY, projectedX, pr
       <rect fill="url(#scene-steel)" height="28" stroke="#26343d" width="48" x="-24" y="-36" />
       <ellipse cx="0" cy="-36" fill="#c7ced0" rx="24" ry="7" stroke="#26343d" />
       <rect fill="url(#scene-steel)" height="18" stroke="#26343d" width="30" x="-15" y="6" />
+    </g>
+  );
+  if (node.geometryFamily === "support_platform") return (
+    <g {...common} transform={`translate(${x} ${y})`}>
+      <rect fill="url(#scene-steel)" height="12" rx="2" stroke="#26343d" width="76" x="-38" y="-6" />
+      <circle cx="-29" cy="0" fill="#303c41" r="2.5" />
+      <circle cx="29" cy="0" fill="#303c41" r="2.5" />
     </g>
   );
   if (node.geometryFamily === "support_console" || node.geometryFamily === "wall_console") return (
@@ -624,7 +650,7 @@ function DynamicWallRearScheme({ scene }: { scene: EngineeringSceneGraph }) {
   const productNodes = scene.nodes.filter((node) => node.geometryFamily !== "wall_passage" && node.geometryFamily !== "passage_accessory");
   const horizontalNodes = productNodes.filter((node) => (
     node.orientation === "horizontal"
-    && (node.geometryFamily === "single_wall_pipe" || node.geometryFamily === "sandwich_pipe" || node.geometryFamily === "rotary_damper")
+    && (node.geometryFamily === "single_wall_pipe" || node.geometryFamily === "sandwich_pipe" || node.geometryFamily === "rotary_damper" || node.geometryFamily === "transition_support_cap")
   ));
   const teeNode = productNodes.find((node) => node.geometryFamily === "tee_90");
   const verticalNodes = productNodes.filter((node) => !horizontalNodes.includes(node) && node !== teeNode);
