@@ -721,6 +721,7 @@ async def read_product(
     response: Response,
     sku: str | None = Query(default=None, min_length=1, max_length=240),
     diameter: str | None = Query(default=None, pattern=r"^(?:\d+:\d*|\d*:\d+)$"),
+    include_compatible: bool = Query(default=True),
     session: AsyncSession = Depends(get_db),
 ) -> ProductRead:
     started_at = perf_counter()
@@ -797,7 +798,9 @@ async def read_product(
     product_built_at = perf_counter()
 
     product_read.compatible_products = (
-        await compatible_items_for_sku(session, product, source_sku) if source_sku else []
+        await compatible_items_for_sku(session, product, source_sku)
+        if source_sku and include_compatible
+        else []
     )
     compatibility_built_at = perf_counter()
 
@@ -846,5 +849,5 @@ async def read_compatible_products(
     if product_sku is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
     product, source_sku = product_sku
-    response.headers["Cache-Control"] = "no-store"
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
     return await compatible_items_for_sku(session, product, source_sku)

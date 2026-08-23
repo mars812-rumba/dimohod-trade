@@ -345,7 +345,7 @@ export async function getCompatibleProducts(
 }
 
 export async function getProductPreview(productSlug: string): Promise<Product | null> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/products/${encodeURIComponent(productSlug)}`, {
+  const response = await fetch(`${apiBaseUrl}/api/v1/products/${encodeURIComponent(productSlug)}?include_compatible=false`, {
     // The family payload exceeds Next.js' 2 MB fetch-cache limit. The homepage
     // stores a compact, processed projection with unstable_cache instead.
     cache: "no-store",
@@ -385,6 +385,7 @@ export async function getProduct(
   diameter?: string | null,
 ): Promise<Product | null> {
   const params = new URLSearchParams();
+  params.set("include_compatible", "false");
   if (sku) {
     params.set("sku", sku);
   }

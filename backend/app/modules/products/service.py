@@ -330,6 +330,22 @@ async def list_compatible_product_skus(
         return []
 
     if allowed_product_ids is not None:
+        # An editorial family allowlist does not mean that every SKU from those
+        # families is a candidate. Large pipe families contain thousands of
+        # variants; hydrating them all and filtering in Python made one
+        # compatibility request take seconds. The final Python matcher remains
+        # the source of truth, while this conservative SQL predicate only
+        # removes candidates that it would reject unconditionally.
+        source_diameters = {
+            sku.diameter_mm
+            for sku in active_source_skus
+            if sku.diameter_mm is not None
+        }
+        candidate_filters = [
+            Product.product_kind.in_(("консоль", "опорная_площадка")),
+        ]
+        if source_diameters:
+            candidate_filters.append(SKU.diameter_mm.in_(source_diameters))
         result = await session.execute(
             select(SKU, Product)
             .join(Product, SKU.product_id == Product.id)
@@ -338,6 +354,7 @@ async def list_compatible_product_skus(
                 Product.id.in_(allowed_product_ids),
                 Product.id != exclude_product_id,
                 SKU.is_active.is_(True),
+                or_(*candidate_filters),
             )
             .order_by(Product.name.asc(), SKU.length_mm.asc().nulls_last(), SKU.article.asc())
         )

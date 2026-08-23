@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/images/:path*", headers: imageCacheHeaders },
       { source: "/brand/:path*", headers: imageCacheHeaders },
+      { source: "/documents/:path*", headers: imageCacheHeaders },
     ];
   },
   async rewrites() {

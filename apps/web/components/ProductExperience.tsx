@@ -10,6 +10,8 @@ import {
   IconCircleCheck as CheckCircle2,
   IconCircleDot as CircleDot,
   IconCircleX as XCircle,
+  IconCertificate as Certificate,
+  IconDownload as Download,
   IconFileText as FileText,
   IconInfoCircle as Info,
   IconStack3 as Layers3,
@@ -31,6 +33,7 @@ import { DimensionScheme } from "@/components/DimensionScheme";
 import { LeadForm } from "@/components/LeadForm";
 import { YandexRatingBadge } from "@/components/YandexRatingBadge";
 import type { CompatibleProduct, Product } from "@/lib/api";
+import { documentsForSku } from "@/lib/productDocuments";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productPublicPath, productSelectionPath } from "@/lib/productUrls";
 import {
@@ -88,8 +91,6 @@ type VariantDimension = {
   label: string;
   options: Array<{ value: string; label: string }>;
 };
-
-const COMPATIBILITY_PREFETCH_LIMIT = 6;
 
 function normalizedCompatibilityValue(value: string | null) {
   const normalized = value?.trim().toLocaleLowerCase("ru-RU") ?? "";
@@ -987,7 +988,9 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const [showLeadForm, setShowLeadForm] = useState(false);
   const compatibilityCache = useRef(
     new Map<string, CompatibleProduct[]>(
-      initialSku ? [[compatibilityCacheKey(initialSku), initialCompatibleProducts]] : [],
+      initialSku && initialCompatibleProducts.length > 0
+        ? [[compatibilityCacheKey(initialSku), initialCompatibleProducts]]
+        : [],
     ),
   );
   const compatibilityRequests = useRef(new Map<string, Promise<CompatibleProduct[]>>());
@@ -1015,7 +1018,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
       const skuKey = sku.id;
       const apiPath = `/api/v1/products/${encodeURIComponent(product.slug)}/compatible?sku=${encodeURIComponent(skuKey)}`;
       const requestUrl = publicApiBaseUrl ? `${publicApiBaseUrl}${apiPath}` : `${appBasePath}${apiPath}`;
-      const request = fetch(requestUrl, { cache: "no-store" })
+      const request = fetch(requestUrl)
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`Compatibility request failed: ${response.status}`);
@@ -1043,7 +1046,9 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
 
   useEffect(() => {
     compatibilityCache.current = new Map(
-      initialSku ? [[compatibilityCacheKey(initialSku), initialCompatibleProducts]] : [],
+      initialSku && initialCompatibleProducts.length > 0
+        ? [[compatibilityCacheKey(initialSku), initialCompatibleProducts]]
+        : [],
     );
     compatibilityRequests.current = new Map();
     setCompatibleProducts(initialCompatibleProducts);
@@ -1086,34 +1091,6 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     };
   }, [activeSku, loadCompatibility]);
 
-  useEffect(() => {
-    if (!activeSku) {
-      return;
-    }
-    const activeCacheKey = compatibilityCacheKey(activeSku);
-    const representatives = new Map<string, Product["skus"][number]>();
-    for (const sku of product.skus) {
-      const cacheKey = compatibilityCacheKey(sku);
-      if (
-        cacheKey !== activeCacheKey &&
-        !compatibilityCache.current.has(cacheKey) &&
-        !representatives.has(cacheKey)
-      ) {
-        representatives.set(cacheKey, sku);
-      }
-      if (representatives.size >= COMPATIBILITY_PREFETCH_LIMIT) {
-        break;
-      }
-    }
-    if (representatives.size === 0) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      void Promise.allSettled(Array.from(representatives.values(), (sku) => loadCompatibility(sku)));
-    }, 350);
-    return () => window.clearTimeout(timer);
-  }, [activeSku, loadCompatibility, product.skus]);
   const normalizedProductName = product.name.toLocaleLowerCase("ru-RU");
   const isDeflector = normalizedProductName.includes("дефлектор");
   const isConeTermination =
@@ -1145,6 +1122,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const contour = activeSku?.contour ?? product.contour;
   const insulationMm = activeSku?.insulation_mm ?? product.insulation_mm;
   const compatibilityMessages = activeSku?.compatibility_messages ?? [];
+  const productDocuments = documentsForSku(product, activeSku);
   const compatibleProductFamilies = groupCompatibleProducts(compatibleProducts);
   const hasCompatibleLengthChoices = compatibleProductFamilies.some(
     (items) => new Set(items.map((item) => item.length_mm).filter((value) => value !== null)).size > 1,
@@ -1419,6 +1397,56 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
               ))}
             </div>
           </section>
+
+          {productDocuments.length > 0 ? (
+            <section className="product-section" aria-labelledby="product-documents-title">
+              <h2 className="product-section-title product-section-title-with-icon" id="product-documents-title">
+                <Certificate size={22} aria-hidden="true" />
+                Сертификаты и документы
+              </h2>
+              <p className="product-documents-intro">
+                Документы показаны по материалу и области действия. Документы на металл относятся к
+                указанным в них партиям и приводятся справочно.
+              </p>
+              <div className="product-documents-grid">
+                {productDocuments.map((document) => (
+                  <article className="product-document-card" key={document.id}>
+                    <a
+                      className="product-document-preview"
+                      href={`${appBasePath}${document.previewUrl}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Открыть документ: ${document.title}`}
+                    >
+                      <img
+                        src={`${appBasePath}${document.previewUrl}`}
+                        alt={`Превью документа «${document.title}»`}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </a>
+                    <div className="product-document-body">
+                      <span className={`product-document-kind product-document-kind-${document.kind}`}>
+                        {document.kind === "certificate" ? "Сертификат" : "Документ на металл"}
+                      </span>
+                      <h3>{document.title}</h3>
+                      <strong>{document.status}</strong>
+                      <p>{document.note}</p>
+                      <div className="product-document-actions">
+                        <a href={`${appBasePath}${document.previewUrl}`} target="_blank" rel="noreferrer">
+                          Открыть
+                        </a>
+                        <a href={`${appBasePath}${document.originalUrl}`} download>
+                          <Download size={16} aria-hidden="true" />
+                          Скачать оригинал
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <section className="product-section">
             <h2 className="product-section-title">Совместимость</h2>
