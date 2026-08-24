@@ -10,6 +10,7 @@ import {
   IconRuler as Ruler,
   IconX as X,
 } from "@tabler/icons-react";
+import { Construction } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { CategoryNode, CatalogTreeResponse } from "@/lib/api";
@@ -206,7 +207,9 @@ export function SiteHeader() {
             <Link className="mobile-menu-feature-link" href="/zamery" onClick={closeMenu}>
               <span><Ruler aria-hidden size={17} /> Мои замеры</span>
             </Link>
-            <Link href="/configurator" onClick={closeMenu}>Подобрать комплект</Link>
+            <Link className="mobile-menu-feature-link" href="/configurator" onClick={closeMenu}>
+              <span><Construction aria-hidden size={17} /> Конфигуратор</span>
+            </Link>
             <Link href="/#send-materials" onClick={closeMenu}>Отправить фото или схему</Link>
             <Link href={privacyPolicyPath} onClick={closeMenu}>Политика персональных данных</Link>
             <Link href={personalDataConsentPath} onClick={closeMenu}>Согласие на обработку данных</Link>

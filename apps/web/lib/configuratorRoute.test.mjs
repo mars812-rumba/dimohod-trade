@@ -28,3 +28,12 @@ test("all saved-profile and scenario links target the dedicated route", () => {
   assert.match(profilesSource, /return `\/configurator\?\$\{params\.toString\(\)\}`/);
   assert.match(scenariosSource, /`\/configurator\?\$\{query\}` : "\/configurator"/);
 });
+
+test("the mobile menu presents the configurator beside measurements", () => {
+  assert.match(headerSource, /import \{ Construction \} from "lucide-react"/);
+  assert.match(
+    headerSource,
+    /href="\/zamery"[\s\S]*Мои замеры[\s\S]*className="mobile-menu-feature-link" href="\/configurator"[\s\S]*<Construction aria-hidden size=\{17\} \/> Конфигуратор/,
+  );
+  assert.doesNotMatch(headerSource, />Подобрать комплект<\/Link>/);
+});
