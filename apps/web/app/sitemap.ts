@@ -3,7 +3,6 @@ import { getCatalogTree, getProductSeoPages, type CategoryNode } from "@/lib/api
 import { productPublicPath } from "@/lib/productUrls";
 import { scenarioPages } from "@/lib/scenarioPages";
 import { guideArticles } from "@/lib/guideArticles";
-import { catalogSeoPages, catalogSeoPagePath } from "@/lib/catalogSeoPages";
 import { stovePageCount, stovePagePath } from "@/lib/stoves";
 
 export const dynamic = "force-dynamic";
@@ -41,9 +40,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...guideArticles.map(({ slug }) => ({
       url: absoluteUrl(`/guides/${slug}`),
     })),
-    ...catalogSeoPages
-      .filter((page) => page.indexable)
-      .map((page) => ({ url: absoluteUrl(catalogSeoPagePath(page)) })),
   ];
 
   try {
