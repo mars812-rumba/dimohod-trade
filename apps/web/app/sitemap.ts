@@ -3,6 +3,7 @@ import { getCatalogTree, getProductSeoPages, type CategoryNode } from "@/lib/api
 import { productPublicPath } from "@/lib/productUrls";
 import { scenarioPages } from "@/lib/scenarioPages";
 import { guideArticles } from "@/lib/guideArticles";
+import { catalogSeoPages, catalogSeoPagePath } from "@/lib/catalogSeoPages";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/catalog") },
     { url: absoluteUrl("/solutions") },
     { url: absoluteUrl("/guides") },
+    { url: absoluteUrl("/configurator") },
     { url: absoluteUrl("/solutions/banya/zamery") },
     { url: absoluteUrl("/zamery") },
     { url: absoluteUrl("/privacy") },
@@ -35,6 +37,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...guideArticles.map(({ slug }) => ({
       url: absoluteUrl(`/guides/${slug}`),
     })),
+    ...catalogSeoPages
+      .filter((page) => page.indexable)
+      .map((page) => ({ url: absoluteUrl(catalogSeoPagePath(page)) })),
   ];
 
   try {

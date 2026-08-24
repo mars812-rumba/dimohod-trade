@@ -136,7 +136,7 @@ export function SiteHeader() {
             <Phone aria-hidden size={17} />
             <span>+7 (965) 075-65-55</span>
           </a>
-          <Link className="header-configurator" href="/#calculator">
+          <Link className="header-configurator" href="/configurator">
             <SlidersHorizontal aria-hidden size={17} />
             <span>Подобрать <span className="header-configurator-extra">комплект</span></span>
           </Link>
@@ -206,7 +206,7 @@ export function SiteHeader() {
             <Link className="mobile-menu-feature-link" href="/zamery" onClick={closeMenu}>
               <span><Ruler aria-hidden size={17} /> Мои замеры</span>
             </Link>
-            <Link href="/#calculator" onClick={closeMenu}>Подобрать комплект</Link>
+            <Link href="/configurator" onClick={closeMenu}>Подобрать комплект</Link>
             <Link href="/#send-materials" onClick={closeMenu}>Отправить фото или схему</Link>
             <Link href={privacyPolicyPath} onClick={closeMenu}>Политика персональных данных</Link>
             <Link href={personalDataConsentPath} onClick={closeMenu}>Согласие на обработку данных</Link>

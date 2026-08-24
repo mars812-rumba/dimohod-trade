@@ -418,7 +418,7 @@ const emptyProductSeoForm: ProductSeoFormState = {
     requiredInputData: "",
     sourceNotes: "",
     configuratorCtaText: "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе.",
-    configuratorCtaHref: "/#calculator",
+    configuratorCtaHref: "/configurator",
   },
 };
 

@@ -31,7 +31,7 @@
     "sourceNotes": [],
     "configuratorCta": {
       "text": "Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе.",
-      "href": "/#calculator"
+      "href": "/configurator"
     }
   }
 }

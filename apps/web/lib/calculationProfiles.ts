@@ -224,7 +224,7 @@ export function duplicateCalculationProfile(
 
 export function calculationProfileConfiguratorHref(profileId: string): string {
   const params = new URLSearchParams({ profile: profileId });
-  return `/?${params.toString()}#calculator`;
+  return `/configurator?${params.toString()}`;
 }
 
 export function calculationProfileMeasurementsHref(profileId: string): string {

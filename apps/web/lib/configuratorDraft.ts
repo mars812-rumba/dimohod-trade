@@ -152,7 +152,7 @@ export function scenarioDraftConfiguratorHref(draft: ScenarioConfiguratorDraft):
   if (levelsCount) params.set("floors", levelsCount);
 
   params.set("draft", JSON.stringify(draft));
-  return `/?${params.toString()}#calculator`;
+  return `/configurator?${params.toString()}`;
 }
 
 export function parseScenarioDraft(value: string | null): ScenarioConfiguratorDraft | null {

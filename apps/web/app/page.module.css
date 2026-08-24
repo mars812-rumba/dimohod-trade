@@ -425,7 +425,7 @@
 }
 
 .scenarioSection,
-.calculatorSection,
+.calculatorEntrySection,
 .catalogSection,
 .contactSection {
   padding: 94px 0;
@@ -1397,7 +1397,8 @@
   font-weight: 760;
 }
 
-.calculatorSection {
+.calculatorEntrySection {
+  border-block: 1px solid var(--line);
   background:
     linear-gradient(rgba(50, 98, 118, 0.06) 1px, transparent 1px),
     linear-gradient(90deg, rgba(50, 98, 118, 0.06) 1px, transparent 1px),
@@ -1405,29 +1406,74 @@
   background-size: 24px 24px;
 }
 
-.calculatorSection :global(.chimney-configurator) {
-  margin-top: 0;
+.calculatorEntry {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.62fr);
+  gap: clamp(48px, 8vw, 112px);
+  align-items: center;
+  padding: clamp(36px, 5vw, 64px);
+  border: 1px solid rgba(50, 98, 118, 0.2);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 22px 72px rgba(16, 33, 39, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 22px 72px rgba(16, 33, 39, 0.1);
 }
 
-.calculatorSection :global(.configurator-header h3) {
-  font-family: "Arial Narrow", "Aptos Narrow", sans-serif;
+.calculatorEntry h2 {
+  max-width: 720px;
+  margin: 0;
+  font-size: clamp(34px, 4vw, 50px);
+  font-weight: 760;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
 }
 
-.calculatorSection :global(.configurator-schematic-pane),
-.calculatorSection :global(.configurator-sheet),
-.calculatorSection :global(.configurator-svg-wrap) {
-  background-color: #e9eeee;
-}
-
-.configuratorFallback {
-  min-height: 360px;
-  padding: 32px;
-  border: 1px solid var(--line);
+.calculatorEntry > div > p:not(.overline) {
+  max-width: 660px;
+  margin: 20px 0 0;
   color: #596a70;
-  background: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.calculatorEntryActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.calculatorEntryResults {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block-start: 1px solid var(--line);
+}
+
+.calculatorEntryResults li {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  min-height: 76px;
+  border-block-end: 1px solid var(--line);
+}
+
+.calculatorEntryResults span {
+  color: var(--signal);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.calculatorEntryResults strong {
+  color: var(--steel-deep);
+  font-size: 15px;
+  line-height: 1.35;
 }
 
 .safetySection {
@@ -2401,7 +2447,7 @@
   .routeExamplesSection,
   .differenceSection,
   .productGuidanceSection,
-  .calculatorSection,
+  .calculatorEntrySection,
   .catalogSection,
   .contactSection,
   .safetySection {
@@ -2416,6 +2462,11 @@
 
   .routeExamplesHeading h2 {
     font-size: clamp(30px, 8vw, 38px);
+  }
+
+  .calculatorEntry {
+    grid-template-columns: 1fr;
+    gap: 34px;
   }
 
   .routeExamplesHeading p {

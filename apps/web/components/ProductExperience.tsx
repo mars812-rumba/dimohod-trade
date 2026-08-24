@@ -950,7 +950,7 @@ function ProductSeoDescription({ value, omitConfiguratorSection }: { value: stri
         }
         return seoSectionHeadings.has(normalizedHeading)
           ? [<ProductCopyHeading key={`${index}-${line}`} title={normalizedHeading} />]
-          : [<p key={`${index}-${line}`}>{line.replace(/\s*:?[\s]*\/#calculator\b/g, "")}</p>];
+          : [<p key={`${index}-${line}`}>{line.replace(/\s*:?[\s]*(?:\/#calculator|\/configurator)\b/g, "")}</p>];
       })}
     </div>
   );
@@ -965,9 +965,13 @@ function seoConfiguratorCta(product: Product): { text: string; href: string } | 
   if (!rawCta || typeof rawCta !== "object" || !("text" in rawCta) || !("href" in rawCta)) {
     return null;
   }
-  return typeof rawCta.text === "string" && typeof rawCta.href === "string" && rawCta.text && rawCta.href
-    ? { text: rawCta.text, href: rawCta.href }
-    : null;
+  if (typeof rawCta.text !== "string" || typeof rawCta.href !== "string" || !rawCta.text || !rawCta.href) {
+    return null;
+  }
+  return {
+    text: rawCta.text,
+    href: rawCta.href === "/#calculator" ? "/configurator" : rawCta.href,
+  };
 }
 
 export function ProductExperience({ product, initialSkuKey }: { product: Product; initialSkuKey?: string }) {

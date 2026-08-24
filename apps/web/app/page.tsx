@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { Suspense } from "react";
 import {
   IconArrowRight as ArrowRight,
   IconBoxMultiple as Boxes,
@@ -28,7 +27,6 @@ import {
   IconTool as Wrench,
   IconBolt as Zap,
 } from "@tabler/icons-react";
-import { ChimneyConfigurator } from "../components/ChimneyConfigurator";
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
 import { HomeHeroCarousel } from "../components/HomeHeroCarousel";
 import { HomeGuidedShowcase } from "../components/HomeGuidedShowcase";
@@ -447,9 +445,9 @@ export default async function HomePage() {
 
             <div className={styles.differenceFooter}>
               <p>Вы описываете задачу — мы помогаем собрать систему.</p>
-              <a className={styles.primaryButton} href="#calculator">
+              <Link className={styles.primaryButton} href="/configurator">
                 Собрать комплект <ArrowRight size={17} aria-hidden />
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -650,27 +648,31 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className={styles.calculatorSection} id="calculator">
+      <section className={styles.calculatorEntrySection} id="calculator">
         <div className={styles.shell}>
-          <div className={styles.sectionHeading}>
+          <div className={styles.calculatorEntry}>
             <div>
               <p className={styles.overline}>Расчёт по вашим замерам</p>
-              <h2>Схема, состав и смета — в одном месте.</h2>
-            </div>
-            <p>
-              Откройте сохранённый замер, чтобы увидеть схему дымохода, BOM с ценами
-              и скачать предварительную смету в PDF.
-            </p>
-          </div>
-          <Suspense
-            fallback={(
-              <div className={styles.configuratorFallback} role="status">
-                Загружаем конфигуратор…
+              <h2>Соберите дымоход на отдельном рабочем экране.</h2>
+              <p>
+                Конфигуратор откроет сохранённые замеры и покажет предварительную SVG-схему,
+                состав комплекта, цены доступных позиций и PDF-смету.
+              </p>
+              <div className={styles.calculatorEntryActions}>
+                <Link className={styles.primaryButton} href="/configurator">
+                  Открыть конфигуратор <ArrowRight aria-hidden size={17} />
+                </Link>
+                <Link className={styles.secondaryButton} href="/zamery">
+                  <Ruler aria-hidden size={17} /> Мои замеры
+                </Link>
               </div>
-            )}
-          >
-            <ChimneyConfigurator assetBasePath={basePath} />
-          </Suspense>
+            </div>
+            <ol className={styles.calculatorEntryResults} aria-label="Результат конфигуратора">
+              <li><span>01</span><strong>Расчётная SVG-схема</strong></li>
+              <li><span>02</span><strong>Комплект из позиций каталога</strong></li>
+              <li><span>03</span><strong>PDF и отправка менеджеру</strong></li>
+            </ol>
+          </div>
         </div>
       </section>
 
@@ -1002,7 +1004,7 @@ export default async function HomePage() {
               <Link href="/catalog">Каталог</Link>
               <Link href="/solutions">Решения</Link>
               <Link href="/guides">Статьи</Link>
-              <a href="#calculator">Конфигуратор</a>
+              <Link href="/configurator">Конфигуратор</Link>
               <a href="tel:+79650756555">Контакты</a>
             </nav>
             <nav className={styles.footerLinks} aria-label="Правовые документы">

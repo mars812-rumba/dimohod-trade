@@ -759,7 +759,7 @@ def test_invalid_seo_knowledge_falls_back_to_safe_empty_structure() -> None:
     knowledge = normalize_seo_knowledge({"installationZones": "outdoor"})
 
     assert knowledge.installation_zones == []
-    assert knowledge.configurator_cta.href == "/#calculator"
+    assert knowledge.configurator_cta.href == "/configurator"
 
 
 def test_generated_meta_replaces_selected_sku_literals_with_tokens() -> None:

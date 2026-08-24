@@ -116,7 +116,7 @@ class AdminSEOConfiguratorCTA(BaseModel):
         default="Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе.",
         max_length=500,
     )
-    href: str = Field(default="/#calculator", max_length=500)
+    href: str = Field(default="/configurator", max_length=500)
 
 
 class AdminSEOProductKnowledge(BaseModel):

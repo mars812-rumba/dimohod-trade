@@ -120,7 +120,7 @@ export type ScenarioPageContent = {
 export function scenarioConfiguratorHref(content: ScenarioPageContent): string {
   const params = new URLSearchParams(content.configuratorPreset);
   const query = params.toString();
-  return query ? `/?${query}#calculator` : "/#calculator";
+  return query ? `/configurator?${query}` : "/configurator";
 }
 
 export const banyaScenario: ScenarioPageContent = {
