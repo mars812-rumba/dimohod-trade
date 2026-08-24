@@ -94,6 +94,7 @@ export type ChimneyCalculation = {
   passageWoolKits: number;
   rotaryDamperHeightMm: number;
   singleWallWarmupPipeLengthMm: number;
+  indoorRiseMm: number;
   ridgeHeightMm: number | null;
   ridgeHorizontalDistanceMm: number | null;
   roofTerminationRequirementMm: number | null;
@@ -678,7 +679,7 @@ function addRouteNodes(
       contour: "сэндвич",
       insulationMm: 50,
       zone: "transition",
-      selectionReason: "Установлена сразу после одноконтурного отвода 90° и переводит подключение на сэндвич-контур.",
+      selectionReason: "Установлена сразу после поворотного шибера и переводит подключение на сэндвич-контур.",
       requiresSku: true,
     });
     bom.push({
@@ -795,6 +796,9 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const routeLengthMm = input.heightM * 1000;
   const legacyRouteTargetMm = connectionHeightMm + routeLengthMm;
   const warmupLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.warmupLengthMm ?? 1000)) : 0;
+  const indoorRiseMm = routeKind === "wall-top"
+    ? Math.max(0, Math.round(positiveNumber(input.draft?.verticalRise) ?? 0))
+    : 0;
   const rotaryDamperHeightMm = routeKind === "ceiling"
     ? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM
     : 0;
@@ -972,14 +976,59 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
         }];
       }
     } else {
-      const wallEndMm = (positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000)
+      const wallStartMm = positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000;
+      const wallEndMm = wallStartMm
         + (positiveNumber(input.draft?.wallThickness) ?? 0)
         + (positiveNumber(input.draft?.facadeOffset) ?? 0);
-      const horizontal = solvePipeLayouts({ axis: "horizontal", startMm: 0, targetMm: wallEndMm, forbiddenZones, fallbackZone: "indoor_warm", maxVariants: 1 })[0];
+      const topDamperEffectiveMm = Math.max(0, Math.round(
+        input.rotaryDamperHeightMm ?? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM,
+      ));
+      const topSupportCapNominalMm = Math.max(0, Math.round(input.supportCapLengthMm ?? 70));
+      const topSupportCapEffectiveMm = effectiveComponentHeight(topSupportCapNominalMm);
+      const damperStartMm = 0;
+      const damperEndMm = damperStartMm + topDamperEffectiveMm;
+      const supportCapStartMm = damperEndMm;
+      const supportCapEndMm = supportCapStartMm + topSupportCapEffectiveMm;
+      const horizontal = topSupportCapEffectiveMm > 0 && wallEndMm > supportCapEndMm
+        ? solvePipeLayouts({
+          axis: "horizontal",
+          startMm: supportCapEndMm,
+          targetMm: wallEndMm,
+          forbiddenZones,
+          fallbackZone: "indoor_warm",
+          contour: "сэндвич",
+          maxVariants: 1,
+        })[0]
+        : null;
       const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
       const outdoor = solvePipeLayouts({ axis: "vertical", startMm: 0, targetMm: outdoorHeightMm, forbiddenZones: [], fallbackZone: "outdoor", maxVariants: 1 })[0];
-      if (horizontal && outdoor) {
-        const indoorRiseMm = routeKind === "wall-top" ? positiveNumber(input.draft?.verticalRise) ?? 0 : 0;
+      if (topSupportCapEffectiveMm <= 0) {
+        errors.push(`Номинальная длина опорной заглушки должна быть больше зоны соединения ${PIPE_SOCKET_OVERLAP_MM} мм.`);
+      } else if (supportCapEndMm > wallStartMm) {
+        errors.push("Шибер с опорной заглушкой попадают внутрь стены; увеличьте расстояние от оси патрубка до внутренней поверхности стены.");
+      } else if (!horizontal) {
+        errors.push("Не найдена раскладка сэндвич-труб от опорной заглушки до тройника без стыка внутри стены.");
+      } else if (!outdoor) {
+        errors.push("Не найдена раскладка наружных сэндвич-труб по заданной вертикальной высоте.");
+      } else {
+        fixedParts.push({
+          id: "rotary_damper",
+          label: "Шибер поворотный",
+          axis: "horizontal",
+          nominalLengthMm: ROTARY_DAMPER_OVERALL_LENGTH_MM,
+          effectiveMm: topDamperEffectiveMm,
+          startMm: damperStartMm,
+          endMm: damperEndMm,
+        });
+        fixedParts.push({
+          id: "support_cap",
+          label: "Опорная заглушка",
+          axis: "horizontal",
+          nominalLengthMm: topSupportCapNominalMm,
+          effectiveMm: topSupportCapEffectiveMm,
+          startMm: supportCapStartMm,
+          endMm: supportCapEndMm,
+        });
         const indoor = indoorRiseMm > 0
           ? solvePipeLayouts({ axis: "vertical", startMm: 0, targetMm: indoorRiseMm, forbiddenZones: [], fallbackZone: "indoor_warm", contour: "одностенный", maxVariants: 1 })[0]
           : null;
@@ -1028,6 +1077,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     passageWoolKits,
     rotaryDamperHeightMm,
     singleWallWarmupPipeLengthMm,
+    indoorRiseMm,
     ridgeHeightMm,
     ridgeHorizontalDistanceMm,
     roofTerminationRequirementMm: terminationHeight?.roofRequirementMm ?? null,
