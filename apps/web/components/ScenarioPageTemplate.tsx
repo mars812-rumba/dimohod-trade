@@ -24,6 +24,7 @@ import {
 } from "@/lib/scenarioPages";
 import { BanyaIntakeFlow } from "./BanyaIntakeFlow";
 import { RouteImageViewer } from "./RouteImageViewer";
+import { SolutionHouseGallery } from "./SolutionHouseGallery";
 import styles from "./ScenarioPageTemplate.module.css";
 
 const iconByName: Record<ScenarioIconName, LucideIcon> = {
@@ -294,6 +295,30 @@ export function ScenarioPageTemplate({
               </div>
               </>
             ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {content.gallery ? (
+        <section
+          aria-labelledby={`${content.slug}-gallery-title`}
+          className={`${styles.section} ${styles.scenarioGallerySection}`}
+        >
+          <div className={styles.shell}>
+            <div className={styles.sectionIntro}>
+              <h2 id={`${content.slug}-gallery-title`}>{content.gallery.title}</h2>
+              <p>{content.gallery.description}</p>
+            </div>
+            <div className={styles.scenarioGallery}>
+              <SolutionHouseGallery
+                equalItems
+                images={content.gallery.images.map((image) => ({
+                  ...image,
+                  src: `${assetBasePath}${image.src}`,
+                }))}
+                label={`Фотографии: ${content.gallery.title}`}
+              />
+            </div>
           </div>
         </section>
       ) : null}

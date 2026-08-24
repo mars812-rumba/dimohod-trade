@@ -12,9 +12,15 @@ type GalleryImage = {
 
 type SolutionHouseGalleryProps = {
   images: GalleryImage[];
+  label?: string;
+  equalItems?: boolean;
 };
 
-export function SolutionHouseGallery({ images }: SolutionHouseGalleryProps) {
+export function SolutionHouseGallery({
+  images,
+  label = "Фотографии дымохода в доме",
+  equalItems = false,
+}: SolutionHouseGalleryProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const touchStartX = useRef<number | null>(null);
@@ -42,10 +48,11 @@ export function SolutionHouseGallery({ images }: SolutionHouseGalleryProps) {
 
   return (
     <>
-      <div className={styles.houseGallery} aria-label="Фотографии дымохода в доме">
+      <div className={styles.houseGallery} aria-label={label}>
         {images.map((image, index) => (
           <button
             aria-label={`Увеличить фотографию ${index + 1} из ${images.length}`}
+            aria-haspopup="dialog"
             className={styles.houseGalleryItem}
             key={image.src}
             onClick={() => openGallery(index)}
@@ -58,7 +65,9 @@ export function SolutionHouseGallery({ images }: SolutionHouseGalleryProps) {
               loading="lazy"
               quality={78}
               sizes={
-                index === 0
+                equalItems
+                  ? "(max-width: 620px) 100vw, (max-width: 820px) 50vw, 33vw"
+                  : index === 0
                   ? "(max-width: 620px) 62vw, 350px"
                   : "(max-width: 620px) 32vw, 190px"
               }
@@ -74,7 +83,7 @@ export function SolutionHouseGallery({ images }: SolutionHouseGalleryProps) {
       </div>
 
       <dialog
-        aria-label="Просмотр фотографий дымохода в доме"
+        aria-label={`Просмотр: ${label}`}
         className={styles.houseGalleryDialog}
         onClick={(event) => {
           if (event.target === event.currentTarget) {

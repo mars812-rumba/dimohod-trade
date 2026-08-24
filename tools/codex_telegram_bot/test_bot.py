@@ -33,7 +33,7 @@ from tools.codex_telegram_bot.bot import (
     extract_file_requests,
     extract_openai_output_text,
     graphify_query_context,
-    is_missing_rollout_error,
+    is_unusable_thread_error,
     is_protected_commit_path,
     load_dotenv,
     model_keyboard,
@@ -248,6 +248,39 @@ class BotUtilitiesTest(unittest.TestCase):
         self.assertIn("commit skipped", output)
         self.assertIn("deploy ok", output)
 
+    def test_commit_ignores_removed_untracked_path_from_task_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            subprocess.run(["git", "init", "-b", "main"], cwd=root, check=True)
+            subprocess.run(
+                ["git", "config", "user.email", "test@example.test"],
+                cwd=root,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "Test User"], cwd=root, check=True
+            )
+            (root / "tracked.txt").write_text("before\n", encoding="utf-8")
+            subprocess.run(["git", "add", "tracked.txt"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-m", "Initial"], cwd=root, check=True)
+
+            (root / "created.txt").write_text("new\n", encoding="utf-8")
+            manager = ReleaseManager(root, branch="main")
+            output = manager.commit(
+                "Add current file",
+                paths=("created.txt", "removed-untracked.webp"),
+            )
+
+            self.assertIn("created.txt", output)
+            committed = subprocess.run(
+                ["git", "show", "--pretty=", "--name-only", "HEAD"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.splitlines()
+            self.assertEqual(committed, ["created.txt"])
+
     def test_remote_deploy_syncs_code_storage_and_runs_fixed_script(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -395,7 +428,7 @@ class BotUtilitiesTest(unittest.TestCase):
         self.assertIn("меню исправлено", prompt)
         self.assertTrue(prompt.endswith("продолжай"))
 
-    def test_missing_rollout_error_is_detected_from_codex_event(self) -> None:
+    def test_unusable_thread_error_detects_missing_rollout(self) -> None:
         summary = StatusSummary()
         consume_codex_event(
             {
@@ -404,7 +437,20 @@ class BotUtilitiesTest(unittest.TestCase):
             },
             summary,
         )
-        self.assertTrue(is_missing_rollout_error(summary, ""))
+        self.assertTrue(is_unusable_thread_error(summary, ""))
+
+    def test_unusable_thread_error_detects_corrupt_utf8_history(self) -> None:
+        diagnostics = (
+            "Error: thread/resume: thread/resume failed: failed to read thread: "
+            "thread-store internal error: failed to load thread history /root/.codex/sessions/x.jsonl: "
+            "stream did not contain valid UTF-8 (code -32603)"
+        )
+        self.assertTrue(is_unusable_thread_error(StatusSummary(), diagnostics))
+
+    def test_unusable_thread_error_ignores_unrelated_failure(self) -> None:
+        self.assertFalse(
+            is_unusable_thread_error(StatusSummary(error_message="network timeout"), "")
+        )
 
     def test_model_selection_changes_command_and_keeps_project_thread(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -467,6 +513,36 @@ class BotUtilitiesTest(unittest.TestCase):
             self.assertTrue(app.has_pending_album(1))
             assert album.timer is not None
             album.timer.cancel()
+
+    def test_text_messages_are_combined_into_one_codex_task(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            state = StateStore(root / "state.json")
+            runner = CodexRunner(root, "/bin/codex", state)
+            app = BotApplication(
+                object(),
+                state,
+                runner,
+                root,
+                None,
+                "transcribe",
+                "vision",
+                "image",
+                "1024x1024",
+                "medium",
+            )
+            with patch.object(app, "route_user_text") as route:
+                app.queue_user_text(1, 10, "Первая часть")
+                app.queue_user_text(1, 11, "Вторая часть")
+                batch = app.text_batches[1]
+                assert batch.timer is not None
+                batch.timer.cancel()
+                app.flush_user_text(1)
+
+            route.assert_called_once_with(
+                1, 10, "Первая часть\n\nВторая часть"
+            )
+            self.assertNotIn(1, app.text_batches)
 
     def test_openai_quota_falls_back_and_persists_next_key(self) -> None:
         class FakeAPI:

@@ -40,6 +40,7 @@ DEFAULT_IMAGE_SIZE = "1024x1024"
 DEFAULT_IMAGE_QUALITY = "medium"
 DEFAULT_CODEX_MODEL_KEY = "sol_medium"
 MEDIA_GROUP_SETTLE_SECONDS = 1.2
+TEXT_MESSAGE_SETTLE_SECONDS = 2.5
 CONTEXT_HISTORY_ITEMS = 5
 CONTEXT_HISTORY_BUDGET = 12000
 PROJECT_INSTRUCTIONS = """Работай только над проектом Dimohod Trade в текущем каталоге.
@@ -715,6 +716,13 @@ class PhotoAlbum:
 
 
 @dataclass
+class TextMessageBatch:
+    first_message_id: int
+    messages: list[str] = field(default_factory=list)
+    timer: threading.Timer | None = None
+
+
+@dataclass
 class StatusSummary:
     started_at: float = field(default_factory=time.monotonic)
     commands_started: int = 0
@@ -781,9 +789,15 @@ def consume_codex_event(event: dict[str, Any], summary: StatusSummary) -> bool:
     return False
 
 
-def is_missing_rollout_error(summary: StatusSummary, diagnostics: str) -> bool:
+def is_unusable_thread_error(summary: StatusSummary, diagnostics: str) -> bool:
+    """Return true when retrying a saved Codex thread cannot succeed."""
     details = f"{summary.error_message}\n{diagnostics}".lower()
-    return "no rollout found for thread id" in details
+    if "no rollout found for thread id" in details:
+        return True
+    return "thread/resume failed" in details and (
+        "failed to load thread history" in details
+        or "stream did not contain valid utf-8" in details
+    )
 
 
 def recovery_context_prompt(
@@ -1416,6 +1430,22 @@ class ReleaseManager:
         )
         return [path for path in output.split("\0") if path]
 
+    def committable_paths(self, paths: list[str]) -> list[str]:
+        """Drop stale untracked paths while preserving real tracked deletions."""
+        tracked_output = run_host_command(
+            ["git", "ls-files", "-z", "--", *paths],
+            self.project_root,
+            timeout=20,
+        )
+        tracked = {path for path in tracked_output.split("\0") if path}
+        return [
+            path
+            for path in paths
+            if path in tracked
+            or (self.project_root / path).exists()
+            or (self.project_root / path).is_symlink()
+        ]
+
     def commit(
         self,
         message: str,
@@ -1448,6 +1478,7 @@ class ReleaseManager:
             for path in target_paths
             if not is_protected_commit_path(path, self.config.protected_paths)
         ]
+        target_paths = self.committable_paths(target_paths)
         if paths is not None:
             unrelated_staged = [path for path in already_staged if path not in target_paths]
             if unrelated_staged:
@@ -1674,6 +1705,9 @@ class BotApplication:
         self.photo_albums: dict[tuple[int, str], PhotoAlbum] = {}
         self.media_processing_chats: set[int] = set()
         self.photo_album_lock = threading.Lock()
+        self.text_batches: dict[int, TextMessageBatch] = {}
+        self.text_batch_lock = threading.Lock()
+        self.pending_codex_chats: set[int] = set()
         self.executor = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="codex-bot")
 
     def selected_openai_key_index(self, chat_id: int) -> int:
@@ -2251,7 +2285,7 @@ class BotApplication:
                 else:
                     self.executor.submit(self.process_image_generation, chat_id, message_id, image_prompt)
                 return
-            self.route_user_text(chat_id, message_id, text)
+            self.queue_user_text(chat_id, message_id, text)
 
     def send_requested_file(self, chat_id: int, message_id: int | None, requested_path: str) -> None:
         project = self.active_project(chat_id)
@@ -2487,13 +2521,43 @@ class BotApplication:
         project_key: str | None = None,
     ) -> None:
         project = self.projects[project_key] if project_key else self.active_project(chat_id)
-        if self.runner.is_running(chat_id) or self.release_for(project.key).is_running():
+        with self.pending_lock:
+            busy = chat_id in self.pending_codex_chats
+            if not busy and not self.runner.is_running(chat_id) and not self.release_for(project.key).is_running():
+                self.pending_codex_chats.add(chat_id)
+            else:
+                busy = True
+        if busy:
             self.api.send_message(
                 chat_id,
                 "Уже выполняется задача или release. Дождитесь завершения либо используйте /cancel",
             )
             return
         self.executor.submit(self.process_codex, chat_id, message_id, prompt, project.key)
+
+    def queue_user_text(self, chat_id: int, message_id: int, text: str) -> None:
+        """Collect consecutive Telegram messages and submit them as one Codex task."""
+        with self.text_batch_lock:
+            batch = self.text_batches.get(chat_id)
+            if batch is None:
+                batch = TextMessageBatch(first_message_id=message_id)
+                self.text_batches[chat_id] = batch
+            batch.messages.append(text)
+            if batch.timer:
+                batch.timer.cancel()
+            batch.timer = threading.Timer(
+                TEXT_MESSAGE_SETTLE_SECONDS, self.flush_user_text, args=(chat_id,)
+            )
+            batch.timer.daemon = True
+            batch.timer.start()
+
+    def flush_user_text(self, chat_id: int) -> None:
+        with self.text_batch_lock:
+            batch = self.text_batches.pop(chat_id, None)
+        if batch and batch.messages:
+            self.route_user_text(
+                chat_id, batch.first_message_id, "\n\n".join(batch.messages)
+            )
 
     def route_user_text(self, chat_id: int, message_id: int, text: str) -> None:
         confirmation = detect_natural_confirmation(text)
@@ -2570,14 +2634,15 @@ class BotApplication:
             if (
                 return_code != 0
                 and not summary.cancelled
-                and is_missing_rollout_error(summary, diagnostics)
+                and is_unusable_thread_error(summary, diagnostics)
             ):
                 model_key = self.state.get_model_key(chat_id)
                 thread_slot = self.state.thread_slot(project_key, model_key)
                 self.state.set_thread(chat_id, None, thread_slot)
                 history = self.state.get_context_history(chat_id, project_key)
                 update_status(
-                    "♻️ Старая сессия Codex недоступна. Создаю новую и восстанавливаю контекст…"
+                    "♻️ Старая сессия Codex недоступна или повреждена. "
+                    "Создаю новую и восстанавливаю контекст…"
                 )
                 retry_prompt = recovery_context_prompt(codex_prompt, history)
                 summary, return_code, diagnostics = self.runner.run(
@@ -2623,6 +2688,9 @@ class BotApplication:
                 self.post_codex_actions.pop(chat_id, None)
             update_status("❌ Ошибка запуска Codex")
             self.api.send_long_message(chat_id, str(exc))
+        finally:
+            with self.pending_lock:
+                self.pending_codex_chats.discard(chat_id)
 
 
 def parse_allowed_users(raw: str | None) -> set[int]:

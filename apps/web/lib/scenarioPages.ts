@@ -78,6 +78,12 @@ export type ScenarioReviewContent = {
   specialistItems: string[];
 };
 
+export type ScenarioGallery = {
+  title: string;
+  description: string;
+  images: Array<{ src: string; alt: string }>;
+};
+
 export type ScenarioPageContent = {
   slug: string;
   kind: ScenarioKind;
@@ -93,6 +99,7 @@ export type ScenarioPageContent = {
   finalCtaHref?: string;
   heroImage: string;
   heroImageAlt: string;
+  gallery?: ScenarioGallery;
   diameterGuide?: ScenarioDiameterGuide;
   guidance?: ScenarioGuidance;
   requiredInputs: ScenarioInput[];
@@ -268,6 +275,33 @@ export const pechScenario: ScenarioPageContent = {
     "Уточним подключение и маршрут, затем сформируем состав системы в конфигураторе для проверки специалистом.",
   heroImage: "/images/home/scenario-pech-user.webp",
   heroImageAlt: "Отопительная печь с металлическим дымоходом в жилом помещении",
+  gallery: {
+    title: "Примеры печей и дымоходов",
+    description:
+      "Пять фотографий показывают разные варианты размещения печи и прохождения дымохода. Для расчёта всё равно нужны модель печи, параметры патрубка и размеры объекта.",
+    images: [
+      {
+        src: "/images/solutions/pech/pech-gallery-01.webp",
+        alt: "Чугунная печь с вертикальным дымоходом в помещении с деревянными стенами",
+      },
+      {
+        src: "/images/solutions/pech/pech-gallery-02.webp",
+        alt: "Зелёный металлический дымоход над кровлей",
+      },
+      {
+        src: "/images/solutions/pech/pech-gallery-03.webp",
+        alt: "Металлический дымоход с растяжками над кровлей",
+      },
+      {
+        src: "/images/solutions/pech/pech-gallery-04.webp",
+        alt: "Отопительная печь с вертикальным дымоходом и защитными экранами",
+      },
+      {
+        src: "/images/solutions/pech/pech-gallery-05.webp",
+        alt: "Печь с металлическим дымоходом, выходящим через стену",
+      },
+    ],
+  },
   diameterGuide: {
     title: "У отопительных печей нет одного стандартного диаметра",
     description:
