@@ -9,10 +9,14 @@ import {
   productPublicPath,
   productSelectionPath,
 } from "@/lib/productUrls";
+import { ensureDiameterInTitle } from "@/lib/productMetadata";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ sku?: string | string[] }>;
+  searchParams: Promise<{
+    length?: string | string[];
+    sku?: string | string[];
+  }>;
 };
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -43,10 +47,19 @@ function requestedSkuKey(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function selectSku(product: Product, key?: string, diameter?: string | null): SKU | null {
+function requestedLengthMm(value: string | string[] | undefined): number | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw || !/^\d+$/.test(raw)) return null;
+  const parsed = Number(raw);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function selectSku(product: Product, key?: string, diameter?: string | null, lengthMm?: number | null): SKU | null {
   return (
     product.skus.find((sku) => sku.id === key || sku.article === key || sku.slug === key) ??
+    product.skus.find((sku) => productDiameterValue(sku) === diameter && sku.length_mm === lengthMm) ??
     product.skus.find((sku) => productDiameterValue(sku) === diameter) ??
+    product.skus.find((sku) => sku.length_mm === lengthMm) ??
     product.skus[0] ??
     null
   );
@@ -105,11 +118,11 @@ function isLegacySkuSpecificSeo(value: string, product: Product) {
 function metadataTitle(product: Product, sku: SKU | null) {
   const skuTitle = skuSeoAttribute(sku, "seo_title");
   if (skuTitle) {
-    return applySeoTemplate(skuTitle, product, sku);
+    return ensureDiameterInTitle(skuTitle, applySeoTemplate(skuTitle, product, sku), sku);
   }
   const customTitle = textAttribute(product, "seo_title");
   if (customTitle && !isLegacySkuSpecificSeo(customTitle, product)) {
-    return applySeoTemplate(customTitle, product, sku);
+    return ensureDiameterInTitle(customTitle, applySeoTemplate(customTitle, product, sku), sku);
   }
   const diameter = diameterLabel(sku);
   const length = sku?.length_mm ? `, L=${sku.length_mm}` : "";
@@ -252,11 +265,12 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   const route = parseProductRoute(slug);
   const initialSkuKey = requestedSkuKey(query.sku) ?? route.legacySku ?? undefined;
+  const initialLengthMm = requestedLengthMm(query.length);
   const product = await getProduct(route.familySlug, initialSkuKey, route.diameter);
   if (!product) {
     return { title: "Товар не найден | Дымоход Трейд" };
   }
-  const sku = selectSku(product, initialSkuKey, route.diameter);
+  const sku = selectSku(product, initialSkuKey, route.diameter, initialLengthMm);
   const title = metadataTitle(product, sku);
   const description = metadataDescription(product, sku);
   const image = productImage(product, sku);
@@ -289,13 +303,14 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   const route = parseProductRoute(slug);
   const initialSkuKey = requestedSkuKey(query.sku) ?? route.legacySku ?? undefined;
+  const initialLengthMm = requestedLengthMm(query.length);
   const product = await getProduct(route.familySlug, initialSkuKey, route.diameter);
 
   if (!product) {
     notFound();
   }
 
-  const initialSku = selectSku(product, initialSkuKey, route.diameter);
+  const initialSku = selectSku(product, initialSkuKey, route.diameter, initialLengthMm);
   if (!initialSku) {
     notFound();
   }
