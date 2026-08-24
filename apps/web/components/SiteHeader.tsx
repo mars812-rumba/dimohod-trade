@@ -118,6 +118,7 @@ export function SiteHeader() {
 
         <nav className="top-nav" aria-label="Основная навигация">
           <Link href="/catalog">Каталог</Link>
+          <Link href="/pechi">Печи</Link>
           <Link href="/solutions">Решения</Link>
           <Link href="/guides">Статьи</Link>
           <Link href="/solutions/banya">Для бани</Link>
@@ -184,6 +185,7 @@ export function SiteHeader() {
                 ) : null}
               </div>
             </details>
+            <Link href="/pechi" onClick={closeMenu}>Печи</Link>
             <details className="mobile-menu-catalog">
               <summary>
                 <span>Решения</span>

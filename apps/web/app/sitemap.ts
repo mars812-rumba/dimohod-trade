@@ -4,6 +4,7 @@ import { productPublicPath } from "@/lib/productUrls";
 import { scenarioPages } from "@/lib/scenarioPages";
 import { guideArticles } from "@/lib/guideArticles";
 import { catalogSeoPages, catalogSeoPagePath } from "@/lib/catalogSeoPages";
+import { stovePageCount, stovePagePath } from "@/lib/stoves";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/") },
     { url: absoluteUrl("/catalog") },
+    ...Array.from({ length: stovePageCount }, (_, index) => ({
+      url: absoluteUrl(stovePagePath(index + 1)),
+    })),
     { url: absoluteUrl("/solutions") },
     { url: absoluteUrl("/guides") },
     { url: absoluteUrl("/configurator") },

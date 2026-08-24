@@ -1,0 +1,3377 @@
+[
+  {
+    "id": 1,
+    "name": "Cometa 180 Vega Long Window Max (Grill'D)",
+    "image": "/images/stoves/0001_cometa-180-vega-long-window-max.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Cometa 180 Vega Short Window Max (Grill'D)",
+    "image": "/images/stoves/0002_cometa-180-vega-short-window-max.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Cometa 180 Vega Window Grill`D Pro (Grill'D)",
+    "image": "/images/stoves/0003_cometa-180-vega-window-grilld-pro.jpg"
+  },
+  {
+    "id": 4,
+    "name": "Cometa 350 Vega Short Window Max Grill`D (Grill'D)",
+    "image": "/images/stoves/0004_cometa-350-vega-short-window-max-grilld.jpg"
+  },
+  {
+    "id": 5,
+    "name": "Cometa 350 Vega Short Window Max Grill`D Pro (Grill'D)",
+    "image": "/images/stoves/0005_cometa-350-vega-short-window-max-grilld-pro.jpg"
+  },
+  {
+    "id": 6,
+    "name": "Cometa 350 Vega Window Max Grill`D Pro (Grill'D)",
+    "image": "/images/stoves/0006_cometa-350-vega-window-max-grilld-pro.jpg"
+  },
+  {
+    "id": 7,
+    "name": "Parovar 18 (302) (Fireway)",
+    "image": "/images/stoves/0007_parovar-18-302-fireway.jpg"
+  },
+  {
+    "id": 8,
+    "name": "Parovar 18 (302) без выноса (Fireway)",
+    "image": "/images/stoves/0008_parovar-18-302-bez-vynosa-fireway.jpg"
+  },
+  {
+    "id": 9,
+    "name": "Retro Short Pro (Grill'D)",
+    "image": "/images/stoves/0009_retro-short-pro.jpg"
+  },
+  {
+    "id": 10,
+    "name": "Shaman Long (2 каменки) Grill`D (Grill'D)",
+    "image": "/images/stoves/0010_shaman-long-2-kamenki-grilld.jpg"
+  },
+  {
+    "id": 11,
+    "name": "Shaman Long (3 каменки) Grill`D (Grill'D)",
+    "image": "/images/stoves/0011_shaman-long-3-kamenki-grilld.jpg"
+  },
+  {
+    "id": 12,
+    "name": "Shaman Long (4 каменки) Grill`D (Grill'D)",
+    "image": "/images/stoves/0012_grill-d.jpg"
+  },
+  {
+    "id": 13,
+    "name": "Атмосфера-L в облицовке Амфиболит (Pro-metall)",
+    "image": "/images/stoves/0013_atmosfera-l-v-oblicovke-amfibolit-pro-metall.jpg"
+  },
+  {
+    "id": 14,
+    "name": "Печь для бани Этна Магма 24 (Панорама)",
+    "image": "/images/stoves/0014_pech-dlya-bani-etna-magma-24-panorama.jpg"
+  },
+  {
+    "id": 15,
+    "name": "Печь дровяная Aurora 160 Short (Grill'D)",
+    "image": "/images/stoves/0015_pech-drovyanaya-aurora-160-short.jpg"
+  },
+  {
+    "id": 16,
+    "name": "Печь дровяная Aurora 160А TRIO Long (Grill'D)",
+    "image": "/images/stoves/0016_pech-drovyanaya-aurora-160a-trio-long.jpg"
+  },
+  {
+    "id": 17,
+    "name": "Печь дровяная Aurora 160А TRIO Short (Grill'D)",
+    "image": "/images/stoves/0017_pech-drovyanaya-aurora-160a-trio-short.jpg"
+  },
+  {
+    "id": 18,
+    "name": "Печь дровяная Aurora MINI Long (Grill'D)",
+    "image": "/images/stoves/0018_pech-drovyanaya-aurora-mini-long.jpg"
+  },
+  {
+    "id": 19,
+    "name": "Печь дровяная Aurora MINI Short (Grill'D)",
+    "image": "/images/stoves/0019_pech-drovyanaya-aurora-mini-short.jpg"
+  },
+  {
+    "id": 20,
+    "name": "Печь дровяная Dubravo 180 Long (Grill'D)",
+    "image": "/images/stoves/0020_pech-drovyanaya-dubravo-180-long.jpg"
+  },
+  {
+    "id": 21,
+    "name": "Печь дровяная Dubravo mini Long (Grill'D)",
+    "image": "/images/stoves/0021_pech-drovyanaya-dubravo-mini-long.jpg"
+  },
+  {
+    "id": 22,
+    "name": "Печь дровяная Violet Short (Grill'D)",
+    "image": "/images/stoves/0022_pech-drovyanaya-violet-short.jpg"
+  },
+  {
+    "id": 23,
+    "name": "Печь дровяная Violet Short Window Max (Grill'D)",
+    "image": "/images/stoves/0023_pech-drovyanaya-violet-short-window-max.jpg"
+  },
+  {
+    "id": 24,
+    "name": "Печь для бани Русь-12 ЛУ",
+    "image": "/images/stoves/0024_pech-dlya-bani-rus-12-lu.jpg"
+  },
+  {
+    "id": 25,
+    "name": "Печь для бани Русь-9 Л",
+    "image": "/images/stoves/0025_pech-dlya-bani-rus-9-l.jpg"
+  },
+  {
+    "id": 26,
+    "name": "Печь для бани Русь-9 ЛУ",
+    "image": "/images/stoves/0026_pech-dlya-bani-rus-9-lu.jpg"
+  },
+  {
+    "id": 29,
+    "name": "Печь для бани Русь-18 Л",
+    "image": "/images/stoves/0029_pech-dlya-bani-rus-18-l.jpg"
+  },
+  {
+    "id": 30,
+    "name": "Печь для бани Русь-18 ЛУ",
+    "image": "/images/stoves/0030_pech-dlya-bani-rus-18-lu.jpg"
+  },
+  {
+    "id": 33,
+    "name": "Печь для бани Везувий Русичъ Антрацит 16 (ДТ-4) б/в",
+    "image": "/images/stoves/0033_pech-dlya-bani-vezuviy-rusich-antracit-16-dt-4-bv.jpg"
+  },
+  {
+    "id": 35,
+    "name": "Печь для бани Лагуна-12 ТК",
+    "image": "/images/stoves/0035_pech-dlya-bani-laguna-12-tk.jpg"
+  },
+  {
+    "id": 36,
+    "name": "Печь для бани Лагуна-12 ТУ",
+    "image": "/images/stoves/0036_pech-dlya-bani-laguna-12-tu.jpg"
+  },
+  {
+    "id": 37,
+    "name": "Печь для бани Везувий Скиф Стандарт 16 (ДТ-4) б/в",
+    "image": "/images/stoves/0037_pech-dlya-bani-vezuviy-skif-standart-16-dt-4-bv.jpg"
+  },
+  {
+    "id": 40,
+    "name": "Печь для бани Тамань-10 Т (1.1)",
+    "image": "/images/stoves/0040_pech-dlya-bani-taman-10-t-2017.jpg"
+  },
+  {
+    "id": 41,
+    "name": "Печь для бани Тамань-10 ТУ (1.1)",
+    "image": "/images/stoves/0041_pech-dlya-bani-taman-10-tu-2017.jpg"
+  },
+  {
+    "id": 42,
+    "name": "Печь для бани Варвара Мини с контуром укороченная",
+    "image": "/images/stoves/0042_pech-dlya-bani-varvara-mini-s-konturom-ukorochennaya.jpg"
+  },
+  {
+    "id": 43,
+    "name": "Печь для бани Везувий Русичъ Антрацит 22 (ДТ-4) б/в",
+    "image": "/images/stoves/0043_pech-dlya-bani-vezuviy-rusich-antracit-22-dt-4-bv.jpg"
+  },
+  {
+    "id": 45,
+    "name": "Печь для бани Русь-12 Л",
+    "image": "/images/stoves/0045_pech-dlya-bani-rus-12-l.jpg"
+  },
+  {
+    "id": 46,
+    "name": "Печь для бани Везувий Русичъ Антрацит 28 (224) 2016",
+    "image": "/images/stoves/0046_pech-dlya-bani-vezuviy-rusich-antracit-28-224-2016.jpg"
+  },
+  {
+    "id": 47,
+    "name": "Печь для бани Лагуна-22 ТК",
+    "image": "/images/stoves/0047_pech-dlya-bani-laguna-22-tk.jpg"
+  },
+  {
+    "id": 48,
+    "name": "Печь для бани Теплодар Русь 9 Л (1.1)",
+    "image": "/images/stoves/0048_pech-dlya-bani-teplodar-rus-9-l-1-1.jpg"
+  },
+  {
+    "id": 49,
+    "name": "Печь для бани Теплодар Русь 9 ЛУ",
+    "image": "/images/stoves/0049_pech-dlya-bani-teplodar-rus-9-lu.jpg"
+  },
+  {
+    "id": 50,
+    "name": "Газодровяная печь Везувий Лава 18 (ДТ-3)",
+    "image": "/images/stoves/0050_gazodrovyanaya-pech-vezuvij-lava-18-dt-3.jpg"
+  },
+  {
+    "id": 52,
+    "name": "Печь для бани Везувий Лава 16 (ДТ-4С) б/в",
+    "image": "/images/stoves/0052_pech-dlya-bani-vezuviy-lava-16-dt-4s-bv.jpg"
+  },
+  {
+    "id": 54,
+    "name": "Печь для бани Везувий Лава 22 (ДТ-4С) б/в",
+    "image": "/images/stoves/0054_pech-dlya-bani-vezuviy-lava-22-dt-4s-bv.jpg"
+  },
+  {
+    "id": 56,
+    "name": "Печь для бани Ермак 12 Классика",
+    "image": "/images/stoves/0056_pech-dlya-bani-ermak-12-klassika.jpg"
+  },
+  {
+    "id": 57,
+    "name": "Печь для бани Везувий Русичъ Антрацит 16 (ДТ-4С) б/в",
+    "image": "/images/stoves/0057_pech-dlya-bani-vezuviy-rusich-antracit-16-dt-4s-bv.jpg"
+  },
+  {
+    "id": 58,
+    "name": "Печь для бани Везувий Русичъ Антрацит 22 (ДТ-4С) б/в",
+    "image": "/images/stoves/0058_pech-dlya-bani-vezuviy-rusich-antracit-22-dt-4s-bv.jpg"
+  },
+  {
+    "id": 60,
+    "name": "Печь для бани Конвектика Ниагара 18 антрацит",
+    "image": "/images/stoves/0060_pech-dlya-bani-konvektika-niagara-18-antracit.jpg"
+  },
+  {
+    "id": 62,
+    "name": "Печь для бани Ермак 12 Сетка-Стандарт (Сталь)",
+    "image": "/images/stoves/0062_pech-dlya-bani-ermak-12-setka-standart-stal.jpg"
+  },
+  {
+    "id": 63,
+    "name": "Печь для бани ASTON 12 с закрытой каменкой",
+    "image": "/images/stoves/0063_pech-dlya-bani-aston-12-s-zakrytoj-kamenkoj.jpg"
+  },
+  {
+    "id": 64,
+    "name": "Банная печь Варвара Мини с контуром укороченная Панорамная",
+    "image": "/images/stoves/0064_bannaya-pech-varvara-mini-s-konturom-ukorochennaya-panoramnaya.jpg"
+  },
+  {
+    "id": 66,
+    "name": "Печь для бани Варвара Мини с контуром Панорамная",
+    "image": "/images/stoves/0066_pech-dlya-bani-varvara-mini-s-konturom-panoramnaya.jpg"
+  },
+  {
+    "id": 67,
+    "name": "Печь для бани Тамань-20 Т (1.1)",
+    "image": "/images/stoves/0067_pech-dlya-bani-taman-20-t-2017.jpg"
+  },
+  {
+    "id": 68,
+    "name": "Газовая печь для бани Ермак Уралочка 12",
+    "image": "/images/stoves/0068_gazovaya-pech-dlya-bani-ermak-uralochka-12.jpg"
+  },
+  {
+    "id": 69,
+    "name": "Печь для бани ASTON 12 со стеклом и закрытой каменкой",
+    "image": "/images/stoves/0069_pech-dlya-bani-aston-12-so-steklom-i-zakrytoj-kamenkoj.jpg"
+  },
+  {
+    "id": 70,
+    "name": "Печь для бани Везувий Русичъ Антрацит 28 (220) 2016",
+    "image": "/images/stoves/0070_pech-dlya-bani-vezuviy-rusich-antracit-28-220-2016.jpg"
+  },
+  {
+    "id": 72,
+    "name": "Печь для бани Варвара Мини с контуром удлиненная Панорамная",
+    "image": "/images/stoves/0072_pech-dlya-bani-varvara-mini-s-konturom-udlinennaya-panoramnaya.jpg"
+  },
+  {
+    "id": 73,
+    "name": "Печь для бани Тамань-10 ТБ (1.1)",
+    "image": "/images/stoves/0073_pech-dlya-bani-taman-10-tb-2017.jpg"
+  },
+  {
+    "id": 74,
+    "name": "Печь для бани Везувий Скиф Стандарт 12 (ДТ-3С) б/в",
+    "image": "/images/stoves/0074_pech-dlya-bani-vezuviy-skif-standart-12-dt-3s-bv.jpg"
+  },
+  {
+    "id": 75,
+    "name": "Печь для бани Лагуна-12 ТК Панорама (2018)",
+    "image": "/images/stoves/0075_pech-dlya-bani-laguna-12-tk-panorama-2018.jpg"
+  },
+  {
+    "id": 76,
+    "name": "Печь для бани Везувий Скиф Стандарт 16 (ДТ-4)",
+    "image": "/images/stoves/0076_pech-dlya-bani-vezuviy-skif-standart-16-dt-4.jpg"
+  },
+  {
+    "id": 78,
+    "name": "Печь для бани Кубань-20 Л",
+    "image": "/images/stoves/0078_pech-dlya-bani-kuban-20-l.jpg"
+  },
+  {
+    "id": 80,
+    "name": "Печь для бани Ермак 16 Классика",
+    "image": "/images/stoves/0080_pech-dlya-bani-ermak-16-klassika.jpg"
+  },
+  {
+    "id": 81,
+    "name": "Печь для бани Теплодар Русь 12 Л",
+    "image": "/images/stoves/0081_pech-dlya-bani-teplodar-rus-12-l.jpg"
+  },
+  {
+    "id": 82,
+    "name": "GRILL'D Bochka 160 A Short",
+    "image": "/images/stoves/0082_grilld-bochka-160-a-short.jpg"
+  },
+  {
+    "id": 83,
+    "name": "Банная печь Везувий Скиф Стандарт 16 (ДТ-4С)",
+    "image": "/images/stoves/0083_bannaya-pech-vezuviy-skif-standart-16-dt-4s.jpg"
+  },
+  {
+    "id": 84,
+    "name": "Банная печь Варвара Мини навесная (с баком) укороченная Панорамная",
+    "image": "/images/stoves/0084_bannaya-pech-varvara-mini-navesnaya-s-bakom-ukorochennaya-panoramnaya.jpg"
+  },
+  {
+    "id": 85,
+    "name": "Печь для бани Везувий Лава 12 (ДТ-3С) б/в",
+    "image": "/images/stoves/0085_pech-dlya-bani-vezuviy-lava-12-dt-3s-bv.jpg"
+  },
+  {
+    "id": 86,
+    "name": "Печь для бани ASTON 12 АКВА",
+    "image": "/images/stoves/0086_pech-dlya-bani-aston-12-akva.jpg"
+  },
+  {
+    "id": 87,
+    "name": "Печь для бани Везувий Лава 12 (ДТ-3) б/в",
+    "image": "/images/stoves/0087_pech-dlya-bani-vezuviy-lava-12-dt-3-bv.jpg"
+  },
+  {
+    "id": 88,
+    "name": "Газовая печь для бани Ермак Уралочка 16",
+    "image": "/images/stoves/0088_gazovaya-pech-dlya-bani-ermak-uralochka-16.jpg"
+  },
+  {
+    "id": 90,
+    "name": "Банная печь Варвара Мини навесная (с баком) Панорамная",
+    "image": "/images/stoves/0090_bannaya-pech-varvara-mini-navesnaya-s-bakom-panoramnaya.jpg"
+  },
+  {
+    "id": 92,
+    "name": "Печь для бани Каскад-12 Т (2018)",
+    "image": "/images/stoves/0092_pech-dlya-bani-kaskad-12-t-2018.jpg"
+  },
+  {
+    "id": 93,
+    "name": "GRILL'D Bochka 160 A Long",
+    "image": "/images/stoves/0093_grilld-bochka-160-a-long.jpg"
+  },
+  {
+    "id": 94,
+    "name": "Печь для бани Везувий Оптимум Стандарт 14 (ДТ-3)",
+    "image": "/images/stoves/0094_pech-dlya-bani-vezuviy-optimum-standart-14-dt-3.jpg"
+  },
+  {
+    "id": 95,
+    "name": "Печь для бани Везувий Оптимум Стандарт 14 (ДТ-3) б/в",
+    "image": "/images/stoves/0095_pech-dlya-bani-vezuviy-optimum-standart-14-dt-3-bv.jpg"
+  },
+  {
+    "id": 96,
+    "name": "Печь для бани Везувий Лава 16 (ДТ-4)",
+    "image": "/images/stoves/0096_pech-dlya-bani-vezuviy-lava-16-dt-4.jpg"
+  },
+  {
+    "id": 97,
+    "name": "Печь для бани ASTON 16 с закрытой каменкой",
+    "image": "/images/stoves/0097_pech-dlya-bani-aston-16-s-zakrytoj-kamenkoj.jpg"
+  },
+  {
+    "id": 98,
+    "name": "Печь для бани Лагуна-22 ТК Панорама",
+    "image": "/images/stoves/0098_pech-dlya-bani-laguna-22-tk-panorama.jpg"
+  },
+  {
+    "id": 99,
+    "name": "Сибирь-18 ЧТД (НМК)",
+    "image": "/images/stoves/0099_sibir-18-chtd-nmk.jpg"
+  },
+  {
+    "id": 100,
+    "name": "Печь для бани Конвектика Олимп 20-26",
+    "image": "/images/stoves/0100_pech-dlya-bani-konvektika-olimp-20-26.jpg"
+  },
+  {
+    "id": 101,
+    "name": "Печь для бани ASTON 12 АКВА со стеклом",
+    "image": "/images/stoves/0101_pech-dlya-bani-aston-12-akva-so-steklom.jpg"
+  },
+  {
+    "id": 102,
+    "name": "Печь для бани Этна Магма 14 (ДТ-3)",
+    "image": "/images/stoves/0102_pech-dlya-bani-etna-magma-14-dt-3.jpg"
+  },
+  {
+    "id": 103,
+    "name": "Печь для бани Ермак Элит 12-С",
+    "image": "/images/stoves/0103_pech-dlya-bani-ermak-elit-12-s.jpg"
+  },
+  {
+    "id": 104,
+    "name": "Печь для бани Варвара Мини навесная (с баком) удлиненная Панорамная",
+    "image": "/images/stoves/0104_pech-dlya-bani-varvara-mini-navesnaya-s-bakom-udlinennaya-panoramnaya.jpg"
+  },
+  {
+    "id": 105,
+    "name": "Печь для бани Сахара-10 ЛБ (2.0)",
+    "image": "/images/stoves/0105_pech-dlya-bani-sahara-10-lb.jpg"
+  },
+  {
+    "id": 106,
+    "name": "Печь для бани Везувий Лава 16 (ДТ-4С)",
+    "image": "/images/stoves/0106_pech-dlya-bani-vezuviy-lava-16-dt-4s.jpg"
+  },
+  {
+    "id": 107,
+    "name": "Печь для бани Везувий Русичъ Антрацит 16 (ДТ-4С)",
+    "image": "/images/stoves/0107_pech-dlya-bani-vezuviy-rusich-antracit-16-dt-4s.jpg"
+  },
+  {
+    "id": 108,
+    "name": "Печь для бани Везувий Скиф Стандарт 16 (ДТ-4С) б/в",
+    "image": "/images/stoves/0108_pech-dlya-bani-vezuviy-skif-standart-16-dt-4s-bv.jpg"
+  },
+  {
+    "id": 110,
+    "name": "Банная печь ASTON 16 со стеклом и закрытой каменкой",
+    "image": "/images/stoves/0110_bannaya-pech-aston-16-so-steklom-i-zakrytoj-kamenkoj.jpg"
+  },
+  {
+    "id": 111,
+    "name": "Печь для бани Русь-12 Л с АГГ-13П",
+    "image": "/images/stoves/0111_pech-dlya-bani-rus-12-l-s-agg-13p.jpg"
+  },
+  {
+    "id": 112,
+    "name": "Печь для бани Конвектика Олимп 14-18",
+    "image": "/images/stoves/0112_pech-dlya-bani-konvektika-olimp-14-18.jpg"
+  },
+  {
+    "id": 113,
+    "name": "Печь для бани Варвара Паленица навесная (с баком) укороченная",
+    "image": "/images/stoves/0113_pech-dlya-bani-varvara-palenica-navesnaya-s-bakom-ukorochennaya.jpg"
+  },
+  {
+    "id": 114,
+    "name": "Печь для бани Этна Кратер 14 (ДТ-3)",
+    "image": "/images/stoves/0114_pech-dlya-bani-etna-krater-14-dt-3.jpg"
+  },
+  {
+    "id": 115,
+    "name": "Печь для бани Везувий Русичъ Антрацит 16 Панорама",
+    "image": "/images/stoves/0115_pech-dlya-bani-vezuviy-rusich-antracit-16-panorama.jpg"
+  },
+  {
+    "id": 117,
+    "name": "Печь для бани Везувий Русский пар (ДТ-4)",
+    "image": "/images/stoves/0117_pech-dlya-bani-vezuviy-russkiy-par-dt-4.jpg"
+  },
+  {
+    "id": 118,
+    "name": "Печь для бани Теплодар Русь 18 Л",
+    "image": "/images/stoves/0118_pech-dlya-bani-teplodar-rus-18-l.jpg"
+  },
+  {
+    "id": 119,
+    "name": "Печь для бани Теплодар Русь 18 ЛУ",
+    "image": "/images/stoves/0119_pech-dlya-bani-teplodar-rus-18-lu.jpg"
+  },
+  {
+    "id": 120,
+    "name": "Печь для бани Тамань-сетка 10 Т (1.1)",
+    "image": "/images/stoves/0120_pech-dlya-bani-taman-setka-10-t.jpg"
+  },
+  {
+    "id": 121,
+    "name": "Печь для бани Этна Магма 14 (ДТ-3С)",
+    "image": "/images/stoves/0121_pech-dlya-bani-etna-magma-14-dt-3s.jpg"
+  },
+  {
+    "id": 122,
+    "name": "Банная печь Ермак 12 Стандарт (сталь)",
+    "image": "/images/stoves/0122_bannaya-pech-ermak-12-standart-stal.jpg"
+  },
+  {
+    "id": 123,
+    "name": "Чугунная печь для бани Ермак 12 Сетка-Стандарт (Чугун)",
+    "image": "/images/stoves/0123_chugunnaya-pech-dlya-bani-ermak-12-setka-standart-chugun.jpg"
+  },
+  {
+    "id": 124,
+    "name": "Печь для бани Везувий Скиф Стандарт 16 (ДТ-4) с теплобменником",
+    "image": "/images/stoves/0124_pech-dlya-bani-vezuviy-skif-standart-16-dt-4-s-teplobmennikom.jpg"
+  },
+  {
+    "id": 125,
+    "name": "Сибирь-24 ЧТД (НМК)",
+    "image": "/images/stoves/0125_sibir-24-chtd-nmk.jpg"
+  },
+  {
+    "id": 128,
+    "name": "Печь для бани Везувий Скиф Стандарт 22 (ДТ-4) с теплобменником",
+    "image": "/images/stoves/0128_pech-dlya-bani-vezuviy-skif-standart-22-dt-4-s-teplobmennikom.jpg"
+  },
+  {
+    "id": 129,
+    "name": "Печь для бани Везувий Легенда Стандарт 22 (ДТ-4С) 2017",
+    "image": "/images/stoves/0129_pech-dlya-bani-vezuviy-legenda-standart-22-dt-4s-2017.jpg"
+  },
+  {
+    "id": 130,
+    "name": "Печь для бани Везувий Скиф 22 П/Г Стандарт (ДТ-4)",
+    "image": "/images/stoves/0130_pech-dlya-bani-vezuviy-skif-22-pg-standart-dt-4.jpg"
+  },
+  {
+    "id": 132,
+    "name": "GRILL'D Aurora TRIO A 160 Short",
+    "image": "/images/stoves/0132_grilld-aurora-trio-a-160-short.jpg"
+  },
+  {
+    "id": 134,
+    "name": "Печь для бани Ермак 12-ПС Классика",
+    "image": "/images/stoves/0134_pech-dlya-bani-ermak-12-ps-klassika.jpg"
+  },
+  {
+    "id": 135,
+    "name": "Печь для бани Этна Кратер 14 (ДТ-3С)",
+    "image": "/images/stoves/0135_pech-dlya-bani-etna-krater-14-dt-3s.jpg"
+  },
+  {
+    "id": 136,
+    "name": "Печь для бани Этна Кратер 18 (ДТ-4)",
+    "image": "/images/stoves/0136_pech-dlya-bani-etna-krater-18-dt-4.jpg"
+  },
+  {
+    "id": 138,
+    "name": "Печь для бани Везувий Скиф Стандарт 16 (ДТ-4С) с теплобменником",
+    "image": "/images/stoves/0138_pech-dlya-bani-vezuviy-skif-standart-16-dt-4s-s-teplobmennikom.jpg"
+  },
+  {
+    "id": 140,
+    "name": "Печь для бани Везувий Скиф 22 П/Г Стандарт (ДТ-4С)",
+    "image": "/images/stoves/0140_pech-dlya-bani-vezuviy-skif-22-pg-standart-dt-4s.jpg"
+  },
+  {
+    "id": 141,
+    "name": "Газовая банная печь Ермак Уралочка 20",
+    "image": "/images/stoves/0141_gazovaya-bannaya-pech-ermak-uralochka-20.jpg"
+  },
+  {
+    "id": 142,
+    "name": "Печь для бани Русь-18 Л с АГГ-20П",
+    "image": "/images/stoves/0142_pech-dlya-bani-rus-18-l-s-agg-20p.jpg"
+  },
+  {
+    "id": 143,
+    "name": "Банная печь Ермак 20 Классика",
+    "image": "/images/stoves/0143_bannaya-pech-ermak-20-klassika.jpg"
+  },
+  {
+    "id": 144,
+    "name": "Печь для бани Везувий Лава 22 (ДТ-4) б/в",
+    "image": "/images/stoves/0144_pech-dlya-bani-vezuviy-lava-22-dt-4-bv.jpg"
+  },
+  {
+    "id": 145,
+    "name": "Печь для бани Этна Кратер 18 (ДТ-4С)",
+    "image": "/images/stoves/0145_pech-dlya-bani-etna-krater-18-dt-4s.jpg"
+  },
+  {
+    "id": 146,
+    "name": "Печь для бани Варвара Мини без контура укороченная топка Панорамная",
+    "image": "/images/stoves/0146_pech-dlya-bani-varvara-mini-bez-kontura-ukorochennaya-topka-panoramnaya.jpg"
+  },
+  {
+    "id": 148,
+    "name": "Печь для бани Везувий Русичъ Антрацит 16 (220)",
+    "image": "/images/stoves/0148_pech-dlya-bani-vezuviy-rusich-antracit-16-220.jpg"
+  },
+  {
+    "id": 149,
+    "name": "Печь для бани Везувий Сенсация 22 Антрацит (ДТ-4С) 2017",
+    "image": "/images/stoves/0149_pech-dlya-bani-vezuviy-sensaciya-22-antracit-dt-4s-2017.jpg"
+  },
+  {
+    "id": 150,
+    "name": "Печь для бани Везувий Лава 16 (220)",
+    "image": "/images/stoves/0150_pech-dlya-bani-vezuviy-lava-16-220.jpg"
+  },
+  {
+    "id": 152,
+    "name": "Банная печь ASTON 20 с закрытой каменкой",
+    "image": "/images/stoves/0152_bannaya-pech-aston-20-s-zakrytoj-kamenkoj.jpg"
+  },
+  {
+    "id": 153,
+    "name": "Печь для бани Варвара Мини без контура Панорамная",
+    "image": "/images/stoves/0153_pech-dlya-bani-varvara-mini-bez-kontura-panoramnaya.jpg"
+  },
+  {
+    "id": 154,
+    "name": "Сибирь-18 Конвекционная (НМК)",
+    "image": "/images/stoves/0154_sibir-18-konvekcionnaya-nmk.jpg"
+  },
+  {
+    "id": 155,
+    "name": "Печь для бани Ермак 16 Стандарт (сталь)",
+    "image": "/images/stoves/0155_pech-dlya-bani-ermak-16-standart-stal.jpg"
+  },
+  {
+    "id": 158,
+    "name": "Печь для бани Везувий Скиф Стандарт 22 (ДТ-4С) б/в",
+    "image": "/images/stoves/0158_pech-dlya-bani-vezuviy-skif-standart-22-dt-4s-bv.jpg"
+  },
+  {
+    "id": 161,
+    "name": "Печь для бани Сахара-16 ЛК (2.0)",
+    "image": "/images/stoves/0161_pech-dlya-bani-sahara-16-lk.jpg"
+  },
+  {
+    "id": 162,
+    "name": "Печь для бани Варвара Мини без контура укороченная",
+    "image": "/images/stoves/0162_pech-dlya-bani-varvara-mini-bez-kontura-ukorochennaya.jpg"
+  },
+  {
+    "id": 163,
+    "name": "Сибирь-18 Панорамная К (НМК)",
+    "image": "/images/stoves/0163_sibir-18-panoramnaya-k-nmk.jpg"
+  },
+  {
+    "id": 164,
+    "name": "Печь для бани ASTON 20 со стеклом и закрытой каменкой",
+    "image": "/images/stoves/0164_pech-dlya-bani-aston-20-so-steklom-i-zakrytoj-kamenkoj.jpg"
+  },
+  {
+    "id": 165,
+    "name": "Печь для бани Варвара Мини без контура",
+    "image": "/images/stoves/0165_pech-dlya-bani-varvara-mini-bez-kontura.jpg"
+  },
+  {
+    "id": 166,
+    "name": "Печь для бани Везувий Скиф 22 с закрытой каменкой (ДТ-4)",
+    "image": "/images/stoves/0166_pech-dlya-bani-vezuviy-skif-22-s-zakrytoy-kamenkoy-dt-4.jpg"
+  },
+  {
+    "id": 167,
+    "name": "Банная печь Варвара Мини без контура удлиненная топка Панорамная",
+    "image": "/images/stoves/0167_bannaya-pech-varvara-mini-bez-kontura-udlinennaya-topka-panoramnaya.jpg"
+  },
+  {
+    "id": 168,
+    "name": "Банная печь Мета-Бел ПБ 16 (Мета-Бел)",
+    "image": "/images/stoves/0168_t.jpg"
+  },
+  {
+    "id": 169,
+    "name": "Печь для бани Везувий Скиф Стандарт 12 (ДТ-3)",
+    "image": "/images/stoves/0169_pech-dlya-bani-vezuviy-skif-standart-12-dt-3.jpg"
+  },
+  {
+    "id": 170,
+    "name": "Печь для бани Везувий Скиф Стандарт 12 (ДТ-3) б/в",
+    "image": "/images/stoves/0170_pech-dlya-bani-vezuviy-skif-standart-12-dt-3-2016-bv.jpg"
+  },
+  {
+    "id": 172,
+    "name": "Банная печь GRILL'D Dubravo mini Long",
+    "image": "/images/stoves/0172_bannaya-pech-grilld-dubravo-mini-long.jpg"
+  },
+  {
+    "id": 173,
+    "name": "Печь для бани Каскад-18 ЛП (2018)",
+    "image": "/images/stoves/0173_pech-dlya-bani-kaskad-18-lp.jpg"
+  },
+  {
+    "id": 174,
+    "name": "Печь для бани Тамань-сетка 20 Т (1.1)",
+    "image": "/images/stoves/0174_pech-dlya-bani-taman-setka-20-t.jpg"
+  },
+  {
+    "id": 176,
+    "name": "Банная печь Варвара Мини без контура удлиненная топка",
+    "image": "/images/stoves/0176_bannaya-pech-varvara-mini-bez-kontura-udlinennaya-topka.jpg"
+  },
+  {
+    "id": 177,
+    "name": "Сибирь под навесной бак (НМК)",
+    "image": "/images/stoves/0177_sibir-pod-navesnoy-bak-nmk.jpg"
+  },
+  {
+    "id": 178,
+    "name": "Газовая печь для бани Ермак Уралочка 24",
+    "image": "/images/stoves/0178_gazovaya-pech-dlya-bani-ermak-uralochka-24.jpg"
+  },
+  {
+    "id": 179,
+    "name": "Печь для бани Везувий Скиф Стандарт 22 (ДТ-4С) с теплообменником",
+    "image": "/images/stoves/0179_pech-dlya-bani-vezuviy-skif-standart-22-dt-4s-s-teploobmennikom.jpg"
+  },
+  {
+    "id": 180,
+    "name": "Классика 'До 23 м³' - Телескоп (Ферингер)",
+    "image": "/images/stoves/0180_klassika-do-23-m---teleskop-feringer.jpg"
+  },
+  {
+    "id": 181,
+    "name": "Печь для бани ASTON 12 INOX",
+    "image": "/images/stoves/0181_pech-dlya-bani-aston-12-inox.jpg"
+  },
+  {
+    "id": 182,
+    "name": "Печь для бани Этна Кратер 24 (ДТ-4)",
+    "image": "/images/stoves/0182_pech-dlya-bani-etna-krater-24-dt-4.jpg"
+  },
+  {
+    "id": 183,
+    "name": "Печь для бани Везувий Скиф Стандарт 12 (ДТ-3С)",
+    "image": "/images/stoves/0183_pech-dlya-bani-vezuviy-skif-standart-12-dt-3s.jpg"
+  },
+  {
+    "id": 184,
+    "name": "Parovar 18 (211) (Fireway)",
+    "image": "/images/stoves/0184_parovar-18-prut-211-fireway.jpg"
+  },
+  {
+    "id": 185,
+    "name": "Parovar 18 (211) без выноса (Fireway)",
+    "image": "/images/stoves/0185_parovar-18-prut-211-bez-vynosa-fireway.jpg"
+  },
+  {
+    "id": 186,
+    "name": "Печь для бани Ермак 16-ПС Классика",
+    "image": "/images/stoves/0186_pech-dlya-bani-ermak-16-ps-klassika.jpg"
+  },
+  {
+    "id": 187,
+    "name": "Печь для бани Везувий Скиф Стандарт 16 (ДТ-3)",
+    "image": "/images/stoves/0187_pech-dlya-bani-vezuvij-skif-standart-16-dt-3.jpg"
+  },
+  {
+    "id": 188,
+    "name": "Печь для бани Везувий Скиф Стандарт 16 (ДТ-3) б/в",
+    "image": "/images/stoves/0188_pech-dlya-bani-vezuvij-skif-standart-16-dt-3-b-v.jpg"
+  },
+  {
+    "id": 189,
+    "name": "Печь для бани Ермак Элит 12-ПС",
+    "image": "/images/stoves/0189_pech-dlya-bani-ermak-elit-12-ps.jpg"
+  },
+  {
+    "id": 190,
+    "name": "Банная печь Везувий Скиф Стандарт 28 (ДТ-4С)",
+    "image": "/images/stoves/0190_bannaya-pech-vezuviy-skif-standart-28-dt-4s.jpg"
+  },
+  {
+    "id": 191,
+    "name": "Банная печь Мета-Бел ПБ 20 (Мета-Бел)",
+    "image": "/images/stoves/0191_bannaya-pech-meta-bel-pb-20-meta-bel.jpg"
+  },
+  {
+    "id": 192,
+    "name": "Банная печь Ермак Элит 16-С",
+    "image": "/images/stoves/0192_bannaya-pech-ermak-elit-16-s.jpg"
+  },
+  {
+    "id": 194,
+    "name": "Печь для бани Везувий Лава 12 (ДТ-3)",
+    "image": "/images/stoves/0194_pech-dlya-bani-vezuviy-lava-12-dt-3.jpg"
+  },
+  {
+    "id": 195,
+    "name": "Печь для бани Везувий Русичъ Антрацит 12 (ДТ-3)",
+    "image": "/images/stoves/0195_pech-dlya-bani-vezuviy-rusich-antracit-12-dt-3.jpg"
+  },
+  {
+    "id": 196,
+    "name": "Печь для бани Везувий Сенсация 22 Антрацит (270) б/в",
+    "image": "/images/stoves/0196_pech-dlya-bani-vezuviy-sensaciya-22-antracit-270-bv.jpg"
+  },
+  {
+    "id": 197,
+    "name": "Печь для бани Везувий Скиф 22 П/Г Ковка (220)",
+    "image": "/images/stoves/0197_pech-dlya-bani-vezuviy-skif-22-pg-kovka-220.jpg"
+  },
+  {
+    "id": 198,
+    "name": "Печь для бани Везувий Лава 22 (220)",
+    "image": "/images/stoves/0198_pech-dlya-bani-vezuviy-lava-22-220.jpg"
+  },
+  {
+    "id": 199,
+    "name": "Печь для бани Везувий Русичъ Антрацит 22 (220)",
+    "image": "/images/stoves/0199_pech-dlya-bani-vezuviy-rusich-antracit-22-220.jpg"
+  },
+  {
+    "id": 200,
+    "name": "Печь для бани ASTON 12 INOX со стеклом",
+    "image": "/images/stoves/0200_pech-dlya-bani-aston-12-inox-so-steklom.jpg"
+  },
+  {
+    "id": 201,
+    "name": "Печь для бани Этна Кратер 24 (ДТ-4С)",
+    "image": "/images/stoves/0201_pech-dlya-bani-etna-krater-24-dt-4s.jpg"
+  },
+  {
+    "id": 202,
+    "name": "Печь для бани Русь-12 Л Профи с АГГ-13П",
+    "image": "/images/stoves/0202_pech-dlya-bani-rus-12-l-profi-s-agg-13p.jpg"
+  },
+  {
+    "id": 203,
+    "name": "Aurora 160 Long (Grill'D)",
+    "image": "/images/stoves/0203_aurora-160-long.jpg"
+  },
+  {
+    "id": 204,
+    "name": "Parovar 18 (201) (Fireway)",
+    "image": "/images/stoves/0204_parovar-18-prut-201-fireway.jpg"
+  },
+  {
+    "id": 205,
+    "name": "Банная печь Везувий Скиф Стандарт 16 (ДТ-3С)",
+    "image": "/images/stoves/0205_bannaya-pech-vezuvij-skif-standart-16-dt-3s.jpg"
+  },
+  {
+    "id": 206,
+    "name": "Печь для бани Везувий Легенда Ковка 16 (217)",
+    "image": "/images/stoves/0206_pech-dlya-bani-vezuviy-legenda-kovka-16-217.jpg"
+  },
+  {
+    "id": 208,
+    "name": "Печь для бани Русь-сетка 12 Л",
+    "image": "/images/stoves/0208_pech-dlya-bani-rus-setka-12-l.jpg"
+  },
+  {
+    "id": 209,
+    "name": "Печь для бани Этна Шторм 18 (ДТ-4)",
+    "image": "/images/stoves/0209_pech-dlya-bani-etna-shtorm-18-dt-4.jpg"
+  },
+  {
+    "id": 210,
+    "name": "Печь для бани Везувий Лава 16 (ДТ-3) б/в",
+    "image": "/images/stoves/0210_pech-dlya-bani-vezuviy-lava-16-dt-4-bv.jpg"
+  },
+  {
+    "id": 211,
+    "name": "Печь для бани Везувий Русичъ Антрацит 16 (ДТ-3)",
+    "image": "/images/stoves/0211_pech-dlya-bani-vezuviy-rusich-antracit-16-dt-4.jpg"
+  },
+  {
+    "id": 212,
+    "name": "Печь для бани Ермак 12 Премиум (Сталь)",
+    "image": "/images/stoves/0212_pech-dlya-bani-ermak-12-premium-stal.jpg"
+  },
+  {
+    "id": 214,
+    "name": "Печь для бани Везувий Лава 16 (205)",
+    "image": "/images/stoves/0214_pech-dlya-bani-vezuviy-lava-16-205.jpg"
+  },
+  {
+    "id": 216,
+    "name": "Облицовка Parovar 24 (Fireway)",
+    "image": "/images/stoves/0216_oblicovka-parovar-24-fireway.jpg"
+  },
+  {
+    "id": 217,
+    "name": "Печь для бани Везувий Лава 12 (ДТ-3С)",
+    "image": "/images/stoves/0217_pech-dlya-bani-vezuviy-lava-12-dt-3s.jpg"
+  },
+  {
+    "id": 218,
+    "name": "Печь для бани Везувий Русичъ Антрацит 12 (ДТ-3С)",
+    "image": "/images/stoves/0218_pech-dlya-bani-vezuviy-rusich-antracit-12-dt-3s.jpg"
+  },
+  {
+    "id": 219,
+    "name": "Печь для бани Везувий Скиф 22 с закрытой каменкой с дверцей 270",
+    "image": "/images/stoves/0219_pech-dlya-bani-vezuviy-skif-22-s-zakrytoy-kamenkoy-s-dvercey-270.jpg"
+  },
+  {
+    "id": 220,
+    "name": "Печь для бани Сахара-16 ЛКП (2.0)",
+    "image": "/images/stoves/0220_pech-dlya-bani-sahara-16-lkp-20.jpg"
+  },
+  {
+    "id": 221,
+    "name": "Печь для бани Сибирь-20 ЛК (2.0)",
+    "image": "/images/stoves/0221_pech-dlya-bani-sibir-20-lk.jpg"
+  },
+  {
+    "id": 222,
+    "name": "Parovar 18 прут (302) (fireway)",
+    "image": "/images/stoves/0222_parovar-18-prut-302-fireway2.jpg"
+  },
+  {
+    "id": 223,
+    "name": "Печь для бани ASTON 20 АКВА",
+    "image": "/images/stoves/0223_pech-dlya-bani-aston-20-akva.jpg"
+  },
+  {
+    "id": 224,
+    "name": "Гроза 18М",
+    "image": "/images/stoves/0224_groza-18m.png"
+  },
+  {
+    "id": 225,
+    "name": "Печь для бани Везувий Сенсация Антрацит 28 (ДТ-4С)",
+    "image": "/images/stoves/0225_pech-dlya-bani-vezuviy-sensaciya-antracit-28-dt-4s.jpg"
+  },
+  {
+    "id": 226,
+    "name": "Печь для бани Варвара Каменка Мини",
+    "image": "/images/stoves/0226_pech-dlya-bani-varvara-kamenka-mini.jpg"
+  },
+  {
+    "id": 227,
+    "name": "GRILL'D Aurora TRIO A 160 Long",
+    "image": "/images/stoves/0227_grilld-aurora-trio-a-160-long.jpg"
+  },
+  {
+    "id": 228,
+    "name": "Печь для бани Этна Шторм 18 (ДТ-4С)",
+    "image": "/images/stoves/0228_pech-dlya-bani-etna-shtorm-18-dt-4s.jpg"
+  },
+  {
+    "id": 230,
+    "name": "Банная печь Ермак 20 Стандарт (Сталь)",
+    "image": "/images/stoves/0230_bannaya-pech-ermak-20-standart-stal.jpg"
+  },
+  {
+    "id": 231,
+    "name": "Печь для бани Везувий Сенсация Антрацит 28 (ДТ-4) б/в",
+    "image": "/images/stoves/0231_pech-dlya-bani-vezuviy-sensaciya-antracit-28-dt-4-bv.jpg"
+  },
+  {
+    "id": 232,
+    "name": "Печь для бани ASTON 12 INOX АКВА",
+    "image": "/images/stoves/0232_pech-dlya-bani-aston-12-inox-akva.jpg"
+  },
+  {
+    "id": 234,
+    "name": "Печь для бани Сахара-16 ЛРК (2.0)",
+    "image": "/images/stoves/0234_pech-dlya-bani-sahara-16-lrk-2-0.jpg"
+  },
+  {
+    "id": 235,
+    "name": "Печь для бани Ермак 16 Премиум (Сталь)",
+    "image": "/images/stoves/0235_pech-dlya-bani-ermak-16-premium-stal.jpg"
+  },
+  {
+    "id": 238,
+    "name": "Малютка 'До 16 м³' - Телескоп (Ферингер)",
+    "image": "/images/stoves/0238_malyutka-do-16-m---teleskop-feringer.jpg"
+  },
+  {
+    "id": 239,
+    "name": "Банная печь Везувий Скиф Стандарт 22 (ДТ-4) б/в",
+    "image": "/images/stoves/0239_bannaya-pech-vezuviy-skif-standart-22-dt-4-bv.jpg"
+  },
+  {
+    "id": 240,
+    "name": "Печь для бани Везувий Скиф Стандарт 22 (ДТ-4)",
+    "image": "/images/stoves/0240_pech-dlya-bani-vezuviy-skif-standart-22-dt-4.jpg"
+  },
+  {
+    "id": 241,
+    "name": "Parovar 18 прут (412) (Fireway)",
+    "image": "/images/stoves/0241_parovar-18-prut-412-fireway2.jpg"
+  },
+  {
+    "id": 242,
+    "name": "Печь для бани Везувий Сенсация 16 Антрацит (270)",
+    "image": "/images/stoves/0242_pech-dlya-bani-vezuviy-sensaciya-16-antracit-270.jpg"
+  },
+  {
+    "id": 243,
+    "name": "Печь для бани Везувий Русичъ Антрацит 16 (205)",
+    "image": "/images/stoves/0243_pech-dlya-bani-vezuviy-rusich-antracit-16-205.jpg"
+  },
+  {
+    "id": 244,
+    "name": "Газовая печь для бани Ермак Уралочка 20Н",
+    "image": "/images/stoves/0244_gazovaya-pech-dlya-bani-ermak-uralochka-20n.jpg"
+  },
+  {
+    "id": 245,
+    "name": "Печь дровяная Dubravo mini Short (Grill'D)",
+    "image": "/images/stoves/0245_pech-drovyanaya-dubravo-mini-short.jpg"
+  },
+  {
+    "id": 246,
+    "name": "Печь для бани Былина-12 Ч (1.2)",
+    "image": "/images/stoves/0246_pech-dlya-bani-bylina-12-ch-1-2.jpg"
+  },
+  {
+    "id": 247,
+    "name": "Печь для бани Былина-12 ЧУ (1.2)",
+    "image": "/images/stoves/0247_pech-dlya-bani-bylina-12-chu-1-2.jpg"
+  },
+  {
+    "id": 248,
+    "name": "Parovar 18 ковка (211) (Fireway)",
+    "image": "/images/stoves/0248_parovar-18-kovka-211-fireway.jpg"
+  },
+  {
+    "id": 249,
+    "name": "Parovar 18 ковка (211) без выноса (Fireway)",
+    "image": "/images/stoves/0249_parovar-18-kovka-211-bez-vynosa-fireway.jpg"
+  },
+  {
+    "id": 250,
+    "name": "Печь для бани Parovar 24 прут (201) (Fireway)",
+    "image": "/images/stoves/0250_parovar-24-prut-201-fireway.jpg"
+  },
+  {
+    "id": 251,
+    "name": "Parovar 18 (412) (Fireway)",
+    "image": "/images/stoves/0251_parovar-18-412-fireway.jpg"
+  },
+  {
+    "id": 252,
+    "name": "Parovar 18 (412) без выноса (Fireway)",
+    "image": "/images/stoves/0252_parovar-18-412-bez-vynosa-fireway.jpg"
+  },
+  {
+    "id": 253,
+    "name": "Печь для бани Везувий Сенсация Антрацит 28 (271)",
+    "image": "/images/stoves/0253_pech-dlya-bani-vezuviy-sensaciya-antracit-28-271.jpg"
+  },
+  {
+    "id": 254,
+    "name": "Везувий Легенда Ковка 28 (271)",
+    "image": "/images/stoves/0254_vezuviy-legenda-kovka-28-271.jpg"
+  },
+  {
+    "id": 256,
+    "name": "Печь для бани Везувий Легенда Стандарт 16 (ДТ-4)",
+    "image": "/images/stoves/0256_pech-dlya-bani-vezuviy-legenda-standart-16-dt-4.jpg"
+  },
+  {
+    "id": 257,
+    "name": "Печь для бани Везувий Легенда Стандарт 16 (ДТ-4) б/в",
+    "image": "/images/stoves/0257_pech-dlya-bani-vezuviy-legenda-standart-16-dt-4-bv.jpg"
+  },
+  {
+    "id": 258,
+    "name": "Печь для бани Русь-18 Л Профи с АГГ-20П",
+    "image": "/images/stoves/0258_pech-dlya-bani-rus-18-l-profi-s-agg-20p.jpg"
+  },
+  {
+    "id": 259,
+    "name": "Банная печь Везувий Легенда Стандарт 12 (ДТ-3С)",
+    "image": "/images/stoves/0259_bannaya-pech-vezuviy-legenda-standart-12-dt-3s.jpg"
+  },
+  {
+    "id": 260,
+    "name": "Печь для бани Везувий Скиф Стандарт 22 (ДТ-4С)",
+    "image": "/images/stoves/0260_pech-dlya-bani-vezuviy-skif-standart-22-dt-4s.jpg"
+  },
+  {
+    "id": 261,
+    "name": "Parovar 18 прут (402) (Fireway)",
+    "image": "/images/stoves/0261_parovar-18-prut-402-fireway.jpg"
+  },
+  {
+    "id": 263,
+    "name": "Печь для бани Везувий Русичъ Антрацит 22 (205)",
+    "image": "/images/stoves/0263_pech-dlya-bani-vezuviy-rusich-antracit-22-205.jpg"
+  },
+  {
+    "id": 264,
+    "name": "Банная печь Мета-Бел ПБМ 20 (без стекла) (Мета-Бел)",
+    "image": "/images/stoves/0264_bannaya-pech-meta-bel-pbm-20-bez-stekla-meta-bel.jpg"
+  },
+  {
+    "id": 265,
+    "name": "Банные печи ASTON 16 INOX",
+    "image": "/images/stoves/0265_bannye-pechi-aston-16-inox.jpg"
+  },
+  {
+    "id": 266,
+    "name": "Печь для бани Этна Кратер 18 (Панорама)",
+    "image": "/images/stoves/0266_pech-dlya-bani-etna-krater-18-panorama.jpg"
+  },
+  {
+    "id": 267,
+    "name": "Печь для бани Варвара Паленица без контура удлиненная Панорамная",
+    "image": "/images/stoves/0267_pech-dlya-bani-varvara-palenica-bez-kontura-udlinennaya-panoramnaya.jpg"
+  },
+  {
+    "id": 268,
+    "name": "Печь для бани Везувий Лава 22 (205)",
+    "image": "/images/stoves/0268_pech-dlya-bani-vezuviy-lava-22-205.jpg"
+  },
+  {
+    "id": 269,
+    "name": "Печь для бани Везувий Лава 22 (ДТ-4)",
+    "image": "/images/stoves/0269_pech-dlya-bani-vezuviy-lava-22-dt-4.jpg"
+  },
+  {
+    "id": 270,
+    "name": "Печь для бани Везувий Русичъ Антрацит 22 (ДТ-4)",
+    "image": "/images/stoves/0270_pech-dlya-bani-vezuviy-rusich-antracit-22-dt-4.jpg"
+  },
+  {
+    "id": 271,
+    "name": "Печь для бани Русь-12 Л Профи",
+    "image": "/images/stoves/0271_pech-dlya-bani-rus-12-l-profi.jpg"
+  },
+  {
+    "id": 272,
+    "name": "Parovar 18 ковка (201) (Fireway)",
+    "image": "/images/stoves/0272_parovar-18-kovka-201-fireway.jpg"
+  },
+  {
+    "id": 273,
+    "name": "Parovar 18 ковка (201) без выноса (Fireway)",
+    "image": "/images/stoves/0273_parovar-18-kovka-201-bez-vynosa-fireway.jpg"
+  },
+  {
+    "id": 275,
+    "name": "Parovar 18 (402) без выноса (Fireway)",
+    "image": "/images/stoves/0275_parovar-18-402-bez-vynosa-fireway.jpg"
+  },
+  {
+    "id": 276,
+    "name": "Печь для бани Варвара Паленица без контура укороченная",
+    "image": "/images/stoves/0276_pech-dlya-bani-varvara-palenica-bez-kontura-ukorochennaya.jpg"
+  },
+  {
+    "id": 277,
+    "name": "Печь для бани Везувий Легенда Стандарт 16 (ДТ-4С)",
+    "image": "/images/stoves/0277_pech-dlya-bani-vezuviy-legenda-standart-16-dt-4s.jpg"
+  },
+  {
+    "id": 278,
+    "name": "Сибирь-15 ЧТД короткая (НМК)",
+    "image": "/images/stoves/0278_sibir-15-chtd-korotkaya-nmk.jpg"
+  },
+  {
+    "id": 280,
+    "name": "Печь для бани Везувий Легенда Ковка 22 (217)",
+    "image": "/images/stoves/0280_pech-dlya-bani-vezuviy-legenda-kovka-22-217.jpg"
+  },
+  {
+    "id": 281,
+    "name": "Печь для бани Варвара Паленица без контура",
+    "image": "/images/stoves/0281_pech-dlya-bani-varvara-palenica-bez-kontura.jpg"
+  },
+  {
+    "id": 282,
+    "name": "Малютка 'До 16 м³' - Экран (Антик) (Ферингер)",
+    "image": "/images/stoves/0282_malyutka-do-16-m---ekran-antik-feringer.jpg"
+  },
+  {
+    "id": 283,
+    "name": "Малютка 'До 16 м³' - Экран (Русский сувенир) (Ферингер)",
+    "image": "/images/stoves/0283_malyutka-do-16-m---ekran-russkiy-suvenir-feringer.jpg"
+  },
+  {
+    "id": 284,
+    "name": "Банная печь Ермак 16 Сетка-Стандарт (Сталь)",
+    "image": "/images/stoves/0284_bannaya-pech-ermak-16-setka-standart-stal.jpg"
+  },
+  {
+    "id": 285,
+    "name": "Печь для бани Ермак 24 Стандарт (Сталь)",
+    "image": "/images/stoves/0285_pech-dlya-bani-ermak-24-standart-stal.jpg"
+  },
+  {
+    "id": 286,
+    "name": "Печь для бани Кубань-20 Л с АГГ-26П",
+    "image": "/images/stoves/0286_pech-dlya-bani-kuban-20-l-s-agg-26p.jpg"
+  },
+  {
+    "id": 287,
+    "name": "Банная печь ASTON 16 INOX со стеклом",
+    "image": "/images/stoves/0287_bannaya-pech-aston-16-inox-so-steklom.jpg"
+  },
+  {
+    "id": 288,
+    "name": "Печь для бани Этна Магма 18 (Панорама)",
+    "image": "/images/stoves/0288_pech-dlya-bani-etna-magma-18-panorama.jpg"
+  },
+  {
+    "id": 289,
+    "name": "Печь для бани Ермак Элит 16-ПС",
+    "image": "/images/stoves/0289_pech-dlya-bani-ermak-elit-16-ps.jpg"
+  },
+  {
+    "id": 290,
+    "name": "Печь для бани Везувий Лава 22 (ДТ-4С)",
+    "image": "/images/stoves/0290_pech-dlya-bani-vezuviy-lava-22-dt-4s.jpg"
+  },
+  {
+    "id": 291,
+    "name": "Печь для бани Везувий Русичъ Антрацит 22 (ДТ-4С)",
+    "image": "/images/stoves/0291_pech-dlya-bani-vezuviy-rusich-antracit-22-dt-4s.jpg"
+  },
+  {
+    "id": 294,
+    "name": "Печь для бани Былина-сетка 12 Ч (1.2)",
+    "image": "/images/stoves/0294_pech-dlya-bani-bylina-setka-12-ch-1-2.jpg"
+  },
+  {
+    "id": 295,
+    "name": "Печь для бани Сахара-24 ЛК (2.0)",
+    "image": "/images/stoves/0295_pech-dlya-bani-sahara-24-lk.jpg"
+  },
+  {
+    "id": 296,
+    "name": "Гроза 18МС",
+    "image": "/images/stoves/0296_groza-18ms.png"
+  },
+  {
+    "id": 297,
+    "name": "Сибирь-15 ЧТД (НМК)",
+    "image": "/images/stoves/0297_sibir-15-chtd-nmk.jpg"
+  },
+  {
+    "id": 298,
+    "name": "Печь для бани Ермак 12 Премиум (Нержавейка)",
+    "image": "/images/stoves/0298_pech-dlya-bani-ermak-12-premium-nerjaveyka.jpg"
+  },
+  {
+    "id": 299,
+    "name": "Печь для бани Русь-12 ЛНЗП Профи с АГГ-13П",
+    "image": "/images/stoves/0299_pech-dlya-bani-rus-12-lnzp-profi-s-agg-13p.jpg"
+  },
+  {
+    "id": 300,
+    "name": "Сибирь с баком (НМК)",
+    "image": "/images/stoves/0300_sibir-s-bakom-nmk.jpg"
+  },
+  {
+    "id": 301,
+    "name": "Печь для бани Сибирь-20 ЛРК (2.0)",
+    "image": "/images/stoves/0301_pech-dlya-bani-sibir-20-lrk.jpg"
+  },
+  {
+    "id": 302,
+    "name": "Parovar 24 прут (302) (Fireway)",
+    "image": "/images/stoves/0302_parovar-24-prut-302-fireway.jpg"
+  },
+  {
+    "id": 303,
+    "name": "Печь для бани Везувий Скиф 22 П/Г Ковка (205)",
+    "image": "/images/stoves/0303_pech-dlya-bani-vezuviy-skif-22-pg-kovka-205.jpg"
+  },
+  {
+    "id": 305,
+    "name": "Печь для бани Варвара Паленица без контура удлиненная",
+    "image": "/images/stoves/0305_pech-dlya-bani-varvara-palenica-bez-kontura-udlinennaya.jpg"
+  },
+  {
+    "id": 306,
+    "name": "Банная печь Везувий Скиф Стандарт 28 (ДТ-4)",
+    "image": "/images/stoves/0306_bannaya-pech-vezuvij-skif-standart-28-dt-4.jpg"
+  },
+  {
+    "id": 307,
+    "name": "Чугунная печь для бани Везувий Ураган Стандарт 28 (ДТ-4)",
+    "image": "/images/stoves/0307_chugunnaya-pech-dlya-bani-vezuviy-uragan-standart-28-dt-4.jpg"
+  },
+  {
+    "id": 309,
+    "name": "Газовая банная печь Ермак Уралочка 24Н",
+    "image": "/images/stoves/0309_gazovaya-bannaya-pech-ermak-uralochka-24n.jpg"
+  },
+  {
+    "id": 310,
+    "name": "Печь для бани Былина-18 Ч (1.2)",
+    "image": "/images/stoves/0310_pech-dlya-bani-bylina-18-ch.jpg"
+  },
+  {
+    "id": 311,
+    "name": "Гефест (ПБ-04)",
+    "image": "/images/stoves/0311_gefest-pb-04.png"
+  },
+  {
+    "id": 312,
+    "name": "Гроза 24М",
+    "image": "/images/stoves/0312_groza-24m.png"
+  },
+  {
+    "id": 313,
+    "name": "Классика 'До 23 м³' - Экран (Антик) (Ферингер)",
+    "image": "/images/stoves/0313_klassika-do-23-m---ekran-antik-feringer.jpg"
+  },
+  {
+    "id": 314,
+    "name": "Классика 'До 23 м³' - Экран (Русский сувенир) (Ферингер)",
+    "image": "/images/stoves/0314_klassika-do-23-m---ekran-russkiy-suvenir-feringer.jpg"
+  },
+  {
+    "id": 315,
+    "name": "Печь для бани Русь-сетка 18 Л",
+    "image": "/images/stoves/0315_pech-dlya-bani-rus-setka-18-l.jpg"
+  },
+  {
+    "id": 316,
+    "name": "Печь для бани Каскад-12 Т Панорама (2018)",
+    "image": "/images/stoves/0316_pech-dlya-bani-kaskad-12-t-panorama.jpg"
+  },
+  {
+    "id": 317,
+    "name": "Печь для бани Везувий Лава 28 (205)",
+    "image": "/images/stoves/0317_pech-dlya-bani-vezuviy-lava-28-205.jpg"
+  },
+  {
+    "id": 319,
+    "name": "Печь для бани Варвара Терма Каменка Мини укороченная",
+    "image": "/images/stoves/0319_pech-dlya-bani-varvara-terma-kamenka-mini-ukorochennaya.jpg"
+  },
+  {
+    "id": 320,
+    "name": "Печь для бани Везувий Русичъ Антрацит 28 (205)",
+    "image": "/images/stoves/0320_pech-dlya-bani-vezuviy-rusich-antracit-28-205.jpg"
+  },
+  {
+    "id": 321,
+    "name": "Печь для бани Везувий Лава 28 (ДТ-4)",
+    "image": "/images/stoves/0321_pech-dlya-bani-vezuviy-lava-28-dt-4.jpg"
+  },
+  {
+    "id": 322,
+    "name": "Печь для бани Везувий Русичъ Антрацит 28 (ДТ-4)",
+    "image": "/images/stoves/0322_pech-dlya-bani-vezuviy-rusich-antracit-28-dt-4.jpg"
+  },
+  {
+    "id": 323,
+    "name": "Parovar 24 прут (412) (Fireway)",
+    "image": "/images/stoves/0323_parovar-24-prut-412-fireway2.jpg"
+  },
+  {
+    "id": 324,
+    "name": "Банная печь Aurora 180 Short Grill`D (Grill'D)",
+    "image": "/images/stoves/0324_bannaya-pech-aurora-180-short-grilld.jpg"
+  },
+  {
+    "id": 325,
+    "name": "Банная печь Мета-Бел ПБМ 16 (Мета-Бел)",
+    "image": "/images/stoves/0325_bannaya-pech-meta-bel-pbm-16-meta-bel.jpg"
+  },
+  {
+    "id": 326,
+    "name": "Печь дровяная Aurora 180 Long (Grill'D)",
+    "image": "/images/stoves/0326_pech-drovyanaya-aurora-180-long.jpg"
+  },
+  {
+    "id": 327,
+    "name": "Гефест (ПБ-04М)",
+    "image": "/images/stoves/0327_gefest-pb-04m.png"
+  },
+  {
+    "id": 328,
+    "name": "Банная печь Варвара Каменка удлиненная",
+    "image": "/images/stoves/0328_bannaya-pech-varvara-kamenka-udlinennaya.jpg"
+  },
+  {
+    "id": 329,
+    "name": "Сибирь-15 Конвекционная (НМК)",
+    "image": "/images/stoves/0329_sibir-15-konvekcionnaya-nmk.jpg"
+  },
+  {
+    "id": 330,
+    "name": "Печь для бани ASTON 16 INOX АКВА",
+    "image": "/images/stoves/0330_pech-dlya-bani-aston-16-inox-akva.jpg"
+  },
+  {
+    "id": 332,
+    "name": "Печь для бани Этна Кратер 24 (Панорама)",
+    "image": "/images/stoves/0332_pech-dlya-bani-etna-krater-24-panorama.jpg"
+  },
+  {
+    "id": 333,
+    "name": "Parovar 24 ковка (211) (Fireway)",
+    "image": "/images/stoves/0333_parovar-24-kovka-211-fireway.jpg"
+  },
+  {
+    "id": 334,
+    "name": "Parovar 24 ковка (211) без выноса (Fireway)",
+    "image": "/images/stoves/0334_parovar-24-kovka-211-bez-vynosa-fireway.jpg"
+  },
+  {
+    "id": 335,
+    "name": "Банная печь Ермак 20 Премиум (Сталь)",
+    "image": "/images/stoves/0335_bannaya-pech-ermak-20-premium-stal.jpg"
+  },
+  {
+    "id": 336,
+    "name": "Печь для бани Кузбасс-14 ТК (2018)",
+    "image": "/images/stoves/0336_pech-dlya-bani-kuzbass-optima-14-tk-2018.jpg"
+  },
+  {
+    "id": 337,
+    "name": "Parovar 18 прут (413) (Fireway)",
+    "image": "/images/stoves/0337_parovar-18-prut-413.jpg"
+  },
+  {
+    "id": 338,
+    "name": "Parovar 24 прут (402) (Fireway)",
+    "image": "/images/stoves/0338_parovar-24-prut-402-fireway.jpg"
+  },
+  {
+    "id": 339,
+    "name": "Чугунная печь для бани Ермак 16 Стандарт (Чугун)",
+    "image": "/images/stoves/0339_chugunnaya-pech-dlya-bani-ermak-16-standart-chugun.jpg"
+  },
+  {
+    "id": 340,
+    "name": "Печь для бани ASTON 16 INOX АКВА со стеклом",
+    "image": "/images/stoves/0340_pech-dlya-bani-aston-16-inox-akva-so-steklom.jpg"
+  },
+  {
+    "id": 342,
+    "name": "Печь для бани Русь-18 ЛНЗП Профи с АГГ-20П",
+    "image": "/images/stoves/0342_pech-dlya-bani-rus-18-lnzp-profi-s-agg-20p.jpg"
+  },
+  {
+    "id": 343,
+    "name": "Parovar 24 ковка (201) (Fireway)",
+    "image": "/images/stoves/0343_parovar-24-kovka-201-fireway2.jpg"
+  },
+  {
+    "id": 344,
+    "name": "Parovar 24 ковка (201) без выноса (Fireway)",
+    "image": "/images/stoves/0344_parovar-24-kovka-201-bez-vynosa-fireway2.jpg"
+  },
+  {
+    "id": 345,
+    "name": "Банная печь Мета-Бел ПБМ 20 (Мета-Бел)",
+    "image": "/images/stoves/0345_bannaya-pech-meta-bel-pbm-20-bel-met.jpg"
+  },
+  {
+    "id": 346,
+    "name": "Печь для бани Былина-сетка 18 Ч (1.3)",
+    "image": "/images/stoves/0346_pech-dlya-bani-bylina-setka-18-ch.jpg"
+  },
+  {
+    "id": 347,
+    "name": "Печь для бани Русь-сетка 12 Л",
+    "image": "/images/stoves/0347_rus-setka-12-l.jpg"
+  },
+  {
+    "id": 348,
+    "name": "Печь для бани Былина-12 Ч Панорама (1.2)",
+    "image": "/images/stoves/0348_pech-dlya-bani-bylina-12-ch-panorama-1-2.jpg"
+  },
+  {
+    "id": 349,
+    "name": "Печь для бани Варвара Каменка",
+    "image": "/images/stoves/0349_pech-dlya-bani-varvara-kamenka.jpg"
+  },
+  {
+    "id": 350,
+    "name": "Банная печь Ермак 12 Сетка-Премиум (Сталь)",
+    "image": "/images/stoves/0350_bannaya-pech-ermak-12-setka-premium-stal.jpg"
+  },
+  {
+    "id": 351,
+    "name": "Печь для бани Каскад-18 ЛП Панорама (2018)",
+    "image": "/images/stoves/0351_pech-dlya-bani-kaskad-18-lp-panorama.jpg"
+  },
+  {
+    "id": 352,
+    "name": "Печь для бани Эверест Steam Master 18 (210М)",
+    "image": "/images/stoves/0352_pech-dlya-bani-everest-steam-master-18-210m.jpg"
+  },
+  {
+    "id": 353,
+    "name": "Parovar 18 (413) (Fireway)",
+    "image": "/images/stoves/0353_parovar-18-413-fireway.jpg"
+  },
+  {
+    "id": 354,
+    "name": "Parovar 18 (414) (Fireway)",
+    "image": "/images/stoves/0354_parovar-18-414.jpg"
+  },
+  {
+    "id": 355,
+    "name": "Печь для бани Везувий Сенсация 12 Антрацит (ДТ-3)",
+    "image": "/images/stoves/0355_pech-dlya-bani-vezuviy-sensaciya-12-antracit-dt-3.jpg"
+  },
+  {
+    "id": 356,
+    "name": "Малютка 'До 16 м³' - Экран (Дуб) - Антик (Ферингер)",
+    "image": "/images/stoves/0356_malyutka-do-16-m---ekran-dub---antik-feringer.jpg"
+  },
+  {
+    "id": 357,
+    "name": "Малютка 'До 16 м³' - Экран (Казанские мотивы) - Антик (Ферингер)",
+    "image": "/images/stoves/0357_malyutka-do-16-m---ekran-kazanskie-motivy---antik-feringer.jpg"
+  },
+  {
+    "id": 358,
+    "name": "Печь для бани ASTON 20 INOX",
+    "image": "/images/stoves/0358_pech-dlya-bani-aston-20-inox.jpg"
+  },
+  {
+    "id": 359,
+    "name": "Банная печь Мета-Бел ПБМ 16 (в модификации ПС) (Мета-Бел)",
+    "image": "/images/stoves/0359_bannaya-pech-meta-bel-pbm-16-v-modifikacii-ps-meta-bel.jpg"
+  },
+  {
+    "id": 360,
+    "name": "Печь для бани Сибирь-30 ЛК (2.0)",
+    "image": "/images/stoves/0360_pech-dlya-bani-sibir-30-lk.jpg"
+  },
+  {
+    "id": 361,
+    "name": "Печь для бани Русь-18 Л Профи",
+    "image": "/images/stoves/0361_pech-dlya-bani-rus-18-l-profi.jpg"
+  },
+  {
+    "id": 362,
+    "name": "Печь для бани Этна Шторм 18 (Панорама)",
+    "image": "/images/stoves/0362_pech-dlya-bani-etna-shtorm-18-panorama.jpg"
+  },
+  {
+    "id": 363,
+    "name": "Гроза 24МС",
+    "image": "/images/stoves/0363_groza-24ms.png"
+  },
+  {
+    "id": 364,
+    "name": "Parovar 24 ковка (302) (Fireway)",
+    "image": "/images/stoves/0364_parovar-24-kovka-302.jpg"
+  },
+  {
+    "id": 365,
+    "name": "Везувий Сенсация 16 Антрацит (ДТ-4) б/в",
+    "image": "/images/stoves/0365_vezuviy-sensaciya-16-antracit-dt-4-bv.jpg"
+  },
+  {
+    "id": 366,
+    "name": "Печь для бани Везувий Сенсация 16 Антрацит (ДТ-4)",
+    "image": "/images/stoves/0366_pech-dlya-bani-vezuviy-sensaciya-16-antracit-dt-4.jpg"
+  },
+  {
+    "id": 367,
+    "name": "Печь для бани ASTON 20 INOX со стеклом",
+    "image": "/images/stoves/0367_pech-dlya-bani-aston-20-inox-so-steklom2.jpg"
+  },
+  {
+    "id": 368,
+    "name": "Печь для бани Ермак Элит 20-ПС",
+    "image": "/images/stoves/0368_pech-dlya-bani-ermak-elit-20-ps.jpg"
+  },
+  {
+    "id": 369,
+    "name": "Печь для бани Ермак 12 Премиум (Чугун)",
+    "image": "/images/stoves/0369_pech-dlya-bani-ermak-12-premium-chugun.jpg"
+  },
+  {
+    "id": 370,
+    "name": "Печь для бани Варвара Каменка Панорамная",
+    "image": "/images/stoves/0370_pech-dlya-bani-varvara-kamenka-panoramnaya.jpg"
+  },
+  {
+    "id": 371,
+    "name": "Печь для бани Былина-24 Ч (1.2)",
+    "image": "/images/stoves/0371_pech-dlya-bani-bylina-24-ch-1-2.jpg"
+  },
+  {
+    "id": 372,
+    "name": "Классика 'До 23 м³' - Экран (Казанские мотивы) (Ферингер)",
+    "image": "/images/stoves/0372_klassika-do-23-m---ekran-kazanskie-motivy-feringer.jpg"
+  },
+  {
+    "id": 373,
+    "name": "Печь для бани Ермак 24 Премиум (Сталь)",
+    "image": "/images/stoves/0373_pech-dlya-bani-ermak-24-premium-stal.jpg"
+  },
+  {
+    "id": 374,
+    "name": "Печь для бани Былина-сетка 12 Ч Панорама (1.2)",
+    "image": "/images/stoves/0374_pech-dlya-bani-bylina-setka-12-ch-panorama-1-2.jpg"
+  },
+  {
+    "id": 375,
+    "name": "Печь для бани Русь-сетка 12 Л Панорама",
+    "image": "/images/stoves/0375_pech-dlya-bani-rus-setka-12-l-panorama.jpg"
+  },
+  {
+    "id": 376,
+    "name": "Гефест (ПБ-04С)",
+    "image": "/images/stoves/0376_gefest-pb-04s.png"
+  },
+  {
+    "id": 378,
+    "name": "Печь для бани Везувий Сенсация 16 Антрацит (ДТ-4С)",
+    "image": "/images/stoves/0378_pech-dlya-bani-vezuviy-sensaciya-16-antracit-dt-4s.jpg"
+  },
+  {
+    "id": 379,
+    "name": "Печь для бани Везувий Сенсация 22 Антрацит (270)",
+    "image": "/images/stoves/0379_pech-dlya-bani-vezuviy-sensaciya-22-antracit-270.jpg"
+  },
+  {
+    "id": 380,
+    "name": "Енисей (НМК)",
+    "image": "/images/stoves/0380_enisey-nmk.jpg"
+  },
+  {
+    "id": 381,
+    "name": "Печь для бани Ермак 16 Сетка-Премиум (Сталь)",
+    "image": "/images/stoves/0381_pech-dlya-bani-ermak-16-setka-premium-stal.jpg"
+  },
+  {
+    "id": 382,
+    "name": "Печь дровяная Aurora 160 Window (Grill'D)",
+    "image": "/images/stoves/0382_pech-drovyanaya-aurora-160-window.jpg"
+  },
+  {
+    "id": 383,
+    "name": "Банная печь Ермак 20 Сетка-Стандарт (Сталь)",
+    "image": "/images/stoves/0383_bannaya-pech-ermak-20-setka-standart-stal.jpg"
+  },
+  {
+    "id": 384,
+    "name": "Банная печь Мета-Бел ПБМ 20 (в модификации ПС) (Мета-Бел)",
+    "image": "/images/stoves/0384_bannaya-pech-meta-bel-pbm-20-v-modifikacii-ps.jpg"
+  },
+  {
+    "id": 385,
+    "name": "Банная печь Мета-Бел ПБМ 20C (Мета-Бел)",
+    "image": "/images/stoves/0385_bannaya-pech-meta-bel-pbm-20c-meta-bel.jpg"
+  },
+  {
+    "id": 386,
+    "name": "Parovar 24 ковка (412) (Fireway)",
+    "image": "/images/stoves/0386_parovar-24-kovka-412.jpg"
+  },
+  {
+    "id": 387,
+    "name": "Parovar 24 ковка (412) без выноса (Fireway)",
+    "image": "/images/stoves/0387_parovar-24-kovka-412-bez-vynosa.jpg"
+  },
+  {
+    "id": 388,
+    "name": "Печь для бани Везувий Легенда Ковка 28 (217)",
+    "image": "/images/stoves/0388_pech-dlya-bani-vezuviy-legenda-kovka-28-217.jpg"
+  },
+  {
+    "id": 389,
+    "name": "Печь для бани Былина-18 Ч Панорама (1.2)",
+    "image": "/images/stoves/0389_pech-dlya-bani-bylina-18-ch-panorama.jpg"
+  },
+  {
+    "id": 390,
+    "name": "Кубань (НМК)",
+    "image": "/images/stoves/0390_kuban-nmk.jpg"
+  },
+  {
+    "id": 391,
+    "name": "Гефест (ПБ-04МС)",
+    "image": "/images/stoves/0391_gefest-pb-04ms.png"
+  },
+  {
+    "id": 395,
+    "name": "Банная печь Aurora 180 Window Grill`D (Grill'D)",
+    "image": "/images/stoves/0395_bannaya-pech-aurora-180-window-grilld.jpg"
+  },
+  {
+    "id": 396,
+    "name": "Чугунная печь для бани ASTON Шторм 16 (ДТ-4) б/в",
+    "image": "/images/stoves/0396_chugunnaya-pech-dlya-bani-aston-shtorm-16-dt-4-b-v.jpg"
+  },
+  {
+    "id": 397,
+    "name": "Parovar 24 ковка (402) (Fireway)",
+    "image": "/images/stoves/0397_parovar-24-kovka-402.jpg"
+  },
+  {
+    "id": 398,
+    "name": "Parovar 24 ковка (402) без выноса (Fireway)",
+    "image": "/images/stoves/0398_parovar-24-kovka-402-bez-vynosa.jpg"
+  },
+  {
+    "id": 399,
+    "name": "Печь для бани Русь-12 ЛНЗП Профи",
+    "image": "/images/stoves/0399_pech-dlya-bani-rus-12-lnzp-profi.jpg"
+  },
+  {
+    "id": 400,
+    "name": "Печь для бани Везувий Легенда Стандарт 22 (ДТ-4)",
+    "image": "/images/stoves/0400_pech-dlya-bani-vezuviy-legenda-standart-22-dt-4.jpg"
+  },
+  {
+    "id": 401,
+    "name": "Печь для бани Везувий Легенда Стандарт 22 (ДТ-4) б/в",
+    "image": "/images/stoves/0401_pech-dlya-bani-vezuviy-legenda-standart-22-dt-4-bv-2017.jpg"
+  },
+  {
+    "id": 402,
+    "name": "Чугунная печь для бани Ермак 16 Премиум (Чугун)",
+    "image": "/images/stoves/0402_chugunnaya-pech-dlya-bani-ermak-16-premium-chugun.jpg"
+  },
+  {
+    "id": 405,
+    "name": "Parovar 18 ковка (404) (Fireway)",
+    "image": "/images/stoves/0405_parovar-18-kovka-404-fireway.jpg"
+  },
+  {
+    "id": 406,
+    "name": "Печь для бани ASTON 20 INOX АКВА",
+    "image": "/images/stoves/0406_pech-dlya-bani-aston-20-inox-akva.jpg"
+  },
+  {
+    "id": 407,
+    "name": "Банная печь Мета-Бел ПБМ 26 (Мета-Бел)",
+    "image": "/images/stoves/0407_bannaya-pech-meta-bel-pbm-26-meta-bel.jpg"
+  },
+  {
+    "id": 408,
+    "name": "Банная печь Везувий Ураган Стандарт 12 (ДТ-3)",
+    "image": "/images/stoves/0408_bannaya-pech-vezuviy-uragan-standart-12-dt-3.jpg"
+  },
+  {
+    "id": 409,
+    "name": "Печь для бани Везувий Легенда Ковка 16 (270)",
+    "image": "/images/stoves/0409_pech-dlya-bani-vezuviy-legenda-kovka-16-270.jpg"
+  },
+  {
+    "id": 410,
+    "name": "Печь для бани Везувий Легенда Ковка 16 (270) б/в",
+    "image": "/images/stoves/0410_pech-dlya-bani-vezuviy-legenda-kovka-16-270-bv.jpg"
+  },
+  {
+    "id": 411,
+    "name": "Печь для бани Везувий Сенсация 12 Антрацит (220)",
+    "image": "/images/stoves/0411_pech-dlya-bani-vezuviy-sensaciya-12-antracit-220.jpg"
+  },
+  {
+    "id": 412,
+    "name": "Печь для бани Везувий Ураган Стандарт 16 (ДТ-4)",
+    "image": "/images/stoves/0412_pech-dlya-bani-vezuviy-uragan-standart-16-dt-4.jpg"
+  },
+  {
+    "id": 413,
+    "name": "Печь для бани Везувий Скиф Парогенератор Ковка (Панорама) \"М\"",
+    "image": "/images/stoves/0413_pech-dlya-bani-vezuvij-skif-parogenerator-kovka-panorama-m.jpg"
+  },
+  {
+    "id": 414,
+    "name": "Печь для бани Этна Шторм 24 (Панорама)",
+    "image": "/images/stoves/0414_pech-dlya-bani-etna-shtorm-24-panorama.jpg"
+  },
+  {
+    "id": 415,
+    "name": "Печь для бани Ермак 12 Сетка-Премиум (Нержавейка)",
+    "image": "/images/stoves/0415_pech-dlya-bani-ermak-12-setka-premium-nerjaveyka.jpg"
+  },
+  {
+    "id": 418,
+    "name": "Печь для бани Везувий Русичъ Антрацит 22 Панорама",
+    "image": "/images/stoves/0418_pech-dlya-bani-vezuviy-rusich-antracit-22-panorama.jpg"
+  },
+  {
+    "id": 419,
+    "name": "Печь для бани Везувий Скиф Ковка 22 Панорама",
+    "image": "/images/stoves/0419_pech-dlya-bani-vezuviy-skif-kovka-22-panorama.jpg"
+  },
+  {
+    "id": 420,
+    "name": "Банная печь Везувий Легенда Ретро 24 Стандарт (ДТ-4)",
+    "image": "/images/stoves/0420_bannaya-pech-vezuviy-legenda-retro-24-standart-dt-4.jpg"
+  },
+  {
+    "id": 421,
+    "name": "Гефест (ПБ-04П)",
+    "image": "/images/stoves/0421_gefest-pb-04p.png"
+  },
+  {
+    "id": 422,
+    "name": "Гроза 24П",
+    "image": "/images/stoves/0422_groza-24p.png"
+  },
+  {
+    "id": 423,
+    "name": "Печь для бани Былина-сетка 18 Ч Панорама (1.2)",
+    "image": "/images/stoves/0423_pech-dlya-bani-bylina-setka-18-ch-panorama.jpg"
+  },
+  {
+    "id": 424,
+    "name": "Чугунная печь для бани Ермак 16 Сетка-Стандарт (Чугун)",
+    "image": "/images/stoves/0424_chugunnaya-pech-dlya-bani-ermak-16-setka-standart-chugun.jpg"
+  },
+  {
+    "id": 425,
+    "name": "Банная печь Везувий Легенда 16 (270) змеевик",
+    "image": "/images/stoves/0425_bannaya-pech-vezuviy-legenda-16-270-zmeevik.jpg"
+  },
+  {
+    "id": 426,
+    "name": "Печь для бани ASTON 20 INOX АКВА со стеклом",
+    "image": "/images/stoves/0426_pech-dlya-bani-aston-20-inox-akva-so-steklom.jpg"
+  },
+  {
+    "id": 427,
+    "name": "Parovar 18 (505) (Fireway)",
+    "image": "/images/stoves/0427_parovar-18-505-fireway.jpg"
+  },
+  {
+    "id": 428,
+    "name": "Печь для бани Везувий Сенсация 16 антрацит (205)",
+    "image": "/images/stoves/0428_pech-dlya-bani-vezuviy-sensaciya-16-antracit-205.jpg"
+  },
+  {
+    "id": 429,
+    "name": "Печь для бани Ермак 24 Сетка-Стандарт (Сталь)",
+    "image": "/images/stoves/0429_pech-dlya-bani-ermak-24-setka-standart-stal.jpg"
+  },
+  {
+    "id": 430,
+    "name": "Банная печь ПароВар 24 (340М)",
+    "image": "/images/stoves/0430_bannaya-pech-parovar-24-340m.jpg"
+  },
+  {
+    "id": 431,
+    "name": "Печь для бани Везувий Легенда Ковка 12 (220)",
+    "image": "/images/stoves/0431_pech-dlya-bani-vezuviy-legenda-kovka-12-220.jpg"
+  },
+  {
+    "id": 432,
+    "name": "Печь для бани Везувий Ураган Стандарт 16 (ДТ-4С)",
+    "image": "/images/stoves/0432_pech-dlya-bani-vezuviy-uragan-standart-16-dt-4s.jpg"
+  },
+  {
+    "id": 433,
+    "name": "Сибирь-20 Панорамная Сетка (НМК)",
+    "image": "/images/stoves/0433_sibir-20-panoramnaya-setka-nmk.jpg"
+  },
+  {
+    "id": 434,
+    "name": "Печь для бани Варвара Терма Каменка Мини",
+    "image": "/images/stoves/0434_pech-dlya-bani-varvara-terma-kamenka-mini.jpg"
+  },
+  {
+    "id": 435,
+    "name": "Печь для бани Сиеста-16 (2.0)",
+    "image": "/images/stoves/0435_pech-dlya-bani-siesta-16-2-0.jpg"
+  },
+  {
+    "id": 436,
+    "name": "Печь для бани Везувий Сенсация 22 Антрацит (ДТ-4) б/в",
+    "image": "/images/stoves/0436_pech-dlya-bani-vezuviy-sensaciya-22-antracit-dt-4-bv.jpg"
+  },
+  {
+    "id": 438,
+    "name": "Печь для бани Везувий Легенда 16 (270) Песчаник",
+    "image": "/images/stoves/0438_pech-dlya-bani-vezuviy-legenda-16-270-peschanik.jpg"
+  },
+  {
+    "id": 439,
+    "name": "Печь для бани Везувий Сенсация Аква 16 (ДТ-4) с баком 30 л.",
+    "image": "/images/stoves/0439_pech-dlya-bani-vezuvij-sensaciya-akva-16-dt-4-s-bakom-30-l.jpg"
+  },
+  {
+    "id": 441,
+    "name": "Печь для бани Русь-18 ЛНЗП Профи",
+    "image": "/images/stoves/0441_pech-dlya-bani-rus-18-lnzp-profi.jpg"
+  },
+  {
+    "id": 442,
+    "name": "Печь для бани Везувий Сенсация 22 Антрацит (ДТ-4С)",
+    "image": "/images/stoves/0442_pech-dlya-bani-vezuviy-sensaciya-22-antracit-dt-4s.jpg"
+  },
+  {
+    "id": 443,
+    "name": "Банная печь Ермак 20 Сетка-Премиум (Сталь)",
+    "image": "/images/stoves/0443_bannaya-pech-ermak-20-setka-premium-stal.jpg"
+  },
+  {
+    "id": 444,
+    "name": "Гефест ЗК (ПБ-04 ЗК)",
+    "image": "/images/stoves/0444_gefest-zk-pb-04-zk.png"
+  },
+  {
+    "id": 445,
+    "name": "Печь для бани Былина-24 Ч Панорама (1.2)",
+    "image": "/images/stoves/0445_pech-dlya-bani-bylina-24-ch-panorama-1-2.jpg"
+  },
+  {
+    "id": 447,
+    "name": "Печь для бани Русь-сетка 18 Л Панорама",
+    "image": "/images/stoves/0447_pech-dlya-bani-rus-setka-18-l-panorama.jpg"
+  },
+  {
+    "id": 448,
+    "name": "Чугунная банная печь Ермак 20 Стандарт (Чугун)",
+    "image": "/images/stoves/0448_chugunnaya-bannaya-pech-ermak-20-standart-chugun.jpg"
+  },
+  {
+    "id": 449,
+    "name": "Печь для бани Сахара-24 ЛКП (2.0)",
+    "image": "/images/stoves/0449_pech-dlya-bani-sahara-24-lkp-2-0.jpg"
+  },
+  {
+    "id": 450,
+    "name": "Печь дровяная Dubravo 180 Short (Grill'D)",
+    "image": "/images/stoves/0450_pech-drovyanaya-dubravo-180-short.jpg"
+  },
+  {
+    "id": 451,
+    "name": "Чугунная печь для бани Везувий Ураган Стандарт 28 (ДТ-4С)",
+    "image": "/images/stoves/0451_chugunnaya-pech-dlya-bani-vezuviy-uragan-standart-28-dt-4s.jpg"
+  },
+  {
+    "id": 452,
+    "name": "Parovar 24 ковка (404) (Fireway)",
+    "image": "/images/stoves/0452_parovar-24-kovka-404-fireway.jpg"
+  },
+  {
+    "id": 453,
+    "name": "Parovar 24 ковка (413) (Fireway)",
+    "image": "/images/stoves/0453_parovar-24-kovka-413.jpg"
+  },
+  {
+    "id": 454,
+    "name": "Parovar 24 ковка (414) (Fireway)",
+    "image": "/images/stoves/0454_parovar-24-kovka-414-fireway.jpg"
+  },
+  {
+    "id": 455,
+    "name": "Печь для бани Кузбасс-20 ТК (2018)",
+    "image": "/images/stoves/0455_pech-dlya-bani-kuzbass-optima-20-tk-2018.jpg"
+  },
+  {
+    "id": 456,
+    "name": "Гефест (ПБ-03)",
+    "image": "/images/stoves/0456_gefest-pb-03.png"
+  },
+  {
+    "id": 457,
+    "name": "Гефест ЗК (ПБ-04М-ЗК)",
+    "image": "/images/stoves/0457_gefest-zk-pb-04m-zk.png"
+  },
+  {
+    "id": 458,
+    "name": "Гроза 24ПС",
+    "image": "/images/stoves/0458_groza-24ps.png"
+  },
+  {
+    "id": 459,
+    "name": "Печь для бани Везувий Легенда Ковка 22 (270)",
+    "image": "/images/stoves/0459_pech-dlya-bani-vezuviy-legenda-kovka-22-270.jpg"
+  },
+  {
+    "id": 460,
+    "name": "Печь для бани Везувий Легенда Ковка 22 (270) б/в",
+    "image": "/images/stoves/0460_pech-dlya-bani-vezuviy-legenda-kovka-22-270-bv-2017.jpg"
+  },
+  {
+    "id": 461,
+    "name": "Гармония 'До 30 м³' - Экран (Антик) (Ферингер)",
+    "image": "/images/stoves/0461_garmoniya-do-30-m---ekran-antik-feringer.jpg"
+  },
+  {
+    "id": 462,
+    "name": "Гармония 'До 30 м³' - Экран (Русский сувенир) (Ферингер)",
+    "image": "/images/stoves/0462_garmoniya-do-30-m---ekran-russkiy-suvenir-feringer.jpg"
+  },
+  {
+    "id": 463,
+    "name": "Банная печь Везувий Легенда 22 (270) змеевик",
+    "image": "/images/stoves/0463_bannaya-pech-vezuviy-legenda-22-270-zmeevik.jpg"
+  },
+  {
+    "id": 464,
+    "name": "Parovar 18 ковка (505) (Fireway)",
+    "image": "/images/stoves/0464_parovar-18-kovka-505-fireway.jpg"
+  },
+  {
+    "id": 465,
+    "name": "Банная печь ПароВар 18 (340М) (Fireway)",
+    "image": "/images/stoves/0465_bannaya-pech-parovar-18-340m.jpg"
+  },
+  {
+    "id": 466,
+    "name": "Банная печь ПароВар 18 (PR-04) (Fireway)",
+    "image": "/images/stoves/0466_bannaya-pech-parovar-18-pr-04.jpg"
+  },
+  {
+    "id": 467,
+    "name": "Чугунная печь для бани Ермак 12 Сетка-Премиум (Чугун)",
+    "image": "/images/stoves/0467_chugunnaya-pech-dlya-bani-ermak-12-setka-premium-chugun.jpg"
+  },
+  {
+    "id": 468,
+    "name": "Печь для бани Везувий Легенда 16 (224) змеевик",
+    "image": "/images/stoves/0468_pech-dlya-bani-vezuviy-legenda-16-224-zmeevik.jpg"
+  },
+  {
+    "id": 469,
+    "name": "Печь для бани Сибирь-20 ЛРК Панорама (2.0)",
+    "image": "/images/stoves/0469_pech-dlya-bani-sibir-20-lrk-panorama.jpg"
+  },
+  {
+    "id": 470,
+    "name": "Везувий Легенда Стандарт 28 (ДТ-4) б/в",
+    "image": "/images/stoves/0470_vezuviy-legenda-standart-28-dt-4-bv.jpg"
+  },
+  {
+    "id": 471,
+    "name": "Печь для бани Везувий Легенда Ковка 16 (224)",
+    "image": "/images/stoves/0471_pech-dlya-bani-vezuviy-legenda-kovka-16-224.jpg"
+  },
+  {
+    "id": 472,
+    "name": "Печь для бани Везувий Легенда Стандарт 28 (ДТ-4)",
+    "image": "/images/stoves/0472_pech-dlya-bani-vezuviy-legenda-standart-28-dt-4.jpg"
+  },
+  {
+    "id": 474,
+    "name": "Печь для бани Везувий Ураган Ковка 12 (260)",
+    "image": "/images/stoves/0474_pech-dlya-bani-vezuviy-uragan-kovka-12-260.jpg"
+  },
+  {
+    "id": 475,
+    "name": "Катунь (НМК)",
+    "image": "/images/stoves/0475_katun-nmk.jpg"
+  },
+  {
+    "id": 476,
+    "name": "Печь для бани Кузбасс-14 ТК Панорама (2018)",
+    "image": "/images/stoves/0476_pech-dlya-bani-kuzbass-14-tk-panorama-2018.jpg"
+  },
+  {
+    "id": 477,
+    "name": "Alma с сеткой (Fireway)",
+    "image": "/images/stoves/0477_alma-fireway.jpg"
+  },
+  {
+    "id": 478,
+    "name": "Печь для бани Везувий Легенда 16 (224) Песчаник",
+    "image": "/images/stoves/0478_pech-dlya-bani-vezuviy-legenda-16-224-peschanik.jpg"
+  },
+  {
+    "id": 479,
+    "name": "Печь для бани Везувий Легенда Стандарт 28 (ДТ-4С)",
+    "image": "/images/stoves/0479_pech-dlya-bani-vezuviy-legenda-standart-28-dt-4s.jpg"
+  },
+  {
+    "id": 481,
+    "name": "Печь для бани Ермак 24 Сетка-Премиум (Сталь)",
+    "image": "/images/stoves/0481_pech-dlya-bani-ermak-24-setka-premium-stal.jpg"
+  },
+  {
+    "id": 482,
+    "name": "Сибирь-24 У ЧТД (НМК)",
+    "image": "/images/stoves/0482_sibir-24-u-chtd-nmk.jpg"
+  },
+  {
+    "id": 483,
+    "name": "Печь для бани Былина-сетка 24 Ч Панорама (1.2)",
+    "image": "/images/stoves/0483_pech-dlya-bani-bylina-setka-24-ch-panorama-1-2.jpg"
+  },
+  {
+    "id": 484,
+    "name": "Чугунная печь для бани ASTON Шторм 16 (ДТ-4) Long",
+    "image": "/images/stoves/0484_chugunnaya-pech-dlya-bani-aston-shtorm-16-dt-4-long.jpg"
+  },
+  {
+    "id": 485,
+    "name": "Гефест (ПБ-03М)",
+    "image": "/images/stoves/0485_gefest-pb-03m.png"
+  },
+  {
+    "id": 486,
+    "name": "Гефест (ПБ-04ПС)",
+    "image": "/images/stoves/0486_gefest-pb-04ps.png"
+  },
+  {
+    "id": 487,
+    "name": "Печь для бани Везувий Легенда 22 (270) Песчаник",
+    "image": "/images/stoves/0487_pech-dlya-bani-vezuviy-legenda-22-270-peschanik.jpg"
+  },
+  {
+    "id": 488,
+    "name": "Печь для бани Везувий Ураган Ковка 28 (271)",
+    "image": "/images/stoves/0488_pech-dlya-bani-vezuviy-uragan-kovka-28-271.jpg"
+  },
+  {
+    "id": 489,
+    "name": "Чугунная банная печь Ермак 16 Сетка-Премиум (Чугун)",
+    "image": "/images/stoves/0489_chugunnaya-bannaya-pech-ermak-16-setka-premium-chugun.jpg"
+  },
+  {
+    "id": 490,
+    "name": "Гроза 18МС Ураган",
+    "image": "/images/stoves/0490_groza-18ms-uragan.png"
+  },
+  {
+    "id": 491,
+    "name": "Parovar 24 ковка (340М) (Fireway)",
+    "image": "/images/stoves/0491_parovar-24-kovka-340m.jpg"
+  },
+  {
+    "id": 492,
+    "name": "Банная печь ПароВар 24 (PR-04) (Fireway)",
+    "image": "/images/stoves/0492_bannaya-pech-parovar-24-pr-04.jpg"
+  },
+  {
+    "id": 493,
+    "name": "Гефест ЗК (ПБ-04С ЗК)",
+    "image": "/images/stoves/0493_gefest-zk-pb-04s-zk.png"
+  },
+  {
+    "id": 494,
+    "name": "Чугунная печь для бани Везувий Легенда Русский пар 18 (270)",
+    "image": "/images/stoves/0494_chugunnaya-pech-dlya-bani-vezuviy-legenda-russkiy-par-18-270.jpg"
+  },
+  {
+    "id": 495,
+    "name": "Чугунная банная печь ASTON Шторм 20 б/в (350)",
+    "image": "/images/stoves/0495_chugunnaya-bannaya-pech-aston-shtorm-20-b-v-350.jpg"
+  },
+  {
+    "id": 496,
+    "name": "Сибирь-24 Панорама (НМК)",
+    "image": "/images/stoves/0496_sibir-24-panorama-nmk.jpg"
+  },
+  {
+    "id": 497,
+    "name": "Банная печь GRILL'D Cometa 180 Vega Long Window Max",
+    "image": "/images/stoves/0497_bannaya-pech-grilld-cometa-180-vega-long-window-max.jpg"
+  },
+  {
+    "id": 498,
+    "name": "Гефест ЗК (ПБ-04МС ЗК)",
+    "image": "/images/stoves/0498_gefest-zk-pb-04ms-zk.png"
+  },
+  {
+    "id": 499,
+    "name": "Parovar 18 ковка (340) (Fireway)",
+    "image": "/images/stoves/0499_parovar-18-kovka-340.jpg"
+  },
+  {
+    "id": 500,
+    "name": "Печь для бани Везувий Легенда Ковка 16 (205)",
+    "image": "/images/stoves/0500_pech-dlya-bani-vezuviy-legenda-kovka-16-205.jpg"
+  },
+  {
+    "id": 501,
+    "name": "Cometa 180 Vega Short Grill`D (Grill'D)",
+    "image": "/images/stoves/0501_cometa-180-vega-short-grilld.jpg"
+  },
+  {
+    "id": 502,
+    "name": "Печь для бани Везувий Ураган Ковка 16 (271)",
+    "image": "/images/stoves/0502_pech-dlya-bani-vezuviy-uragan-kovka-16-271.jpg"
+  },
+  {
+    "id": 503,
+    "name": "Банная печь GRILL'D Dubravo 180 Window",
+    "image": "/images/stoves/0503_bannaya-pech-grilld-dubravo-180-window.jpg"
+  },
+  {
+    "id": 504,
+    "name": "Сибирь-24 Конвекционная (НМК)",
+    "image": "/images/stoves/0504_sibir-24-konvekcionnaya-nmk.jpg"
+  },
+  {
+    "id": 505,
+    "name": "Parovar 24 ковка (505) (Fireway)",
+    "image": "/images/stoves/0505_parovar-24-kovka-505-fireway.jpg"
+  },
+  {
+    "id": 506,
+    "name": "Гармония 'До 30 м³' - Экран (Дуб) (Ферингер)",
+    "image": "/images/stoves/0506_garmoniya-do-30-m---ekran-dub-feringer.jpg"
+  },
+  {
+    "id": 507,
+    "name": "Гармония 'До 30 м³' - Экран (Казанские мотивы) (Ферингер)",
+    "image": "/images/stoves/0507_garmoniya-do-30-m---ekran-kazanskie-motivy-feringer.jpg"
+  },
+  {
+    "id": 508,
+    "name": "Печь для бани Везувий Легенда Ковка 22 (224)",
+    "image": "/images/stoves/0508_pech-dlya-bani-vezuviy-legenda-kovka-22-224.jpg"
+  },
+  {
+    "id": 509,
+    "name": "Печь для бани Везувий Сенсация 22 Антрацит (224)",
+    "image": "/images/stoves/0509_pech-dlya-bani-vezuviy-sensaciya-22-antracit-224.jpg"
+  },
+  {
+    "id": 510,
+    "name": "Печь для бани Везувий Ураган Стандарт 22 (ДТ-4)",
+    "image": "/images/stoves/0510_pech-dlya-bani-vezuviy-uragan-standart-22-dt-4.jpg"
+  },
+  {
+    "id": 511,
+    "name": "Чугунная банная печь Везувий Легенда Русский пар 18 (240)",
+    "image": "/images/stoves/0511_chugunnaya-bannaya-pech-vezuviy-legenda-russkiy-par-18-240.jpg"
+  },
+  {
+    "id": 512,
+    "name": "Банная печь Везувий Легенда Ретро 24 Стандарт (ДТ-4)",
+    "image": "/images/stoves/0512_bannaya-pech-vezuvij-legenda-retro-24-standart-dt-4.jpg"
+  },
+  {
+    "id": 513,
+    "name": "Печь для бани Везувий Легенда Ковка 28 (270)",
+    "image": "/images/stoves/0513_pech-dlya-bani-vezuviy-legenda-kovka-28-270.jpg"
+  },
+  {
+    "id": 514,
+    "name": "Печь для бани Везувий Ураган Ковка 16 (270)",
+    "image": "/images/stoves/0514_pech-dlya-bani-vezuviy-uragan-kovka-16-270.jpg"
+  },
+  {
+    "id": 515,
+    "name": "Печь для бани Русь-12 ЛНЗП Профи Панорама (1.1)",
+    "image": "/images/stoves/0515_pech-dlya-bani-rus-12-lnzp-profi-panorama.jpg"
+  },
+  {
+    "id": 516,
+    "name": "Банная печь Везувий Ураган Стандарт 22 (ДТ-4C)",
+    "image": "/images/stoves/0516_bannaya-pech-vezuviy-uragan-standart-22-dt-4c.jpg"
+  },
+  {
+    "id": 517,
+    "name": "Чугунная банная печь Ермак 20 Премиум (Чугун)",
+    "image": "/images/stoves/0517_chugunnaya-bannaya-pech-ermak-20-premium-chugun.jpg"
+  },
+  {
+    "id": 518,
+    "name": "Чугунная печь для бани ASTON Шторм 20 (350)",
+    "image": "/images/stoves/0518_chugunnaya-pech-dlya-bani-aston-shtorm-20-350.jpg"
+  },
+  {
+    "id": 519,
+    "name": "Классика 'До 23 м³' - Экран (Дуб) (Ферингер)",
+    "image": "/images/stoves/0519_klassika-do-23-m---ekran-dub-feringer.jpg"
+  },
+  {
+    "id": 520,
+    "name": "Гефест УРАГАН (ПБ-04С Ураган)",
+    "image": "/images/stoves/0520_gefest-uragan-pb-04s-uragan.png"
+  },
+  {
+    "id": 521,
+    "name": "Печь для бани Везувий Легенда 28 (270) змеевик",
+    "image": "/images/stoves/0521_pech-dlya-bani-vezuviy-legenda-28-270-zmeevik.jpg"
+  },
+  {
+    "id": 522,
+    "name": "Сибирь-24 Панорамная К (НМК)",
+    "image": "/images/stoves/0522_sibir-24-panoramnaya-k-nmk.jpg"
+  },
+  {
+    "id": 523,
+    "name": "Печь для бани Везувий Сенсация Антрацит 28 (205)",
+    "image": "/images/stoves/0523_pech-dlya-bani-vezuviy-sensaciya-antracit-28-205.jpg"
+  },
+  {
+    "id": 524,
+    "name": "Печь для бани Везувий Легенда Ковка 22 (205)",
+    "image": "/images/stoves/0524_pech-dlya-bani-vezuviy-legenda-kovka-22-205.jpg"
+  },
+  {
+    "id": 525,
+    "name": "Печь для бани Везувий Сенсация 22 Антрацит (205)",
+    "image": "/images/stoves/0525_pech-dlya-bani-vezuviy-sensaciya-22-antracit-205.jpg"
+  },
+  {
+    "id": 526,
+    "name": "Банная печь GRILL'D Violet Short Window Max",
+    "image": "/images/stoves/0526_bannaya-pech-grilld-violet-short-window-max.jpg"
+  },
+  {
+    "id": 527,
+    "name": "Гефест УРАГАН (ПБ-04МС Ураган)",
+    "image": "/images/stoves/0527_gefest-uragan-pb-04ms-uragan.png"
+  },
+  {
+    "id": 528,
+    "name": "Гефест ЗК (ПБ-04П-ЗК)",
+    "image": "/images/stoves/0528_gefest-zk-pb-04p-zk.png"
+  },
+  {
+    "id": 529,
+    "name": "Банная печь GRILL'D Violet Short",
+    "image": "/images/stoves/0529_bannaya-pech-grilld-violet-short.jpg"
+  },
+  {
+    "id": 530,
+    "name": "Гефест (ПБ-03С)",
+    "image": "/images/stoves/0530_gefest-pb-03s.png"
+  },
+  {
+    "id": 531,
+    "name": "Печь для бани Везувий Скиф Стандарт 38 (218)",
+    "image": "/images/stoves/0531_pech-dlya-bani-vezuvij-skif-standart-38-218.jpg"
+  },
+  {
+    "id": 533,
+    "name": "Печь дровяная Violet Long (Grill'D)",
+    "image": "/images/stoves/0533_pech-drovyanaya-violet-long.jpg"
+  },
+  {
+    "id": 534,
+    "name": "Печь для бани Везувий Легенда 22 (205) змеевик",
+    "image": "/images/stoves/0534_pech-dlya-bani-vezuviy-legenda-22-205-zmeevik.jpg"
+  },
+  {
+    "id": 535,
+    "name": "Гроза 24МС Ураган",
+    "image": "/images/stoves/0535_groza-24ms-uragan.png"
+  },
+  {
+    "id": 537,
+    "name": "Печь для бани Русь-18 ЛНЗП Профи Панорама (1.1)",
+    "image": "/images/stoves/0537_pech-dlya-bani-rus-18-lnzp-profi-panorama.jpg"
+  },
+  {
+    "id": 538,
+    "name": "Гефест (ПБ-03МС)",
+    "image": "/images/stoves/0538_gefest-pb-03ms.png"
+  },
+  {
+    "id": 539,
+    "name": "Печь для бани Русь-сетка 25 Л Панорама",
+    "image": "/images/stoves/0539_pech-dlya-bani-rus-setka-25-l-panorama.jpg"
+  },
+  {
+    "id": 540,
+    "name": "Чугунная банная печь Ермак 20 Сетка-Стандарт (Чугун)",
+    "image": "/images/stoves/0540_chugunnaya-bannaya-pech-ermak-20-setka-standart-chugun.jpg"
+  },
+  {
+    "id": 541,
+    "name": "Печь для бани Везувий Ураган Ковка 22 (271)",
+    "image": "/images/stoves/0541_pech-dlya-bani-vezuviy-uragan-kovka-22-271.jpg"
+  },
+  {
+    "id": 542,
+    "name": "Чугунная банная печь Ермак 24 Премиум (Чугун)",
+    "image": "/images/stoves/0542_chugunnaya-bannaya-pech-ermak-24-premium-chugun.jpg"
+  },
+  {
+    "id": 543,
+    "name": "Печь для бани Везувий Легенда 28 (270) Песчаник",
+    "image": "/images/stoves/0543_pech-dlya-bani-vezuviy-legenda-28-270-peschanik.jpg"
+  },
+  {
+    "id": 544,
+    "name": "Печь для бани Везувий Легенда Ретро 24 Ковка (205)",
+    "image": "/images/stoves/0544_pech-dlya-bani-vezuviy-legenda-retro-24-kovka-205.jpg"
+  },
+  {
+    "id": 545,
+    "name": "Гефест (ПБ-03П)",
+    "image": "/images/stoves/0545_gefest-pb-03p.png"
+  },
+  {
+    "id": 547,
+    "name": "Печь банная ПБМ 20В (с вермикулитом) (Мета-Бел)",
+    "image": "/images/stoves/0547_pech-bannaya-pbm-20v-s-vermikulitom-meta-bel.jpg"
+  },
+  {
+    "id": 548,
+    "name": "Чугунная печь для бани ASTON Шторм 20 Long (350)",
+    "image": "/images/stoves/0548_chugunnaya-pech-dlya-bani-aston-shtorm-20-long-350.jpg"
+  },
+  {
+    "id": 549,
+    "name": "Банная печь Везувий Ураган Стандарт 28 (ДТ-4)",
+    "image": "/images/stoves/0549_bannaya-pech-vezuviy-uragan-standart-28-dt-4.png"
+  },
+  {
+    "id": 551,
+    "name": "Печь для бани Везувий Ураган Ковка 16 (224)",
+    "image": "/images/stoves/0551_pech-dlya-bani-vezuviy-uragan-kovka-16-224.jpg"
+  },
+  {
+    "id": 552,
+    "name": "Печь для бани Кузбасс-20 ТК Панорама (2018)",
+    "image": "/images/stoves/0552_pech-dlya-bani-kuzbass-optima-20-tk-panorama.jpg"
+  },
+  {
+    "id": 554,
+    "name": "Газовая печь для бани Ермак Уралочка 36",
+    "image": "/images/stoves/0554_gazovaya-pech-dlya-bani-ermak-uralochka-36.jpg"
+  },
+  {
+    "id": 555,
+    "name": "Банная печь Варвара Сказка Мини",
+    "image": "/images/stoves/0555_bannaya-pech-varvara-skazka-mini.jpg"
+  },
+  {
+    "id": 557,
+    "name": "Гефест Ураган ЗК (ПБ-04C-ЗК Ураган)",
+    "image": "/images/stoves/0557_gefest-uragan-zk-pb-04c-zk-uragan.png"
+  },
+  {
+    "id": 558,
+    "name": "Печь для бани Везувий Легенда Ковка 28 (205)",
+    "image": "/images/stoves/0558_pech-dlya-bani-vezuviy-legenda-kovka-28-205.jpg"
+  },
+  {
+    "id": 559,
+    "name": "Гефест ЗК (ПБ-03-ЗК)",
+    "image": "/images/stoves/0559_gefest-zk-pb-03-zk.png"
+  },
+  {
+    "id": 560,
+    "name": "Гефест Ураган ЗК (ПБ-04МС-ЗК Ураган)",
+    "image": "/images/stoves/0560_gefest-uragan-zk-pb-04ms-zk-uragan.png"
+  },
+  {
+    "id": 561,
+    "name": "Печь для бани Везувий Ураган Ковка 16 (205)",
+    "image": "/images/stoves/0561_pech-dlya-bani-vezuviy-uragan-kovka-16-205.jpg"
+  },
+  {
+    "id": 562,
+    "name": "Чугунная печь для бани Ермак 20 Сетка-Премиум (Чугун)",
+    "image": "/images/stoves/0562_chugunnaya-pech-dlya-bani-ermak-20-setka-premium-chugun.jpg"
+  },
+  {
+    "id": 563,
+    "name": "Печь для бани Везувий Легенда 28 (205) змеевик",
+    "image": "/images/stoves/0563_pech-dlya-bani-vezuviy-legenda-28-205-zmeevik.jpg"
+  },
+  {
+    "id": 564,
+    "name": "Alma (340М) с сеткой (Fireway)",
+    "image": "/images/stoves/0564_alma-340m-s-setkoj-fireway.jpg"
+  },
+  {
+    "id": 565,
+    "name": "Сибирь-24 Каминная (НМК)",
+    "image": "/images/stoves/0565_sibir-24-kaminnaya-nmk.jpg"
+  },
+  {
+    "id": 567,
+    "name": "Гефест УРАГАН (ПБ-04ПС Ураган)",
+    "image": "/images/stoves/0567_gefest-uragan-pb-04ps-uragan.png"
+  },
+  {
+    "id": 568,
+    "name": "Печь для бани Сибирь-20 ЛК Профи (2.0)",
+    "image": "/images/stoves/0568_pech-dlya-bani-sibir-20-lk-profi-2-0.jpg"
+  },
+  {
+    "id": 569,
+    "name": "Гефест ЗК (ПБ-03М-ЗК)",
+    "image": "/images/stoves/0569_gefest-zk-pb-03m-zk.png"
+  },
+  {
+    "id": 570,
+    "name": "Банная печь Везувий Ураган Ковка 28 (270)",
+    "image": "/images/stoves/0570_bannaya-pech-vezuviy-uragan-kovka-28-270.jpg"
+  },
+  {
+    "id": 571,
+    "name": "Печь для бани Эверест Легкий пар (280) под обкладку",
+    "image": "/images/stoves/0571_pech-dlya-bani-everest-legkij-par-280-pod-obkladku.jpg"
+  },
+  {
+    "id": 572,
+    "name": "Печь для бани Сахара-16 ЛК Профи (2.0)",
+    "image": "/images/stoves/0572_pech-dlya-bani-sahara-16-lk-profi.jpg"
+  },
+  {
+    "id": 573,
+    "name": "Печь для бани Везувий Легенда 16 (270) Талькохлорит",
+    "image": "/images/stoves/0573_pech-dlya-bani-vezuviy-legenda-16-270-talkohlorit.jpg"
+  },
+  {
+    "id": 574,
+    "name": "Гефест (ПБ-03ПС)",
+    "image": "/images/stoves/0574_gefest-pb-03ps.png"
+  },
+  {
+    "id": 575,
+    "name": "Печь для бани Везувий Легенда Русский пар Ковка 18 Панорама \"М\"",
+    "image": "/images/stoves/0575_pech-dlya-bani-vezuvij-legenda-russkij-par-kovka-18-panorama-m.jpg"
+  },
+  {
+    "id": 576,
+    "name": "Печь для бани Везувий Ураган Ковка 22 (205)",
+    "image": "/images/stoves/0576_pech-dlya-bani-vezuviy-uragan-kovka-22-205.jpg"
+  },
+  {
+    "id": 577,
+    "name": "Банная печь Мета-Бел ПБМ 20 LUX (Бела-Мет)",
+    "image": "/images/stoves/0577_bannaya-pech-meta-bel-pbm-20-lux-bela-met.jpg"
+  },
+  {
+    "id": 578,
+    "name": "Печь для бани Эверест Steam Master 18 INOX",
+    "image": "/images/stoves/0578_pech-dlya-bani-everest-steam-master-18-inox.jpg"
+  },
+  {
+    "id": 579,
+    "name": "Гроза 24ПС Ураган",
+    "image": "/images/stoves/0579_groza-24ps-uragan.png"
+  },
+  {
+    "id": 580,
+    "name": "Печь дровяная Dubravo 180 Window (Grill'D)",
+    "image": "/images/stoves/0580_pech-drovyanaya-dubravo-180-window.jpg"
+  },
+  {
+    "id": 581,
+    "name": "Чугунная печь для бани Ермак 24 Сетка-Премиум (Чугун)",
+    "image": "/images/stoves/0581_chugunnaya-pech-dlya-bani-ermak-24-setka-premium-chugun.jpg"
+  },
+  {
+    "id": 582,
+    "name": "Печь для бани Везувий Легенда 28 (205) Песчаник",
+    "image": "/images/stoves/0582_pech-dlya-bani-vezuviy-legenda-28-205-peschanik.jpg"
+  },
+  {
+    "id": 583,
+    "name": "Гефест (ПБ-02)",
+    "image": "/images/stoves/0583_gefest-pb-02.png"
+  },
+  {
+    "id": 584,
+    "name": "Cometa 180 Vega Window (Grill'D)",
+    "image": "/images/stoves/0584_cometa-180-vega-window.jpg"
+  },
+  {
+    "id": 585,
+    "name": "Атмосфера-М КТТ сетка (Про-металл)",
+    "image": "/images/stoves/0585_atmosfera-m-ktt-setka.jpg"
+  },
+  {
+    "id": 586,
+    "name": "Гефест ЗК (ПБ-03С-ЗК)",
+    "image": "/images/stoves/0586_gefest-zk-pb-03s-zk.png"
+  },
+  {
+    "id": 587,
+    "name": "Мини 'До 16 м³' - Змеевик (Ферингер)",
+    "image": "/images/stoves/0587_mini-do-16-m---zmeevik-feringer.jpg"
+  },
+  {
+    "id": 588,
+    "name": "Гефест (ПБ-02М)",
+    "image": "/images/stoves/0588_gefest-pb-02m.png"
+  },
+  {
+    "id": 589,
+    "name": "Печь для бани Везувий Легенда 28 (270) Талькохлорит",
+    "image": "/images/stoves/0589_pech-dlya-bani-vezuviy-legenda-28-270-talkohlorit.jpg"
+  },
+  {
+    "id": 590,
+    "name": "Печь для бани Ермак 16 Сетка-Премиум (Нержавейка)",
+    "image": "/images/stoves/0590_pech-dlya-bani-ermak-16-setka-premium-nerjaveyka.jpg"
+  },
+  {
+    "id": 591,
+    "name": "Гефест УРАГАН (ПБ-03С Ураган)",
+    "image": "/images/stoves/0591_gefest-uragan-pb-03s-uragan.png"
+  },
+  {
+    "id": 592,
+    "name": "Alma (505) с сеткой (Fireway)",
+    "image": "/images/stoves/0592_alma-505-s-setkoj-fireway.jpg"
+  },
+  {
+    "id": 593,
+    "name": "Печь для бани Везувий Легенда 22 (205) Талькохлорит",
+    "image": "/images/stoves/0593_pech-dlya-bani-vezuviy-legenda-22-205-talkohlorit.jpg"
+  },
+  {
+    "id": 594,
+    "name": "Банная печь Эверест Легкий пар (281)",
+    "image": "/images/stoves/0594_bannaya-pech-everest-legkij-par-281.jpg"
+  },
+  {
+    "id": 595,
+    "name": "Гефест ЗК (ПБ-03МС-ЗК)",
+    "image": "/images/stoves/0595_gefest-zk-pb-03ms-zk.png"
+  },
+  {
+    "id": 596,
+    "name": "Печь для бани Везувий Легенда 16 (224) Талькохлорит",
+    "image": "/images/stoves/0596_pech-dlya-bani-vezuviy-legenda-16-224-talkohlorit.jpg"
+  },
+  {
+    "id": 597,
+    "name": "Печь для бани Сибирский утёс-20 ЛП Профи",
+    "image": "/images/stoves/0597_pech-dlya-bani-sibirskiy-utes-20-lp-profi.jpg"
+  },
+  {
+    "id": 598,
+    "name": "Атмосфера сетка",
+    "image": "/images/stoves/0598_atmosfera-setka.png"
+  },
+  {
+    "id": 599,
+    "name": "Печь для бани Эверест Steam Master 24 INOX",
+    "image": "/images/stoves/0599_pech-dlya-bani-everest-steam-master-24-inox.jpg"
+  },
+  {
+    "id": 600,
+    "name": "Банная печь GRILL'D Violet Long Window Max",
+    "image": "/images/stoves/0600_bannaya-pech-grilld-violet-long-window-max.jpg"
+  },
+  {
+    "id": 601,
+    "name": "Гефест УРАГАН (ПБ-03МС Ураган)",
+    "image": "/images/stoves/0601_gefest-uragan-pb-03ms-uragan.png"
+  },
+  {
+    "id": 602,
+    "name": "Чугунная банная печь Везувий Легенда Русский пар Ковка 18 (271)",
+    "image": "/images/stoves/0602_chugunnaya-bannaya-pech-vezuviy-legenda-russkiy-par-kovka-18-271.jpg"
+  },
+  {
+    "id": 603,
+    "name": "Гефест Ураган ЗК (ПБ-04ПC-ЗК Ураган)",
+    "image": "/images/stoves/0603_gefest-uragan-zk-pb-04pc-zk-uragan.png"
+  },
+  {
+    "id": 604,
+    "name": "Печь для бани Сахара-16 ЛКП Профи (2.0)",
+    "image": "/images/stoves/0604_pech-dlya-bani-sahara-16-lkp-profi-2-0.jpg"
+  },
+  {
+    "id": 605,
+    "name": "Печь для бани Сахара-24 ЛКП Профи (2.0)",
+    "image": "/images/stoves/0605_pech-dlya-bani-sahara-24-lkp-profi-2-0.jpg"
+  },
+  {
+    "id": 606,
+    "name": "Печь для бани Везувий Ураган Ковка 28 (205)",
+    "image": "/images/stoves/0606_pech-dlya-bani-vezuviy-uragan-kovka-28-205.jpg"
+  },
+  {
+    "id": 607,
+    "name": "Чугунная печь Везувий LV-12 S \"Антрацит\" с плитой",
+    "image": "/images/stoves/0607_chugunnaya-pech-vezuvij-lv-12-s-antracit-s-plitoj.jpg"
+  },
+  {
+    "id": 608,
+    "name": "Печь для бани Варвара Сказка",
+    "image": "/images/stoves/0608_pech-dlya-bani-varvara-skazka.jpg"
+  },
+  {
+    "id": 609,
+    "name": "Печь для бани Везувий Легенда Русский пар Ковка 18 (270) б/в",
+    "image": "/images/stoves/0609_pech-dlya-bani-vezuvij-legenda-russkij-par-kovka-18-270-b-v.jpg"
+  },
+  {
+    "id": 610,
+    "name": "Чугунная печь для бани Везувий Легенда Русский пар Ковка 18 (270)",
+    "image": "/images/stoves/0610_chugunnaya-pech-dlya-bani-vezuviy-legenda-russkiy-par-kovka-18-270.jpg"
+  },
+  {
+    "id": 611,
+    "name": "Гефест (ПБ-02С)",
+    "image": "/images/stoves/0611_gefest-pb-02s.png"
+  },
+  {
+    "id": 612,
+    "name": "Банная печь ASTON Шторм 26 Турбопар (350)",
+    "image": "/images/stoves/0612_bannaya-pech-aston-shtorm-26-turbopar-350.jpg"
+  },
+  {
+    "id": 613,
+    "name": "Гефест (ПБ-02МС)",
+    "image": "/images/stoves/0613_gefest-pb-02ms.png"
+  },
+  {
+    "id": 614,
+    "name": "Печь для бани Варвара Сказка удлиненная",
+    "image": "/images/stoves/0614_pech-dlya-bani-varvara-skazka-udlinennaya.jpg"
+  },
+  {
+    "id": 615,
+    "name": "Печь для бани Везувий Легенда Русский пар Ковка 24 Панорама \"М\"",
+    "image": "/images/stoves/0615_pech-dlya-bani-vezuvij-legenda-russkij-par-kovka-24-panorama-m.jpg"
+  },
+  {
+    "id": 616,
+    "name": "Чугунная печь для бани Везувий Легенда Русский пар Ковка 18 (240)",
+    "image": "/images/stoves/0616_chugunnaya-pech-dlya-bani-vezuviy-legenda-russkiy-par-kovka-18-240.jpg"
+  },
+  {
+    "id": 617,
+    "name": "Печь для бани Варвара Терма Сказка Мини",
+    "image": "/images/stoves/0617_pech-dlya-bani-varvara-terma-skazka-mini.jpg"
+  },
+  {
+    "id": 618,
+    "name": "Печь для бани Сиеста-30",
+    "image": "/images/stoves/0618_pech-dlya-bani-siesta-30.jpg"
+  },
+  {
+    "id": 619,
+    "name": "Гефест ЗК (ПБ-03П-ЗК)",
+    "image": "/images/stoves/0619_gefest-zk-pb-03p-zk.png"
+  },
+  {
+    "id": 620,
+    "name": "Оптима 'До 23 м³' - Змеевик (Ферингер)",
+    "image": "/images/stoves/0620_optima-do-23-m---zmeevik-feringer.jpg"
+  },
+  {
+    "id": 621,
+    "name": "Печь для бани Варвара Терма Сказка Мини удлиненная",
+    "image": "/images/stoves/0621_pech-dlya-bani-varvara-terma-skazka-mini-udlinennaya.jpg"
+  },
+  {
+    "id": 622,
+    "name": "Alma (PR04) с сеткой (Fireway)",
+    "image": "/images/stoves/0622_alma-pr04-s-setkoj-fireway.jpg"
+  },
+  {
+    "id": 623,
+    "name": "Печь для бани ASTON Шторм Турбопар 26 Long (350)",
+    "image": "/images/stoves/0623_pech-dlya-bani-aston-shtorm-turbopar-26-long-350.jpg"
+  },
+  {
+    "id": 624,
+    "name": "Печь для бани Русь-27 ЛНЗП Профи Панорама (1.1)",
+    "image": "/images/stoves/0624_pech-dlya-bani-rus-27-lnzp-profi-panorama.jpg"
+  },
+  {
+    "id": 625,
+    "name": "Чугунная банная печь Везувий Легенда Русский пар Ковка 24 (271)",
+    "image": "/images/stoves/0625_chugunnaya-bannaya-pech-vezuviy-legenda-russkiy-par-kovka-24-271.jpg"
+  },
+  {
+    "id": 626,
+    "name": "Печь для бани Везувий Легенда 22 (270) Талькохлорит",
+    "image": "/images/stoves/0626_pech-dlya-bani-vezuviy-legenda-22-270-talkohlorit.jpg"
+  },
+  {
+    "id": 627,
+    "name": "Чугунная банная печь Везувий Легенда Русский пар Ковка 24 (240)",
+    "image": "/images/stoves/0627_chugunnaya-bannaya-pech-vezuviy-legenda-russkiy-par-kovka-24-240.jpg"
+  },
+  {
+    "id": 628,
+    "name": "Гефест УРАГАН (ПБ-03ПС Ураган)",
+    "image": "/images/stoves/0628_gefest-uragan-pb-03ps-uragan.png"
+  },
+  {
+    "id": 629,
+    "name": "Чугунная банная печь Везувий Легенда Русский пар Ковка 24 (270)",
+    "image": "/images/stoves/0629_chugunnaya-bannaya-pech-vezuviy-legenda-russkiy-par-kovka-24-270.jpg"
+  },
+  {
+    "id": 630,
+    "name": "Гефест ЗК (ПБ-02-ЗК)",
+    "image": "/images/stoves/0630_gefest-zk-pb-02-zk.png"
+  },
+  {
+    "id": 631,
+    "name": "Гефест (ПБ-02П)",
+    "image": "/images/stoves/0631_gefest-pb-02p.png"
+  },
+  {
+    "id": 632,
+    "name": "Печь для бани Сибирь-20 ЛРК Профи Панорама (2.0)",
+    "image": "/images/stoves/0632_pech-dlya-bani-sibir-20-lrk-panorama-2018.jpg"
+  },
+  {
+    "id": 633,
+    "name": "Банная печь Эверест Steam Master 18 (310) Чугун б/в",
+    "image": "/images/stoves/0633_bannaya-pech-everest-steam-master-18-310-chugun-b-v.jpg"
+  },
+  {
+    "id": 634,
+    "name": "Печь для бани Эверест Steam Master 18 (310) Чугун",
+    "image": "/images/stoves/0634_pech-dlya-bani-everest-steam-master-18-310-chugun.jpg"
+  },
+  {
+    "id": 635,
+    "name": "Гефест ЗК (ПБ-02М-ЗК)",
+    "image": "/images/stoves/0635_gefest-zk-pb-02m-zk.png"
+  },
+  {
+    "id": 636,
+    "name": "Гефест ЗК (ПБ-03ПС-ЗК)",
+    "image": "/images/stoves/0636_gefest-zk-pb-03ps-zk.png"
+  },
+  {
+    "id": 637,
+    "name": "Печь для бани Ермак 24 Люкс",
+    "image": "/images/stoves/0637_pech-dlya-bani-ermak-24-lyuks.jpg"
+  },
+  {
+    "id": 638,
+    "name": "Печь для бани Везувий Легенда 28 (205) Талькохлорит",
+    "image": "/images/stoves/0638_pech-dlya-bani-vezuviy-legenda-28-205-talkohlorit.jpg"
+  },
+  {
+    "id": 639,
+    "name": "Печь для бани Сибирский утёс-20 ЛП Профи Панорама",
+    "image": "/images/stoves/0639_pech-dlya-bani-sibirskiy-utes-20-lp-profi-panorama.jpg"
+  },
+  {
+    "id": 640,
+    "name": "Сибирь-32 Каминная (НМК)",
+    "image": "/images/stoves/0640_sibir-32-kaminnaya-nmk.jpg"
+  },
+  {
+    "id": 641,
+    "name": "Печь для бани Ермак 20 Премиум (Нержавейка)",
+    "image": "/images/stoves/0641_pech-dlya-bani-ermak-20-premium-nerjaveyka.jpg"
+  },
+  {
+    "id": 642,
+    "name": "Гефест Ураган ЗК (ПБ-03С-ЗК Ураган)",
+    "image": "/images/stoves/0642_gefest-uragan-zk-pb-03s-zk-uragan.png"
+  },
+  {
+    "id": 644,
+    "name": "Гефест (ПБ-02ПС)",
+    "image": "/images/stoves/0644_gefest-pb-02ps.png"
+  },
+  {
+    "id": 645,
+    "name": "Гефест Ураган ЗК (ПБ-03МС-ЗК Ураган)",
+    "image": "/images/stoves/0645_gefest-uragan-zk-pb-03ms-zk-uragan.png"
+  },
+  {
+    "id": 646,
+    "name": "Банная печь Варвара Терма Сказка удлиненная",
+    "image": "/images/stoves/0646_bannaya-pech-varvara-terma-skazka-udlinennaya.jpg"
+  },
+  {
+    "id": 647,
+    "name": "Гефест ЗК (ПБ-02С-ЗК)",
+    "image": "/images/stoves/0647_gefest-zk-pb-02s-zk.png"
+  },
+  {
+    "id": 648,
+    "name": "Атмосфера-М сетка нерж (Про-металл)",
+    "image": "/images/stoves/0648_atmosfera-m-setka-nerzh-pro-metall.jpg"
+  },
+  {
+    "id": 649,
+    "name": "Банная печь Эверест Steam Master 24 (310) Чугун б/в",
+    "image": "/images/stoves/0649_bannaya-pech-everest-steam-master-24-310-chugun-b-v.jpg"
+  },
+  {
+    "id": 650,
+    "name": "Печь для бани Эверест Steam Master 24 (310) Чугун",
+    "image": "/images/stoves/0650_pech-dlya-bani-everest-steam-master-24-310-chugun.jpg"
+  },
+  {
+    "id": 651,
+    "name": "Печь для бани Эверест Steam Master GALAXY 18 (310) Чугун",
+    "image": "/images/stoves/0651_pech-dlya-bani-everest-steam-master-galaxy-18-310-chugun.jpg"
+  },
+  {
+    "id": 652,
+    "name": "Гефест ЗК (ПБ-02МС-ЗК)",
+    "image": "/images/stoves/0652_gefest-zk-pb-02ms-zk.png"
+  },
+  {
+    "id": 655,
+    "name": "Банная печь Ермак 20 Сетка-Премиум (Нержавейка)",
+    "image": "/images/stoves/0655_bannaya-pech-ermak-20-setka-premium-nerjaveyka.jpg"
+  },
+  {
+    "id": 656,
+    "name": "Гефест УРАГАН (ПБ-02МС Ураган)",
+    "image": "/images/stoves/0656_gefest-uragan-pb-02ms-uragan.png"
+  },
+  {
+    "id": 657,
+    "name": "Банная печь GRILL'D Violet Long PRO",
+    "image": "/images/stoves/0657_bannaya-pech-grilld-violet-long-pro.jpg"
+  },
+  {
+    "id": 658,
+    "name": "Гефест ЗК (ПБ-02П-ЗК)",
+    "image": "/images/stoves/0658_gefest-zk-pb-02p-zk.png"
+  },
+  {
+    "id": 659,
+    "name": "Мини 'До 16 м³' - Змеевик + Россо Леванте (Ферингер)",
+    "image": "/images/stoves/0659_mini-do-16-m---zmeevik--rosso-levante-feringer.jpg"
+  },
+  {
+    "id": 660,
+    "name": "Мини 'До 16 м³' - Змеевик + Сильвия Оро (Ферингер)",
+    "image": "/images/stoves/0660_mini-do-16-m---zmeevik--silviya-oro-feringer.jpg"
+  },
+  {
+    "id": 661,
+    "name": "Макси 'До 30 м³' - Змеевик наборный (Ферингер)",
+    "image": "/images/stoves/0661_maksi-do-30-m---zmeevik-nabornyy-feringer.jpg"
+  },
+  {
+    "id": 662,
+    "name": "Гефест 3К (ПБ-01-ЗК)",
+    "image": "/images/stoves/0662_gefest-3k-pb-01-zk.png"
+  },
+  {
+    "id": 663,
+    "name": "Печь для бани Эверест Steam Master 30 INOX",
+    "image": "/images/stoves/0663_pech-dlya-bani-everest-steam-master-30-inox.jpg"
+  },
+  {
+    "id": 664,
+    "name": "Гром 30",
+    "image": "/images/stoves/0664_grom-30.png"
+  },
+  {
+    "id": 665,
+    "name": "Гефест Ураган ЗК (ПБ-03ПС-ЗК Ураган)",
+    "image": "/images/stoves/0665_gefest-uragan-zk-pb-03ps-zk-uragan.png"
+  },
+  {
+    "id": 666,
+    "name": "Банная печь Эверест Steam Master GALAXY 24 (310) Чугун",
+    "image": "/images/stoves/0666_bannaya-pech-everest-steam-master-galaxy-24-310-chugun.jpg"
+  },
+  {
+    "id": 667,
+    "name": "Гефест 3К (ПБ-01М-ЗК)",
+    "image": "/images/stoves/0667_gefest-3k-pb-01m-zk.png"
+  },
+  {
+    "id": 668,
+    "name": "Печь для бани Эверест Steam Master 38 INOX б/в",
+    "image": "/images/stoves/0668_pech-dlya-bani-everest-steam-master-38-inox-b-v.jpg"
+  },
+  {
+    "id": 669,
+    "name": "Гефест ЗК (ПБ-02ПС-ЗК)",
+    "image": "/images/stoves/0669_gefest-zk-pb-02ps-zk.png"
+  },
+  {
+    "id": 670,
+    "name": "Гефест УРАГАН (ПБ-02ПС Ураган)",
+    "image": "/images/stoves/0670_gefest-uragan-pb-02ps-uragan.png"
+  },
+  {
+    "id": 671,
+    "name": "Гефест 3К (ПБ-01С-ЗК)",
+    "image": "/images/stoves/0671_gefest-3k-pb-01s-zk.png"
+  },
+  {
+    "id": 672,
+    "name": "Гефест ЗК (ПБ-01П-ЗК)",
+    "image": "/images/stoves/0672_gefest-zk-pb-01p-zk.png"
+  },
+  {
+    "id": 673,
+    "name": "Cometa 350 Vega Window Max Grill`D (Grill'D)",
+    "image": "/images/stoves/0673_cometa-350-vega-window-max-grilld.jpg"
+  },
+  {
+    "id": 674,
+    "name": "Банная печь Ермак 24 Сетка-Люкс",
+    "image": "/images/stoves/0674_bannaya-pech-ermak-24-setka-lyuks.jpg"
+  },
+  {
+    "id": 675,
+    "name": "Гефест 3К (ПБ-01МС-ЗК)",
+    "image": "/images/stoves/0675_gefest-3k-pb-01ms-zk.png"
+  },
+  {
+    "id": 676,
+    "name": "Печь для бани Сибирь-30 ЛКП Профи Панорама (2.0)",
+    "image": "/images/stoves/0676_pech-dlya-bani-sibir-30-lnzp-profi-panorama.jpg"
+  },
+  {
+    "id": 677,
+    "name": "Печь для бани Эверест Steam Master 30 (320) Чугун",
+    "image": "/images/stoves/0677_pech-dlya-bani-everest-steam-master-30-320-chugun.jpg"
+  },
+  {
+    "id": 678,
+    "name": "Гефест ЗК (ПБ-01ПС-ЗК)",
+    "image": "/images/stoves/0678_gefest-zk-pb-01ps-zk.png"
+  },
+  {
+    "id": 679,
+    "name": "Гефест Ураган ЗК (ПБ-02С-ЗК Ураган)",
+    "image": "/images/stoves/0679_gefest-uragan-zk-pb-02s-zk-uragan.png"
+  },
+  {
+    "id": 681,
+    "name": "Гефест Ураган ЗК (ПБ-02МС-ЗК Ураган)",
+    "image": "/images/stoves/0681_gefest-uragan-zk-pb-02ms-zk-uragan.png"
+  },
+  {
+    "id": 682,
+    "name": "Банная печь GRILL'D Violet Long Window Max PRO",
+    "image": "/images/stoves/0682_bannaya-pech-grilld-violet-long-window-max-pro.jpg"
+  },
+  {
+    "id": 683,
+    "name": "Оптима 'До 23 м³' - Змеевик + Россо Леванте (Ферингер)",
+    "image": "/images/stoves/0683_optima-do-23-m---zmeevik--rosso-levante-feringer.jpg"
+  },
+  {
+    "id": 684,
+    "name": "Оптима 'До 23 м³' - Змеевик + Сильвия Оро (Ферингер)",
+    "image": "/images/stoves/0684_optima-do-23-m---zmeevik--silviya-oro-feringer.jpg"
+  },
+  {
+    "id": 685,
+    "name": "Печь для бани Эверест Steam Master GALAXY 30 (320) Чугун",
+    "image": "/images/stoves/0685_pech-dlya-bani-everest-steam-master-galaxy-30-320-chugun.jpg"
+  },
+  {
+    "id": 686,
+    "name": "Атмосфера-L сетка нерж (Pro-metall)",
+    "image": "/images/stoves/0686_atmosfera-l-setka-nerzh-pro-metall.jpg"
+  },
+  {
+    "id": 687,
+    "name": "Гефест Ураган ЗК (ПБ-02ПС-ЗК Ураган)",
+    "image": "/images/stoves/0687_gefest-uragan-zk-pb-02ps-zk-uragan.png"
+  },
+  {
+    "id": 688,
+    "name": "Печь для бани Эверест Steam Master GALAXY 24 (310) Чугун GOLD",
+    "image": "/images/stoves/0688_pech-dlya-bani-everest-steam-master-galaxy-24-310-chugun-gold.jpg"
+  },
+  {
+    "id": 689,
+    "name": "Гефест Ураган ЗК (ПБ-01С-ЗК Ураган)",
+    "image": "/images/stoves/0689_gefest-uragan-zk-pb-01s-zk-uragan.png"
+  },
+  {
+    "id": 690,
+    "name": "Гефест Ураган ЗК (ПБ-01МС-ЗК Ураган)",
+    "image": "/images/stoves/0690_gefest-uragan-zk-pb-01ms-zk-uragan.png"
+  },
+  {
+    "id": 691,
+    "name": "Мини 'До 16 м³' - Жадеит (Ферингер)",
+    "image": "/images/stoves/0691_mini-do-16-m---jadeit-feringer.jpg"
+  },
+  {
+    "id": 692,
+    "name": "Гефест Ураган ЗК (ПБ-01ПС-ЗК Ураган)",
+    "image": "/images/stoves/0692_gefest-uragan-zk-pb-01ps-zk-uragan.png"
+  },
+  {
+    "id": 693,
+    "name": "Атмосфера-XL сетка нерж (Pro-metall)",
+    "image": "/images/stoves/0693_atmosfera-xl-setka-nerzh-pro-metall.jpg"
+  },
+  {
+    "id": 694,
+    "name": "Cometa 180 Vega Short Grill`D Pro (Grill'D)",
+    "image": "/images/stoves/0694_cometa-180-vega-short-grilld-pro.jpg"
+  },
+  {
+    "id": 695,
+    "name": "Печь для бани Эверест Легкий пар Профи Ковка чугунная ЗК",
+    "image": "/images/stoves/0695_pech-dlya-bani-everest-legkij-par-profi-kovka-chugunnaya-zk.jpg"
+  },
+  {
+    "id": 696,
+    "name": "Макси 'До 30 м³' - Змеевик + Россо Леванте (Ферингер)",
+    "image": "/images/stoves/0696_maksi-do-30-m---zmeevik--rosso-levante-feringer.jpg"
+  },
+  {
+    "id": 697,
+    "name": "Макси 'До 30 м³' - Змеевик + Сильвия Оро (Ферингер)",
+    "image": "/images/stoves/0697_maksi-do-30-m---zmeevik--silviya-oro-feringer.jpg"
+  },
+  {
+    "id": 698,
+    "name": "Cometa 180 Vega Long Grill`D Pro (Grill'D)",
+    "image": "/images/stoves/0698_cometa-180-vega-long-grilld-pro.jpg"
+  },
+  {
+    "id": 699,
+    "name": "Атмосфера-L комбинированная сетка-ламель Пироксенит (Pro-metall)",
+    "image": "/images/stoves/0699_atmosfera-l-kombinirovannaya-setka-lamel-piroksenit-pro-metall.jpg"
+  },
+  {
+    "id": 700,
+    "name": "Оптима 'До 23 м³' - Жадеит (Ферингер)",
+    "image": "/images/stoves/0700_optima-do-23-m---jadeit-feringer.jpg"
+  },
+  {
+    "id": 701,
+    "name": "Атмосфера-L комбинированная (Pro-metall)",
+    "image": "/images/stoves/0701_atmosfera-l-kombinirovannaya-pro-metall.jpg"
+  },
+  {
+    "id": 702,
+    "name": "Печь для бани Ермак 30 Люкс (Нержавейка)",
+    "image": "/images/stoves/0702_pech-dlya-bani-ermak-30-lyuks-nerzhavejka.jpg"
+  },
+  {
+    "id": 703,
+    "name": "Печь для бани Эверест Steam Master 18 Чугун Ламель Талькохлорит",
+    "image": "/images/stoves/0703_pech-dlya-bani-everest-steam-master-18-chugun-lamel-talkohlorit.jpg"
+  },
+  {
+    "id": 704,
+    "name": "Гром 50",
+    "image": "/images/stoves/0704_grom-50.png"
+  },
+  {
+    "id": 705,
+    "name": "Атмосфера-L комбинированная сетка-ламель Пироксенит (Pro-metall)",
+    "image": "/images/stoves/0705_atmosfera-l-kombinirovannaya-setka-lamel-piroksenit.jpg"
+  },
+  {
+    "id": 706,
+    "name": "Cometa 180 Vega Long Window Max Pro (Grill'D)",
+    "image": "/images/stoves/0706_cometa-180-vega-long-window-max-pro.jpg"
+  },
+  {
+    "id": 707,
+    "name": "Cometa 180 Vega Short Window Max Grill`D Pro (Grill'D)",
+    "image": "/images/stoves/0707_cometa-180-vega-short-window-max-grilld-pro.jpg"
+  },
+  {
+    "id": 708,
+    "name": "Печь для бани Ермак 24 Люкс GOLD",
+    "image": "/images/stoves/0708_pech-dlya-bani-ermak-24-lyuks-gold.jpg"
+  },
+  {
+    "id": 709,
+    "name": "Атмосфера-L змеевик",
+    "image": "/images/stoves/0709_atmosfera-l-zmeevik.jpg"
+  },
+  {
+    "id": 710,
+    "name": "Печь для бани Эверест Steam Master 30 INOX Пироксенит Элит S-40",
+    "image": "/images/stoves/0710_pech-dlya-bani-everest-steam-master-30-inox-piroksenit-elit-s-40.jpg"
+  },
+  {
+    "id": 711,
+    "name": "Печь для бани Эверест Steam Master 30 INOX Ламель Амфиболит S-20",
+    "image": "/images/stoves/0711_pech-dlya-bani-everest-steam-master-30-inox-lamel-amfibolit-s-20.jpg"
+  },
+  {
+    "id": 712,
+    "name": "Печь для бани Ермак 24 Сетка-Люкс GOLD",
+    "image": "/images/stoves/0712_pech-dlya-bani-ermak-24-setka-lyuks-gold.jpg"
+  },
+  {
+    "id": 713,
+    "name": "Атмосфера-L комбинированная сетка-ламель Верде Гватемала (Pro-metall)",
+    "image": "/images/stoves/0713_atmosfera-l-kombinirovannaya-setka-lamel-verde-gvatemala-pro-metall.jpg"
+  },
+  {
+    "id": 714,
+    "name": "Атмосфера-L комбинированная сетка-ламель Окаменевшее дерево наборный (Pro-metall)",
+    "image": "/images/stoves/0714_atmosfera-l-kombinirovannaya-setka-lamel-okamenevshee-derevo-nabornyj-pro-metall.jpg"
+  },
+  {
+    "id": 715,
+    "name": "Банная печь Эверест 24 (280) Пироксенит Элит",
+    "image": "/images/stoves/0715_bannaya-pech-everest-24-280-piroksenit-elit.jpg"
+  },
+  {
+    "id": 716,
+    "name": "Атмосфера-L комбинированная сетка-ламель Жадеит наборный (Pro-metall)",
+    "image": "/images/stoves/0716_atmosfera-l-kombinirovannaya-setka-lamel-zhadeit-nabornyj.jpg"
+  },
+  {
+    "id": 717,
+    "name": "Макси 'До 30 м³' - Жадеит (Ферингер)",
+    "image": "/images/stoves/0717_maksi-do-30-m---jadeit-feringer.jpg"
+  },
+  {
+    "id": 718,
+    "name": "ПБ Регалия Super Inox НК",
+    "image": "/images/stoves/0718_pb-regaliya-super-inox-nk.jpg"
+  },
+  {
+    "id": 719,
+    "name": "Оптима 'До 23 м³' - Жадеит бучардированный (Ферингер)",
+    "image": "/images/stoves/0719_optima-do-23-m---jadeit-buchardirovannyy-feringer.jpg"
+  },
+  {
+    "id": 720,
+    "name": "Банная печь Эверест Президент 24 (280) Талькохлорит",
+    "image": "/images/stoves/0720_bannaya-pech-everest-prezident-24-280-talkohlorit.jpg"
+  },
+  {
+    "id": 721,
+    "name": "Cometa 180 Vega Window, Stone (Серпентинит) Grill`D Pro (Grill'D)",
+    "image": "/images/stoves/0721_cometa-180-vega-window-stone-serpentinit-grilld-pro.jpg"
+  },
+  {
+    "id": 722,
+    "name": "Атмосфера-L в ламелях Талькохлорит наборный рисунок (Pro-metall)",
+    "image": "/images/stoves/0722_atmosfera-l-v-lamelyah-talkohlorit-nabornyj-risunok.jpg"
+  },
+  {
+    "id": 723,
+    "name": "Банная печь Эверест Steam Master 30 Чугун Ламель Рваный камень",
+    "image": "/images/stoves/0723_bannaya-pech-everest-steam-master-30-chugun-lamel-rvanyj-kamen.jpg"
+  },
+  {
+    "id": 724,
+    "name": "Атмосфера-V сетка нерж (Pro-metall)",
+    "image": "/images/stoves/0724_atmosfera-v-setka-nerzh-pro-metall.jpg"
+  },
+  {
+    "id": 725,
+    "name": "Атмосфера-XL змеевик (Pro-metall)",
+    "image": "/images/stoves/0725_atmosfera-xl-zmeevik.jpg"
+  },
+  {
+    "id": 726,
+    "name": "Печь для бани Эверест Steam Master 30 Чугун Пироксенит Элит S-40",
+    "image": "/images/stoves/0726_pech-dlya-bani-everest-steam-master-30-chugun-piroksenit-elit-s-40.jpg"
+  },
+  {
+    "id": 727,
+    "name": "Печь для бани Эверест Steam Master 30 Чугун Талькохлорит S-40",
+    "image": "/images/stoves/0727_pech-dlya-bani-everest-steam-master-30-chugun-talkohlorit-s-40.jpg"
+  },
+  {
+    "id": 728,
+    "name": "Атмосфера-L в ламелях Верде Гватемала наборный рисунок (Pro-metall)",
+    "image": "/images/stoves/0728_atmosfera-l-v-lamelyah-verde-gvatemala-nabornyj-risunok-pro-metall.jpg"
+  },
+  {
+    "id": 729,
+    "name": "Атмосфера-L окаменевшее дерево (Pro-metall)",
+    "image": "/images/stoves/0729_atmosfera-l-okamenevshee-derevo-pro-metall.jpg"
+  },
+  {
+    "id": 730,
+    "name": "Атмосфера-XL в ламелях Пироксенит наборный рисунок (Pro-metall)",
+    "image": "/images/stoves/0730_atmosfera-xl-v-lamelyah-piroksenit-nabornyj-risunok.jpg"
+  },
+  {
+    "id": 731,
+    "name": "Атмосфера-XL в ламелях Талькохлорит наборный рисунок (Pro-metall)",
+    "image": "/images/stoves/0731_atmosfera-xl-v-lamelyah-talkohlorit-nabornyj-risunok-pro-metall.jpg"
+  },
+  {
+    "id": 732,
+    "name": "Атмосфера-L в облицовке Пироксенит (Pro-metall)",
+    "image": "/images/stoves/0732_atmosfera-l-v-oblicovke-piroksenit.jpg"
+  },
+  {
+    "id": 733,
+    "name": "Атмосфера-XL окаменевшее дерево (Pro-metall)",
+    "image": "/images/stoves/0733_atmosfera-xl-okamenevshee-derevo-pro-metall.jpg"
+  },
+  {
+    "id": 734,
+    "name": "Атмосфера-L в ламелях Жадеит наборный рисунок (Pro-metall)",
+    "image": "/images/stoves/0734_atmosfera-l-v-lamelyah-zhadeit-nabornyj-risunok.jpg"
+  },
+  {
+    "id": 735,
+    "name": "Атмосфера-L в облицовке Талькохлорит (Pro-metall)",
+    "image": "/images/stoves/0735_atmosfera-l-v-oblicovke-talkohlorit-pro-metall.jpg"
+  },
+  {
+    "id": 736,
+    "name": "Атмосфера-L в облицовке Пироксенит Элит (Pro-metall)",
+    "image": "/images/stoves/0736_atmosfera-l-v-oblicovke-piroksenit-elit-pro-metall.jpg"
+  },
+  {
+    "id": 737,
+    "name": "Атмосфера-XL в ламелях Верде Гватемала наборный рисунок (Pro-metall)",
+    "image": "/images/stoves/0737_atmosfera-xl-v-lamelyah-verde-gvatemala-nabornyj-risunok-pro-metall.jpg"
+  },
+  {
+    "id": 738,
+    "name": "Атмосфера-XL в ламелях Окаменевшее дерево наборный рисунок (Pro-metall)",
+    "image": "/images/stoves/0738_atmosfera-xl-v-lamelyah-okamenevshee-derevo-nabornyj-risunok-pro-metall.jpg"
+  },
+  {
+    "id": 739,
+    "name": "Атмосфера XL в облицовке Талькохлорит (Pro-metall)",
+    "image": "/images/stoves/0739_atmosfera-xl-v-oblicovke-talkohlorit-pro-metall.jpg"
+  },
+  {
+    "id": 740,
+    "name": "Печь дровяная Violet Retro Long (Grill'D)",
+    "image": "/images/stoves/0740_pech-drovyanaya-violet-retro-long.jpg"
+  },
+  {
+    "id": 741,
+    "name": "Печь дровяная Violet Retro Short (Grill'D)",
+    "image": "/images/stoves/0741_pech-drovyanaya-violet-retro-short.jpg"
+  },
+  {
+    "id": 742,
+    "name": "Атмосфера XL в облицовке Амфиболит (Pro-metall)",
+    "image": "/images/stoves/0742_atmosfera-xl-v-oblicovke-amfibolit-pro-metall.jpg"
+  },
+  {
+    "id": 743,
+    "name": "Атмосфера XL в облицовке Пироксенит (Pro-metall)",
+    "image": "/images/stoves/0743_atmosfera-xl-v-oblicovke-piroksenit-pro-metall.jpg"
+  },
+  {
+    "id": 744,
+    "name": "Гром 80",
+    "image": "/images/stoves/0744_grom-80.png"
+  },
+  {
+    "id": 745,
+    "name": "Атмосфера L в облицовке Талькохлорит Узор №7 (Pro-metall)",
+    "image": "/images/stoves/0745_atmosfera-l-v-oblicovke-talkohlorit-uzor-7-pro-metall.jpg"
+  },
+  {
+    "id": 746,
+    "name": "Атмосфера XL в облицовке Пироксенит Элит (Pro-metall)",
+    "image": "/images/stoves/0746_atmosfera-xl-v-oblicovke-piroksenit-elit.jpg"
+  },
+  {
+    "id": 747,
+    "name": "Атмосфера-XL в ламелях Жадеит наборный рисунок (Pro-melall)",
+    "image": "/images/stoves/0747_atmosfera-xl-v-lamelyah-zhadeit-nabornyj-risunok-pro-melall.jpg"
+  },
+  {
+    "id": 748,
+    "name": "Атмосфера XL в облицовке Талькохлорит Узор №7 (Pro-metall)",
+    "image": "/images/stoves/0748_atmosfera-xl-v-oblicovke-talkohlorit-uzor-7-pro-metall.jpg"
+  },
+  {
+    "id": 749,
+    "name": "Мини 'До 16 м³' - Окаменевшее дерево (Ферингер)",
+    "image": "/images/stoves/0749_mini-do-16-m---okamenevshee-derevo-feringer.jpg"
+  },
+  {
+    "id": 750,
+    "name": "Оптима 'До 23 м³' - Окаменевшее дерево (Ферингер)",
+    "image": "/images/stoves/0750_optima-do-23-m---okamenevshee-derevo-feringer.jpg"
+  },
+  {
+    "id": 751,
+    "name": "Гефест ЗК (ПБ-100П-ЗК)",
+    "image": "/images/stoves/0751_gefest-zk-pb-100p-zk.png"
+  },
+  {
+    "id": 752,
+    "name": "Гефест ЗК (ПБ-100ПС-ЗК)",
+    "image": "/images/stoves/0752_gefest-zk-pb-100ps-zk.png"
+  },
+  {
+    "id": 753,
+    "name": "Макси 'До 30 м³' - Окаменевшее дерево (Ферингер)",
+    "image": "/images/stoves/0753_maksi-do-30-m---okamenevshee-derevo-feringer.jpg"
+  }
+]
