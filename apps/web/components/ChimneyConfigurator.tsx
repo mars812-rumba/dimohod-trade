@@ -44,6 +44,7 @@ import {
   type EstimateMeasurement,
 } from "@/lib/chimneyEstimate";
 import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
+import { EstimateLeadDialog } from "./EstimateLeadDialog";
 
 type RouteType = "ceiling" | "wall";
 type StoveType = "bania" | "pech" | "kamin" | "tt-kotel" | "gaz";
@@ -2425,14 +2426,20 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                 {estimate.unpricedLineCount ? ` · ${estimate.unpricedLineCount} требуют уточнения` : ""}
               </small>
             </div>
-            <button
-              disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"}
-              onClick={savePdf}
-              type="button"
-            >
-              <Download aria-hidden size={17} />
-              {pdfStatus === "generating" ? "Формируем PDF…" : "Скачать PDF-смету"}
-            </button>
+            <div className="configurator-estimate-actions">
+              <button
+                disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"}
+                onClick={savePdf}
+                type="button"
+              >
+                <Download aria-hidden size={17} />
+                {pdfStatus === "generating" ? "Формируем PDF…" : "Скачать PDF-смету"}
+              </button>
+              <EstimateLeadDialog
+                disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"}
+                estimate={estimate}
+              />
+            </div>
             {pdfStatus === "error" ? (
               <p role="alert">Не удалось сформировать PDF. Попробуйте ещё раз.</p>
             ) : null}
@@ -2463,9 +2470,15 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           <strong>Комплект рассчитан по замерам</strong>
           <span>{estimate.unpricedLineCount ? `Предварительный итог ${formatRub(estimate.knownSubtotalRub)} · ${estimate.unpricedLineCount} поз. без цены.` : `Итого ${formatRub(estimate.knownSubtotalRub)}.`}</span>
         </div>
-        <button disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"} type="button" onClick={savePdf}>
-          <Download aria-hidden size={16} /> {pdfStatus === "generating" ? "Формируем…" : "Сохранить PDF"}
-        </button>
+        <div className="configurator-result-action-buttons">
+          <button disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"} type="button" onClick={savePdf}>
+            <Download aria-hidden size={16} /> {pdfStatus === "generating" ? "Формируем…" : "Сохранить PDF"}
+          </button>
+          <EstimateLeadDialog
+            disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"}
+            estimate={estimate}
+          />
+        </div>
       </div>
       </>
       )}

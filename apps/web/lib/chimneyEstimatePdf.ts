@@ -20,7 +20,7 @@ function pdfDate(date: Date): string {
   }).format(date);
 }
 
-export async function downloadChimneyEstimatePdf(estimate: ChimneyEstimate): Promise<void> {
+async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
   const [pdfMakeModule, fontsModule] = await Promise.all([
     import("pdfmake/build/pdfmake"),
     import("pdfmake/build/vfs_fonts"),
@@ -141,5 +141,15 @@ export async function downloadChimneyEstimatePdf(estimate: ChimneyEstimate): Pro
     content,
   };
 
-  pdfMake.createPdf(documentDefinition).download(`smeta-dymohoda-${filenameDate(estimate.generatedAt)}.pdf`);
+  return pdfMake.createPdf(documentDefinition);
+}
+
+export async function createChimneyEstimatePdfBlob(estimate: ChimneyEstimate): Promise<Blob> {
+  const pdf = await createChimneyEstimatePdf(estimate);
+  return new Promise<Blob>((resolve) => pdf.getBlob(resolve));
+}
+
+export async function downloadChimneyEstimatePdf(estimate: ChimneyEstimate): Promise<void> {
+  const pdf = await createChimneyEstimatePdf(estimate);
+  pdf.download(`smeta-dymohoda-${filenameDate(estimate.generatedAt)}.pdf`);
 }

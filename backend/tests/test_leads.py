@@ -86,3 +86,72 @@ def test_rejects_lead_without_personal_data_consent(tmp_path, monkeypatch):
     )
     assert response.status_code == 422
     assert not (tmp_path / "leads").exists()
+
+
+def test_accepts_email_contact_and_sends_customer_confirmation(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.modules.leads.router.settings.media_storage_dir", str(tmp_path))
+    manager_deliveries = []
+    customer_deliveries = []
+    monkeypatch.setattr(
+        "app.modules.leads.router.send_lead_email",
+        lambda record, attachment: manager_deliveries.append((record, attachment)) or True,
+    )
+    monkeypatch.setattr(
+        "app.modules.leads.router.send_customer_confirmation_email",
+        lambda record, attachment: customer_deliveries.append((record, attachment)) or True,
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/leads",
+        data={
+            "name": "Анна",
+            "contact_method": "email",
+            "contact": "ANNA@example.com",
+            "source": "chimney-estimate",
+            "configuration": "BOM: труба — 2 шт.",
+            "personal_data_consent": "true",
+            "consent_version": "2026-08-11",
+        },
+        files={"attachment": ("smeta.pdf", b"pdf", "application/pdf")},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["customer_email_status"] == "sent"
+    assert manager_deliveries[0][0]["contact"] == "anna@example.com"
+    assert customer_deliveries[0][0]["contact_method"] == "email"
+
+
+def test_rejects_invalid_telegram_contact(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.modules.leads.router.settings.media_storage_dir", str(tmp_path))
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/leads",
+        data={
+            "name": "Иван",
+            "contact_method": "telegram",
+            "contact": "не ник",
+            "personal_data_consent": "true",
+            "consent_version": "2026-08-11",
+        },
+    )
+    assert response.status_code == 422
+    assert not (tmp_path / "leads").exists()
+
+
+def test_honeypot_filters_bot_without_saving_lead(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.modules.leads.router.settings.media_storage_dir", str(tmp_path))
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/leads",
+        data={
+            "name": "Spam Bot",
+            "phone": "+7 999 123-45-67",
+            "website": "https://spam.example",
+            "personal_data_consent": "true",
+            "consent_version": "2026-08-11",
+        },
+    )
+    assert response.status_code == 201
+    assert response.json()["email_status"] == "filtered"
+    assert not (tmp_path / "leads").exists()

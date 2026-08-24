@@ -137,3 +137,29 @@ export function formatRub(value: number): string {
     maximumFractionDigits: 0,
   }).format(value);
 }
+
+export function chimneyEstimateText(estimate: ChimneyEstimate): string {
+  const lines = estimate.lines.map((line, index) => {
+    const details = [
+      `${index + 1}. ${line.label}`,
+      line.article ? `арт. ${line.article}` : "артикул уточняется",
+      line.characteristics.join(" · "),
+      `${line.quantity} шт.`,
+      line.lineTotalRub === null ? "цена по запросу" : formatRub(line.lineTotalRub),
+    ].filter(Boolean);
+    return details.join(" | ");
+  });
+  return [
+    `Расчёт: ${estimate.profileName}`,
+    `Позиций: ${estimate.lines.length}; единиц: ${estimate.totalUnits}`,
+    `Итого по известным ценам: ${formatRub(estimate.knownSubtotalRub)}`,
+    estimate.unpricedLineCount ? `Без цены: ${estimate.unpricedLineCount}` : "",
+    "",
+    "BOM:",
+    ...lines,
+    "",
+    "Проверить перед заказом:",
+    ...estimate.reviewItems,
+    ...estimate.calculationErrors,
+  ].filter((line) => line !== "").join("\n");
+}
