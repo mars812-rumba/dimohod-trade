@@ -197,8 +197,8 @@ export function BanyaIntakeFlow({
       title: "Как измерить высоту заднего патрубка",
     },
     outletDiameter: {
-      src: `${assetBasePath}/images/measurements/stove-outlet-outer-diameter-photo.webp`,
-      alt: "Рулетка проходит через центр патрубка от одной наружной кромки до другой",
+      src: `${assetBasePath}/images/measurements/stove-outlet-outer-diameter-guide.webp`,
+      alt: "Наружный диаметр патрубка измеряется через центр от одной внешней стенки до другой",
       title: "Как измерить наружный диаметр патрубка",
     },
     roomHeight: {

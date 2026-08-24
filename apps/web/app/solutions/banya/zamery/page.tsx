@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description: "Пошаговая подготовка размеров печи, патрубка, здания и выбранной трассы для дальнейшего расчёта дымохода.",
     images: [
       {
-        url: "/images/measurements/stove-outlet-diameter-mobile.webp",
+        url: "/images/measurements/stove-outlet-outer-diameter-guide.webp",
         width: 1024,
         height: 1536,
         alt: "Схема наружного замера патрубка банной печи",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Замеры для расчёта дымохода в бане",
     description: "Пошаговая подготовка размеров для расчёта дымохода в бане.",
-    images: ["/images/measurements/stove-outlet-diameter-mobile.webp"],
+    images: ["/images/measurements/stove-outlet-outer-diameter-guide.webp"],
   },
 };
 
