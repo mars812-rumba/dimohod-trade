@@ -1,5 +1,6 @@
 .hero {
   display: flex;
+  height: calc(100vh - 68px);
   height: calc(100svh - 68px);
   flex-direction: column;
   color: #102127;
@@ -136,6 +137,7 @@
 
 @media (max-width: 720px) {
   .hero {
+    height: calc(100vh - 72px);
     height: calc(100svh - 72px);
   }
 
