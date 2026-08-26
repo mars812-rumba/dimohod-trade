@@ -29,14 +29,14 @@ const slides = [
 const mobileVideoCues = [
   {
     start: 0,
-    end: 6,
+    end: 8,
     title: "Собственное производство",
     description: "Точное изготовление и контроль качества",
     Icon: IconBuildingFactory2,
   },
   {
     start: 8,
-    end: 14,
+    end: 16,
     title: "Лазерная сварка в стык",
     description: "Ровный и аккуратный шов",
     Icon: IconSparkles,
@@ -120,6 +120,8 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
   const videoCue = activeVideoCue === null ? null : mobileVideoCues[activeVideoCue];
+  const displayedVideoCue = videoCue ?? mobileVideoCues[0];
+  const usesMobileVideo = isMobile && !reduceMotion && !mobileVideoFailed;
 
   const syncVideoCue = (currentTime: number) => {
     const cueIndex = mobileVideoCues.findIndex(
@@ -130,7 +132,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
 
   return (
     <section
-      className={styles.hero}
+      className={`${styles.hero} ${usesMobileVideo ? styles.heroWithMobileVideo : ""}`}
       role="region"
       aria-roledescription="карусель"
       aria-label="Визуализации вариантов дымоходных систем"
@@ -144,6 +146,20 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         touchStartX.current = null;
       }}
     >
+      {usesMobileVideo ? (
+        <div className={styles.mobileCueSlot} aria-live="off">
+          <div key={activeVideoCue ?? "initial"} className={styles.videoCue}>
+            <span className={styles.videoCueIcon} aria-hidden="true">
+              <displayedVideoCue.Icon size={25} strokeWidth={1.7} />
+            </span>
+            <span className={styles.videoCueCopy}>
+              <strong>{displayedVideoCue.title}</strong>
+              <span>{displayedVideoCue.description}</span>
+            </span>
+          </div>
+        </div>
+      ) : null}
+
       <h1 className={styles.headline}>
         Дымоход под ваш отопитель — со схемой и проверкой комплекта.
       </h1>
@@ -160,7 +176,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             unoptimized
             sizes="100vw"
           />
-          {isMobile && !reduceMotion && !mobileVideoFailed ? (
+          {usesMobileVideo ? (
             <video
               ref={mobileVideoRef}
               className={`${styles.mobileVideo} ${mobileVideoPlaying ? styles.mobileVideoPlaying : ""}`}
@@ -178,11 +194,9 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
               onTimeUpdate={(event) => syncVideoCue(event.currentTarget.currentTime)}
               onPause={() => {
                 setMobileVideoPlaying(false);
-                setActiveVideoCue(null);
               }}
               onWaiting={() => {
                 setMobileVideoPlaying(false);
-                setActiveVideoCue(null);
               }}
               onError={() => {
                 setMobileVideoPlaying(false);
@@ -192,17 +206,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             >
               <source src={`${assetBasePath}/videos/home/0826.mp4`} type="video/mp4" />
             </video>
-          ) : null}
-          {isMobile && mobileVideoPlaying && videoCue ? (
-            <div key={activeVideoCue} className={styles.videoCue} aria-live="off">
-              <span className={styles.videoCueIcon} aria-hidden="true">
-                <videoCue.Icon size={25} strokeWidth={1.7} />
-              </span>
-              <span className={styles.videoCueCopy}>
-                <strong>{videoCue.title}</strong>
-                <span>{videoCue.description}</span>
-              </span>
-            </div>
           ) : null}
         </div>
 

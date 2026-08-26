@@ -1,4 +1,5 @@
 .hero {
+  position: relative;
   display: flex;
   height: calc(100vh - 68px);
   height: calc(100svh - 68px);
@@ -51,6 +52,10 @@
 }
 
 .videoCue {
+  display: none;
+}
+
+.mobileCueSlot {
   display: none;
 }
 
@@ -166,7 +171,7 @@
     height: 100%;
     opacity: 0;
     object-fit: cover;
-    object-position: center;
+    object-position: center 56%;
     pointer-events: none;
     transition: opacity 160ms ease;
   }
@@ -175,25 +180,26 @@
     opacity: 1;
   }
 
+  .mobileCueSlot {
+    display: flex;
+    flex: 0 0 72px;
+    align-items: stretch;
+    min-height: 72px;
+    background: #102127;
+  }
+
   .videoCue {
-    position: absolute;
-    z-index: 2;
-    top: 12px;
-    right: 14px;
-    bottom: auto;
-    left: 14px;
     display: grid;
     grid-template-columns: 46px minmax(0, 1fr);
     gap: 12px;
     align-items: center;
-    min-height: 72px;
-    padding: 12px 14px;
+    width: 100%;
+    min-height: 100%;
+    padding: 10px 14px;
     overflow: hidden;
     color: #fff;
-    background: rgba(16, 33, 39, 0.9);
-    box-shadow: 0 14px 32px rgba(4, 15, 19, 0.24);
-    clip-path: inset(0 0 0 0);
-    animation: videoCueReveal 420ms cubic-bezier(0.16, 1, 0.3, 1);
+    background: linear-gradient(105deg, #102127 0%, #173d4c 72%, #102127 100%);
+    animation: videoCueFade 380ms ease-out;
     pointer-events: none;
   }
 
@@ -230,7 +236,7 @@
 
   .cta {
     right: 14px;
-    bottom: max(12px, env(safe-area-inset-bottom));
+    bottom: max(72px, calc(env(safe-area-inset-bottom) + 56px));
     width: calc(100% - 28px);
     min-height: 60px;
     padding-inline: 14px;
@@ -248,6 +254,20 @@
     font-size: clamp(14px, 4vw, 17px);
   }
 
+  .heroWithMobileVideo .headline {
+    position: absolute;
+    z-index: 3;
+    top: 72px;
+    right: 0;
+    left: 0;
+    min-height: 52px;
+    padding: 8px 14px;
+    background: linear-gradient(180deg, rgba(16, 33, 39, 0.92), rgba(16, 33, 39, 0.72));
+    font-size: clamp(13px, 3.65vw, 15px);
+    line-height: 1.22;
+    pointer-events: none;
+  }
+
   .renderDisclosure {
     top: 12px;
     left: 12px;
@@ -262,6 +282,7 @@
   }
 
   .cta {
+    bottom: max(60px, calc(env(safe-area-inset-bottom) + 48px));
     min-height: 52px;
     padding-block: 7px;
   }
@@ -270,10 +291,13 @@
     display: none;
   }
 
+  .mobileCueSlot {
+    flex-basis: 64px;
+    min-height: 64px;
+  }
+
   .videoCue {
-    top: 10px;
     grid-template-columns: 40px minmax(0, 1fr);
-    min-height: 62px;
     padding: 10px 12px;
   }
 
@@ -281,19 +305,22 @@
     width: 40px;
     height: 40px;
   }
+
+  .heroWithMobileVideo .headline {
+    top: 64px;
+    min-height: 46px;
+    padding-block: 6px;
+    font-size: 13px;
+  }
 }
 
-@keyframes videoCueReveal {
+@keyframes videoCueFade {
   from {
     opacity: 0;
-    clip-path: inset(0 100% 0 0);
-    transform: translateY(8px);
   }
 
   to {
     opacity: 1;
-    clip-path: inset(0 0 0 0);
-    transform: translateY(0);
   }
 }
 
