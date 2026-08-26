@@ -31,6 +31,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   const [reduceMotion, setReduceMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileVideoFailed, setMobileVideoFailed] = useState(false);
+  const [mobileVideoPlaying, setMobileVideoPlaying] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -118,7 +119,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
           {isMobile && !reduceMotion && !mobileVideoFailed ? (
             <video
               ref={mobileVideoRef}
-              className={styles.mobileVideo}
+              className={`${styles.mobileVideo} ${mobileVideoPlaying ? styles.mobileVideoPlaying : ""}`}
               autoPlay
               loop
               muted
@@ -126,7 +127,13 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
               preload="metadata"
               poster={imagePath}
               aria-hidden="true"
-              onError={() => setMobileVideoFailed(true)}
+              onPlaying={() => setMobileVideoPlaying(true)}
+              onPause={() => setMobileVideoPlaying(false)}
+              onWaiting={() => setMobileVideoPlaying(false)}
+              onError={() => {
+                setMobileVideoPlaying(false);
+                setMobileVideoFailed(true);
+              }}
             >
               <source src={`${assetBasePath}/videos/home/0826.mp4`} type="video/mp4" />
             </video>
