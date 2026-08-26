@@ -4,7 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   IconArrowRight,
+  IconAssembly,
+  IconBuildingFactory2,
   IconFileTypePdf,
+  IconSparkles,
+  IconTruckDelivery,
 } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import styles from "./HomeHeroCarousel.module.css";
@@ -22,6 +26,37 @@ const slides = [
   ["designer-fireplace.webp", "Подвесной камин и дымоход в интерьере"],
 ] as const;
 
+const mobileVideoCues = [
+  {
+    start: 0,
+    end: 6,
+    title: "Собственное производство",
+    description: "Точное изготовление и контроль качества",
+    Icon: IconBuildingFactory2,
+  },
+  {
+    start: 8,
+    end: 14,
+    title: "Лазерная сварка в стык",
+    description: "Ровный и аккуратный шов",
+    Icon: IconSparkles,
+  },
+  {
+    start: 16,
+    end: 20,
+    title: "Проверяем совместимость элементов",
+    description: "Чтобы комплект подошёл по месту",
+    Icon: IconAssembly,
+  },
+  {
+    start: 20,
+    end: 22.1,
+    title: "Доставка по всей России",
+    description: "Отгружаем готовые заказы",
+    Icon: IconTruckDelivery,
+  },
+] as const;
+
 type HomeHeroCarouselProps = {
   assetBasePath?: string;
 };
@@ -32,6 +67,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   const [isMobile, setIsMobile] = useState(false);
   const [mobileVideoFailed, setMobileVideoFailed] = useState(false);
   const [mobileVideoPlaying, setMobileVideoPlaying] = useState(false);
+  const [activeVideoCue, setActiveVideoCue] = useState<number | null>(null);
   const touchStartX = useRef<number | null>(null);
   const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -83,6 +119,14 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
+  const videoCue = activeVideoCue === null ? null : mobileVideoCues[activeVideoCue];
+
+  const syncVideoCue = (currentTime: number) => {
+    const cueIndex = mobileVideoCues.findIndex(
+      ({ start, end }) => currentTime >= start && currentTime < end,
+    );
+    setActiveVideoCue(cueIndex >= 0 ? cueIndex : null);
+  };
 
   return (
     <section
@@ -127,20 +171,44 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
               preload="metadata"
               poster={imagePath}
               aria-hidden="true"
-              onPlaying={() => setMobileVideoPlaying(true)}
-              onPause={() => setMobileVideoPlaying(false)}
-              onWaiting={() => setMobileVideoPlaying(false)}
+              onPlaying={(event) => {
+                setMobileVideoPlaying(true);
+                syncVideoCue(event.currentTarget.currentTime);
+              }}
+              onTimeUpdate={(event) => syncVideoCue(event.currentTarget.currentTime)}
+              onPause={() => {
+                setMobileVideoPlaying(false);
+                setActiveVideoCue(null);
+              }}
+              onWaiting={() => {
+                setMobileVideoPlaying(false);
+                setActiveVideoCue(null);
+              }}
               onError={() => {
                 setMobileVideoPlaying(false);
                 setMobileVideoFailed(true);
+                setActiveVideoCue(null);
               }}
             >
               <source src={`${assetBasePath}/videos/home/0826.mp4`} type="video/mp4" />
             </video>
           ) : null}
+          {isMobile && mobileVideoPlaying && videoCue ? (
+            <div key={activeVideoCue} className={styles.videoCue} aria-live="off">
+              <span className={styles.videoCueIcon} aria-hidden="true">
+                <videoCue.Icon size={25} strokeWidth={1.7} />
+              </span>
+              <span className={styles.videoCueCopy}>
+                <strong>{videoCue.title}</strong>
+                <span>{videoCue.description}</span>
+              </span>
+            </div>
+          ) : null}
         </div>
 
-        <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
+        {!(isMobile && mobileVideoPlaying) ? (
+          <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
+        ) : null}
 
         <Link className={styles.cta} href="/zamery?edit=1">
           <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
@@ -160,7 +228,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
           ))}
         </div>
       </div>
-
     </section>
   );
 }
