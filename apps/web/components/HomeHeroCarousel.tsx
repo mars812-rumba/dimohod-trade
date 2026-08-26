@@ -29,27 +29,56 @@ type HomeHeroCarouselProps = {
 export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileVideoFailed, setMobileVideoFailed] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const showSlide = (index: number) => {
     setActiveIndex((index + slides.length) % slides.length);
   };
 
   useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updateMotionPreference = () => setReduceMotion(media.matches);
-    updateMotionPreference();
-    media.addEventListener("change", updateMotionPreference);
-    return () => media.removeEventListener("change", updateMotionPreference);
+    const motionMedia = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobileMedia = window.matchMedia("(max-width: 720px)");
+    const updateMediaPreferences = () => {
+      setReduceMotion(motionMedia.matches);
+      setIsMobile(mobileMedia.matches);
+    };
+    updateMediaPreferences();
+    motionMedia.addEventListener("change", updateMediaPreferences);
+    mobileMedia.addEventListener("change", updateMediaPreferences);
+    return () => {
+      motionMedia.removeEventListener("change", updateMediaPreferences);
+      mobileMedia.removeEventListener("change", updateMediaPreferences);
+    };
   }, []);
 
   useEffect(() => {
-    if (reduceMotion) return;
+    if (reduceMotion || (isMobile && !mobileVideoFailed)) return;
     const interval = window.setInterval(() => {
       setActiveIndex((index) => (index + 1) % slides.length);
     }, 6500);
     return () => window.clearInterval(interval);
-  }, [reduceMotion]);
+  }, [isMobile, mobileVideoFailed, reduceMotion]);
+
+  useEffect(() => {
+    const video = mobileVideoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void video.play().catch(() => undefined);
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [isMobile, mobileVideoFailed, reduceMotion]);
 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
@@ -86,6 +115,22 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             unoptimized
             sizes="100vw"
           />
+          {isMobile && !reduceMotion && !mobileVideoFailed ? (
+            <video
+              ref={mobileVideoRef}
+              className={styles.mobileVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              poster={imagePath}
+              aria-hidden="true"
+              onError={() => setMobileVideoFailed(true)}
+            >
+              <source src={`${assetBasePath}/videos/home/0826.mp4`} type="video/mp4" />
+            </video>
+          ) : null}
         </div>
 
         <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
