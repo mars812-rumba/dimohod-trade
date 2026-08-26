@@ -15,6 +15,8 @@ import {
   type CalculationProfile,
 } from "@/lib/calculationProfiles";
 import {
+  facadeOffsetFromRoofOverhang,
+  parseScenarioDraft,
   saveConfiguratorDraft,
   type ScenarioConfiguratorDraft,
 } from "@/lib/configuratorDraft";
@@ -47,7 +49,7 @@ import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
 import { EstimateLeadDialog } from "./EstimateLeadDialog";
 
 type RouteType = "ceiling" | "wall";
-type StoveType = "bania" | "pech" | "kamin" | "tt-kotel" | "gaz";
+type StoveType = "bania" | "pech" | "kamin" | "tt-kotel" | "gaz" | "diesel";
 type OutletType = "vertical" | "horizontal";
 type RoofType = "pitched" | "flat";
 
@@ -99,6 +101,7 @@ const STOVE_OPTIONS: Array<{ id: StoveType; label: string }> = [
   { id: "kamin", label: "Камин" },
   { id: "tt-kotel", label: "Твердотопливный котёл" },
   { id: "gaz", label: "Газовый котёл" },
+  { id: "diesel", label: "Дизельный котёл" },
 ];
 
 const OUTLET_OPTIONS: Array<{ id: OutletType; label: string }> = [
@@ -236,22 +239,32 @@ function HorizontalTransitionAssembly({
 }
 
 function DynamicWallTopScheme({
+  indoorRiseMm,
   outlet = "top",
   variant,
 }: {
+  indoorRiseMm: number;
   outlet?: "top" | "rear";
   variant: PipeLayoutVariant | null;
 }) {
   const rearOutlet = outlet === "rear";
+  const indoorPipes = variant?.pipes.filter((pipe) => (
+    pipe.axis === "vertical" && pipe.contour === "одностенный"
+  )) ?? [];
   const outdoorPipes = variant?.pipes.filter((pipe) => (
     pipe.axis === "vertical" && pipe.contour === "сэндвич"
   )) ?? [];
   const horizontalPipes = variant?.pipes.filter((pipe) => pipe.axis === "horizontal") ?? [];
+  const indoorInstalledMm = indoorPipes.reduce((sum, pipe) => sum + pipe.effectiveMm, 0);
   const outdoorNominalMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const horizontalNominalMm = horizontalPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
   const consolePositionsMm = wallTopRouteFacadeConsolePositions(outdoorNominalMm);
   const stackTopY = 220;
-  const horizontalAxisY = rearOutlet ? 1200 : 1088;
+  const stoveTopY = 1120;
+  const indoorRiseVisualHeight = indoorRiseMm > 0
+    ? Math.max(96, Math.min(420, indoorRiseMm * 0.4))
+    : 32;
+  const horizontalAxisY = rearOutlet ? 1200 : stoveTopY - indoorRiseVisualHeight;
   const routeDeltaY = horizontalAxisY - 1088;
   const stackBottomY = 1058 + routeDeltaY;
   const stackHeight = stackBottomY - stackTopY;
@@ -259,6 +272,7 @@ function DynamicWallTopScheme({
   const horizontalEndX = 658;
   const horizontalWidth = horizontalEndX - horizontalStartX;
   let outdoorCursorY = stackBottomY;
+  let indoorCursorY = stoveTopY;
   let horizontalCursorX = horizontalStartX;
 
   return (
@@ -272,7 +286,7 @@ function DynamicWallTopScheme({
       <desc id="dynamic-wall-top-description">
         {rearOutlet
           ? "Векторная расчётная схема прямого заднего выхода без отвода 90 градусов; количество труб и креплений соответствует выбранной раскладке конфигуратора."
-          : "Векторная расчётная схема верхнего выхода с отводом 90 градусов; количество труб и креплений соответствует выбранной раскладке конфигуратора."}
+          : `Векторная расчётная схема верхнего выхода с одноконтурным подъёмом ${indoorRiseMm} мм и отводом 90 градусов; количество труб и креплений соответствует выбранной раскладке конфигуратора.`}
       </desc>
       <defs>
         <linearGradient id="dynamic-steel-vertical" x1="0" x2="1">
@@ -316,6 +330,9 @@ function DynamicWallTopScheme({
         <filter id="dynamic-pipe-shadow" height="130%" width="150%" x="-25%" y="-15%">
           <feDropShadow dx="2" dy="4" floodColor="#182428" floodOpacity="0.2" stdDeviation="4" />
         </filter>
+        <marker id="dynamic-rise-arrow" markerHeight="8" markerWidth="8" orient="auto-start-reverse" refX="6" refY="4" viewBox="0 0 8 8">
+          <path d="M1 1 L7 4 L1 7" fill="none" stroke="#587079" strokeLinecap="round" strokeLinejoin="round" />
+        </marker>
       </defs>
 
       <rect fill="#fff" height="1536" width="1024" />
@@ -343,15 +360,66 @@ function DynamicWallTopScheme({
               <rect fill="url(#dynamic-steel-horizontal)" height="52" rx="5" stroke="#344348" strokeWidth="3" width="30" x="268" y={horizontalAxisY - 26} />
               <ellipse cx="282" cy={horizontalAxisY} fill="url(#dynamic-steel-horizontal)" rx="8" ry="25" stroke="#344348" strokeWidth="2" />
             </>
-          ) : (
+          ) : !indoorPipes.length ? (
             <rect fill="url(#dynamic-steel-vertical)" height="38" rx="5" stroke="#344348" strokeWidth="3" width="52" x="207" y="1084" />
-          )}
+          ) : null}
         </g>
+
+        {!rearOutlet && indoorPipes.length ? (
+          <g aria-label={`Одноконтурный подъём от печи: ${indoorRiseMm} мм, труб: ${indoorPipes.length}`}>
+            {indoorPipes.map((pipe, index) => {
+              const height = indoorInstalledMm > 0
+                ? indoorRiseVisualHeight * (pipe.effectiveMm / indoorInstalledMm)
+                : indoorRiseVisualHeight / indoorPipes.length;
+              indoorCursorY -= height;
+              const y = indoorCursorY;
+              return (
+                <g key={pipe.id}>
+                  <rect
+                    fill="url(#dynamic-steel-vertical)"
+                    filter="url(#dynamic-pipe-shadow)"
+                    height={Math.max(2, height - 4)}
+                    rx="5"
+                    stroke="#344348"
+                    strokeWidth="2"
+                    width="52"
+                    x="207"
+                    y={y + 2}
+                  />
+                  <line stroke="#29363b" strokeWidth="4" x1="204" x2="262" y1={y + 3} y2={y + 3} />
+                  <line opacity="0.72" stroke="#fff" strokeWidth="2" x1="213" x2="213" y1={y + 10} y2={y + height - 8} />
+                  <text className="dynamic-pipe-index" textAnchor="middle" x="233" y={y + height / 2 + 5}>
+                    В{index + 1}
+                  </text>
+                </g>
+              );
+            })}
+            <line stroke="#29363b" strokeWidth="4" x1="204" x2="262" y1={stoveTopY} y2={stoveTopY} />
+          </g>
+        ) : null}
 
         {!rearOutlet ? (
           <g aria-label="Отвод 90 градусов">
-            <path d="M233 1120 V1112 Q233 1088 257 1088 H286" fill="none" stroke="#344348" strokeLinecap="round" strokeLinejoin="round" strokeWidth="52" />
-            <path d="M233 1120 V1112 Q233 1088 257 1088 H286" fill="none" stroke="url(#dynamic-steel-horizontal)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="46" />
+            <path d={`M233 ${horizontalAxisY + 26} V${horizontalAxisY + 24} Q233 ${horizontalAxisY} 257 ${horizontalAxisY} H286`} fill="none" stroke="#344348" strokeLinecap="round" strokeLinejoin="round" strokeWidth="52" />
+            <path d={`M233 ${horizontalAxisY + 26} V${horizontalAxisY + 24} Q233 ${horizontalAxisY} 257 ${horizontalAxisY} H286`} fill="none" stroke="url(#dynamic-steel-horizontal)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="46" />
+          </g>
+        ) : null}
+
+        {!rearOutlet && indoorRiseMm > 0 ? (
+          <g aria-label={`Размер подъёма от печи до поворота: ${indoorRiseMm} мм`}>
+            <path
+              d={`M184 ${horizontalAxisY} V${stoveTopY}`}
+              fill="none"
+              markerEnd="url(#dynamic-rise-arrow)"
+              markerStart="url(#dynamic-rise-arrow)"
+              stroke="#587079"
+              strokeWidth="2"
+            />
+            <line stroke="#9aabb0" strokeWidth="1.5" x1="184" x2="204" y1={horizontalAxisY} y2={horizontalAxisY} />
+            <line stroke="#9aabb0" strokeWidth="1.5" x1="184" x2="204" y1={stoveTopY} y2={stoveTopY} />
+            <rect fill="#fff" height="46" rx="8" stroke="#cbd7da" width="112" x="52" y={(horizontalAxisY + stoveTopY) / 2 - 23} />
+            <text fill="#53656d" fontSize="11" fontWeight="700" textAnchor="middle" x="108" y={(horizontalAxisY + stoveTopY) / 2 - 5}>ПОДЪЁМ</text>
+            <text fill="#173d4c" fontSize="15" fontWeight="850" textAnchor="middle" x="108" y={(horizontalAxisY + stoveTopY) / 2 + 15}>{indoorRiseMm} мм</text>
           </g>
         ) : null}
 
@@ -506,7 +574,7 @@ function DynamicWallTopScheme({
         <rect height="72" rx="18" width="900" />
         <text x="24" y="29">По выбранной смете</text>
         <text x="24" y="55">
-          трубы — {outdoorPipes.length + horizontalPipes.length} шт. · площадка — 1 шт. · консоли — {consolePositionsMm.length + 1} шт. · силовые хомуты — {consolePositionsMm.length} шт.
+          трубы — {indoorPipes.length + outdoorPipes.length + horizontalPipes.length} шт. · площадка — 1 шт. · консоли — {consolePositionsMm.length + 1} шт. · силовые хомуты — {consolePositionsMm.length} шт.
         </text>
       </g>
     </svg>
@@ -810,8 +878,8 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
     draft.route !== "ceiling" && draft.wallExitHeight ? `Точка выхода через стену: ${draft.wallExitHeight} м` : "",
     draft.route !== "ceiling" && draft.wallThickness ? `Толщина стены: ${draft.wallThickness} мм` : "",
     draft.route !== "ceiling" && draft.wallMaterial ? `Материал стены: ${draft.wallMaterial}` : "",
-    draft.route !== "ceiling" && draft.facadeOffset ? `От фасада до оси трубы: ${draft.facadeOffset} мм` : "",
     draft.route !== "ceiling" && draft.roofOverhang ? `Вынос кровли: ${draft.roofOverhang} мм` : "",
+    draft.route !== "ceiling" && draft.roofOverhang ? `Расчётный вынос оси трубы: ${facadeOffsetFromRoofOverhang(draft.roofOverhang)} мм` : "",
     draft.routeNotes ? `Особенности маршрута: ${draft.routeNotes}` : "",
     draft.photosReady ? "Фотографии места установки: подготовлены" : "",
   ].filter(Boolean);
@@ -1524,6 +1592,7 @@ function VerticalPassageDetails({
 export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorProps) {
   const searchParams = useSearchParams();
   const requestedProfileId = searchParams.get("profile") ?? "";
+  const requestedDraft = searchParams.get("draft") ?? "";
   const [transferredDraft, setTransferredDraft] = useState<ScenarioConfiguratorDraft | null>(null);
   const [calculationProfiles, setCalculationProfiles] = useState<CalculationProfile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState("");
@@ -1558,7 +1627,8 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       const storedProfile = storedProfileId
         ? profiles.find((profile) => profile.id === storedProfileId)
         : undefined;
-      const nextProfile = requestedProfile ?? storedProfile;
+      const draftFromUrl = parseScenarioDraft(requestedDraft);
+      const nextProfile = requestedProfile ?? (draftFromUrl ? undefined : storedProfile);
       setCalculationProfiles(profiles);
       if (nextProfile) {
         setTransferredDraft(nextProfile.draft);
@@ -1566,6 +1636,11 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         saveConfiguratorDraft(window.sessionStorage, nextProfile.draft);
         window.localStorage.setItem(ACTIVE_CALCULATION_PROFILE_KEY, nextProfile.id);
         setProfileNotice(`Открыт замер «${nextProfile.name}».`);
+      } else if (draftFromUrl) {
+        setTransferredDraft(draftFromUrl);
+        setActiveProfileId("");
+        saveConfiguratorDraft(window.sessionStorage, draftFromUrl);
+        setProfileNotice("Замеры перенесены в конфигуратор.");
       } else {
         setTransferredDraft(null);
         setActiveProfileId("");
@@ -1577,7 +1652,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       setTransferredDraft(null);
       setProfileNotice("Не удалось прочитать сохранённые замеры на этом устройстве.");
     }
-  }, [requestedProfileId]);
+  }, [requestedDraft, requestedProfileId]);
 
   useEffect(() => {
     if (!transferredDraft) return;
@@ -1753,11 +1828,12 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         params.set("preferred_diameter", `:${diameter + 100}`);
       }
       if (line.materialPreference === "stainless-standard") {
+        const combustionSteel = stove === "gaz" || stove === "diesel";
         params.set("preferred_material", "stainless");
-        params.set("preferred_steel_grade", "AISI 304");
+        params.set("preferred_steel_grade", combustionSteel ? "AISI 316" : "AISI 304");
         if (line.contour === "сэндвич") {
           params.set("preferred_outer_material", "stainless");
-          params.set("preferred_outer_steel_grade", "AISI 304");
+          params.set("preferred_outer_steel_grade", "AISI 430");
         }
       }
       if (line.nominalLengthMm) params.set("length_mm", String(line.nominalLengthMm));
@@ -1811,7 +1887,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     return () => controller.abort();
   // Quantity changes do not alter a catalog SKU. Keep the existing matches and
   // refetch only when fields that participate in catalog lookup have changed.
-  }, [assetBasePath, calculation.diameterMm, calculation.diameterStatus, catalogLookupSignature]);
+  }, [assetBasePath, calculation.diameterMm, calculation.diameterStatus, catalogLookupSignature, stove]);
 
   const totalQty = selectedBom.reduce((sum, item) => sum + item.quantity, 0);
   const stoveLabel = STOVE_OPTIONS.find((option) => option.id === stove)?.label ?? "Источник";
@@ -2226,11 +2302,11 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               </div>
             ) : calculation.routeKind === "wall-rear" ? (
               <div className="configurator-wall-route-scheme">
-                <DynamicWallTopScheme outlet="rear" variant={selectedVariant} />
+                <DynamicWallTopScheme indoorRiseMm={calculation.indoorRiseMm} outlet="rear" variant={selectedVariant} />
               </div>
             ) : calculation.routeKind === "wall-top" ? (
               <div className="configurator-wall-route-scheme">
-                <DynamicWallTopScheme variant={selectedVariant} />
+                <DynamicWallTopScheme indoorRiseMm={calculation.indoorRiseMm} variant={selectedVariant} />
               </div>
             ) : (
               <GeneratedChimneyScheme

@@ -5,12 +5,25 @@ export type EquipmentStatus = "installed" | "selected" | "not-selected";
 export type PassportStatus = "yes" | "no" | "unknown";
 export type DiameterSource = "passport" | "measured" | "unknown";
 
+export const FACADE_PIPE_CLEARANCE_MM = 100;
+export const CONFIGURATOR_DIAMETERS_MM = [
+  100, 110, 120, 130, 140, 150, 160, 180, 200, 250, 280, 300,
+] as const;
+
+export function facadeOffsetFromRoofOverhang(roofOverhang: string): string {
+  const normalized = roofOverhang.trim();
+  if (!normalized) return "";
+  const value = Number(normalized);
+  if (!Number.isFinite(value) || value < 0) return "";
+  return String(value + FACADE_PIPE_CLEARANCE_MM);
+}
+
 export type ScenarioConfiguratorDraft = {
   scenario: "banya" | "dom";
   objectType: MeasurementObjectType;
   equipmentStatus: EquipmentStatus;
   passportStatus: PassportStatus;
-  equipmentType: "" | "bania" | "pech" | "kamin" | "tt-kotel" | "gaz";
+  equipmentType: "" | "bania" | "pech" | "kamin" | "tt-kotel" | "gaz" | "diesel";
   manufacturer: string;
   model: string;
   outlet: "" | "top" | "rear";
@@ -167,6 +180,11 @@ export function parseScenarioDraft(value: string | null): ScenarioConfiguratorDr
       if (draft.diameterX && !draft.diameterY) draft.diameter = draft.diameterX;
       if (!draft.diameterX && draft.diameterY) draft.diameter = draft.diameterY;
       if (draft.diameterX && draft.diameterX === draft.diameterY) draft.diameter = draft.diameterX;
+    }
+    if (!CONFIGURATOR_DIAMETERS_MM.includes(
+      Number(draft.diameter) as (typeof CONFIGURATOR_DIAMETERS_MM)[number],
+    )) {
+      draft.diameter = "";
     }
     draft.diameterX = "";
     draft.diameterY = "";

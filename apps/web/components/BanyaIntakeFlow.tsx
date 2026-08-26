@@ -9,8 +9,10 @@ import {
   saveCalculationProfile,
 } from "@/lib/calculationProfiles";
 import {
+  CONFIGURATOR_DIAMETERS_MM,
   createEmptyScenarioDraft,
   draftFieldStatus,
+  facadeOffsetFromRoofOverhang,
   mergeConfiguratorDraft,
   readConfiguratorDraft,
   saveConfiguratorDraft,
@@ -35,7 +37,10 @@ function normalizeIntakeDraft(draft: ScenarioConfiguratorDraft): ScenarioConfigu
   const objectType = draft.objectType === "banya" ? "banya" : "house";
   const equipmentType = draft.equipmentType === "bania"
     || draft.equipmentType === "pech"
+    || draft.equipmentType === "kamin"
     || draft.equipmentType === "tt-kotel"
+    || draft.equipmentType === "gaz"
+    || draft.equipmentType === "diesel"
     ? draft.equipmentType
     : "";
   const legacyDiameter = !draft.diameter
@@ -44,7 +49,10 @@ function normalizeIntakeDraft(draft: ScenarioConfiguratorDraft): ScenarioConfigu
       || (draft.diameterX && draft.diameterX === draft.diameterY))
     ? draft.diameterX || draft.diameterY
     : "";
-  const diameter = draft.diameter || legacyDiameter;
+  const diameterCandidate = draft.diameter || legacyDiameter;
+  const diameter = CONFIGURATOR_DIAMETERS_MM.includes(
+    Number(diameterCandidate) as (typeof CONFIGURATOR_DIAMETERS_MM)[number],
+  ) ? diameterCandidate : "";
   const diameterSource = draft.diameterSource === "passport"
     ? diameter ? "measured" : "unknown"
     : draft.diameterSource;
@@ -58,6 +66,7 @@ function normalizeIntakeDraft(draft: ScenarioConfiguratorDraft): ScenarioConfigu
     diameterX: "",
     diameterY: "",
     diameterSource,
+    facadeOffset: facadeOffsetFromRoofOverhang(draft.roofOverhang),
   };
 }
 
@@ -104,6 +113,52 @@ function MeasurementField({ draft, field, label, placeholder, unit, numeric = tr
         {allowDefer && status !== "known" ? (
           <button onClick={() => onDefer(field)} type="button">
             {status === "later" ? "Вернуть к замеру" : "Уточнить позже"}
+          </button>
+        ) : null}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DiameterSelectField({
+  draft,
+  onChange,
+  onDefer,
+  children,
+}: {
+  draft: ScenarioConfiguratorDraft;
+  onChange: (field: keyof ScenarioConfiguratorDraft, value: string) => void;
+  onDefer: (field: keyof ScenarioConfiguratorDraft) => void;
+  children?: ReactNode;
+}) {
+  const selectedDiameter = CONFIGURATOR_DIAMETERS_MM.includes(
+    Number(draft.diameter) as (typeof CONFIGURATOR_DIAMETERS_MM)[number],
+  ) ? draft.diameter : "";
+  const status: DraftFieldStatus = selectedDiameter
+    ? "known"
+    : draft.deferredFields.includes("diameter") ? "later" : "measure";
+
+  return (
+    <div className={styles.measurementField}>
+      <label className={styles.field}>
+        <span>Наружный диаметр патрубка, мм</span>
+        <select
+          aria-label="Наружный диаметр патрубка"
+          onChange={(event) => onChange("diameter", event.target.value)}
+          value={selectedDiameter}
+        >
+          <option value="">Выберите диаметр</option>
+          {CONFIGURATOR_DIAMETERS_MM.map((diameter) => (
+            <option key={diameter} value={diameter}>{diameter} мм</option>
+          ))}
+        </select>
+      </label>
+      <div className={styles.fieldMeta}>
+        <span data-status={status}>{statusLabels[status]}</span>
+        {status !== "known" ? (
+          <button onClick={() => onDefer("diameter")} type="button">
+            {status === "later" ? "Вернуть к выбору" : "Уточнить позже"}
           </button>
         ) : null}
       </div>
@@ -310,6 +365,7 @@ export function BanyaIntakeFlow({
     setIntake((current) => ({
       ...current,
       [field]: value,
+      ...(field === "roofOverhang" ? { facadeOffset: facadeOffsetFromRoofOverhang(value) } : {}),
       deferredFields: current.deferredFields.filter((item) => item !== field),
     }));
   };
@@ -319,6 +375,7 @@ export function BanyaIntakeFlow({
     setIntake((current) => ({
       ...current,
       [field]: "",
+      ...(field === "roofOverhang" ? { facadeOffset: "" } : {}),
       deferredFields: current.deferredFields.includes(field)
         ? current.deferredFields.filter((item) => item !== field)
         : [...current.deferredFields, field],
@@ -442,6 +499,8 @@ export function BanyaIntakeFlow({
                     ["bania", "Банная печь"],
                     ["pech", "Печь"],
                     ["tt-kotel", "Твердотопливный котёл"],
+                    ["gaz", "Газовый котёл"],
+                    ["diesel", "Дизельный котёл"],
                   ].map(([value, label]) => (
                     <label key={label}>
                       <input
@@ -521,11 +580,11 @@ export function BanyaIntakeFlow({
                 </div>
               </fieldset>
               {intake.diameterSource !== "unknown" ? <>
-              <MeasurementField draft={intake} field="diameter" label="Наружный диаметр патрубка" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От внешнего края до внешнего края" unit="мм">
+              <DiameterSelectField draft={intake} onChange={updateMeasurement} onDefer={toggleDeferred}>
                 <MeasurementHelp scheme={schemes.outletDiameter}>
                   <p>Приложите рулетку через центр патрубка и измерьте расстояние от одной наружной кромки до другой. Внутреннее отверстие не измеряйте.</p>
                 </MeasurementHelp>
-              </MeasurementField>
+              </DiameterSelectField>
               </> : null}
             </div>
           </section> : null}
@@ -722,11 +781,11 @@ export function BanyaIntakeFlow({
                   <MeasurementField draft={intake} field="wallThickness" label="Толщина стены" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Полная толщина" unit="мм">
                     <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте полную толщину стены от внутренней до наружной поверхности в месте предполагаемого прохода.</p></MeasurementHelp>
                   </MeasurementField>
-                  <MeasurementField draft={intake} field="facadeOffset" label="От фасада до оси наружной трубы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Вынос трубы" unit="мм">
-                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте горизонтальный вынос от плоскости фасада до оси предполагаемой наружной трубы.</p></MeasurementHelp>
-                  </MeasurementField>
-                  <MeasurementField draft={intake} field="roofOverhang" label="Вынос кровли от фасада" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если есть" unit="мм">
-                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте горизонтально от плоскости фасада до наружного края свеса кровли.</p></MeasurementHelp>
+                  <MeasurementField draft={intake} field="roofOverhang" label="От фасада до края выноса кровли" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Горизонтальный размер" unit="мм">
+                    <MeasurementHelp scheme={schemes.exteriorRoute}>
+                      <p>Измерьте горизонтально от плоскости фасада до наружного края свеса кровли.</p>
+                      <p><strong>Вынос оси трубы рассчитаем автоматически: размер выноса кровли + 100 мм.</strong></p>
+                    </MeasurementHelp>
                   </MeasurementField>
                   <MeasurementField draft={intake} field="outdoorHeight" label="Высота наружной трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Ориентировочно" unit="м">
                     <MeasurementHelp scheme={schemes.exteriorRoute}><p>Укажите известную вертикальную длину наружного участка. Окончательную геометрию и условия крепления проверяет специалист.</p></MeasurementHelp>
@@ -744,11 +803,11 @@ export function BanyaIntakeFlow({
                   <MeasurementField draft={intake} field="wallThickness" label="Толщина стены" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Полная толщина" unit="мм">
                     <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте полную толщину стены от внутренней до наружной поверхности в месте предполагаемого прохода.</p></MeasurementHelp>
                   </MeasurementField>
-                  <MeasurementField draft={intake} field="facadeOffset" label="От фасада до оси наружной трубы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Вынос трубы" unit="мм">
-                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте горизонтальный вынос от плоскости фасада до оси предполагаемой наружной трубы.</p></MeasurementHelp>
-                  </MeasurementField>
-                  <MeasurementField draft={intake} field="roofOverhang" label="Вынос кровли от фасада" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если есть" unit="мм">
-                    <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте горизонтально от плоскости фасада до наружного края свеса кровли.</p></MeasurementHelp>
+                  <MeasurementField draft={intake} field="roofOverhang" label="От фасада до края выноса кровли" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Горизонтальный размер" unit="мм">
+                    <MeasurementHelp scheme={schemes.exteriorRoute}>
+                      <p>Измерьте горизонтально от плоскости фасада до наружного края свеса кровли.</p>
+                      <p><strong>Вынос оси трубы рассчитаем автоматически: размер выноса кровли + 100 мм.</strong></p>
+                    </MeasurementHelp>
                   </MeasurementField>
                   <MeasurementField draft={intake} field="outdoorHeight" label="Высота наружной трассы" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Ориентировочно" unit="м">
                     <MeasurementHelp scheme={schemes.exteriorRoute}><p>Измерьте вертикальную длину наружной части трассы. Окончательную геометрию и крепления проверяет специалист.</p></MeasurementHelp>

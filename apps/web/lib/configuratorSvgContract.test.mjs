@@ -27,7 +27,7 @@ test("wall-top configurator scene is a real inline SVG without a raster backdrop
 test("direct rear route reuses the 90-degree SVG template with a lowered part3", () => {
   const source = componentSource("DynamicWallTopScheme", "EngineeringSceneProduct");
 
-  assert.match(source, /const horizontalAxisY = rearOutlet \? 1200 : 1088/);
+  assert.match(source, /const horizontalAxisY = rearOutlet \? 1200 : stoveTopY - indoorRiseVisualHeight/);
   assert.match(source, /const routeDeltaY = horizontalAxisY - 1088/);
   assert.match(source, /!rearOutlet \? \(/);
   assert.match(source, /aria-label="Отвод 90 градусов"/);
@@ -40,7 +40,19 @@ test("direct rear route reuses the 90-degree SVG template with a lowered part3",
   assert.match(source, /consolePositionsMm\.map/);
   assert.doesNotMatch(source, /<image\b/);
 
-  assert.match(configuratorSource, /<DynamicWallTopScheme outlet="rear" variant=\{selectedVariant\} \/>/);
+  assert.match(configuratorSource, /<DynamicWallTopScheme indoorRiseMm=\{calculation\.indoorRiseMm\} outlet="rear" variant=\{selectedVariant\} \/>/);
+});
+
+test("wall-top SVG renders the measured single-wall rise and its dimension", () => {
+  const source = componentSource("DynamicWallTopScheme", "EngineeringSceneProduct");
+
+  assert.match(source, /pipe\.axis === "vertical" && pipe\.contour === "одностенный"/);
+  assert.match(source, /const indoorRiseVisualHeight = indoorRiseMm > 0/);
+  assert.match(source, /indoorPipes\.map/);
+  assert.match(source, /Одноконтурный подъём от печи/);
+  assert.match(source, /Размер подъёма от печи до поворота/);
+  assert.match(source, />\{indoorRiseMm\} мм<\/text>/);
+  assert.match(configuratorSource, /<DynamicWallTopScheme indoorRiseMm=\{calculation\.indoorRiseMm\} variant=\{selectedVariant\} \/>/);
 });
 
 test("BOM previews use the matched catalog SKU media instead of missing hardcoded assets", () => {
@@ -63,6 +75,13 @@ test("changing only pipe quantity does not refetch every catalog match", () => {
   assert.doesNotMatch(signatureSource, /line\.quantity/);
   assert.match(
     configuratorSource,
-    /\[assetBasePath, calculation\.diameterMm, calculation\.diameterStatus, catalogLookupSignature\]/,
+    /\[assetBasePath, calculation\.diameterMm, calculation\.diameterStatus, catalogLookupSignature, stove\]/,
   );
+});
+
+test("gas and diesel drafts request the confirmed 316/430 steel pair", () => {
+  assert.match(configuratorSource, /stove === "gaz" \|\| stove === "diesel"/);
+  assert.match(configuratorSource, /combustionSteel \? "AISI 316" : "AISI 304"/);
+  assert.match(configuratorSource, /preferred_outer_steel_grade", "AISI 430"/);
+  assert.match(configuratorSource, /parseScenarioDraft\(requestedDraft\)/);
 });
