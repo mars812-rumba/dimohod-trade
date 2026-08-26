@@ -9,6 +9,7 @@ import {
   IconChevronRight as ChevronRight,
   IconCircleDot as CircleDot,
   IconCertificate as Certificate,
+  IconClipboardCheck as ClipboardCheck,
   IconDownload as Download,
   IconFileCheck as FileCheck2,
   IconFlame as FlameKindling,
@@ -25,6 +26,7 @@ import {
   IconShieldCheck as ShieldCheck,
   IconStar as Star,
   IconTool as Wrench,
+  IconTruckDelivery as TruckDelivery,
   IconBolt as Zap,
 } from "@tabler/icons-react";
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
@@ -234,6 +236,29 @@ const checks = [
   "Оголовок и завершение системы",
 ];
 
+const serviceBenefits = [
+  {
+    icon: Zap,
+    title: "Лазерная сварка в стык",
+    text: "Технология изготовления элементов дымохода из нержавеющей стали.",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Инженерное сопровождение",
+    text: "Сверяем исходные данные, схему и состав комплекта до оформления заказа.",
+  },
+  {
+    icon: TruckDelivery,
+    title: "Доставка по России",
+    text: "Отправляем готовые заказы транспортными компаниями в регионы.",
+  },
+  {
+    icon: FlameKindling,
+    title: "Под конкретный отопитель",
+    text: "Начинаем подбор с модели и параметров патрубка печи, камина или котла.",
+  },
+];
+
 const catalogGroups = [
   {
     title: "Одноконтурные элементы",
@@ -393,6 +418,30 @@ export default async function HomePage() {
       />
       <main className={styles.main}>
         <HomeHeroCarousel assetBasePath={basePath} />
+
+        <section className={styles.benefitsSection} aria-labelledby="home-benefits-title">
+          <div className={`${styles.shell} ${styles.benefitsLayout}`}>
+            <div className={styles.benefitsIntro}>
+              <h2 id="home-benefits-title">Почему выбирают Дымоход Трейд</h2>
+              <p>Производство, проверка комплекта и доставка — в одном заказе.</p>
+            </div>
+
+            <div className={styles.benefitsGrid}>
+              {serviceBenefits.map(({ icon: Icon, title, text }) => (
+                <article className={styles.benefitItem} key={title}>
+                  <span className={styles.benefitIcon} aria-hidden>
+                    <Icon size={29} strokeWidth={1.55} />
+                  </span>
+                  <div>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <HomeGuidedShowcase assetBasePath={basePath} />
 
       <section className={styles.differenceSection} aria-labelledby="difference-title">
