@@ -101,6 +101,16 @@
   line-height: 1.1;
 }
 
+.ctaHeroTitle {
+  max-width: none;
+  margin: 0;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
 .ctaCopy span {
   font-size: 11px;
   font-weight: 620;
@@ -238,13 +248,27 @@
     right: 14px;
     bottom: max(72px, calc(env(safe-area-inset-bottom) + 56px));
     width: calc(100% - 28px);
-    min-height: 60px;
-    padding-inline: 14px;
+    min-height: 72px;
+    padding: 10px 14px;
     font-size: 12px;
+  }
+
+  .cta > svg {
+    flex: 0 0 auto;
   }
 
   .ctaCopy {
     flex: 1;
+    gap: 5px;
+  }
+
+  .ctaHeroTitle,
+  .ctaCopy strong {
+    overflow: hidden;
+    font-size: clamp(11px, 3.5vw, 14px);
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .headline {
@@ -252,20 +276,6 @@
     min-height: 72px;
     padding: 0 12px;
     font-size: clamp(14px, 4vw, 17px);
-  }
-
-  .heroWithMobileVideo .headline {
-    position: absolute;
-    z-index: 3;
-    top: 72px;
-    right: 0;
-    left: 0;
-    min-height: 52px;
-    padding: 8px 14px;
-    background: linear-gradient(180deg, rgba(16, 33, 39, 0.92), rgba(16, 33, 39, 0.72));
-    font-size: clamp(13px, 3.65vw, 15px);
-    line-height: 1.22;
-    pointer-events: none;
   }
 
   .renderDisclosure {
@@ -306,12 +316,6 @@
     height: 40px;
   }
 
-  .heroWithMobileVideo .headline {
-    top: 64px;
-    min-height: 46px;
-    padding-block: 6px;
-    font-size: 13px;
-  }
 }
 
 @keyframes videoCueFade {

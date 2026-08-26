@@ -132,7 +132,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
 
   return (
     <section
-      className={`${styles.hero} ${usesMobileVideo ? styles.heroWithMobileVideo : ""}`}
+      className={styles.hero}
       role="region"
       aria-roledescription="карусель"
       aria-label="Визуализации вариантов дымоходных систем"
@@ -160,9 +160,11 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         </div>
       ) : null}
 
-      <h1 className={styles.headline}>
-        Дымоход под ваш отопитель — со схемой и проверкой комплекта.
-      </h1>
+      {!usesMobileVideo ? (
+        <h1 className={styles.headline}>
+          Дымоход под ваш отопитель — со схемой и проверкой комплекта.
+        </h1>
+      ) : null}
 
       <div className={styles.carouselFrame}>
         <div className={styles.imageStage} aria-live="off">
@@ -215,10 +217,19 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
 
         <Link className={styles.cta} href="/zamery?edit=1">
           <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
-          <span className={styles.ctaCopy}>
-            <strong>Получить предварительный расчёт</strong>
-            <span>Схема, комплект и цена до выезда специалиста</span>
-          </span>
+          <div className={styles.ctaCopy}>
+            {usesMobileVideo ? (
+              <>
+                <h1 className={styles.ctaHeroTitle}>Дымоход под ваш отопитель</h1>
+                <strong>Получить предварительный расчёт</strong>
+              </>
+            ) : (
+              <>
+                <strong>Получить предварительный расчёт</strong>
+                <span>Схема, комплект и цена до выезда специалиста</span>
+              </>
+            )}
+          </div>
           <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
         </Link>
 
