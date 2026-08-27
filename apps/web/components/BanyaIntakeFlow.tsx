@@ -820,10 +820,10 @@ export function BanyaIntakeFlow({
               ) : intake.route === "wall" ? (
                 <div className={styles.fieldGrid}>
                   <MeasurementField draft={intake} field="verticalRise" label="Подъём от печи до поворота" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Вертикальный участок" unit="мм">
-                    <MeasurementHelp scheme={schemes.topOutletWall}><p>Измерьте вертикальный участок от верхней грани печи до предполагаемого поворота в сторону стены.</p></MeasurementHelp>
-                  </MeasurementField>
-                  <MeasurementField draft={intake} field="wallExitHeight" label="Высота точки выхода через стену" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="От уровня пола" unit="м">
-                    <MeasurementHelp scheme={schemes.topOutletWall}><p>Измерьте предполагаемую точку центра прохода от чистового пола и зафиксируйте материал стены для последующей проверки.</p></MeasurementHelp>
+                    <MeasurementHelp scheme={schemes.topOutletWall}>
+                      <p>Измерьте вертикальный участок от верхней грани печи до предполагаемого поворота в сторону стены.</p>
+                      <p><strong>В комплект закладываем трубу 1000 мм; место подрезки подтверждает менеджер.</strong></p>
+                    </MeasurementHelp>
                   </MeasurementField>
                   <MeasurementField draft={intake} field="wallDistance" label="От оси патрубка до внутренней стены" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По горизонтали" unit="мм">
                     <MeasurementHelp scheme={schemes.topOutletWall}><p>Измерьте горизонтально от оси патрубка до внутренней поверхности стены по предполагаемой линии дымохода.</p></MeasurementHelp>

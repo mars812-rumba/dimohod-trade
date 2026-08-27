@@ -45,6 +45,7 @@ import {
   type CatalogEstimateMatch,
   type EstimateMeasurement,
 } from "@/lib/chimneyEstimate";
+import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
 import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
 import { EstimateLeadDialog } from "./EstimateLeadDialog";
 
@@ -875,7 +876,6 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
     draft.route === "ceiling" && draft.ridgeHorizontalDistance ? `От оси дымохода до конька: ${draft.ridgeHorizontalDistance} мм` : "",
     draft.route === "ceiling" && draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
     draft.route === "ceiling" && draft.passageWoolKits ? `Комплекты ваты: ${draft.passageWoolKits} шт. (вручную)` : "",
-    draft.route !== "ceiling" && draft.wallExitHeight ? `Точка выхода через стену: ${draft.wallExitHeight} м` : "",
     draft.route !== "ceiling" && draft.wallThickness ? `Толщина стены: ${draft.wallThickness} мм` : "",
     draft.route !== "ceiling" && draft.wallMaterial ? `Материал стены: ${draft.wallMaterial}` : "",
     draft.route !== "ceiling" && draft.roofOverhang ? `Вынос кровли: ${draft.roofOverhang} мм` : "",
@@ -1771,6 +1771,10 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         line.catalogDiameterMode ?? null,
         line.catalogLengthMode ?? null,
         line.materialPreference ?? null,
+        line.thicknessProfile ?? null,
+        line.preferredSteelGrade ?? null,
+        line.preferredOuterSteelGrade ?? null,
+        line.catalogBaseSize ?? null,
       ]),
   ), [selectedBom]);
   const rearSceneGraph = useMemo(() => (
@@ -1812,6 +1816,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       const params = new URLSearchParams({ limit: "24", offset: "0", product_kind: line.productKind });
       if (line.catalogCategorySlug) params.set("category", line.catalogCategorySlug);
       if (line.catalogSearch) params.set("q", line.catalogSearch);
+      if (line.catalogBaseSize) params.set("base_size", line.catalogBaseSize);
       const exactDiameter = diameterKinds.has(line.productKind);
       const exactBySandwichOuterDiameter = line.catalogDiameterMode === "sandwich-outer-exact";
       const rangeBySandwichOuterDiameter = line.catalogDiameterMode === "sandwich-outer-range";
@@ -1827,13 +1832,28 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       if (rangeBySandwichOuterDiameter) {
         params.set("preferred_diameter", `:${diameter + 100}`);
       }
-      if (line.materialPreference === "stainless-standard") {
-        const combustionSteel = stove === "gaz" || stove === "diesel";
-        params.set("preferred_material", "stainless");
-        params.set("preferred_steel_grade", combustionSteel ? "AISI 316" : "AISI 304");
+      if (line.preferredSteelGrade || line.materialPreference === "stainless-standard") {
+        const combustionSteel = CHIMNEY_ENGINEERING_RULES.combustionMaterials.applianceTypes.includes(stove as "gaz" | "diesel");
+        params.set("material", "stainless");
+        params.set("steel_grade", line.preferredSteelGrade ?? (combustionSteel
+          ? CHIMNEY_ENGINEERING_RULES.combustionMaterials.innerSteelGrade
+          : CHIMNEY_ENGINEERING_RULES.standardMaterials.innerSteelGrade));
         if (line.contour === "сэндвич") {
-          params.set("preferred_outer_material", "stainless");
-          params.set("preferred_outer_steel_grade", "AISI 430");
+          params.set("outer_material", "stainless");
+          params.set("outer_steel_grade", line.preferredOuterSteelGrade
+            ?? (combustionSteel
+              ? CHIMNEY_ENGINEERING_RULES.combustionMaterials.outerSteelGrade
+              : CHIMNEY_ENGINEERING_RULES.standardMaterials.outerSteelGrade));
+        }
+        if ((!combustionSteel || Boolean(line.preferredSteelGrade)) && line.thicknessProfile) {
+          params.set("wall_thickness_mm", String(
+            line.thicknessProfile === "first-floor-0.8"
+              ? CHIMNEY_ENGINEERING_RULES.standardMaterials.firstFloorInnerThicknessMm
+              : CHIMNEY_ENGINEERING_RULES.standardMaterials.upperAndOutdoorInnerThicknessMm,
+          ));
+          if (line.contour === "сэндвич") {
+            params.set("outer_wall_thickness_mm", String(CHIMNEY_ENGINEERING_RULES.standardMaterials.outerThicknessMm));
+          }
         }
       }
       if (line.nominalLengthMm) params.set("length_mm", String(line.nominalLengthMm));

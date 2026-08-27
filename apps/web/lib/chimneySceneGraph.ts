@@ -47,6 +47,7 @@ type ScenePipe = {
   startMm: number;
   endMm: number;
   contour: "одностенный" | "сэндвич";
+  thicknessProfile?: "first-floor-0.8" | "upper-outdoor-0.5";
 };
 
 type SceneVariant = { pipes: ScenePipe[] };
@@ -106,12 +107,13 @@ export type EngineeringSceneGraph = {
 const PIPE_OVERLAP_MM = 50;
 
 function pipeBomKey(pipe: ScenePipe) {
-  return `${pipe.contour === "сэндвич" ? "sandwich" : "single-layout"}-pipe-${pipe.nominalMm}`;
+  return `${pipe.contour === "сэндвич" ? "sandwich" : "single-layout"}-pipe-${pipe.nominalMm}${pipe.thicknessProfile === "upper-outdoor-0.5" ? "-upper-outdoor" : ""}`;
 }
 
 function geometryFamily(line: SceneBomLine): EngineeringGeometryFamily | null {
   if (line.key.startsWith("single-layout-pipe-")) return "single_wall_pipe";
   if (line.key.startsWith("sandwich-pipe-")) return "sandwich_pipe";
+  if (line.key === "tee-lower-sandwich-pipe-250") return "sandwich_pipe";
   if (line.key === "rear-connection-rotary-damper") return "rotary_damper";
   if (line.key === "support-cap") return "transition_support_cap";
   if (line.key === "outside-tee") return "tee_90";
@@ -304,11 +306,27 @@ export function buildExternalWallSceneGraph({
   const teeLine = bomByKey.get("outside-tee");
   if (teeLine) addNode({ line: teeLine, index: 0, family: "tee_90", orientation: "vertical", xMm: horizontalRunMm, yMm: 0 });
 
+  const teeLowerPipeLine = bomByKey.get("tee-lower-sandwich-pipe-250");
+  const teeLowerPipeNominalMm = teeLowerPipeLine?.nominalLengthMm ?? 0;
+  const teeLowerPipeEffectiveMm = Math.max(0, teeLowerPipeNominalMm - PIPE_OVERLAP_MM);
+  if (teeLowerPipeLine) addNode({
+    line: teeLowerPipeLine,
+    index: 0,
+    family: "sandwich_pipe",
+    parentNode: "outside-tee-1",
+    branch: "lower",
+    orientation: "vertical",
+    xMm: horizontalRunMm,
+    yMm: -teeLowerPipeEffectiveMm,
+    effectiveLengthMm: teeLowerPipeEffectiveMm,
+    nominalLengthMm: teeLowerPipeNominalMm,
+  });
+
   const supportPlatformLine = bomByKey.get("outside-support-platform");
-  if (supportPlatformLine) addNode({ line: supportPlatformLine, index: 0, family: "support_platform", parentNode: "outside-tee-1", branch: "support", orientation: "horizontal", xMm: horizontalRunMm, yMm: -150 });
+  if (supportPlatformLine) addNode({ line: supportPlatformLine, index: 0, family: "support_platform", parentNode: teeLowerPipeLine ? "tee-lower-sandwich-pipe-250-1" : "outside-tee-1", branch: "support", orientation: "horizontal", xMm: horizontalRunMm, yMm: -250 });
 
   const teeConsoleLine = bomByKey.get("tee-support-console");
-  if (teeConsoleLine) addNode({ line: teeConsoleLine, index: 0, family: "support_console", parentNode: "outside-tee-1", branch: "support", orientation: "horizontal", xMm: horizontalRunMm, yMm: -220 });
+  if (teeConsoleLine) addNode({ line: teeConsoleLine, index: 0, family: "support_console", parentNode: "outside-support-platform-1", branch: "support", orientation: "horizontal", xMm: horizontalRunMm, yMm: -320 });
 
   const facadeConsoleLine = bomByKey.get("outside-support-consoles");
   const powerClampLine = bomByKey.get("outside-console-power-clamps");

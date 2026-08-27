@@ -10,6 +10,7 @@ const bom = [
   ["support-cap", "заглушка", "Опорная заглушка", 1, undefined, "сэндвич", "transition"],
   ["wall-passage", "проходной_узел", "Проход стены", 1, undefined, undefined, "wall_or_ceiling_pass"],
   ["outside-tee", "тройник", "Тройник 90°", 1, undefined, "сэндвич", "wall/outdoor"],
+  ["tee-lower-sandwich-pipe-250", "труба", "Сэндвич-труба под тройник 250", 1, 250, "сэндвич", "outdoor/support"],
   ["outside-support-platform", "опорная_площадка", "Опорная площадка", 1, undefined, undefined, "outdoor/support"],
   ["tee-support-console", "консоль", "Консоль под тройник", 1, undefined, undefined, "outdoor/support"],
   ["outside-support-consoles", "консоль", "Фасадная консоль", 1, undefined, undefined, "outdoor/support"],
@@ -64,7 +65,11 @@ test("builds a validated scene graph from calculation, BOM and catalog reference
   assert.equal(scene.nodes.filter((node) => node.geometryFamily === "power_clamp").length, 1);
   const tee = scene.nodes.find((node) => node.geometryFamily === "tee_90");
   const platform = scene.nodes.find((node) => node.geometryFamily === "support_platform");
-  assert.equal(platform.parentNode, tee.id);
+  const lowerPipe = scene.nodes.find((node) => node.bomKey === "tee-lower-sandwich-pipe-250");
+  assert.equal(lowerPipe.parentNode, tee.id);
+  assert.equal(lowerPipe.nominalLengthMm, 250);
+  assert.equal(lowerPipe.effectiveLengthMm, 200);
+  assert.equal(platform.parentNode, lowerPipe.id);
   assert.equal(platform.xMm, tee.xMm);
   assert.ok(platform.yMm < tee.yMm);
 });

@@ -9,10 +9,17 @@ import {
   wallRouteConsoleQuantity,
   wallTopRouteFacadeConsoleQuantity,
 } from "./wallRouteLayout";
+import {
+  CHIMNEY_ENGINEERING_RULES,
+  type ChimneyThicknessProfile,
+} from "./configuratorEngineeringRules";
 
-export const PIPE_SOCKET_OVERLAP_MM = 50;
-export const ROTARY_DAMPER_EFFECTIVE_LENGTH_MM = 130;
-export const ROTARY_DAMPER_OVERALL_LENGTH_MM = 180;
+export const PIPE_SOCKET_OVERLAP_MM = CHIMNEY_ENGINEERING_RULES.socketOverlapMm;
+export const ROTARY_DAMPER_EFFECTIVE_LENGTH_MM = CHIMNEY_ENGINEERING_RULES.rotaryDamper.effectiveMm;
+export const ROTARY_DAMPER_OVERALL_LENGTH_MM = CHIMNEY_ENGINEERING_RULES.rotaryDamper.nominalMm;
+export const SUPPORT_CAP_EFFECTIVE_LENGTH_MM = CHIMNEY_ENGINEERING_RULES.supportCap.effectiveMm;
+export const SUPPORT_CAP_OVERALL_LENGTH_MM = CHIMNEY_ENGINEERING_RULES.supportCap.nominalMm;
+export const SINGLE_WALL_ELBOW_90_EFFECTIVE_LENGTH_MM = CHIMNEY_ENGINEERING_RULES.singleWallElbow90.effectiveMm;
 export const PIPE_LENGTHS = [
   { nominalMm: 1000, effectiveMm: 950 },
   { nominalMm: 500, effectiveMm: 450 },
@@ -41,10 +48,11 @@ export type PlacedPipe = {
   endMm: number;
   zone: "indoor_warm" | "wall_or_ceiling_pass" | "attic_or_cold_zone" | "outdoor";
   contour: "одностенный" | "сэндвич";
+  thicknessProfile?: ChimneyThicknessProfile;
 };
 
 export type FixedRoutePart = {
-  id: "warmup" | "rotary_damper" | "support_cap";
+  id: "warmup" | "elbow_90" | "rotary_damper" | "support_cap";
   label: string;
   axis: RouteAxis;
   nominalLengthMm: number;
@@ -78,6 +86,10 @@ export type ChimneyBomLine = {
   catalogDiameterMode?: "sandwich-outer-exact" | "sandwich-outer-range";
   catalogLengthMode?: "exact" | "nearest";
   materialPreference?: "stainless-standard" | "catalog-default";
+  thicknessProfile?: ChimneyThicknessProfile;
+  preferredSteelGrade?: string;
+  preferredOuterSteelGrade?: string;
+  catalogBaseSize?: string;
   removable?: boolean;
   quantityNote?: string;
 };
@@ -135,8 +147,45 @@ export function positiveNumber(value: string | number | null | undefined): numbe
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
+function calculatedFacadeOffsetMm(roofOverhang: string | undefined): number {
+  const normalized = roofOverhang?.replace(",", ".").trim();
+  if (!normalized) return 0;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed + 100 : 0;
+}
+
 function effectiveComponentHeight(nominalLengthMm: number): number {
   return Math.max(0, nominalLengthMm - PIPE_SOCKET_OVERLAP_MM);
+}
+
+function applyThicknessProfiles(
+  variant: PipeLayoutVariant,
+  routeKind: ChimneyRouteKind,
+  forbiddenZones: ForbiddenJointZone[],
+): PipeLayoutVariant {
+  const firstFloorEndMm = forbiddenZones.find((zone) => zone.kind === "floor")?.endMm ?? Number.POSITIVE_INFINITY;
+  let firstSandwichAssigned = false;
+  return {
+    ...variant,
+    pipes: variant.pipes.map((pipe) => {
+      let thicknessProfile: ChimneyThicknessProfile;
+      if (pipe.contour === "одностенный") {
+        thicknessProfile = "first-floor-0.8";
+      } else if (!firstSandwichAssigned) {
+        thicknessProfile = "first-floor-0.8";
+        firstSandwichAssigned = true;
+      } else if (routeKind === "ceiling") {
+        thicknessProfile = pipe.startMm < firstFloorEndMm
+          ? "first-floor-0.8"
+          : "upper-outdoor-0.5";
+      } else {
+        thicknessProfile = pipe.axis === "horizontal" && pipe.zone !== "outdoor"
+          ? "first-floor-0.8"
+          : "upper-outdoor-0.5";
+      }
+      return { ...pipe, thicknessProfile };
+    }),
+  };
 }
 
 function measuredDiameter(draft: ScenarioConfiguratorDraft | null): Pick<ChimneyCalculation, "diameterMm" | "diameterStatus"> {
@@ -235,6 +284,66 @@ export function solvePipeLayouts({
     })
     .filter((variant, index, all) => all.findIndex((item) => item.id === variant.id) === index)
     .slice(0, maxVariants);
+}
+
+function solveWallSandwichLayout({
+  startMm,
+  targetMm,
+  forbiddenZones,
+  fallbackZone,
+}: {
+  startMm: number;
+  targetMm: number;
+  forbiddenZones: ForbiddenJointZone[];
+  fallbackZone: PlacedPipe["zone"];
+}): PipeLayoutVariant | null {
+  const mandatoryPipe = CHIMNEY_ENGINEERING_RULES.wallRoute.firstSandwichPipe;
+  const firstEndMm = startMm + mandatoryPipe.effectiveMm;
+  if (jointInsideForbiddenZone(firstEndMm, forbiddenZones)) return null;
+
+  const firstPipe: PlacedPipe = {
+    id: "horizontal-pipe-1",
+    axis: "horizontal",
+    nominalMm: mandatoryPipe.nominalMm,
+    effectiveMm: mandatoryPipe.effectiveMm,
+    startMm,
+    endMm: firstEndMm,
+    zone: pipeZone(startMm, firstEndMm, forbiddenZones, fallbackZone),
+    contour: "сэндвич",
+  };
+  if (firstEndMm >= targetMm) {
+    return {
+      id: String(mandatoryPipe.nominalMm),
+      label: String(mandatoryPipe.nominalMm),
+      pipes: [firstPipe],
+      coveredEndMm: firstEndMm,
+      reserveMm: firstEndMm - targetMm,
+      jointPositionsMm: [firstEndMm],
+    };
+  }
+
+  const tail = solvePipeLayouts({
+    axis: "horizontal",
+    startMm: firstEndMm,
+    targetMm,
+    forbiddenZones,
+    fallbackZone,
+    contour: "сэндвич",
+    maxVariants: 1,
+  })[0];
+  if (!tail) return null;
+  const tailPipes = tail.pipes.map((pipe, index) => ({
+    ...pipe,
+    id: `horizontal-pipe-${index + 2}`,
+  }));
+  return {
+    id: `${mandatoryPipe.nominalMm}-${tail.id}`,
+    label: `${mandatoryPipe.nominalMm} + ${tail.label}`,
+    pipes: [firstPipe, ...tailPipes],
+    coveredEndMm: tail.coveredEndMm,
+    reserveMm: tail.reserveMm,
+    jointPositionsMm: [firstEndMm, ...tail.jointPositionsMm],
+  };
 }
 
 function solvePipeLayoutEndingAtOrBefore({
@@ -370,16 +479,17 @@ function wallForbiddenZones(draft: ScenarioConfiguratorDraft | null, fallbackDis
 function summarizePipeBom(variants: PipeLayoutVariant[], routeKind: ChimneyRouteKind): ChimneyBomLine[] {
   const selected = variants[0];
   if (!selected) return [];
-  const counts = new Map<string, { nominalLengthMm: number; contour: PlacedPipe["contour"]; quantity: number }>();
+  const counts = new Map<string, { nominalLengthMm: number; contour: PlacedPipe["contour"]; thicknessProfile: ChimneyThicknessProfile; quantity: number }>();
   selected.pipes.forEach((pipe) => {
-    const key = `${pipe.contour}-${pipe.nominalMm}`;
+    const thicknessProfile = pipe.thicknessProfile ?? (pipe.zone === "outdoor" ? "upper-outdoor-0.5" : "first-floor-0.8");
+    const key = `${pipe.contour}-${pipe.nominalMm}-${thicknessProfile}`;
     const current = counts.get(key);
-    counts.set(key, { nominalLengthMm: pipe.nominalMm, contour: pipe.contour, quantity: (current?.quantity ?? 0) + 1 });
+    counts.set(key, { nominalLengthMm: pipe.nominalMm, contour: pipe.contour, thicknessProfile, quantity: (current?.quantity ?? 0) + 1 });
   });
   return [...counts.entries()]
     .sort(([, left], [, right]) => right.nominalLengthMm - left.nominalLengthMm)
-    .map(([, { nominalLengthMm, contour, quantity }]) => ({
-      key: `${contour === "сэндвич" ? "sandwich" : "single-layout"}-pipe-${nominalLengthMm}`,
+    .map(([, { nominalLengthMm, contour, thicknessProfile, quantity }]) => ({
+      key: `${contour === "сэндвич" ? "sandwich" : "single-layout"}-pipe-${nominalLengthMm}${thicknessProfile === "upper-outdoor-0.5" ? "-upper-outdoor" : ""}`,
       productKind: "труба",
       label: `${contour === "сэндвич" ? "Сэндвич-труба" : "Одностенная труба"} ${nominalLengthMm} мм`,
       quantity,
@@ -389,6 +499,7 @@ function summarizePipeBom(variants: PipeLayoutVariant[], routeKind: ChimneyRoute
       zone: routeKind === "ceiling" ? "indoor/cold/pass" : "wall/outdoor",
       selectionReason: "Длина выбрана так, чтобы соединения не попадали внутрь проходных зон.",
       requiresSku: true,
+      thicknessProfile,
     }));
 }
 
@@ -402,6 +513,23 @@ function addRouteNodes(
   passageWoolKits: number,
   wallConsoleQuantity: number,
 ) {
+  const addTeeLowerSandwichPipe = () => bom.push({
+    key: "tee-lower-sandwich-pipe-250",
+    productKind: "труба",
+    label: "Сэндвич-труба под тройник 250 мм",
+    quantity: 1,
+    nominalLengthMm: CHIMNEY_ENGINEERING_RULES.wallRoute.teeLowerSandwichPipe.nominalMm,
+    contour: "сэндвич" as const,
+    insulationMm: 50,
+    zone: "outdoor/support",
+    selectionReason: "По производственному правилу всегда устанавливается под наружным тройником.",
+    requiresSku: true,
+    catalogLengthMode: "exact" as const,
+    materialPreference: "stainless-standard" as const,
+    thicknessProfile: "upper-outdoor-0.5" as const,
+    preferredSteelGrade: CHIMNEY_ENGINEERING_RULES.wallRoute.teeLowerSandwichPipe.innerSteelGrade,
+    preferredOuterSteelGrade: CHIMNEY_ENGINEERING_RULES.wallRoute.teeLowerSandwichPipe.outerSteelGrade,
+  });
   if (routeKind === "ceiling") {
     if (singleWallWarmupPipeLengthMm > 0) {
       bom.unshift({
@@ -415,6 +543,7 @@ function addRouteNodes(
         selectionReason: "Из общей высоты разгона вычтена высота поворотного шибера.",
         requiresSku: true,
         catalogLengthMode: "nearest",
+        thicknessProfile: "first-floor-0.8",
       });
     }
     bom.splice(singleWallWarmupPipeLengthMm > 0 ? 1 : 0, 0, {
@@ -493,11 +622,16 @@ function addRouteNodes(
   bom.push({
     key: "passage-flange",
     productKind: "фланец",
-    label: "Фланец проходного узла",
+    label: "Фланец проходного узла 600×600 мм, AISI 430",
     quantity: passageQty * 2,
     zone: "wall_or_ceiling_pass",
     selectionReason: "По два фланца на проход: со стороны помещения и с противоположной стороны конструкции.",
     requiresSku: true,
+    catalogCategorySlug: "flantsy",
+    catalogSearch: "Фланец декоративный",
+    catalogBaseSize: CHIMNEY_ENGINEERING_RULES.passageKit.flangeBaseSize,
+    materialPreference: "catalog-default",
+    preferredSteelGrade: CHIMNEY_ENGINEERING_RULES.passageKit.flangeSteelGrade,
   });
   const upperFloorSkirtQty = Math.max(0, passageQty - (hasAttic ? 1 : 0));
   const decorativeSkirts = routeKind === "ceiling"
@@ -593,6 +727,7 @@ function addRouteNodes(
       catalogCategorySlug: "sendvich-troyniki",
       catalogSearch: "Сэндвич-тройник с К/О 90°",
     });
+    addTeeLowerSandwichPipe();
     bom.push({
       key: "outside-support-platform",
       productKind: "опорная_площадка",
@@ -695,6 +830,7 @@ function addRouteNodes(
       catalogCategorySlug: "sendvich-troyniki",
       catalogSearch: "Сэндвич-тройник с К/О 90°",
     });
+    addTeeLowerSandwichPipe();
     bom.push({
       key: "outside-support-platform",
       productKind: "опорная_площадка",
@@ -784,6 +920,12 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     "Каждый стык проверяется по абсолютной координате трассы.",
     `Расчётные полезные длины учитывают соединение ${PIPE_SOCKET_OVERLAP_MM} мм.`,
   ];
+  if (routeKind === "wall-top") {
+    notes.push("Для подъёма от печи заложена одностенная труба 1000 мм; фактическое место подрезки подтверждает менеджер.");
+  }
+  if (routeKind !== "ceiling") {
+    notes.push("После опорной заглушки первой заложена сэндвич-труба 1000 мм.");
+  }
   const reviewItems = [
     "Подтвердить полезную длину соединения для труб 500, 350 и 250 мм.",
     "Подобрать конкретные исполнения проходных узлов и фланцев по конструкции и наружному диаметру.",
@@ -795,15 +937,15 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     : positiveNumber(input.draft?.connectionHeight) ?? 0;
   const routeLengthMm = input.heightM * 1000;
   const legacyRouteTargetMm = connectionHeightMm + routeLengthMm;
-  const warmupLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.warmupLengthMm ?? 1000)) : 0;
+  const warmupLengthMm = routeKind === "ceiling"
+    ? CHIMNEY_ENGINEERING_RULES.initialSingleWallPipe.nominalMm
+    : 0;
   const indoorRiseMm = routeKind === "wall-top"
-    ? Math.max(0, Math.round(positiveNumber(input.draft?.verticalRise) ?? 0))
+    ? CHIMNEY_ENGINEERING_RULES.initialSingleWallPipe.effectiveMm
     : 0;
-  const rotaryDamperHeightMm = routeKind === "ceiling"
-    ? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM
-    : 0;
+  const rotaryDamperHeightMm = ROTARY_DAMPER_EFFECTIVE_LENGTH_MM;
   const singleWallWarmupPipeLengthMm = warmupLengthMm;
-  const supportCapLengthMm = routeKind === "ceiling" ? Math.max(0, Math.round(input.supportCapLengthMm ?? 70)) : 0;
+  const supportCapLengthMm = routeKind === "ceiling" ? SUPPORT_CAP_OVERALL_LENGTH_MM : 0;
   const fixedParts: FixedRoutePart[] = [];
   let pipeStartMm = routeKind === "ceiling" ? connectionHeightMm : 0;
   if (singleWallWarmupPipeLengthMm > 0) {
@@ -824,7 +966,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     pipeStartMm += rotaryDamperHeightMm;
   }
   if (supportCapLengthMm > 0) {
-    const effectiveMm = effectiveComponentHeight(supportCapLengthMm);
+    const effectiveMm = SUPPORT_CAP_EFFECTIVE_LENGTH_MM;
     fixedParts.push({ id: "support_cap", label: "Опорная заглушка", axis: "vertical", nominalLengthMm: supportCapLengthMm, effectiveMm, startMm: pipeStartMm, endMm: pipeStartMm + effectiveMm });
     pipeStartMm += effectiveMm;
   }
@@ -898,26 +1040,24 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     } else if (routeKind === "wall-rear") {
       const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
       const wallStartMm = positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000;
+      const facadeOffsetMm = calculatedFacadeOffsetMm(input.draft?.roofOverhang);
       const wallEndMm = wallStartMm
         + (positiveNumber(input.draft?.wallThickness) ?? 0)
-        + (positiveNumber(input.draft?.facadeOffset) ?? 0);
-      const rearDamperEffectiveMm = Math.max(0, Math.round(input.rotaryDamperHeightMm ?? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM));
-      const rearSupportCapNominalMm = Math.max(0, Math.round(input.supportCapLengthMm ?? 70));
-      const rearSupportCapEffectiveMm = effectiveComponentHeight(rearSupportCapNominalMm);
+        + facadeOffsetMm;
+      const rearDamperEffectiveMm = ROTARY_DAMPER_EFFECTIVE_LENGTH_MM;
+      const rearSupportCapNominalMm = SUPPORT_CAP_OVERALL_LENGTH_MM;
+      const rearSupportCapEffectiveMm = SUPPORT_CAP_EFFECTIVE_LENGTH_MM;
       const damperStartMm = 0;
       const damperEndMm = damperStartMm + rearDamperEffectiveMm;
       const supportCapStartMm = damperEndMm;
       const supportCapEndMm = supportCapStartMm + rearSupportCapEffectiveMm;
       const horizontalSandwich = rearSupportCapEffectiveMm > 0 && wallEndMm > supportCapEndMm
-        ? solvePipeLayouts({
-          axis: "horizontal",
+        ? solveWallSandwichLayout({
           startMm: supportCapEndMm,
           targetMm: wallEndMm,
           forbiddenZones,
           fallbackZone: "wall_or_ceiling_pass",
-          contour: "сэндвич",
-          maxVariants: 1,
-        })[0]
+        })
         : null;
       const outdoorLayout = solvePipeLayouts({
         axis: "vertical",
@@ -940,7 +1080,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       } else if (supportCapEndMm > wallStartMm) {
         errors.push("Шибер с опорной заглушкой попадают внутрь стены; увеличьте расстояние от патрубка до внутренней поверхности стены.");
       } else if (!horizontalSandwich) {
-        errors.push("Не найдена раскладка сэндвич-труб без стыка внутри стены.");
+        errors.push("Обязательная первая сэндвич-труба 1000 мм даёт стык внутри стены; раскладку должен проверить менеджер.");
       } else if (!outdoorLayout) {
         errors.push("Не найдена раскладка наружных сэндвич-труб по заданной вертикальной высоте.");
       } else {
@@ -977,28 +1117,26 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       }
     } else {
       const wallStartMm = positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000;
+      const facadeOffsetMm = calculatedFacadeOffsetMm(input.draft?.roofOverhang);
       const wallEndMm = wallStartMm
         + (positiveNumber(input.draft?.wallThickness) ?? 0)
-        + (positiveNumber(input.draft?.facadeOffset) ?? 0);
-      const topDamperEffectiveMm = Math.max(0, Math.round(
-        input.rotaryDamperHeightMm ?? ROTARY_DAMPER_EFFECTIVE_LENGTH_MM,
-      ));
-      const topSupportCapNominalMm = Math.max(0, Math.round(input.supportCapLengthMm ?? 70));
-      const topSupportCapEffectiveMm = effectiveComponentHeight(topSupportCapNominalMm);
-      const damperStartMm = 0;
+        + facadeOffsetMm;
+      const topDamperEffectiveMm = ROTARY_DAMPER_EFFECTIVE_LENGTH_MM;
+      const topSupportCapNominalMm = SUPPORT_CAP_OVERALL_LENGTH_MM;
+      const topSupportCapEffectiveMm = SUPPORT_CAP_EFFECTIVE_LENGTH_MM;
+      const elbowStartMm = 0;
+      const elbowEndMm = elbowStartMm + SINGLE_WALL_ELBOW_90_EFFECTIVE_LENGTH_MM;
+      const damperStartMm = elbowEndMm;
       const damperEndMm = damperStartMm + topDamperEffectiveMm;
       const supportCapStartMm = damperEndMm;
       const supportCapEndMm = supportCapStartMm + topSupportCapEffectiveMm;
       const horizontal = topSupportCapEffectiveMm > 0 && wallEndMm > supportCapEndMm
-        ? solvePipeLayouts({
-          axis: "horizontal",
+        ? solveWallSandwichLayout({
           startMm: supportCapEndMm,
           targetMm: wallEndMm,
           forbiddenZones,
           fallbackZone: "indoor_warm",
-          contour: "сэндвич",
-          maxVariants: 1,
-        })[0]
+        })
         : null;
       const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
       const outdoor = solvePipeLayouts({ axis: "vertical", startMm: 0, targetMm: outdoorHeightMm, forbiddenZones: [], fallbackZone: "outdoor", maxVariants: 1 })[0];
@@ -1007,10 +1145,19 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       } else if (supportCapEndMm > wallStartMm) {
         errors.push("Шибер с опорной заглушкой попадают внутрь стены; увеличьте расстояние от оси патрубка до внутренней поверхности стены.");
       } else if (!horizontal) {
-        errors.push("Не найдена раскладка сэндвич-труб от опорной заглушки до тройника без стыка внутри стены.");
+        errors.push("Обязательная первая сэндвич-труба 1000 мм даёт стык внутри стены; раскладку должен проверить менеджер.");
       } else if (!outdoor) {
         errors.push("Не найдена раскладка наружных сэндвич-труб по заданной вертикальной высоте.");
       } else {
+        fixedParts.push({
+          id: "elbow_90",
+          label: "Одноконтурный отвод 90°",
+          axis: "horizontal",
+          nominalLengthMm: SINGLE_WALL_ELBOW_90_EFFECTIVE_LENGTH_MM + PIPE_SOCKET_OVERLAP_MM,
+          effectiveMm: SINGLE_WALL_ELBOW_90_EFFECTIVE_LENGTH_MM,
+          startMm: elbowStartMm,
+          endMm: elbowEndMm,
+        });
         fixedParts.push({
           id: "rotary_damper",
           label: "Шибер поворотный",
@@ -1052,6 +1199,8 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     }
   }
   if (!variants.length && !errors.length) errors.push("Не найдена раскладка труб без стыков внутри проходных зон.");
+
+  variants = variants.map((variant) => applyThicknessProfiles(variant, routeKind, forbiddenZones));
 
   const bom = summarizePipeBom(variants, routeKind);
   addRouteNodes(
@@ -1101,17 +1250,27 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
 
 export function bomForVariant(calculation: ChimneyCalculation, variant: PipeLayoutVariant | null): ChimneyBomLine[] {
   const isLayoutPipe = (line: ChimneyBomLine) => line.key.startsWith("sandwich-pipe-") || line.key.startsWith("single-layout-pipe-");
-  const withMaterialDefaults = (lines: ChimneyBomLine[]) => lines.map((line) => ({
-    ...line,
-    materialPreference: line.materialPreference ?? (
+  const withMaterialDefaults = (lines: ChimneyBomLine[]) => lines.map((line) => {
+    const materialPreference = line.materialPreference ?? (
       line.key === "ceiling-passage"
       || line.key === "wall-passage"
       || line.productKind === "крепеж"
       || line.productKind === "изоляция"
         ? "catalog-default"
         : "stainless-standard"
-    ),
-  } satisfies ChimneyBomLine));
+    );
+    const thicknessProfile = line.thicknessProfile ?? (
+      materialPreference === "stainless-standard" && line.contour
+        ? line.key === "support-cap"
+          || line.zone === "indoor_warm"
+          || line.zone === "transition"
+          || line.zone === "wall_or_ceiling_pass"
+            ? "first-floor-0.8"
+            : "upper-outdoor-0.5"
+        : undefined
+    );
+    return { ...line, materialPreference, thicknessProfile } satisfies ChimneyBomLine;
+  });
   if (!variant) return withMaterialDefaults(calculation.bom.filter((line) => !isLayoutPipe(line)));
   const pipeLines = summarizePipeBom([variant], calculation.routeKind);
   const fixedAndNodes = calculation.bom.filter((line) => !isLayoutPipe(line));
