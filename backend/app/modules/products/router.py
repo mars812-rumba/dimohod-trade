@@ -305,6 +305,7 @@ def sku_matches_filters(
     angle_deg: int | None,
     insulation_mm: int | None,
     contour: str | None,
+    base_size: str | None = None,
 ) -> bool:
     return (
         sku.is_active
@@ -330,7 +331,8 @@ def sku_matches_filters(
         and (angle_deg is None or sku.angle_deg == angle_deg)
         and (insulation_mm is None or sku.insulation_mm == insulation_mm)
         and (contour is None or (sku.contour or "").casefold().strip() == contour.casefold().strip())
-)
+        and (base_size is None or (sku.attributes or {}).get("base_size") == base_size)
+    )
 
 
 def _decimal_attribute(value: object) -> Decimal | None:
@@ -484,6 +486,7 @@ async def read_products(
     angle_deg: int | None = Query(default=None, ge=0, le=360),
     insulation_mm: int | None = Query(default=None, ge=0, le=10000),
     contour: str | None = Query(default=None, min_length=1, max_length=32),
+    base_size: str | None = Query(default=None, min_length=1, max_length=32),
     preferred_diameter: str | None = Query(default=None, pattern=r"^(?:\d+:\d*|\d*:\d+)$"),
     preferred_steel_grade: str | None = Query(default=None, min_length=1, max_length=32),
     preferred_material: str | None = Query(default=None, min_length=1, max_length=32),
@@ -512,6 +515,7 @@ async def read_products(
         angle_deg=angle_deg,
         insulation_mm=insulation_mm,
         contour=contour,
+        base_size=base_size,
     )
     items: list[ProductListItem] = []
 
@@ -533,6 +537,7 @@ async def read_products(
                 angle_deg=angle_deg,
                 insulation_mm=insulation_mm,
                 contour=contour,
+                base_size=base_size,
             )
         ]
         preferred_skus = [
@@ -552,6 +557,7 @@ async def read_products(
                 angle_deg=None,
                 insulation_mm=None,
                 contour=None,
+                base_size=None,
             )
         ]
         representative_pool = preferred_skus or active_skus
