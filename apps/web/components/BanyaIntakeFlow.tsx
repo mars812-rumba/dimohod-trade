@@ -35,15 +35,15 @@ type BanyaIntakeFlowProps = {
 };
 
 const choiceIconScale: Record<string, number> = {
-  "/images/measurements/icons/object-bathhouse.webp": 1.21,
-  "/images/measurements/icons/object-house.webp": 1.08,
-  "/images/measurements/icons/heater-sauna.webp": 1.14,
-  "/images/measurements/icons/heater-stove.webp": 1.09,
-  "/images/measurements/icons/heater-solid-fuel.webp": 1.07,
-  "/images/measurements/icons/heater-gas.webp": 1.06,
-  "/images/measurements/icons/heater-diesel.webp": 1.06,
-  "/images/measurements/icons/outlet-top.webp": 1.15,
-  "/images/measurements/icons/outlet-rear.webp": 1.17,
+  "/images/measurements/icons/object-bathhouse.webp": 1.43,
+  "/images/measurements/icons/object-house.webp": 1.27,
+  "/images/measurements/icons/heater-sauna.webp": 1.35,
+  "/images/measurements/icons/heater-stove.webp": 1.29,
+  "/images/measurements/icons/heater-solid-fuel.webp": 1.27,
+  "/images/measurements/icons/heater-gas.webp": 1.25,
+  "/images/measurements/icons/heater-diesel.webp": 1.25,
+  "/images/measurements/icons/outlet-top.webp": 1.36,
+  "/images/measurements/icons/outlet-rear.webp": 1.38,
 };
 
 function ChoiceIcon({ src }: { src: string }) {
