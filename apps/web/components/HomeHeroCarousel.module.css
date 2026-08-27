@@ -51,6 +51,10 @@
   display: none;
 }
 
+.mobilePoster {
+  display: none;
+}
+
 .videoCue {
   display: none;
 }
@@ -72,11 +76,17 @@
   letter-spacing: 0.02em;
 }
 
-.cta {
+.heroActions {
   position: absolute;
   z-index: 2;
   right: max(24px, calc((100vw - 1240px) / 2));
   bottom: 24px;
+  display: grid;
+  gap: 8px;
+  width: min(360px, calc(100% - 48px));
+}
+
+.cta {
   display: inline-flex;
   gap: 10px;
   align-items: center;
@@ -88,6 +98,21 @@
   font-size: 13px;
   font-weight: 750;
   transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.catalogCta {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  color: #fff;
+  background: rgba(16, 33, 39, 0.66);
+  font-size: 13px;
+  font-weight: 720;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
 .ctaCopy {
@@ -142,7 +167,14 @@
   transform: translateY(-2px);
 }
 
-.cta:focus-visible {
+.catalogCta:hover {
+  border-color: rgba(255, 255, 255, 0.9);
+  background: rgba(16, 33, 39, 0.82);
+  transform: translateY(-1px);
+}
+
+.cta:focus-visible,
+.catalogCta:focus-visible {
   outline: 3px solid rgba(255, 255, 255, 0.88);
   outline-offset: 4px;
 }
@@ -170,6 +202,21 @@
 
   .carouselFrame {
     min-height: 0;
+  }
+
+  .slideImage {
+    display: none;
+  }
+
+  .mobilePoster {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 56%;
   }
 
   .mobileVideo {
@@ -218,8 +265,9 @@
     width: 46px;
     height: 46px;
     place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.82);
     color: #fff;
-    background: #ed5b2a;
+    background: transparent;
   }
 
   .videoCueCopy {
@@ -244,10 +292,14 @@
     line-height: 1.25;
   }
 
-  .cta {
+  .heroActions {
     right: 14px;
-    bottom: max(72px, calc(env(safe-area-inset-bottom) + 56px));
+    bottom: calc(10px + env(safe-area-inset-bottom));
     width: calc(100% - 28px);
+  }
+
+  .cta {
+    width: 100%;
     min-height: 72px;
     padding: 10px 14px;
     font-size: 12px;
@@ -271,6 +323,11 @@
     white-space: nowrap;
   }
 
+  .catalogCta {
+    min-height: 44px;
+    background: rgba(16, 33, 39, 0.58);
+  }
+
   .headline {
     flex-basis: 72px;
     min-height: 72px;
@@ -291,10 +348,17 @@
     font-size: 14px;
   }
 
+  .heroActions {
+    gap: 6px;
+  }
+
   .cta {
-    bottom: max(60px, calc(env(safe-area-inset-bottom) + 48px));
     min-height: 52px;
     padding-block: 7px;
+  }
+
+  .catalogCta {
+    min-height: 40px;
   }
 
   .ctaCopy span {

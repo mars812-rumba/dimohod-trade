@@ -9,7 +9,7 @@ const stylesSource = await readFile(stylesUrl, "utf8");
 
 test("hero carousel references existing responsive image assets", async () => {
   assert.doesNotMatch(componentSource, /\.mobile\.webp/);
-  assert.doesNotMatch(componentSource, /<source\b/);
+  assert.match(componentSource, /<source src=\{`\$\{assetBasePath\}\/videos\/home\/0826\.mp4`\}/);
 
   const fileNames = [...componentSource.matchAll(/\["([^"]+\.webp)",/g)]
     .map((match) => match[1]);
@@ -19,6 +19,19 @@ test("hero carousel references existing responsive image assets", async () => {
     `../public/images/home/hero-projects/${fileName}`,
     import.meta.url,
   ))));
+  await access(new URL("../public/videos/home/0826.mp4", import.meta.url));
+});
+
+test("mobile hero explains production and exposes a secondary catalog action", () => {
+  assert.match(componentSource, /Дымоходы высокого качества на точном оборудовании/u);
+  assert.match(componentSource, /className=\{styles\.catalogCta\} href="\/catalog"/);
+  assert.match(componentSource, /Открыть каталог/u);
+  assert.match(stylesSource, /background: rgba\(16, 33, 39, 0\.58\)/);
+});
+
+test("mobile hero reserves orange for the primary calculation action", () => {
+  assert.match(stylesSource, /\.cta \{[\s\S]*?background: #ed5b2a;/u);
+  assert.match(stylesSource, /\.videoCueIcon \{[\s\S]*?border: 1px solid rgba\(255, 255, 255, 0\.82\);[\s\S]*?background: transparent;/u);
 });
 
 test("hero carousel keeps a vh fallback for browsers without small viewport units", () => {
