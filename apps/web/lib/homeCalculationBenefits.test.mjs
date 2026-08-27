@@ -9,7 +9,6 @@ const stylesSource = readFileSync(new URL("../app/page.module.css", import.meta.
 
 const benefitImages = [
   "calculation-main.webp",
-  "calculation-main-photo.webp",
   "calculation-price.webp",
   "delivery.webp",
   "estimate-pdf.webp",
@@ -18,11 +17,12 @@ const benefitImages = [
   "production-welding.webp",
 ];
 
-test("homepage leads with the online chimney calculation and exposes both calls to action", () => {
+test("homepage calculation section stays compact and exposes both calls to action", () => {
   assert.match(pageSource, /Рассчитайте дымоход прямо на сайте/u);
-  assert.match(pageSource, /Готовый расчёт под ваш объект/u);
   assert.match(pageSource, /Вы рассчитываете — мы проверяем и отправляем/u);
   assert.equal(pageSource.match(/href="\/zamery\?edit=1"/gu)?.length, 2);
+  assert.doesNotMatch(pageSource, /calculationFeature/u);
+  assert.doesNotMatch(pageSource, /Готовый расчёт под ваш объект/u);
 });
 
 test("every calculation benefit illustration is a committed WebP asset", () => {

@@ -444,19 +444,9 @@ export default async function HomePage() {
           <div className={styles.shell}>
             <div className={styles.benefitsIntro}>
               <h2 id="home-benefits-title">Рассчитайте дымоход прямо на сайте</h2>
-              <p>Получите стоимость, состав комплекта, персональную схему монтажа и готовую смету до оформления заказа.</p>
-            </div>
-
-            <article className={styles.calculationFeature}>
-              <div className={styles.calculationFeatureCopy}>
-                <h3>Готовый расчёт под ваш объект</h3>
-                <p>Ответьте на вопросы по объекту и отопителю — система соберёт комплект именно под ваши параметры.</p>
-                <ul>
-                  {["Стоимость комплекта", "Полный список изделий", "Схема монтажа", "PDF-смета"].map((item) => (
-                    <li key={item}><Check aria-hidden size={18} strokeWidth={2} />{item}</li>
-                  ))}
-                </ul>
-                <div className={styles.calculationFeatureAction}>
+              <div className={styles.benefitsIntroContent}>
+                <p>Получите стоимость, состав комплекта, персональную схему монтажа и готовую смету до оформления заказа.</p>
+                <div className={styles.benefitsIntroAction}>
                   <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/zamery?edit=1">
                     Рассчитать дымоход
                     <ArrowRight aria-hidden size={18} strokeWidth={1.8} />
@@ -464,15 +454,7 @@ export default async function HomePage() {
                   <span>Расчёт займёт несколько минут</span>
                 </div>
               </div>
-              <div className={styles.calculationFeatureVisual} aria-hidden>
-                <Image
-                  alt=""
-                  height={512}
-                  src={`${basePath}/images/home/calculation-benefits/calculation-main-photo.webp`}
-                  width={512}
-                />
-              </div>
-            </article>
+            </div>
 
             <div className={styles.calculationResults} aria-label="Что входит в результат расчёта">
               {calculationResults.map(({ image, title, text }) => (

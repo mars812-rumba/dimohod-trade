@@ -29,94 +29,229 @@
 }
 
 .benefitsSection {
-  padding: clamp(48px, 6vw, 78px) 0;
+  padding: clamp(64px, 7vw, 96px) 0;
   color: #fff;
   background: linear-gradient(118deg, #0d252f 0%, #173d4c 58%, #102127 100%);
 }
 
-.benefitsLayout {
-  display: grid;
-  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.55fr);
-  gap: clamp(32px, 5vw, 72px);
-  align-items: start;
-}
-
 .benefitsIntro {
-  position: sticky;
-  top: 92px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: clamp(28px, 6vw, 80px);
+  align-items: end;
 }
 
 .benefitsIntro h2 {
-  max-width: 10ch;
+  max-width: 13ch;
   margin: 0;
-  font-size: clamp(38px, 4.4vw, 58px);
+  font-size: clamp(40px, 5.2vw, 68px);
   font-weight: 720;
-  line-height: 0.94;
+  line-height: 0.96;
   letter-spacing: -0.04em;
   text-wrap: balance;
 }
 
-.benefitsIntro h2::after {
-  display: block;
-  width: 62px;
-  height: 4px;
-  margin-top: 24px;
-  background: var(--signal);
-  content: "";
+.benefitsIntroContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.benefitsIntro p {
-  max-width: 34ch;
-  margin: 24px 0 0;
+.benefitsIntroContent > p {
+  max-width: 48ch;
+  margin: 0;
   color: #c4d4d8;
-  font-size: 15px;
+  font-size: clamp(15px, 1.5vw, 18px);
   line-height: 1.6;
   text-wrap: pretty;
 }
 
-.benefitsGrid {
+.benefitsIntroAction {
+  display: flex;
+  gap: 14px 18px;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.benefitsIntroAction > span {
+  max-width: 18ch;
+  color: #c4d4d8;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.calculationButton {
+  white-space: nowrap;
+}
+
+.calculationResults {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: clamp(40px, 6vw, 72px);
   border-top: 1px solid rgba(179, 207, 215, 0.22);
   border-left: 1px solid rgba(179, 207, 215, 0.22);
 }
 
-.benefitItem {
+.calculationResult {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
-  gap: 20px;
-  min-height: 220px;
-  padding: clamp(26px, 3.2vw, 40px);
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: clamp(18px, 2.5vw, 30px);
+  min-height: 210px;
+  padding: clamp(24px, 3vw, 38px);
   border-right: 1px solid rgba(179, 207, 215, 0.22);
   border-bottom: 1px solid rgba(179, 207, 215, 0.22);
 }
 
-.benefitIcon {
+.calculationResultIcon {
   display: grid;
-  width: 52px;
-  height: 52px;
+  width: 96px;
+  height: 96px;
   place-items: center;
-  border: 1px solid rgba(237, 91, 42, 0.7);
-  color: #ff7548;
+  border: 1px solid rgba(151, 211, 219, 0.28);
+  border-radius: 14px;
+  background: rgba(221, 241, 242, 0.1);
 }
 
-.benefitItem h3 {
+.calculationResultIcon img {
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
+  filter: brightness(1.55) saturate(1.08);
+}
+
+.calculationResult h3 {
   max-width: 15ch;
-  margin: 3px 0 0;
-  font-size: clamp(23px, 2.2vw, 31px);
+  margin: 8px 0 0;
+  font-size: clamp(23px, 2.15vw, 30px);
   font-weight: 680;
   line-height: 1.02;
   letter-spacing: -0.025em;
   text-wrap: balance;
 }
 
-.benefitItem p {
+.calculationResult p {
   max-width: 34ch;
-  margin: 16px 0 0;
+  margin: 14px 0 0;
   color: #c4d4d8;
   font-size: 14px;
   line-height: 1.58;
   text-wrap: pretty;
+}
+
+.calculationProcess {
+  margin-top: clamp(48px, 7vw, 84px);
+  padding-top: clamp(36px, 5vw, 56px);
+  border-top: 1px solid rgba(179, 207, 215, 0.26);
+}
+
+.calculationProcessHeading {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: clamp(24px, 5vw, 72px);
+  align-items: end;
+}
+
+.calculationProcessHeading h3 {
+  max-width: 18ch;
+  margin: 0;
+  font-size: clamp(30px, 3.8vw, 48px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.calculationProcessHeading p {
+  max-width: 48ch;
+  margin: 0;
+  color: #c4d4d8;
+  font-size: 14px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.calculationSteps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 38px 0 0;
+  padding: 0;
+  border-top: 1px solid rgba(179, 207, 215, 0.22);
+  list-style: none;
+}
+
+.calculationSteps li {
+  position: relative;
+  min-width: 0;
+  padding: 28px clamp(18px, 2.5vw, 30px) 30px;
+  border-right: 1px solid rgba(179, 207, 215, 0.22);
+}
+
+.calculationSteps li:first-child {
+  border-left: 1px solid rgba(179, 207, 215, 0.22);
+}
+
+.calculationSteps li::after {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  left: -5px;
+  height: 1px;
+  background: rgba(179, 207, 215, 0.22);
+  content: "";
+}
+
+.calculationStepNumber {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(237, 91, 42, 0.72);
+  color: #ff7548;
+  font-size: 12px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.calculationStepIcon {
+  display: grid;
+  width: 76px;
+  height: 76px;
+  margin-top: 22px;
+  place-items: center;
+  border: 1px solid rgba(151, 211, 219, 0.26);
+  border-radius: 14px;
+  background: rgba(221, 241, 242, 0.09);
+}
+
+.calculationStepIcon img {
+  width: 66px;
+  height: 66px;
+  object-fit: contain;
+  filter: brightness(1.58) saturate(1.08);
+}
+
+.calculationSteps h4 {
+  margin: 18px 0 0;
+  font-family: "Arial Narrow", "Aptos Narrow", "Roboto Condensed", sans-serif;
+  font-size: clamp(21px, 2vw, 27px);
+  font-weight: 680;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.calculationSteps p {
+  margin: 12px 0 0;
+  color: #c4d4d8;
+  font-size: 13px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.calculationProcessAction {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 38px;
 }
 
 .hero {
@@ -2334,16 +2469,16 @@
 }
 
 @media (max-width: 1020px) {
-  .benefitsLayout {
-    grid-template-columns: 1fr;
-  }
-
-  .benefitsIntro {
-    position: static;
-  }
-
   .benefitsIntro h2 {
     max-width: 14ch;
+  }
+
+  .calculationSteps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .calculationSteps li:nth-child(3) {
+    border-left: 1px solid rgba(179, 207, 215, 0.22);
   }
 
   .routeExamplesGrid {
@@ -2405,51 +2540,112 @@
     padding: 54px 0;
   }
 
-  .benefitsLayout {
-    gap: 30px;
+  .benefitsIntro,
+  .calculationProcessHeading {
+    grid-template-columns: 1fr;
   }
 
   .benefitsIntro h2 {
-    max-width: 12ch;
+    max-width: 13ch;
     font-size: clamp(34px, 10vw, 44px);
   }
 
-  .benefitsIntro h2::after {
-    width: 48px;
-    height: 3px;
-    margin-top: 18px;
-  }
-
-  .benefitsIntro p {
-    margin-top: 18px;
+  .benefitsIntroContent > p {
     font-size: 14px;
   }
 
-  .benefitItem {
-    grid-template-columns: 42px minmax(0, 1fr);
+  .calculationResults {
+    grid-template-columns: 1fr;
+    margin-top: 44px;
+  }
+
+  .calculationResult {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 18px;
+    min-height: 0;
+    padding: 24px 20px;
+  }
+
+  .calculationResultIcon {
+    width: 76px;
+    height: 76px;
+  }
+
+  .calculationResultIcon img {
+    width: 66px;
+    height: 66px;
+  }
+
+  .calculationResult h3 {
+    margin-top: 4px;
+    font-size: clamp(22px, 6vw, 28px);
+  }
+
+  .calculationResult p {
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .calculationProcess {
+    margin-top: 54px;
+    padding-top: 38px;
+  }
+
+  .calculationProcessHeading {
+    gap: 18px;
+  }
+
+  .calculationProcessHeading h3 {
+    font-size: clamp(30px, 8vw, 40px);
+  }
+
+  .calculationSteps {
+    grid-template-columns: 1fr;
+    margin-top: 30px;
+  }
+
+  .calculationSteps li {
+    display: grid;
+    grid-template-columns: 30px 64px minmax(0, 1fr);
     gap: 14px;
-    min-height: 184px;
-    padding: 22px 18px;
+    align-items: center;
+    padding: 20px 0;
+    border-right: 0;
   }
 
-  .benefitIcon {
-    width: 42px;
-    height: 42px;
+  .calculationSteps li:first-child,
+  .calculationSteps li:nth-child(3) {
+    border-left: 0;
   }
 
-  .benefitIcon svg {
-    width: 24px;
-    height: 24px;
+  .calculationStepIcon {
+    width: 64px;
+    height: 64px;
+    margin-top: 0;
   }
 
-  .benefitItem h3 {
-    font-size: clamp(20px, 5.8vw, 26px);
+  .calculationStepIcon img {
+    width: 56px;
+    height: 56px;
   }
 
-  .benefitItem p {
-    margin-top: 12px;
+  .calculationSteps h4 {
+    margin-top: 0;
+    font-size: 22px;
+  }
+
+  .calculationSteps p {
+    margin-top: 7px;
     font-size: 12px;
-    line-height: 1.5;
+  }
+
+  .calculationProcessAction {
+    justify-content: stretch;
+    margin-top: 30px;
+  }
+
+  .calculationProcessAction .calculationButton {
+    width: 100%;
   }
 
   .hero {
@@ -2925,12 +3121,49 @@
 }
 
 @media (max-width: 460px) {
-  .benefitsGrid {
-    grid-template-columns: 1fr;
+  .benefitsIntroAction {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
-  .benefitItem {
-    min-height: 0;
+  .benefitsIntroAction .calculationButton {
+    width: 100%;
+  }
+
+  .calculationResult {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 14px;
+    padding-inline: 14px;
+  }
+
+  .calculationResultIcon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .calculationResultIcon img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .calculationSteps li {
+    grid-template-columns: 26px 54px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .calculationStepNumber {
+    width: 26px;
+    height: 26px;
+  }
+
+  .calculationStepIcon {
+    width: 54px;
+    height: 54px;
+  }
+
+  .calculationStepIcon img {
+    width: 48px;
+    height: 48px;
   }
 }
 
