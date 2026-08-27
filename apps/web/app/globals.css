@@ -5518,6 +5518,9 @@ body.mobile-menu-open {
 
   .mobile-menu-trigger {
     display: inline-flex;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
   }
 
   .header-phone {
@@ -5525,9 +5528,14 @@ body.mobile-menu-open {
     width: 40px;
     min-height: 40px;
     padding: 0;
-    border-color: rgba(255, 255, 255, 0.78);
-    border-radius: 3px;
+    border: 0;
+    border-radius: 0;
     color: #fff;
+    background: transparent;
+  }
+
+  .header-phone:hover {
+    border-color: transparent;
     background: transparent;
   }
 
