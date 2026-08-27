@@ -248,6 +248,20 @@
   letter-spacing: -0.035em;
 }
 
+.intakeIntroHeading {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  min-width: 0;
+}
+
+.intakeIntroIcon {
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
 .intakeIntro p {
   max-width: 520px;
   margin: 0;
@@ -452,6 +466,61 @@
   border-color: var(--scenario-steel);
   color: #fff;
   background: var(--scenario-deep);
+}
+
+.visualChoiceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.objectChoiceGrid,
+.outletChoiceGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.visualChoiceGrid label {
+  min-width: 0;
+}
+
+.choiceRow .visualChoice {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  min-height: 92px;
+  padding: 10px 12px;
+  overflow: hidden;
+  color: var(--scenario-ink);
+  background: #fff;
+}
+
+.choiceRow .visualChoice strong {
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.choiceIconFrame {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  place-items: center;
+}
+
+.choiceIcon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.choiceRow input:checked + .visualChoice {
+  border-color: var(--scenario-steel);
+  color: var(--scenario-ink);
+  background: #edf5f5;
+  box-shadow: inset 0 0 0 1px var(--scenario-steel);
 }
 
 .choiceContext {
@@ -1833,6 +1902,16 @@ a.groupItem:hover {
     padding: 56px 0;
   }
 
+  .intakeIntroHeading {
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .intakeIntroIcon {
+    width: 64px;
+    height: 64px;
+  }
+
   .intakeStep {
     padding: 34px 0;
   }
@@ -1840,6 +1919,23 @@ a.groupItem:hover {
   .stepHeading {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .visualChoiceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .choiceRow .visualChoice {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 8px;
+    min-height: 82px;
+    padding: 8px;
+  }
+
+  .choiceIconFrame {
+    width: 52px;
+    height: 52px;
   }
 
   .routeChoices {

@@ -9,7 +9,6 @@ import {
   IconChevronRight as ChevronRight,
   IconCircleDot as CircleDot,
   IconCertificate as Certificate,
-  IconClipboardCheck as ClipboardCheck,
   IconDownload as Download,
   IconFileCheck as FileCheck2,
   IconFlame as FlameKindling,
@@ -26,7 +25,6 @@ import {
   IconShieldCheck as ShieldCheck,
   IconStar as Star,
   IconTool as Wrench,
-  IconTruckDelivery as TruckDelivery,
   IconBolt as Zap,
 } from "@tabler/icons-react";
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
@@ -236,26 +234,49 @@ const checks = [
   "Оголовок и завершение системы",
 ];
 
-const serviceBenefits = [
+const calculationResults = [
   {
-    icon: Zap,
-    title: "Лазерная сварка в стык",
-    text: "Технология изготовления элементов дымохода из нержавеющей стали.",
+    image: "/images/home/calculation-benefits/calculation-price.webp",
+    title: "Стоимость комплекта",
+    text: "Увидите предварительную стоимость дымохода до оформления заказа.",
   },
   {
-    icon: ClipboardCheck,
-    title: "Инженерное сопровождение",
-    text: "Сверяем исходные данные, схему и состав комплекта до оформления заказа.",
+    image: "/images/home/calculation-benefits/product-list.webp",
+    title: "Полный состав изделий",
+    text: "Получите список элементов и их количество для выбранного маршрута.",
   },
   {
-    icon: TruckDelivery,
+    image: "/images/home/calculation-benefits/installation-scheme.webp",
+    title: "Персональная схема монтажа",
+    text: "Увидите маршрут дымохода и расположение элементов на своём объекте.",
+  },
+  {
+    image: "/images/home/calculation-benefits/estimate-pdf.webp",
+    title: "Готовая PDF-смета",
+    text: "Скачайте расчёт, чтобы сохранить его или отправить на согласование.",
+  },
+];
+
+const calculationSteps = [
+  {
+    image: "/images/home/calculation-benefits/calculation-main.webp",
+    title: "Расчёт на сайте",
+    text: "Вы отвечаете на вопросы об объекте, отопителе и маршруте.",
+  },
+  {
+    image: "/images/home/calculation-benefits/calculation-price.webp",
+    title: "Проверка специалистом",
+    text: "Мы сверяем исходные данные, состав комплекта и схему.",
+  },
+  {
+    image: "/images/home/calculation-benefits/production-welding.webp",
+    title: "Производство комплекта",
+    text: "После проверки и согласования заказ передаётся в производство.",
+  },
+  {
+    image: "/images/home/calculation-benefits/delivery.webp",
     title: "Доставка по России",
-    text: "Отправляем готовые заказы транспортными компаниями в регионы.",
-  },
-  {
-    icon: FlameKindling,
-    title: "Под конкретный отопитель",
-    text: "Начинаем подбор с модели и параметров патрубка печи, камина или котла.",
+    text: "Отправляем готовый заказ транспортной компанией.",
   },
 ];
 
@@ -420,17 +441,44 @@ export default async function HomePage() {
         <HomeHeroCarousel assetBasePath={basePath} />
 
         <section className={styles.benefitsSection} aria-labelledby="home-benefits-title">
-          <div className={`${styles.shell} ${styles.benefitsLayout}`}>
+          <div className={styles.shell}>
             <div className={styles.benefitsIntro}>
-              <h2 id="home-benefits-title">Почему выбирают Дымоход Трейд</h2>
-              <p>Производство, проверка комплекта и доставка — в одном заказе.</p>
+              <h2 id="home-benefits-title">Рассчитайте дымоход прямо на сайте</h2>
+              <p>Получите стоимость, состав комплекта, персональную схему монтажа и готовую смету до оформления заказа.</p>
             </div>
 
-            <div className={styles.benefitsGrid}>
-              {serviceBenefits.map(({ icon: Icon, title, text }) => (
-                <article className={styles.benefitItem} key={title}>
-                  <span className={styles.benefitIcon} aria-hidden>
-                    <Icon size={29} strokeWidth={1.55} />
+            <article className={styles.calculationFeature}>
+              <div className={styles.calculationFeatureCopy}>
+                <h3>Готовый расчёт под ваш объект</h3>
+                <p>Ответьте на вопросы по объекту и отопителю — система соберёт комплект именно под ваши параметры.</p>
+                <ul>
+                  {["Стоимость комплекта", "Полный список изделий", "Схема монтажа", "PDF-смета"].map((item) => (
+                    <li key={item}><Check aria-hidden size={18} strokeWidth={2} />{item}</li>
+                  ))}
+                </ul>
+                <div className={styles.calculationFeatureAction}>
+                  <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/zamery?edit=1">
+                    Рассчитать дымоход
+                    <ArrowRight aria-hidden size={18} strokeWidth={1.8} />
+                  </Link>
+                  <span>Расчёт займёт несколько минут</span>
+                </div>
+              </div>
+              <div className={styles.calculationFeatureVisual} aria-hidden>
+                <Image
+                  alt=""
+                  height={512}
+                  src={`${basePath}/images/home/calculation-benefits/calculation-main-photo.webp`}
+                  width={512}
+                />
+              </div>
+            </article>
+
+            <div className={styles.calculationResults} aria-label="Что входит в результат расчёта">
+              {calculationResults.map(({ image, title, text }) => (
+                <article className={styles.calculationResult} key={title}>
+                  <span className={styles.calculationResultIcon} aria-hidden>
+                    <Image alt="" height={112} src={`${basePath}${image}`} width={112} />
                   </span>
                   <div>
                     <h3>{title}</h3>
@@ -438,6 +486,33 @@ export default async function HomePage() {
                   </div>
                 </article>
               ))}
+            </div>
+
+            <div className={styles.calculationProcess}>
+              <div className={styles.calculationProcessHeading}>
+                <h3>Вы рассчитываете — мы проверяем и отправляем</h3>
+                <p>Расчёт на сайте становится основой заказа, а перед производством его проверяет специалист.</p>
+              </div>
+              <ol className={styles.calculationSteps}>
+                {calculationSteps.map(({ image, title, text }, index) => (
+                  <li key={title}>
+                    <span className={styles.calculationStepNumber}>{index + 1}</span>
+                    <span className={styles.calculationStepIcon} aria-hidden>
+                      <Image alt="" height={88} src={`${basePath}${image}`} width={88} />
+                    </span>
+                    <div>
+                      <h4>{title}</h4>
+                      <p>{text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <div className={styles.calculationProcessAction}>
+                <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/zamery?edit=1">
+                  Рассчитать дымоход
+                  <ArrowRight aria-hidden size={18} strokeWidth={1.8} />
+                </Link>
+              </div>
             </div>
           </div>
         </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { IconArrowRight as ArrowRight, IconChevronDown as ChevronDown } from "@tabler/icons-react";
 import { type ReactNode, useEffect, useState } from "react";
 import {
@@ -32,6 +33,33 @@ type BanyaIntakeFlowProps = {
   initialObjectType?: ScenarioConfiguratorDraft["objectType"];
   onProfileSaved?: () => void;
 };
+
+const choiceIconScale: Record<string, number> = {
+  "/images/measurements/icons/object-bathhouse.webp": 1.21,
+  "/images/measurements/icons/object-house.webp": 1.08,
+  "/images/measurements/icons/heater-sauna.webp": 1.14,
+  "/images/measurements/icons/heater-stove.webp": 1.09,
+  "/images/measurements/icons/heater-solid-fuel.webp": 1.07,
+  "/images/measurements/icons/heater-gas.webp": 1.06,
+  "/images/measurements/icons/heater-diesel.webp": 1.06,
+  "/images/measurements/icons/outlet-top.webp": 1.15,
+  "/images/measurements/icons/outlet-rear.webp": 1.17,
+};
+
+function ChoiceIcon({ src }: { src: string }) {
+  return (
+    <span className={styles.choiceIconFrame} aria-hidden="true">
+      <Image
+        alt=""
+        className={styles.choiceIcon}
+        height={72}
+        src={src}
+        style={{ transform: `scale(${choiceIconScale[src] ?? 1})` }}
+        width={72}
+      />
+    </span>
+  );
+}
 
 function normalizeIntakeDraft(draft: ScenarioConfiguratorDraft): ScenarioConfiguratorDraft {
   const objectType = draft.objectType === "banya" ? "banya" : "house";
@@ -426,7 +454,17 @@ export function BanyaIntakeFlow({
     <section className={styles.intakeSection} id="scenario-intake" aria-labelledby="intake-title">
       <div className={styles.shell}>
         <div className={styles.intakeIntro} id="source-data">
-          <h2 id="intake-title">Начните с того, что уже знаете</h2>
+          <div className={styles.intakeIntroHeading}>
+            <Image
+              alt=""
+              aria-hidden="true"
+              className={styles.intakeIntroIcon}
+              height={96}
+              src="/images/measurements/icons/tape-measure.webp"
+              width={96}
+            />
+            <h2 id="intake-title">Начните с того, что уже знаете</h2>
+          </div>
           <p>Поля можно заполнять не по порядку. Неизвестные данные оставьте пустыми и добавьте позже.</p>
         </div>
 
@@ -445,11 +483,11 @@ export function BanyaIntakeFlow({
             </div>
             <fieldset className={styles.choiceFieldset}>
               <legend>Какой объект измеряем?</legend>
-              <div className={styles.choiceRow}>
+              <div className={`${styles.choiceRow} ${styles.visualChoiceGrid} ${styles.objectChoiceGrid}`}>
                 {[
-                  ["banya", "Баня"],
-                  ["house", "Дом"],
-                ].map(([value, label]) => (
+                  ["banya", "Баня", "/images/measurements/icons/object-bathhouse.webp"],
+                  ["house", "Дом", "/images/measurements/icons/object-house.webp"],
+                ].map(([value, label, icon]) => (
                   <label key={value}>
                     <input
                       checked={intake.objectType === value}
@@ -464,7 +502,10 @@ export function BanyaIntakeFlow({
                       }}
                       type="radio"
                     />
-                    <span>{label}</span>
+                    <span className={styles.visualChoice}>
+                      <ChoiceIcon src={icon} />
+                      <strong>{label}</strong>
+                    </span>
                   </label>
                 ))}
               </div>
@@ -494,14 +535,14 @@ export function BanyaIntakeFlow({
             {intake.equipmentStatus !== "not-selected" ? (
               <fieldset className={styles.choiceFieldset}>
                 <legend>Тип отопителя</legend>
-                <div className={styles.choiceRow}>
+                <div className={`${styles.choiceRow} ${styles.visualChoiceGrid}`}>
                   {[
-                    ["bania", "Банная печь"],
-                    ["pech", "Печь"],
-                    ["tt-kotel", "Твердотопливный котёл"],
-                    ["gaz", "Газовый котёл"],
-                    ["diesel", "Дизельный котёл"],
-                  ].map(([value, label]) => (
+                    ["bania", "Банная печь", "/images/measurements/icons/heater-sauna.webp"],
+                    ["pech", "Печь", "/images/measurements/icons/heater-stove.webp"],
+                    ["tt-kotel", "Твердотопливный котёл", "/images/measurements/icons/heater-solid-fuel.webp"],
+                    ["gaz", "Газовый котёл", "/images/measurements/icons/heater-gas.webp"],
+                    ["diesel", "Дизельный котёл", "/images/measurements/icons/heater-diesel.webp"],
+                  ].map(([value, label, icon]) => (
                     <label key={label}>
                       <input
                         checked={intake.equipmentType === value}
@@ -509,7 +550,10 @@ export function BanyaIntakeFlow({
                         onChange={() => update("equipmentType", value as ScenarioConfiguratorDraft["equipmentType"])}
                         type="radio"
                       />
-                      <span>{label}</span>
+                      <span className={styles.visualChoice}>
+                        <ChoiceIcon src={icon} />
+                        <strong>{label}</strong>
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -531,7 +575,7 @@ export function BanyaIntakeFlow({
 
             <fieldset className={styles.choiceFieldset}>
               <legend>Положение патрубка отопителя</legend>
-              <div className={styles.choiceRow}>
+              <div className={`${styles.choiceRow} ${styles.visualChoiceGrid} ${styles.outletChoiceGrid}`}>
                 <label>
                   <input checked={intake.outlet === "top"} name={`${scenario}-outlet`} onChange={() => {
                     markProfileDirty();
@@ -541,7 +585,10 @@ export function BanyaIntakeFlow({
                       route: current.route === "wall-direct" ? "wall" : current.route,
                     }));
                   }} type="radio" />
-                  <span>Сверху</span>
+                  <span className={styles.visualChoice}>
+                    <ChoiceIcon src="/images/measurements/icons/outlet-top.webp" />
+                    <strong>Сверху</strong>
+                  </span>
                 </label>
                 <label>
                   <input checked={intake.outlet === "rear"} name={`${scenario}-outlet`} onChange={() => {
@@ -552,7 +599,10 @@ export function BanyaIntakeFlow({
                       route: current.route === "unknown" ? "unknown" : "wall-direct",
                     }));
                   }} type="radio" />
-                  <span>Сзади</span>
+                  <span className={styles.visualChoice}>
+                    <ChoiceIcon src="/images/measurements/icons/outlet-rear.webp" />
+                    <strong>Сзади</strong>
+                  </span>
                 </label>
               </div>
             </fieldset>
