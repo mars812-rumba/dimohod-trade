@@ -16,8 +16,15 @@ import { PersonalDataConsent } from "./PersonalDataConsent";
 type ContactMethod = "phone" | "whatsapp" | "telegram" | "email";
 
 type EstimateLeadDialogProps = {
+  buttonLabel?: string;
+  description?: string;
   disabled?: boolean;
   estimate: ChimneyEstimate;
+  heading?: string;
+  onSubmitted?: () => void;
+  source?: string;
+  submitLabel?: string;
+  triggerClassName?: string;
 };
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -61,7 +68,17 @@ function responseError(payload: unknown): string {
   return "Проверьте заполненные поля и попробуйте ещё раз.";
 }
 
-export function EstimateLeadDialog({ disabled = false, estimate }: EstimateLeadDialogProps) {
+export function EstimateLeadDialog({
+  buttonLabel = "Отправить менеджеру",
+  description = "Приложим текущую PDF-смету к заявке. Менеджер проверит состав и свяжется с вами в течение 30 минут.",
+  disabled = false,
+  estimate,
+  heading = "Отправить BOM менеджеру",
+  onSubmitted,
+  source = "chimney-estimate",
+  submitLabel = "Отправить расчёт",
+  triggerClassName = "configurator-estimate-send",
+}: EstimateLeadDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
@@ -92,7 +109,7 @@ export function EstimateLeadDialog({ disabled = false, estimate }: EstimateLeadD
       const currentEstimate = { ...estimate, generatedAt: new Date() };
       const pdf = await createChimneyEstimatePdfBlob(currentEstimate);
       const data = new FormData(form);
-      data.set("source", "chimney-estimate");
+      data.set("source", source);
       data.set(
         "configuration",
         `${chimneyEstimateText(currentEstimate)}\n\nСтраница расчёта: ${window.location.href}`.slice(0, 12000),
@@ -120,6 +137,7 @@ export function EstimateLeadDialog({ disabled = false, estimate }: EstimateLeadD
         ? payload.email_status
         : null;
       setStatus(emailStatus === "sent" ? "success" : "saved");
+      onSubmitted?.();
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Не удалось отправить расчёт.");
@@ -131,14 +149,14 @@ export function EstimateLeadDialog({ disabled = false, estimate }: EstimateLeadD
   return (
     <>
       <button
-        className="configurator-estimate-send"
+        className={triggerClassName}
         disabled={disabled}
         onClick={open}
         ref={triggerRef}
         type="button"
       >
         <MailForward aria-hidden size={17} />
-        Отправить менеджеру
+        {buttonLabel}
       </button>
 
       <dialog
@@ -179,9 +197,9 @@ export function EstimateLeadDialog({ disabled = false, estimate }: EstimateLeadD
             <>
               <div className="estimate-lead-dialog-heading">
                 <span>Расчёт комплекта</span>
-                <h2 id={titleId}>Отправить BOM менеджеру</h2>
+                <h2 id={titleId}>{heading}</h2>
                 <p id={descriptionId}>
-                  Приложим текущую PDF-смету к заявке. Менеджер проверит состав и свяжется с вами в течение 30 минут.
+                  {description}
                 </p>
               </div>
 
@@ -247,7 +265,7 @@ export function EstimateLeadDialog({ disabled = false, estimate }: EstimateLeadD
                 <div className="estimate-lead-actions">
                   <button disabled={status === "sending"} type="submit">
                     <Send aria-hidden size={17} />
-                    {status === "sending" ? "Формируем и отправляем…" : "Отправить расчёт"}
+                    {status === "sending" ? "Формируем и отправляем…" : submitLabel}
                   </button>
                   <small>
                     PDF получит менеджер. При выборе email копия придёт и вам. Контакты компании — в{" "}

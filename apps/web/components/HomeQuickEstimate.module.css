@@ -171,6 +171,38 @@
 .assumptions strong { display: block; margin-bottom: 8px; }
 .assumptions ul { display: grid; gap: 4px; margin: 0; padding-left: 18px; color: #5a676c; font-size: 12px; line-height: 1.45; }
 .status { margin: 0; color: #5a6c72; }
+.leadGate {
+  display: grid;
+  width: min(100%, 620px);
+  gap: 20px;
+  align-self: center;
+  margin: auto;
+  padding: clamp(24px, 5vw, 38px);
+  border: 1px solid #cbd4d6;
+  border-radius: 14px;
+  background: #f7f9f8;
+}
+.leadGate h4 { margin: 0; color: #173d4c; font-size: clamp(24px, 3vw, 32px); line-height: 1.05; letter-spacing: -.025em; }
+.leadGate p { max-width: 55ch; margin: 10px 0 0; color: #52656c; line-height: 1.55; }
+.leadGate > small { color: #68797e; font-size: 11px; line-height: 1.45; }
+.gateButton {
+  display: inline-flex;
+  width: 100%;
+  min-height: 52px;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 22px;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  background: #ed5b2a;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.gateButton:disabled { cursor: wait; opacity: .55; }
+.gateButton:focus-visible { outline: 3px solid rgba(237, 91, 42, .35); outline-offset: 3px; }
 .resultFooter { display: grid; gap: 10px; margin-top: 22px; }
 .exactLink { width: 100%; }
 .resultFooter small { color: #68797e; line-height: 1.45; text-align: center; }

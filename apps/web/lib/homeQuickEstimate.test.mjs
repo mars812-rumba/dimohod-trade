@@ -20,6 +20,14 @@ test("quick estimate uses the existing catalog and transfers answers to measurem
   assert.match(component, /router\.push\(`\/zamery\?/);
 });
 
+test("price and BOM stay gated until the existing lead form saves the estimate", () => {
+  assert.match(component, /!leadSubmitted/);
+  assert.match(component, /estimate && leadSubmitted/);
+  assert.match(component, /<EstimateLeadDialog/);
+  assert.match(component, /source="chimney-quick-estimate"/);
+  assert.match(component, /onSubmitted=\{\(\) => setLeadSubmitted\(true\)\}/);
+});
+
 test("route choices use raster renders and existing measurement icons", () => {
   assert.match(component, /route-through-roof\.webp/);
   assert.match(component, /route-along-facade\.webp/);

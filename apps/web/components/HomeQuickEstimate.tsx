@@ -31,6 +31,7 @@ import {
   type QuickEstimateRoute,
 } from "@/lib/homeQuickEstimate";
 import styles from "./HomeQuickEstimate.module.css";
+import { EstimateLeadDialog } from "./EstimateLeadDialog";
 
 type Step = 0 | 1 | 2 | 3 | 4;
 type MatchStatus = "idle" | "loading" | "ready" | "error";
@@ -171,6 +172,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
   const [wallDistance, setWallDistance] = useState("");
   const [matches, setMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [matchStatus, setMatchStatus] = useState<MatchStatus>("idle");
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
 
   const answers = useMemo<QuickEstimateAnswers | null>(() => {
     if (!objectType || !equipmentStatus || !outlet || !route) return null;
@@ -223,6 +225,10 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
     return () => controller.abort();
   }, [answers, assetBasePath, bom, step]);
 
+  useEffect(() => {
+    if (step !== 4) setLeadSubmitted(false);
+  }, [step]);
+
   const estimate = useMemo(() => calculation && answers ? buildChimneyEstimate({
     selectedBom: bom,
     matches,
@@ -253,6 +259,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
     setStep(0);
     setMatches({});
     setMatchStatus("idle");
+    setLeadSubmitted(false);
   }
 
   return (
@@ -357,9 +364,29 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
 
             {step === 4 ? <>
               <div className={styles.heading}><small>Предварительный результат</small><h3>Ориентировочный состав комплекта</h3><p>Финальную смету подтверждаем после точных замеров и проверки параметров.</p></div>
-              {matchStatus === "loading" ? <p className={styles.status}>Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
-              {matchStatus === "error" ? <p className={styles.status}>Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
-              {estimate ? <div className={styles.resultGrid}>
+              {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
+              {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
+              {estimate && !leadSubmitted ? (
+                <div aria-busy={matchStatus === "loading"} className={styles.leadGate}>
+                  <div>
+                    <h4>Куда отправить результат?</h4>
+                    <p>Оставьте контакт — заявка вместе с предварительным BOM попадёт менеджеру. После отправки сразу покажем стоимость и состав комплекта.</p>
+                  </div>
+                  <EstimateLeadDialog
+                    buttonLabel="Получить расчёт"
+                    description="Укажите удобный способ связи. Сохраним заявку с предварительным BOM в системе менеджера и сразу откроем результат на этой странице."
+                    disabled={matchStatus !== "ready" && matchStatus !== "error"}
+                    estimate={estimate}
+                    heading="Получить стоимость и BOM"
+                    onSubmitted={() => setLeadSubmitted(true)}
+                    source="chimney-quick-estimate"
+                    submitLabel="Отправить и показать результат"
+                    triggerClassName={styles.gateButton}
+                  />
+                  <small>Контакт нужен только для обработки расчёта. Согласие на обработку данных подтверждается в форме.</small>
+                </div>
+              ) : null}
+              {estimate && leadSubmitted ? <div className={styles.resultGrid}>
                 <div>
                   <div className={styles.priceCard}>
                     <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций" : "Ориентировочная стоимость"}</small>
@@ -375,10 +402,10 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
                   {estimate.lines.length > 10 ? <p className={styles.status}>Ещё {estimate.lines.length - 10} позиций будут в полной смете.</p> : null}
                 </div>
               </div> : null}
-              <div className={styles.resultFooter}>
+              {leadSubmitted ? <div className={styles.resultFooter}>
                 <button className={styles.exactLink} onClick={goExact} type="button">Уточнить расчёт по замерам <ArrowRight aria-hidden size={18} /></button>
                 <small>Ответы из быстрого расчёта перенесём в форму замеров — повторно заполнять их не придётся.</small>
-              </div>
+              </div> : null}
             </> : null}
 
             {step < 4 ? <div className={styles.footer}>
