@@ -135,7 +135,7 @@ export function AdminCustomerManager() {
   return (
     <main className={styles.shell}>
       <nav className={styles.topbar} aria-label="Навигация администратора">
-        <Link href="/admin"><ArrowLeft aria-hidden size={17} /> Каталог</Link>
+        <Link href="/admin/catalog"><ArrowLeft aria-hidden size={17} /> Управление каталогом</Link>
         <button onClick={() => void logout()} type="button"><LogOut aria-hidden size={16} /> Выйти</button>
       </nav>
 

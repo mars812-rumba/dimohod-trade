@@ -7,7 +7,7 @@ export function GET() {
       id: adminPath,
       name: "Дымоход Трейд — Админка",
       short_name: "Админка",
-      description: "Управление каталогом Дымоход Трейд.",
+      description: "Клиенты, сметы и управление каталогом Дымоход Трейд.",
       start_url: adminPath,
       scope: adminPath,
       display: "standalone",

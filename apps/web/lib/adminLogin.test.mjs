@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const loginSource = fs.readFileSync(path.join(here, "../components/AdminLoginForm.tsx"), "utf8");
 const middlewareSource = fs.readFileSync(path.join(here, "../middleware.ts"), "utf8");
+const adminPageSource = fs.readFileSync(path.join(here, "../app/admin/page.tsx"), "utf8");
+const catalogPageSource = fs.readFileSync(path.join(here, "../app/admin/catalog/page.tsx"), "utf8");
 
 test("admin login creates an HttpOnly-backed session through the API", () => {
   assert.match(loginSource, /\/api\/v1\/admin\/auth\/login/);
@@ -26,4 +28,11 @@ test("middleware gates shared admin pages", () => {
   assert.match(middlewareSource, /dimohod_admin_session/);
   assert.match(middlewareSource, /\/admin\/login/);
   assert.match(middlewareSource, /\/admin\/customers\/\:path\*/);
+  assert.match(middlewareSource, /\/admin\/catalog\/\:path\*/);
+});
+
+test("admin root opens customers while catalog has its own private route", () => {
+  assert.match(adminPageSource, /redirect\("\/admin\/customers"\)/);
+  assert.match(catalogPageSource, /AdminCatalogManager/);
+  assert.match(catalogPageSource, /robots: \{ index: false, follow: false \}/);
 });

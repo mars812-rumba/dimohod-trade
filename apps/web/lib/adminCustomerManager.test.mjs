@@ -26,6 +26,7 @@ test("customer manager supports search and links to editable estimates", () => {
   assert.match(componentSource, /Поиск клиента или замера/);
   assert.match(componentSource, /\/admin\/estimates\/\$\{estimate\.lead_id\}#admin=1/);
   assert.match(componentSource, /customer\.estimates\.map/);
+  assert.match(componentSource, /href="\/admin\/catalog"/);
 });
 
 test("customer manager exposes status feedback", () => {
