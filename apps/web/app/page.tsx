@@ -27,6 +27,7 @@ import {
   IconTool as Wrench,
   IconBolt as Zap,
 } from "@tabler/icons-react";
+import { ArrowRight as LucideArrowRight, ClipboardCheck } from "lucide-react";
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
 import { HomeHeroCarousel } from "../components/HomeHeroCarousel";
 import { LeadForm } from "../components/LeadForm";
@@ -401,34 +402,10 @@ export default async function HomePage() {
       <main className={styles.main}>
         <HomeHeroCarousel assetBasePath={basePath} />
 
-        <section className={styles.pathChoiceSection} aria-labelledby="calculation-path-title">
-          <div className={styles.shell}>
-            <div className={styles.pathChoiceHeading}>
-              <h2 id="calculation-path-title">Сначала выберите формат</h2>
-              <p>Не знаете размеры — прикиньте бюджет. Готовите заказ — переходите к глубокому замеру.</p>
-            </div>
-            <Link className={styles.pathChoicePrimary} href="/raschet">
-              <span className={styles.pathChoiceSymbols} aria-hidden>
-                <Gauge size={24} strokeWidth={1.7} />
-                <Ruler size={24} strokeWidth={1.7} />
-              </span>
-              <span>
-                <small>Быстрый расчёт или глубокий замер</small>
-                <strong>Начать замер</strong>
-                <em>На следующем экране подскажем, какой путь подойдёт именно вам.</em>
-              </span>
-              <ArrowRight aria-hidden size={22} />
-            </Link>
-          </div>
-        </section>
-
         <section className={styles.benefitsSection} aria-labelledby="home-benefits-title">
           <div className={styles.shell}>
             <div className={styles.benefitsIntro}>
               <h2 id="home-benefits-title">Полный замер для точной сметы</h2>
-              <div className={styles.benefitsIntroContent}>
-                <p>Готовите реальный заказ? Укажите размеры — получите схему, состав комплекта и точную смету после проверки менеджером.</p>
-              </div>
             </div>
 
             <div className={styles.calculationShowcase}>
@@ -445,9 +422,13 @@ export default async function HomePage() {
                 </ol>
 
                 <div className={styles.calculationAction}>
-                  <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/raschet">
-                    Выбрать формат замера
-                    <ArrowRight aria-hidden size={18} strokeWidth={1.8} />
+                  <Link className={styles.calculationFormatCta} href="/raschet">
+                    <ClipboardCheck aria-hidden size={30} strokeWidth={2} />
+                    <span>
+                      <small>Дымоход под ваш отопитель</small>
+                      <strong>Начать замер</strong>
+                    </span>
+                    <LucideArrowRight aria-hidden size={27} strokeWidth={2} />
                   </Link>
                   <span>Размеры сохранятся — к заполнению можно вернуться позже</span>
                 </div>

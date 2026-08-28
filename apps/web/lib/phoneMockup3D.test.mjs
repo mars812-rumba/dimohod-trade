@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const component = readFileSync(new URL("../components/PhoneMockup3D.tsx", import.meta.url), "utf8");
+const styles = readFileSync(new URL("../components/PhoneMockup3D.module.css", import.meta.url), "utf8");
 const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
 
 test("homepage uses the interactive phone instead of the static configurator screenshot", () => {
@@ -29,4 +30,11 @@ test("slide controls have accessible names", () => {
   assert.match(component, /aria-label="Предыдущий экран"/);
   assert.match(component, /aria-label="Следующий экран"/);
   assert.match(component, /aria-pressed=\{index === activeSlide\}/);
+});
+
+test("phone presentation is enlarged without a translucent outer panel", () => {
+  assert.match(styles, /\.scaleFrame[\s\S]*transform: scale\(1\.23\)/);
+  assert.match(styles, /\.stage[\s\S]*background: transparent/);
+  assert.match(styles, /\.arrow[\s\S]*border: 0/);
+  assert.doesNotMatch(component, /styles\.(?:edge|sideEdge|topEdge|bottomEdge|leftEdge|rightEdge)/);
 });

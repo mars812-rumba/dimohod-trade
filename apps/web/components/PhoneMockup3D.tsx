@@ -211,10 +211,6 @@ export function PhoneMockup3D({ assetBasePath = "" }: { assetBasePath?: string }
           <div className={styles.rig} ref={rigRef}>
             <div className={styles.phone}>
               <div aria-hidden className={`${styles.face} ${styles.backFace}`} />
-              <div aria-hidden className={`${styles.edge} ${styles.topEdge}`} />
-              <div aria-hidden className={`${styles.edge} ${styles.bottomEdge}`} />
-              <div aria-hidden className={`${styles.sideEdge} ${styles.leftEdge}`} />
-              <div aria-hidden className={`${styles.sideEdge} ${styles.rightEdge}`} />
 
               <div className={`${styles.face} ${styles.frontFace}`}>
                 <div aria-hidden className={styles.notch} />

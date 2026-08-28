@@ -3,16 +3,21 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+const pageStyles = readFileSync(new URL("../app/page.module.css", import.meta.url), "utf8");
 const header = readFileSync(new URL("../components/SiteHeader.tsx", import.meta.url), "utf8");
 const hero = readFileSync(new URL("../components/HomeHeroCarousel.tsx", import.meta.url), "utf8");
 
 test("homepage sends measurement entry points to one format choice", () => {
-  assert.match(page, /Сначала выберите формат/);
-  assert.match(page, /Быстрый расчёт или глубокий замер/);
   assert.match(page, /Полный замер для точной сметы/);
+  assert.match(page, /Дымоход под ваш отопитель/);
+  assert.match(page, /Начать замер/);
   assert.match(page, /href="\/raschet"/);
+  assert.doesNotMatch(page, /Сначала выберите формат/);
+  assert.doesNotMatch(page, /Готовите реальный заказ\? Укажите размеры/);
   assert.doesNotMatch(page, /<HomeQuickEstimate/);
   assert.doesNotMatch(page, /<HomeGuidedShowcase/);
+  assert.match(page, /ClipboardCheck/);
+  assert.match(pageStyles, /\.calculationFormatCta[\s\S]*border-radius: 30px/);
 });
 
 test("hero and navigation open the same format choice", () => {
