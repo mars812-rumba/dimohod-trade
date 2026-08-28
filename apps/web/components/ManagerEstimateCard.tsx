@@ -66,7 +66,6 @@ type ManagerEstimateEnvelope = {
 };
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-const adminTokenStorageKey = "dimohod-trade:bom-admin-token";
 type AccessHeader = "X-Lead-Manager-Token" | "X-BOM-Admin-Token";
 
 type LineDraft = {
@@ -122,6 +121,7 @@ export function ManagerEstimateCard({ leadId }: { leadId: string }) {
   const [payload, setPayload] = useState<ManagerEstimateEnvelope | null>(null);
   const [accessToken, setAccessToken] = useState("");
   const [accessHeader, setAccessHeader] = useState<AccessHeader>("X-Lead-Manager-Token");
+  const [usesAdminSession, setUsesAdminSession] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -137,29 +137,28 @@ export function ManagerEstimateCard({ leadId }: { leadId: string }) {
     const storageKey = `dimohod-trade:lead-manager:${leadId}`;
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
     const hashToken = hashParams.get("token");
-    const useAdminToken = !hashToken && hashParams.get("admin") === "1";
-    const header: AccessHeader = useAdminToken ? "X-BOM-Admin-Token" : "X-Lead-Manager-Token";
+    const requestedAdminSession = !hashToken && hashParams.get("admin") === "1";
+    const header: AccessHeader = "X-Lead-Manager-Token";
     let token = hashToken;
     try {
       if (hashToken) window.sessionStorage.setItem(storageKey, hashToken);
-      token ??= window.sessionStorage.getItem(useAdminToken ? adminTokenStorageKey : storageKey);
+      if (!requestedAdminSession) token ??= window.sessionStorage.getItem(storageKey);
     } catch {
       // The email link still works when session storage is unavailable.
     }
-    if (hashToken) {
+    const useAdminSession = requestedAdminSession || !token;
+    if (hashToken || requestedAdminSession) {
       window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
     }
-    if (!token) {
-      setStatus("error");
-      return;
-    }
-    setAccessToken(token);
+    setAccessToken(token ?? "");
     setAccessHeader(header);
+    setUsesAdminSession(useAdminSession);
 
     const controller = new AbortController();
     fetch(`${apiBaseUrl}/api/v1/leads/${encodeURIComponent(leadId)}/manager`, {
       cache: "no-store",
-      headers: { [header]: token },
+      credentials: "include",
+      headers: useAdminSession ? {} : { [header]: token ?? "" },
       signal: controller.signal,
     })
       .then(async (response) => {
@@ -172,7 +171,7 @@ export function ManagerEstimateCard({ leadId }: { leadId: string }) {
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        if (!useAdminToken) {
+        if (!useAdminSession) {
           try {
             window.sessionStorage.removeItem(storageKey);
           } catch {
@@ -185,14 +184,18 @@ export function ManagerEstimateCard({ leadId }: { leadId: string }) {
   }, [leadId]);
 
   async function mutate(path: string, method: "POST" | "PATCH" | "DELETE", body: object) {
-    if (!payload || !accessToken || busy) return;
+    if (!payload || (!usesAdminSession && !accessToken) || busy) return;
     setBusy(true);
     setNotice("");
     try {
       const response = await fetch(`${apiBaseUrl}/api/v1/leads/${encodeURIComponent(leadId)}/manager${path}`, {
         method,
         cache: "no-store",
-        headers: { "Content-Type": "application/json", [accessHeader]: accessToken },
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(usesAdminSession ? {} : { [accessHeader]: accessToken }),
+        },
         body: JSON.stringify({ revision: payload.revision, ...body }),
       });
       const data = await response.json().catch(() => null);
@@ -303,8 +306,8 @@ export function ManagerEstimateCard({ leadId }: { leadId: string }) {
   return (
     <main className={styles.shell}>
       <div className={styles.topbar}>
-        <Link href={accessHeader === "X-BOM-Admin-Token" ? "/admin/customers" : "/admin"}>
-          <ArrowLeft aria-hidden size={17} /> {accessHeader === "X-BOM-Admin-Token" ? "Все клиенты" : "Каталог"}
+        <Link href={usesAdminSession ? "/admin/customers" : "/admin"}>
+          <ArrowLeft aria-hidden size={17} /> {usesAdminSession ? "Все клиенты" : "Каталог"}
         </Link>
         <span>Заявка {payload.lead_id.slice(0, 8).toUpperCase()}</span>
       </div>

@@ -5,7 +5,6 @@ import {
   CalendarDays,
   ClipboardList,
   ExternalLink,
-  KeyRound,
   LogOut,
   Mail,
   MessageCircle,
@@ -14,6 +13,7 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import styles from "./AdminCustomerManager.module.css";
 
@@ -48,7 +48,6 @@ type CustomerResponse = {
 };
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-const tokenStorageKey = "dimohod-trade:bom-admin-token";
 
 function formatDate(value: string): string {
   const date = new Date(value);
@@ -81,125 +80,63 @@ function ContactIcon({ method }: { method: CustomerContact["method"] }) {
 }
 
 export function AdminCustomerManager() {
-  const [token, setToken] = useState("");
-  const [tokenDraft, setTokenDraft] = useState("");
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [total, setTotal] = useState(0);
-  const [status, setStatus] = useState<"locked" | "loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [message, setMessage] = useState("");
 
-  async function loadCustomers(accessToken: string, search = "") {
+  async function loadCustomers(search = "") {
     setStatus("loading");
     setMessage("");
     try {
       const suffix = search.trim() ? `?q=${encodeURIComponent(search.trim())}` : "";
       const response = await fetch(`${apiBaseUrl}/api/v1/admin/customers${suffix}`, {
         cache: "no-store",
-        headers: { "X-BOM-Admin-Token": accessToken },
+        credentials: "include",
       });
-      if (!response.ok) throw new Error(response.status === 401 ? "Неверный ключ доступа" : "Не удалось загрузить клиентов");
+      if (response.status === 401) {
+        router.replace("/admin/login?next=/admin/customers");
+        return;
+      }
+      if (!response.ok) throw new Error("Не удалось загрузить клиентов");
       const data = await response.json() as CustomerResponse;
       setCustomers(data.items);
       setTotal(data.total);
-      setToken(accessToken);
       setStatus("ready");
-      try {
-        window.sessionStorage.setItem(tokenStorageKey, accessToken);
-      } catch {
-        // The loaded page remains usable when browser storage is unavailable.
-      }
     } catch (error) {
-      try {
-        window.sessionStorage.removeItem(tokenStorageKey);
-      } catch {
-        // Nothing else to clean up.
-      }
       setCustomers([]);
       setTotal(0);
-      setToken("");
-      setStatus("locked");
-      setMessage(error instanceof Error ? error.message : "Не удалось войти");
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Не удалось загрузить клиентов");
     }
   }
 
   useEffect(() => {
-    let savedToken = "";
-    try {
-      savedToken = window.sessionStorage.getItem(tokenStorageKey) ?? "";
-    } catch {
-      // The manager can still enter the token manually.
-    }
-    if (!savedToken) {
-      setStatus("locked");
-      return;
-    }
-    void loadCustomers(savedToken);
+    void loadCustomers();
   }, []);
-
-  function submitToken(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const value = tokenDraft.trim();
-    if (!value) {
-      setMessage("Введите ключ доступа");
-      return;
-    }
-    void loadCustomers(value);
-  }
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (token) void loadCustomers(token, query);
+    void loadCustomers(query);
   }
 
-  function logout() {
-    try {
-      window.sessionStorage.removeItem(tokenStorageKey);
-    } catch {
-      // The local session is already unavailable.
-    }
-    setToken("");
-    setTokenDraft("");
-    setCustomers([]);
-    setTotal(0);
-    setMessage("");
-    setStatus("locked");
-  }
-
-  if (status === "locked") {
-    return (
-      <main className={styles.shell}>
-        <section className={styles.loginCard} aria-labelledby="customer-login-title">
-          <div className={styles.loginIcon}><KeyRound aria-hidden size={24} /></div>
-          <p className={styles.eyebrow}>Внутренний раздел</p>
-          <h1 id="customer-login-title">Клиенты и замеры</h1>
-          <p>Введите ключ менеджера. Он сохранится только в текущей вкладке браузера.</p>
-          <form onSubmit={submitToken}>
-            <label htmlFor="customer-admin-token">Ключ доступа</label>
-            <input
-              aria-describedby={message ? "customer-login-error" : undefined}
-              aria-invalid={Boolean(message)}
-              autoComplete="current-password"
-              id="customer-admin-token"
-              onChange={(event) => setTokenDraft(event.target.value)}
-              required
-              type="password"
-              value={tokenDraft}
-            />
-            {message ? <p className={styles.formError} id="customer-login-error" role="alert">{message}</p> : null}
-            <button type="submit"><KeyRound aria-hidden size={17} /> Открыть базу</button>
-          </form>
-          <Link className={styles.backLink} href="/admin"><ArrowLeft aria-hidden size={17} /> Вернуться в каталог</Link>
-        </section>
-      </main>
-    );
+  async function logout() {
+    await fetch(`${apiBaseUrl}/api/v1/admin/auth/logout`, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+    }).catch(() => null);
+    router.replace("/admin/login");
+    router.refresh();
   }
 
   return (
     <main className={styles.shell}>
       <nav className={styles.topbar} aria-label="Навигация администратора">
         <Link href="/admin"><ArrowLeft aria-hidden size={17} /> Каталог</Link>
-        <button onClick={logout} type="button"><LogOut aria-hidden size={16} /> Выйти</button>
+        <button onClick={() => void logout()} type="button"><LogOut aria-hidden size={16} /> Выйти</button>
       </nav>
 
       <header className={styles.header}>

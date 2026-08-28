@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.modules.admin.auth_router import router as admin_auth_router
 from app.modules.admin.router import router as admin_router
+from app.modules.boms.dependencies import require_bom_admin
 from app.modules.boms.router import router as boms_router
 from app.modules.catalog.router import router as catalog_router
 from app.modules.compatibility.router import router as compatibility_router
@@ -16,7 +18,13 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-api_router.include_router(admin_router, prefix="/admin", tags=["admin"])
+api_router.include_router(admin_auth_router, prefix="/admin/auth", tags=["admin-auth"])
+api_router.include_router(
+    admin_router,
+    prefix="/admin",
+    tags=["admin"],
+    dependencies=[Depends(require_bom_admin)],
+)
 api_router.include_router(boms_router, prefix="/admin/boms", tags=["admin-boms"])
 api_router.include_router(catalog_router, prefix="/catalog", tags=["catalog"])
 api_router.include_router(compatibility_router, prefix="/compatibility", tags=["compatibility"])

@@ -9,10 +9,21 @@ from hashlib import sha256
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Cookie,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Response,
+    UploadFile,
+    status,
+)
 from pydantic import ValidationError
 
 from app.core.config import settings
+from app.modules.admin.auth import ADMIN_SESSION_COOKIE, valid_admin_session
 from app.modules.leads.customers import sync_customer_estimate, upsert_customer
 from app.modules.leads.email import send_customer_confirmation_email, send_lead_email
 from app.modules.leads.schemas import (
@@ -57,9 +68,14 @@ def read_private_lead(lead_id: str) -> tuple[Path, dict[str, object]]:
 
 
 def authorized_manager_lead(
-    lead_id: str, manager_token: str | None, admin_token: str | None = None
+    lead_id: str,
+    manager_token: str | None,
+    admin_token: str | None = None,
+    admin_session: str | None = None,
 ) -> tuple[Path, dict[str, object]]:
     lead_dir, record = read_private_lead(lead_id)
+    if valid_admin_session(admin_session):
+        return lead_dir, record
     if (
         settings.bom_admin_token
         and admin_token
@@ -175,8 +191,11 @@ async def read_manager_lead(
     response: Response,
     manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
     admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
 ) -> dict[str, object]:
-    lead_dir, record = authorized_manager_lead(lead_id, manager_token, admin_token)
+    lead_dir, record = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
     estimate = read_estimate_record(lead_dir, record)
 
     response.headers["Cache-Control"] = "no-store"
@@ -190,8 +209,11 @@ async def create_manager_line(
     response: Response,
     manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
     admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
 ) -> dict[str, object]:
-    lead_dir, record = authorized_manager_lead(lead_id, manager_token, admin_token)
+    lead_dir, record = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
     estimate = read_estimate_record(lead_dir, record)
     check_revision(estimate, payload.revision)
     estimate_body = estimate["estimate"]
@@ -218,8 +240,11 @@ async def update_manager_line(
     response: Response,
     manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
     admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
 ) -> dict[str, object]:
-    lead_dir, record = authorized_manager_lead(lead_id, manager_token, admin_token)
+    lead_dir, record = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
     estimate = read_estimate_record(lead_dir, record)
     check_revision(estimate, payload.revision)
     lines = estimate["estimate"]["lines"]
@@ -243,8 +268,11 @@ async def delete_manager_line(
     response: Response,
     manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
     admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
 ) -> dict[str, object]:
-    lead_dir, record = authorized_manager_lead(lead_id, manager_token, admin_token)
+    lead_dir, record = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
     estimate = read_estimate_record(lead_dir, record)
     check_revision(estimate, payload.revision)
     lines = estimate["estimate"]["lines"]
@@ -267,8 +295,11 @@ async def restore_manager_line(
     response: Response,
     manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
     admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
 ) -> dict[str, object]:
-    lead_dir, record = authorized_manager_lead(lead_id, manager_token, admin_token)
+    lead_dir, record = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
     estimate = read_estimate_record(lead_dir, record)
     check_revision(estimate, payload.revision)
     removed = estimate["removed_lines"]

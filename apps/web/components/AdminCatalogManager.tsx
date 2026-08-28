@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
-import { ImagePlus, Link2, Plus, RefreshCcw, Save, Sparkles, Trash2, X } from "lucide-react";
+import { ImagePlus, Link2, LogOut, Plus, RefreshCcw, Save, Sparkles, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { DimensionScheme } from "./DimensionScheme";
 import styles from "./AdminCatalogManager.module.css";
@@ -624,6 +624,7 @@ async function apiRequestWithStatus<T>(path: string, init?: RequestInit): Promis
   const response = await fetch(requestUrl, {
     ...init,
     cache: init?.cache ?? "no-store",
+    credentials: init?.credentials ?? "include",
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),
@@ -631,6 +632,9 @@ async function apiRequestWithStatus<T>(path: string, init?: RequestInit): Promis
   });
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.location.assign(`/admin/login?next=${encodeURIComponent(window.location.pathname)}`);
+    }
     const body = await response.json().catch(() => null);
     throw new ApiRequestError(response.status, requestUrl, formatApiDetail(body?.detail));
   }
@@ -645,8 +649,11 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
 
 async function apiRequestNoContent(path: string, init?: RequestInit): Promise<number> {
   const requestUrl = buildBackendUrl(path);
-  const response = await fetch(requestUrl, init);
+  const response = await fetch(requestUrl, { ...init, credentials: init?.credentials ?? "include" });
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.location.assign(`/admin/login?next=${encodeURIComponent(window.location.pathname)}`);
+    }
     const body = await response.json().catch(() => null);
     throw new ApiRequestError(response.status, requestUrl, formatApiDetail(body?.detail));
   }
@@ -1185,7 +1192,7 @@ export default function AdminCatalogManager() {
     }
 
     const mediaUrl = buildBackendUrl(uploadedMedia.url);
-    const mediaResponse = await fetch(mediaUrl, { cache: "no-store" });
+    const mediaResponse = await fetch(mediaUrl, { cache: "no-store", credentials: "include" });
     if (!mediaResponse.ok) {
       throw new ApiRequestError(mediaResponse.status, mediaUrl, "Фото записано, но URL изображения недоступен");
     }
@@ -1217,7 +1224,7 @@ export default function AdminCatalogManager() {
       throw new Error("Область фото сохранена, но фотография отсутствует в ответе backend");
     }
     const mediaUrl = buildBackendUrl(media.url);
-    const mediaResponse = await fetch(mediaUrl, { cache: "no-store" });
+    const mediaResponse = await fetch(mediaUrl, { cache: "no-store", credentials: "include" });
     if (!mediaResponse.ok) {
       throw new ApiRequestError(mediaResponse.status, mediaUrl, "Область фото сохранена, но URL изображения недоступен");
     }
@@ -1247,7 +1254,7 @@ export default function AdminCatalogManager() {
       }),
     });
     const mediaUrl = buildBackendUrl(uploadResponse.data.url);
-    const mediaResponse = await fetch(mediaUrl, { cache: "no-store" });
+    const mediaResponse = await fetch(mediaUrl, { cache: "no-store", credentials: "include" });
     if (!mediaResponse.ok) {
       throw new ApiRequestError(mediaResponse.status, mediaUrl, "Фото SKU записано, но URL изображения недоступен");
     }
@@ -1285,7 +1292,7 @@ export default function AdminCatalogManager() {
         },
       );
       const mediaUrl = buildBackendUrl(response.data.url);
-      const mediaResponse = await fetch(mediaUrl, { cache: "no-store" });
+      const mediaResponse = await fetch(mediaUrl, { cache: "no-store", credentials: "include" });
       if (!mediaResponse.ok) {
         throw new ApiRequestError(mediaResponse.status, mediaUrl, "Обложка записана, но URL изображения недоступен");
       }
@@ -1703,6 +1710,15 @@ export default function AdminCatalogManager() {
     }
   }
 
+  async function logoutAdmin() {
+    await fetch(buildBackendUrl("/api/v1/admin/auth/logout"), {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+    }).catch(() => null);
+    window.location.assign("/admin/login");
+  }
+
   return (
     <main className={styles.shell}>
       <div className={styles.topline}>
@@ -1713,7 +1729,12 @@ export default function AdminCatalogManager() {
           </p>
         </div>
         <div>
-          <Link className={styles.customerLink} href="/admin/customers">Клиенты и замеры</Link>
+          <div className={styles.adminLinks}>
+            <Link className={styles.customerLink} href="/admin/customers">Клиенты и замеры</Link>
+            <button className={styles.logoutButton} onClick={() => void logoutAdmin()} type="button">
+              <LogOut aria-hidden size={15} /> Выйти
+            </button>
+          </div>
           <div className={styles.status}>{status}</div>
         </div>
       </div>

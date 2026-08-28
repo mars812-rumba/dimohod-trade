@@ -13,12 +13,15 @@ class Settings(BaseSettings):
     openai_seo_model: str = "gpt-5.6-luna"
     lead_recipient_email: str = "office@dimohod-trade.pro"
     lead_from_email: str = "office@dimohod-trade.pro"
+    lead_manager_base_url: str = "https://dimohod-trade.pro/admin/estimates"
     smtp_host: str | None = None
     smtp_port: int = 587
     smtp_username: str | None = None
     smtp_password: str | None = None
     smtp_use_tls: bool = True
     smtp_use_ssl: bool = False
+    bom_admin_token: str | None = None
+    admin_session_cookie_secure: bool = True
 
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),

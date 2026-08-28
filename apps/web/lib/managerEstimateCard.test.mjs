@@ -19,8 +19,8 @@ test("manager card exchanges a fragment token through a private header", () => {
   assert.match(componentSource, /X-Lead-Manager-Token/);
   assert.match(componentSource, /history\.replaceState/);
   assert.match(componentSource, /cache: "no-store"/);
-  assert.match(componentSource, /X-BOM-Admin-Token/);
-  assert.match(componentSource, /adminTokenStorageKey/);
+  assert.match(componentSource, /credentials: "include"/);
+  assert.match(componentSource, /usesAdminSession/);
   assert.match(componentSource, /hashParams\.get\("admin"\) === "1"/);
 });
 

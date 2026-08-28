@@ -14,10 +14,10 @@ const pageSource = fs.readFileSync(
   "utf8",
 );
 
-test("customer manager keeps its access token in the current tab", () => {
-  assert.match(componentSource, /dimohod-trade:bom-admin-token/);
-  assert.match(componentSource, /window\.sessionStorage/);
-  assert.match(componentSource, /X-BOM-Admin-Token/);
+test("customer manager uses the protected admin session", () => {
+  assert.match(componentSource, /credentials: "include"/);
+  assert.match(componentSource, /\/api\/v1\/admin\/auth\/logout/);
+  assert.match(componentSource, /\/admin\/login\?next=\/admin\/customers/);
   assert.match(componentSource, /cache: "no-store"/);
 });
 
@@ -28,11 +28,9 @@ test("customer manager supports search and links to editable estimates", () => {
   assert.match(componentSource, /customer\.estimates\.map/);
 });
 
-test("customer manager exposes accessible login and status feedback", () => {
-  assert.match(componentSource, /htmlFor="customer-admin-token"/);
-  assert.match(componentSource, /aria-invalid/);
-  assert.match(componentSource, /role="alert"/);
+test("customer manager exposes status feedback", () => {
   assert.match(componentSource, /aria-live="polite"/);
+  assert.match(componentSource, /Загружаем клиентов/);
 });
 
 test("customer database is excluded from search indexing", () => {
