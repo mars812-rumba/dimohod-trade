@@ -1,5 +1,6 @@
 import type { ProductListItem } from "./api";
 import type { ChimneyBomLine } from "./chimneyCalculation";
+import { allocatePassageKitPrice } from "./configuratorPricingRules";
 
 export type CatalogEstimateMatch = {
   item: ProductListItem;
@@ -15,6 +16,7 @@ export type EstimateMeasurement = {
 
 export type ChimneyEstimateLine = {
   key: string;
+  skuId: string | null;
   label: string;
   article: string | null;
   skuName: string | null;
@@ -90,9 +92,21 @@ export function buildChimneyEstimate({
   calculationErrors: string[];
   generatedAt?: Date;
 }): ChimneyEstimate {
+  const flangeMatch = matches["passage-flange"];
+  const flangeUnitPriceRub = flangeMatch ? positivePrice(flangeMatch.item.price_rub) : null;
+  const passageAllocation = allocatePassageKitPrice(flangeUnitPriceRub);
+  const hasPassageCup = selectedBom.some((line) => line.key === "ceiling-passage" || line.key === "wall-passage");
+  const passagePricingNeedsReview = hasPassageCup && passageAllocation.reviewItem !== null;
   const lines = selectedBom.map((bomLine): ChimneyEstimateLine => {
     const match = matches[bomLine.key];
-    const unitPriceRub = match ? positivePrice(match.item.price_rub) : null;
+    const catalogUnitPriceRub = match ? positivePrice(match.item.price_rub) : null;
+    const isPassageCup = bomLine.key === "ceiling-passage" || bomLine.key === "wall-passage";
+    const isPassageFlange = bomLine.key === "passage-flange";
+    const unitPriceRub = isPassageCup
+      ? match ? passageAllocation.cupUnitPriceRub : null
+      : isPassageFlange && passagePricingNeedsReview
+        ? null
+        : catalogUnitPriceRub;
     const lineTotalRub = unitPriceRub === null ? null : unitPriceRub * bomLine.quantity;
     const matchStatus = !match
       ? "missing"
@@ -103,6 +117,7 @@ export function buildChimneyEstimate({
           : "candidate";
     return {
       key: bomLine.key,
+      skuId: match?.item.selected_sku_id ?? null,
       label: bomLine.label,
       article: match?.item.article ?? null,
       skuName: match?.item.name ?? null,
@@ -110,7 +125,14 @@ export function buildChimneyEstimate({
       unitPriceRub,
       lineTotalRub,
       characteristics: match ? itemCharacteristics(match.item) : [],
-      note: [bomLine.quantityNote, bomLine.selectionReason].filter(Boolean).join(" · "),
+      note: [
+        bomLine.quantityNote,
+        bomLine.selectionReason,
+        isPassageCup ? passageAllocation.explanation : null,
+        isPassageFlange && passagePricingNeedsReview
+          ? "Цена связанной группы временно исключена из итога до проверки стоимости комплекта."
+          : null,
+      ].filter(Boolean).join(" · "),
       matchStatus,
     };
   });
@@ -125,7 +147,10 @@ export function buildChimneyEstimate({
     unpricedLineCount: lines.filter((line) => line.lineTotalRub === null).length,
     totalUnits: lines.reduce((sum, line) => sum + line.quantity, 0),
     removedLabels,
-    reviewItems,
+    reviewItems: [
+      ...reviewItems,
+      ...(hasPassageCup && passageAllocation.reviewItem ? [passageAllocation.reviewItem] : []),
+    ],
     calculationErrors,
   };
 }

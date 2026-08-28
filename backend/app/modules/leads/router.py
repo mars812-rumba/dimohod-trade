@@ -6,9 +6,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from pydantic import ValidationError
 
 from app.core.config import settings
 from app.modules.leads.email import send_customer_confirmation_email, send_lead_email
+from app.modules.leads.schemas import LeadEstimate
 
 router = APIRouter()
 
@@ -47,6 +49,7 @@ async def create_lead(
     comment: str = Form("", max_length=2000),
     source: str = Form("homepage", max_length=80),
     configuration: str = Form("", max_length=12000),
+    estimate_json: str = Form("", max_length=120000),
     personal_data_consent: bool = Form(...),
     consent_version: str = Form(..., max_length=20),
     website: str = Form("", max_length=200),
@@ -62,6 +65,13 @@ async def create_lead(
         raise HTTPException(status_code=422, detail="Необходимо согласие на обработку персональных данных")
     if consent_version != CURRENT_CONSENT_VERSION:
         raise HTTPException(status_code=422, detail="Обновите страницу и подтвердите актуальную версию согласия")
+
+    estimate: LeadEstimate | None = None
+    if estimate_json:
+        try:
+            estimate = LeadEstimate.model_validate_json(estimate_json)
+        except ValidationError as error:
+            raise HTTPException(status_code=422, detail="Некорректная структура BOM") from error
 
     lead_id = uuid.uuid4().hex
     lead_dir = Path(settings.media_storage_dir) / "leads" / lead_id
@@ -88,6 +98,7 @@ async def create_lead(
         "comment": comment.strip(),
         "source": source,
         "configuration": configuration,
+        "estimate": "estimate.json" if estimate else None,
         "attachment": attachment_name,
         "personal_data_consent": True,
         "consent_version": consent_version,
@@ -95,6 +106,22 @@ async def create_lead(
     }
     record_path = lead_dir / "lead.json"
     record_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+    if estimate:
+        estimate_record = {
+            "schema_version": 1,
+            "lead_id": lead_id,
+            "status": "submitted",
+            "customer": {
+                "name": record["name"],
+                "contact_method": record["contact_method"],
+                "contact": record["contact"],
+            },
+            "estimate": estimate.model_dump(mode="json"),
+        }
+        (lead_dir / "estimate.json").write_text(
+            json.dumps(estimate_record, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
 
     email_status = "pending"
     try:

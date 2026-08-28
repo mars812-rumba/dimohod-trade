@@ -122,6 +122,84 @@ def test_accepts_email_contact_and_sends_customer_confirmation(tmp_path, monkeyp
     assert customer_deliveries[0][0]["contact_method"] == "email"
 
 
+def test_saves_structured_estimate_with_customer_and_sku_links(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.modules.leads.router.settings.media_storage_dir", str(tmp_path))
+    monkeypatch.setattr("app.modules.leads.router.send_lead_email", lambda *_: True)
+    client = TestClient(app)
+    estimate = {
+        "schemaVersion": 1,
+        "profileName": "Баня — вывод через стену",
+        "generatedAt": "2026-08-28T10:00:00Z",
+        "sourceUrl": "https://dimohod-trade.pro/configurator?profile=test",
+        "measurements": [{"label": "Маршрут", "value": "Через стену"}],
+        "lines": [
+            {
+                "key": "sandwich-pipe-1000",
+                "skuId": "00000000-0000-0000-0000-000000000101",
+                "label": "Сэндвич-труба 1000 мм",
+                "article": "DT-1000",
+                "skuName": "Сэндвич-труба",
+                "quantity": 2,
+                "unitPriceRub": 2500,
+                "lineTotalRub": 5000,
+                "characteristics": ["Ø 150/250 мм"],
+                "note": "",
+                "matchStatus": "exact",
+            }
+        ],
+        "knownSubtotalRub": 5000,
+        "pricedLineCount": 1,
+        "unpricedLineCount": 0,
+        "totalUnits": 2,
+        "removedLabels": [],
+        "reviewItems": [],
+        "calculationErrors": [],
+    }
+
+    response = client.post(
+        "/api/v1/leads",
+        data={
+            "name": "Иван",
+            "contact_method": "phone",
+            "contact": "+7 999 123-45-67",
+            "source": "chimney-estimate",
+            "estimate_json": json.dumps(estimate),
+            "personal_data_consent": "true",
+            "consent_version": "2026-08-11",
+        },
+    )
+
+    assert response.status_code == 201
+    lead_dir = next((tmp_path / "leads").iterdir())
+    lead = json.loads((lead_dir / "lead.json").read_text(encoding="utf-8"))
+    saved = json.loads((lead_dir / "estimate.json").read_text(encoding="utf-8"))
+    assert lead["estimate"] == "estimate.json"
+    assert saved["customer"]["contact"] == "+7 999 123-45-67"
+    assert saved["estimate"]["lines"][0]["sku_id"] == estimate["lines"][0]["skuId"]
+    assert saved["estimate"]["lines"][0]["quantity"] == 2
+
+
+def test_rejects_invalid_structured_estimate_before_creating_lead(tmp_path, monkeypatch):
+    monkeypatch.setattr("app.modules.leads.router.settings.media_storage_dir", str(tmp_path))
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/leads",
+        data={
+            "name": "Иван",
+            "contact_method": "phone",
+            "contact": "+7 999 123-45-67",
+            "estimate_json": json.dumps({"schemaVersion": 1, "lines": []}),
+            "personal_data_consent": "true",
+            "consent_version": "2026-08-11",
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Некорректная структура BOM"
+    assert not (tmp_path / "leads").exists()
+
+
 def test_rejects_invalid_telegram_contact(tmp_path, monkeypatch):
     monkeypatch.setattr("app.modules.leads.router.settings.media_storage_dir", str(tmp_path))
     client = TestClient(app)

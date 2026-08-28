@@ -97,6 +97,15 @@ export function EstimateLeadDialog({ disabled = false, estimate }: EstimateLeadD
         "configuration",
         `${chimneyEstimateText(currentEstimate)}\n\nСтраница расчёта: ${window.location.href}`.slice(0, 12000),
       );
+      data.set(
+        "estimate_json",
+        JSON.stringify({
+          schemaVersion: 1,
+          ...currentEstimate,
+          generatedAt: currentEstimate.generatedAt.toISOString(),
+          sourceUrl: window.location.href,
+        }),
+      );
       data.set("attachment", pdf, "predvaritelnaya-smeta-dymohoda.pdf");
 
       const response = await fetch(`${apiBaseUrl}/api/v1/leads`, {

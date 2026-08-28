@@ -82,6 +82,7 @@ export type ProductListItem = {
   price_rub: string | null;
   sku_count: number;
   selected_sku: string | null;
+  selected_sku_id: string | null;
 };
 
 export type ProductListResponse = {

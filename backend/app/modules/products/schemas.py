@@ -74,6 +74,7 @@ class ProductListItem(BaseModel):
     price_rub: Decimal | None
     sku_count: int
     selected_sku: str | None = None
+    selected_sku_id: UUID | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

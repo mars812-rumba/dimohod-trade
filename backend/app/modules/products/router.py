@@ -613,6 +613,9 @@ async def read_products(
                 selected_sku=representative_sku.article
                 if representative_sku
                 else None,
+                selected_sku_id=representative_sku.id
+                if representative_sku
+                else None,
             )
         )
 
