@@ -30,6 +30,7 @@ import {
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
 import { HomeHeroCarousel } from "../components/HomeHeroCarousel";
 import { HomeGuidedShowcase } from "../components/HomeGuidedShowcase";
+import { HomeQuickEstimate } from "../components/HomeQuickEstimate";
 import { LeadForm } from "../components/LeadForm";
 import { ProductGalleryPreview } from "../components/ProductGalleryPreview";
 import { YANDEX_MAPS_RATING } from "../components/YandexRatingBadge";
@@ -447,6 +448,8 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        <HomeQuickEstimate assetBasePath={basePath} />
 
         <HomeGuidedShowcase assetBasePath={basePath} />
 
