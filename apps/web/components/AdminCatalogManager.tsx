@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { ImagePlus, Link2, Plus, RefreshCcw, Save, Sparkles, Trash2, X } from "lucide-react";
+import Link from "next/link";
 import { DimensionScheme } from "./DimensionScheme";
 import styles from "./AdminCatalogManager.module.css";
 
@@ -1711,7 +1712,10 @@ export default function AdminCatalogManager() {
             Фото и схемы хранятся один раз. Размеры и цены — в SKU.
           </p>
         </div>
-        <div className={styles.status}>{status}</div>
+        <div>
+          <Link className={styles.customerLink} href="/admin/customers">Клиенты и замеры</Link>
+          <div className={styles.status}>{status}</div>
+        </div>
       </div>
 
       <section className={styles.workspace}>

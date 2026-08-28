@@ -29,6 +29,32 @@
   color: var(--steel);
   font-size: 13px;
   font-weight: 680;
+  text-align: right;
+}
+
+.customerLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  padding: 0 15px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--steel);
+  font-size: 13px;
+  font-weight: 760;
+  text-decoration: none;
+}
+
+.customerLink:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.customerLink:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 2px;
 }
 
 .workspace {

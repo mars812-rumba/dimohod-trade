@@ -1,0 +1,486 @@
+.shell {
+  width: min(1240px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 64px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.topbar a,
+.topbar button,
+.backLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  color: #365963;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.topbar button:hover,
+.topbar a:hover,
+.backLink:hover {
+  color: #e9682c;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #dbe3e5;
+}
+
+.header h1,
+.loginCard h1 {
+  margin: 4px 0 8px;
+  color: #183c45;
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.header > div > p:last-child,
+.loginCard > p:not(.eyebrow) {
+  max-width: 650px;
+  margin: 0;
+  color: #65777c;
+  line-height: 1.55;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #e9682c;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.counter {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0 8px;
+  min-width: 150px;
+  padding: 15px 18px;
+  border-radius: 12px;
+  color: #fff;
+  background: #1f5964;
+}
+
+.counter strong {
+  font-size: 25px;
+  line-height: 1;
+}
+
+.counter span {
+  grid-column: 1 / -1;
+  margin-top: 5px;
+  color: #cce3e7;
+  font-size: 12px;
+}
+
+.searchBar {
+  margin: 24px 0 10px;
+}
+
+.searchBar > label,
+.loginCard label {
+  display: block;
+  margin-bottom: 7px;
+  color: #496269;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.searchBar > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid #bfcdd1;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.searchBar svg {
+  margin-left: 15px;
+  color: #6a7c81;
+}
+
+.searchBar input,
+.loginCard input {
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  outline: 0;
+  color: #183c45;
+  background: transparent;
+  font: inherit;
+}
+
+.searchBar input {
+  padding: 0 12px;
+}
+
+.searchBar button,
+.loginCard form button {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  color: #fff;
+  background: #e9682c;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.searchBar:focus-within > div,
+.loginCard input:focus-visible {
+  outline: 3px solid rgba(233, 104, 44, 0.25);
+  outline-offset: 2px;
+}
+
+.statusMessage {
+  min-height: 22px;
+  margin: 0 0 8px;
+  color: #65777c;
+  font-size: 13px;
+}
+
+.customerList {
+  display: grid;
+  gap: 14px;
+}
+
+.customerCard {
+  overflow: hidden;
+  border: 1px solid #d7e0e2;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(24, 60, 69, 0.055);
+}
+
+.customerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e4eaeb;
+  background: #f7f9f9;
+}
+
+.customerHeader h2 {
+  margin: 0 0 9px;
+  color: #183c45;
+  font-size: 21px;
+}
+
+.contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 16px;
+}
+
+.contacts a {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  color: #35606a;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.contacts a:hover {
+  color: #e9682c;
+  text-decoration: underline;
+}
+
+.customerMeta {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 3px 7px;
+  text-align: right;
+}
+
+.customerMeta strong {
+  color: #183c45;
+  font-size: 22px;
+}
+
+.customerMeta span {
+  color: #65777c;
+  font-size: 13px;
+}
+
+.customerMeta small {
+  grid-column: 1 / -1;
+  color: #7b8a8e;
+  font-size: 11px;
+}
+
+.estimateList {
+  display: grid;
+}
+
+.estimateRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(270px, auto) minmax(210px, auto);
+  align-items: center;
+  gap: 22px;
+  padding: 15px 20px;
+}
+
+.estimateRow + .estimateRow {
+  border-top: 1px solid #edf1f2;
+}
+
+.estimateIdentity {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 10px;
+  color: #3c6871;
+}
+
+.estimateIdentity > div {
+  min-width: 0;
+}
+
+.estimateIdentity strong,
+.estimateIdentity span {
+  display: flex;
+  align-items: center;
+}
+
+.estimateIdentity strong {
+  overflow: hidden;
+  color: #203f47;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.estimateIdentity span {
+  gap: 5px;
+  margin-top: 5px;
+  color: #77868a;
+  font-size: 12px;
+}
+
+.estimateStats {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 18px;
+  margin: 0;
+}
+
+.estimateStats div {
+  display: grid;
+  gap: 3px;
+}
+
+.estimateStats dt {
+  color: #7a898d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.estimateStats dd {
+  margin: 0;
+  color: #183c45;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.estimateRow > a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 1px solid #b8c9cd;
+  border-radius: 8px;
+  color: #244f59;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+
+.estimateRow > a:hover {
+  border-color: #e9682c;
+  color: #c9501b;
+  background: #fff7f2;
+}
+
+.emptyState,
+.loginCard {
+  display: grid;
+  justify-items: start;
+  border: 1px solid #d7e0e2;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgba(24, 60, 69, 0.07);
+}
+
+.emptyState {
+  justify-items: center;
+  padding: 56px 24px;
+  color: #587077;
+  text-align: center;
+}
+
+.emptyState h2 {
+  margin: 14px 0 6px;
+  color: #183c45;
+}
+
+.emptyState p {
+  margin: 0;
+}
+
+.loginCard {
+  width: min(480px, 100%);
+  margin: 10vh auto 0;
+  padding: 30px;
+}
+
+.loginIcon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 24px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #1f5964;
+}
+
+.loginCard h1 {
+  font-size: 38px;
+}
+
+.loginCard form {
+  display: grid;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.loginCard input {
+  padding: 0 12px;
+  border: 1px solid #bfcdd1;
+  border-radius: 8px;
+}
+
+.loginCard form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  border-radius: 8px;
+}
+
+.formError {
+  margin: 7px 0 0;
+  color: #a43a20;
+  font-size: 13px;
+}
+
+.backLink {
+  margin-top: 14px;
+}
+
+.topbar a:focus-visible,
+.topbar button:focus-visible,
+.backLink:focus-visible,
+.searchBar button:focus-visible,
+.loginCard form button:focus-visible,
+.contacts a:focus-visible,
+.estimateRow > a:focus-visible {
+  outline: 3px solid rgba(233, 104, 44, 0.35);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .estimateRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .estimateStats {
+    justify-content: start;
+  }
+
+  .estimateRow > a {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .shell {
+    width: min(100% - 20px, 1240px);
+    padding-top: 14px;
+  }
+
+  .header,
+  .customerHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .counter {
+    align-self: flex-start;
+  }
+
+  .searchBar > div {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .searchBar button {
+    grid-column: 1 / -1;
+  }
+
+  .customerMeta {
+    text-align: left;
+  }
+
+  .estimateRow {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .estimateStats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .estimateRow > a {
+    grid-column: auto;
+  }
+
+  .loginCard {
+    margin-top: 5vh;
+    padding: 24px 20px;
+  }
+}

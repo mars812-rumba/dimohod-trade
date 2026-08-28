@@ -1,4 +1,5 @@
 import json
+from urllib.parse import parse_qs, urlparse
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -14,7 +15,10 @@ def test_create_lead(tmp_path, monkeypatch):
     delivered = []
     monkeypatch.setattr(
         "app.modules.leads.router.send_lead_email",
-        lambda record, attachment: delivered.append((record, attachment)) or True,
+        lambda record, attachment, manager_url=None: delivered.append(
+            (record, attachment, manager_url)
+        )
+        or True,
     )
     client = TestClient(app)
     response = client.post(
@@ -94,7 +98,10 @@ def test_accepts_email_contact_and_sends_customer_confirmation(tmp_path, monkeyp
     customer_deliveries = []
     monkeypatch.setattr(
         "app.modules.leads.router.send_lead_email",
-        lambda record, attachment: manager_deliveries.append((record, attachment)) or True,
+        lambda record, attachment, manager_url=None: manager_deliveries.append(
+            (record, attachment, manager_url)
+        )
+        or True,
     )
     monkeypatch.setattr(
         "app.modules.leads.router.send_customer_confirmation_email",
@@ -124,7 +131,16 @@ def test_accepts_email_contact_and_sends_customer_confirmation(tmp_path, monkeyp
 
 def test_saves_structured_estimate_with_customer_and_sku_links(tmp_path, monkeypatch):
     monkeypatch.setattr("app.modules.leads.router.settings.media_storage_dir", str(tmp_path))
-    monkeypatch.setattr("app.modules.leads.router.send_lead_email", lambda *_: True)
+    monkeypatch.setattr(
+        "app.modules.leads.router.settings.lead_manager_base_url",
+        "https://dimohod-trade.pro/admin/estimates",
+    )
+    monkeypatch.setattr("app.modules.leads.router.settings.bom_admin_token", "manager-secret")
+    deliveries = []
+    monkeypatch.setattr(
+        "app.modules.leads.router.send_lead_email",
+        lambda record, attachment, manager_url=None: deliveries.append(manager_url) or True,
+    )
     client = TestClient(app)
     estimate = {
         "schemaVersion": 1,
@@ -174,9 +190,86 @@ def test_saves_structured_estimate_with_customer_and_sku_links(tmp_path, monkeyp
     lead = json.loads((lead_dir / "lead.json").read_text(encoding="utf-8"))
     saved = json.loads((lead_dir / "estimate.json").read_text(encoding="utf-8"))
     assert lead["estimate"] == "estimate.json"
+    assert lead["customer_id"] == saved["customer"]["id"]
     assert saved["customer"]["contact"] == "+7 999 123-45-67"
     assert saved["estimate"]["lines"][0]["sku_id"] == estimate["lines"][0]["skuId"]
     assert saved["estimate"]["lines"][0]["quantity"] == 2
+
+    manager_url = deliveries[0]
+    parsed_url = urlparse(manager_url)
+    token = parse_qs(parsed_url.fragment)["token"][0]
+    assert parsed_url.path.endswith(lead["id"])
+    assert token not in (lead_dir / "lead.json").read_text(encoding="utf-8")
+
+    denied = client.get(f"/api/v1/leads/{lead['id']}/manager")
+    assert denied.status_code == 404
+    allowed = client.get(
+        f"/api/v1/leads/{lead['id']}/manager",
+        headers={"X-Lead-Manager-Token": token},
+    )
+    assert allowed.status_code == 200
+    assert allowed.headers["cache-control"] == "no-store"
+    assert allowed.json()["customer"]["name"] == "Иван"
+    admin_allowed = client.get(
+        f"/api/v1/leads/{lead['id']}/manager",
+        headers={"X-BOM-Admin-Token": "manager-secret"},
+    )
+    assert admin_allowed.status_code == 200
+
+    current = allowed.json()
+    line_id = current["estimate"]["lines"][0]["id"]
+    updated = client.patch(
+        f"/api/v1/leads/{lead['id']}/manager/items/{line_id}",
+        headers={"X-Lead-Manager-Token": token},
+        json={"revision": current["revision"], "quantity": 3, "unitPriceRub": 2400},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["estimate"]["known_subtotal_rub"] == 7200
+    assert (lead_dir / "original.json").is_file()
+    customer = json.loads(
+        (tmp_path / "customers" / f"{lead['customer_id']}.json").read_text(encoding="utf-8")
+    )
+    assert customer["estimates"][0]["known_total_rub"] == 7200
+
+    conflict = client.patch(
+        f"/api/v1/leads/{lead['id']}/manager/items/{line_id}",
+        headers={"X-Lead-Manager-Token": token},
+        json={"revision": current["revision"], "quantity": 4},
+    )
+    assert conflict.status_code == 409
+
+    removed = client.request(
+        "DELETE",
+        f"/api/v1/leads/{lead['id']}/manager/items/{line_id}",
+        headers={"X-Lead-Manager-Token": token},
+        json={"revision": updated.json()["revision"]},
+    )
+    assert removed.status_code == 200
+    assert removed.json()["estimate"]["lines"] == []
+    assert removed.json()["removed_lines"][0]["id"] == line_id
+
+    restored = client.post(
+        f"/api/v1/leads/{lead['id']}/manager/items/{line_id}/restore",
+        headers={"X-Lead-Manager-Token": token},
+        json={"revision": removed.json()["revision"]},
+    )
+    assert restored.status_code == 200
+    assert restored.json()["estimate"]["known_subtotal_rub"] == 7200
+
+    added = client.post(
+        f"/api/v1/leads/{lead['id']}/manager/items",
+        headers={"X-Lead-Manager-Token": token},
+        json={
+            "revision": restored.json()["revision"],
+            "label": "Доставка",
+            "quantity": 1,
+            "unitPriceRub": 1500,
+            "matchStatus": "manual",
+        },
+    )
+    assert added.status_code == 201
+    assert added.json()["estimate"]["known_subtotal_rub"] == 8700
+    assert added.json()["estimate"]["lines"][-1]["match_status"] == "manual"
 
 
 def test_rejects_invalid_structured_estimate_before_creating_lead(tmp_path, monkeypatch):
