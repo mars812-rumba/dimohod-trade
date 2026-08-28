@@ -235,49 +235,10 @@ const checks = [
 ];
 
 const calculationResults = [
-  {
-    image: "/images/home/calculation-benefits/calculation-price.webp",
-    title: "Стоимость комплекта",
-    text: "Увидите предварительную стоимость дымохода до оформления заказа.",
-  },
-  {
-    image: "/images/home/calculation-benefits/product-list.webp",
-    title: "Полный состав изделий",
-    text: "Получите список элементов и их количество для выбранного маршрута.",
-  },
-  {
-    image: "/images/home/calculation-benefits/installation-scheme.webp",
-    title: "Персональная схема монтажа",
-    text: "Увидите маршрут дымохода и расположение элементов на своём объекте.",
-  },
-  {
-    image: "/images/home/calculation-benefits/estimate-pdf.webp",
-    title: "Готовая PDF-смета",
-    text: "Скачайте расчёт, чтобы сохранить его или отправить на согласование.",
-  },
-];
-
-const calculationSteps = [
-  {
-    image: "/images/home/calculation-benefits/calculation-main.webp",
-    title: "Расчёт на сайте",
-    text: "Вы отвечаете на вопросы об объекте, отопителе и маршруте.",
-  },
-  {
-    image: "/images/home/calculation-benefits/calculation-price.webp",
-    title: "Проверка специалистом",
-    text: "Мы сверяем исходные данные, состав комплекта и схему.",
-  },
-  {
-    image: "/images/home/calculation-benefits/production-welding.webp",
-    title: "Производство комплекта",
-    text: "После проверки и согласования заказ передаётся в производство.",
-  },
-  {
-    image: "/images/home/calculation-benefits/delivery.webp",
-    title: "Доставка по России",
-    text: "Отправляем готовый заказ транспортной компанией.",
-  },
+  "Стоимость",
+  "Подробный список изделий",
+  "Индивидуальная монтажная схема под ваш замер с основными узлами и проходами",
+  "Готовая PDF-смета",
 ];
 
 const catalogGroups = [
@@ -456,45 +417,30 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <div className={styles.calculationResults} aria-label="Что входит в результат расчёта">
-              {calculationResults.map(({ image, title, text }) => (
-                <article className={styles.calculationResult} key={title}>
-                  <span className={styles.calculationResultIcon} aria-hidden>
-                    <Image alt="" height={112} src={`${basePath}${image}`} width={112} />
-                  </span>
-                  <div>
-                    <h3>{title}</h3>
-                    <p>{text}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <div className={styles.calculationShowcase}>
+              <picture className={styles.calculationRender}>
+                <source
+                  media="(max-width: 720px)"
+                  srcSet={`${basePath}/images/home/calculation-benefits/configurator-mobile.webp`}
+                />
+                <Image
+                  alt="Конфигуратор дымохода с монтажной схемой и перечнем изделий"
+                  height={810}
+                  sizes="(max-width: 720px) calc(100vw - 28px), 72vw"
+                  src={`${basePath}/images/home/calculation-benefits/configurator-desktop.webp`}
+                  unoptimized
+                  width={1440}
+                />
+              </picture>
 
-            <div className={styles.calculationProcess}>
-              <div className={styles.calculationProcessHeading}>
-                <h3>Вы рассчитываете — мы проверяем и отправляем</h3>
-                <p>Расчёт на сайте становится основой заказа, а перед производством его проверяет специалист.</p>
-              </div>
-              <ol className={styles.calculationSteps}>
-                {calculationSteps.map(({ image, title, text }, index) => (
-                  <li key={title}>
-                    <span className={styles.calculationStepNumber}>{index + 1}</span>
-                    <span className={styles.calculationStepIcon} aria-hidden>
-                      <Image alt="" height={88} src={`${basePath}${image}`} width={88} />
-                    </span>
-                    <div>
-                      <h4>{title}</h4>
-                      <p>{text}</p>
-                    </div>
+              <ol className={styles.calculationResults} aria-label="Что вы получите после расчёта">
+                {calculationResults.map((result, index) => (
+                  <li className={styles.calculationResult} key={result}>
+                    <span aria-hidden>{index + 1}</span>
+                    <h3>{result}</h3>
                   </li>
                 ))}
               </ol>
-              <div className={styles.calculationProcessAction}>
-                <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/zamery?edit=1">
-                  Рассчитать дымоход
-                  <ArrowRight aria-hidden size={18} strokeWidth={1.8} />
-                </Link>
-              </div>
             </div>
           </div>
         </section>
