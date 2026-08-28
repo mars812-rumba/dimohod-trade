@@ -402,12 +402,38 @@ export default async function HomePage() {
       <main className={styles.main}>
         <HomeHeroCarousel assetBasePath={basePath} />
 
+        <section className={styles.pathChoiceSection} aria-labelledby="calculation-path-title">
+          <div className={styles.shell}>
+            <h2 id="calculation-path-title">Какой результат вам нужен?</h2>
+            <div className={styles.pathChoiceGrid}>
+              <Link className={styles.pathChoicePrimary} href="/zamery?edit=1">
+                <Ruler aria-hidden size={25} strokeWidth={1.7} />
+                <span>
+                  <small>Готовите реальный заказ?</small>
+                  <strong>Полный замер</strong>
+                  <em>Точная смета по вашим размерам. Экономит платный выезд замерщика — от ~10 000 ₽ за город.</em>
+                </span>
+                <ArrowRight aria-hidden size={21} />
+              </Link>
+              <Link className={styles.pathChoiceSecondary} href="/#quick-estimate">
+                <Gauge aria-hidden size={25} strokeWidth={1.7} />
+                <span>
+                  <small>Не знаете размеры?</small>
+                  <strong>Быстрый расчёт</strong>
+                  <em>Прикинуть бюджет за 2 минуты. Ориентировочная точность ±30% — поможет понять порядок цифр.</em>
+                </span>
+                <ArrowRight aria-hidden size={21} />
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <section className={styles.benefitsSection} aria-labelledby="home-benefits-title">
           <div className={styles.shell}>
             <div className={styles.benefitsIntro}>
-              <h2 id="home-benefits-title">Рассчитайте дымоход прямо на сайте</h2>
+              <h2 id="home-benefits-title">Полный замер для точной сметы</h2>
               <div className={styles.benefitsIntroContent}>
-                <p>Получите стоимость, состав комплекта, персональную схему монтажа и готовую смету до оформления заказа.</p>
+                <p>Готовите реальный заказ? Укажите размеры — получите схему, состав комплекта и точную смету после проверки менеджером.</p>
               </div>
             </div>
 
@@ -428,7 +454,7 @@ export default async function HomePage() {
               </picture>
 
               <div className={styles.calculationDetails}>
-                <ol className={styles.calculationResults} aria-label="Что вы получите после расчёта">
+                <ol className={styles.calculationResults} aria-label="Что вы получите после полного замера">
                   {calculationResults.map((result, index) => (
                     <li className={styles.calculationResult} key={result}>
                       <span aria-hidden>{index + 1}</span>
@@ -439,10 +465,10 @@ export default async function HomePage() {
 
                 <div className={styles.calculationAction}>
                   <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/zamery?edit=1">
-                    Рассчитать дымоход
+                    Начать полный замер
                     <ArrowRight aria-hidden size={18} strokeWidth={1.8} />
                   </Link>
-                  <span>Расчёт займёт несколько минут</span>
+                  <span>Размеры сохранятся — к заполнению можно вернуться позже</span>
                 </div>
               </div>
             </div>

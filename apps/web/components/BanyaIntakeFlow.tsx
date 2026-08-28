@@ -11,6 +11,7 @@ import {
 } from "@/lib/calculationProfiles";
 import {
   CONFIGURATOR_DIAMETERS_MM,
+  MEASUREMENTS_INTAKE_STORAGE_KEY,
   createEmptyScenarioDraft,
   draftFieldStatus,
   facadeOffsetFromRoofOverhang,
@@ -256,7 +257,7 @@ export function BanyaIntakeFlow({
     ...createEmptyScenarioDraft(initialScenario),
     ...(initialObjectType ? { objectType: initialObjectType } : {}),
   });
-  const storageKey = "dimohod-trade:measurements-intake:v2";
+  const storageKey = MEASUREMENTS_INTAKE_STORAGE_KEY;
   const requestedProfileId = initialProfileId;
   const requestedRoute = initialRoute;
   const [intake, setIntake] = useState<ScenarioConfiguratorDraft>(emptyDraft);

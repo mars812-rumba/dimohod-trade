@@ -19,7 +19,11 @@ import {
   type CatalogEstimateMatch,
 } from "@/lib/chimneyEstimate";
 import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
-import { saveConfiguratorDraft, type EquipmentStatus } from "@/lib/configuratorDraft";
+import {
+  MEASUREMENTS_INTAKE_STORAGE_KEY,
+  saveConfiguratorDraft,
+  type EquipmentStatus,
+} from "@/lib/configuratorDraft";
 import {
   quickEstimateAssumptions,
   quickEstimateDraft,
@@ -246,6 +250,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
 
   function goExact() {
     if (!draft || !answers) return;
+    window.sessionStorage.setItem(MEASUREMENTS_INTAKE_STORAGE_KEY, JSON.stringify(draft));
     saveConfiguratorDraft(window.sessionStorage, draft);
     const params = new URLSearchParams({
       edit: "1",
@@ -263,14 +268,14 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
   }
 
   return (
-    <section className={styles.section} aria-labelledby="quick-estimate-title">
+    <section className={styles.section} id="quick-estimate" aria-labelledby="quick-estimate-title">
       <div className={styles.shell}>
         <div className={styles.intro}>
           <div>
-            <p className={styles.eyebrow}>Простой сценарий</p>
-            <h2 id="quick-estimate-title">Не хотите делать замеры? Попробуйте быстрый расчёт</h2>
+            <p className={styles.eyebrow}>Прикинуть бюджет</p>
+            <h2 id="quick-estimate-title">Не знаете размеры? Быстрый расчёт</h2>
           </div>
-          <p>Ответьте на несколько простых вопросов — покажем ориентировочную стоимость и состав комплекта.</p>
+          <p>Без замеров, около 2 минут. Покажем порядок бюджета с ориентировочной точностью ±30%.</p>
         </div>
 
         <div className={styles.quiz}>
@@ -363,7 +368,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
             </> : null}
 
             {step === 4 ? <>
-              <div className={styles.heading}><small>Предварительный результат</small><h3>Ориентировочный состав комплекта</h3><p>Финальную смету подтверждаем после точных замеров и проверки параметров.</p></div>
+              <div className={styles.heading}><small>Предварительный результат</small><h3>Ориентировочный состав комплекта</h3><p>Быстрый расчёт показывает порядок бюджета с возможным отклонением ±30%. Это не финальная смета для заказа.</p></div>
               {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
               {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
               {estimate && !leadSubmitted ? (
@@ -389,7 +394,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
               {estimate && leadSubmitted ? <div className={styles.resultGrid}>
                 <div>
                   <div className={styles.priceCard}>
-                    <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций" : "Ориентировочная стоимость"}</small>
+                    <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций · ±30%" : "Ориентировочная стоимость · ±30%"}</small>
                     <strong>{matchStatus === "loading" ? "…" : formatRub(estimate.knownSubtotalRub)}</strong>
                     <p>{estimate.lines.length} позиций · {estimate.totalUnits} изделий{estimate.unpricedLineCount ? ` · без цены: ${estimate.unpricedLineCount}` : ""}</p>
                   </div>
@@ -402,9 +407,10 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
                   {estimate.lines.length > 10 ? <p className={styles.status}>Ещё {estimate.lines.length - 10} позиций будут в полной смете.</p> : null}
                 </div>
               </div> : null}
+              {leadSubmitted ? <p className={styles.precisionNotice}><strong>Нужна сумма для заказа?</strong> Уточните размеры — пересчитаем комплект по вашим данным и подготовим точную смету после проверки менеджером.</p> : null}
               {leadSubmitted ? <div className={styles.resultFooter}>
-                <button className={styles.exactLink} onClick={goExact} type="button">Уточнить расчёт по замерам <ArrowRight aria-hidden size={18} /></button>
-                <small>Ответы из быстрого расчёта перенесём в форму замеров — повторно заполнять их не придётся.</small>
+                <button className={styles.exactLink} onClick={goExact} type="button">Уточнить размеры и получить точную смету <ArrowRight aria-hidden size={18} /></button>
+                <small>Тип отопителя, выход и диаметр уже перенесём в полный замер — повторно вводить их не придётся.</small>
               </div> : null}
             </> : null}
 

@@ -28,6 +28,66 @@
   margin: 0 auto;
 }
 
+.pathChoiceSection {
+  padding: clamp(36px, 5vw, 58px) 0;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+
+.pathChoiceSection h2 {
+  margin: 0 0 24px;
+  font-size: clamp(28px, 3.5vw, 42px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.pathChoiceGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr);
+  gap: 16px;
+}
+
+.pathChoicePrimary,
+.pathChoiceSecondary {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 24px;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+  padding: clamp(20px, 3vw, 30px);
+  border-radius: 14px;
+  text-decoration: none;
+}
+
+.pathChoicePrimary {
+  color: #fff;
+  background: #173d4c;
+  box-shadow: 0 18px 42px rgba(16, 33, 39, .16);
+}
+
+.pathChoiceSecondary {
+  border: 1px solid #c6d0d2;
+  color: #173d4c;
+  background: #f4f6f5;
+}
+
+.pathChoicePrimary > span,
+.pathChoiceSecondary > span { display: grid; min-width: 0; gap: 5px; }
+.pathChoicePrimary small,
+.pathChoiceSecondary small { font-size: 12px; font-weight: 750; }
+.pathChoicePrimary small { color: #bdced3; }
+.pathChoiceSecondary small { color: #61747b; }
+.pathChoicePrimary strong,
+.pathChoiceSecondary strong { font-size: clamp(22px, 2.5vw, 30px); line-height: 1; }
+.pathChoicePrimary em,
+.pathChoiceSecondary em { max-width: 58ch; font-size: 13px; font-style: normal; line-height: 1.45; }
+.pathChoicePrimary em { color: #d8e3e6; }
+.pathChoiceSecondary em { color: #52656c; }
+.pathChoicePrimary:hover { background: #102f3b; }
+.pathChoiceSecondary:hover { border-color: #7394a1; background: #eef2f1; }
+.pathChoicePrimary:focus-visible,
+.pathChoiceSecondary:focus-visible { outline: 3px solid rgba(237, 91, 42, .42); outline-offset: 4px; }
+
 .benefitsSection {
   padding: clamp(64px, 7vw, 96px) 0;
   color: #fff;
@@ -2427,6 +2487,13 @@
   .shell {
     width: min(100% - 28px, 1240px);
   }
+
+  .pathChoiceSection { padding: 38px 0; }
+  .pathChoiceGrid { grid-template-columns: 1fr; }
+  .pathChoicePrimary,
+  .pathChoiceSecondary { grid-template-columns: 28px minmax(0, 1fr) 20px; gap: 12px; padding: 20px 16px; }
+  .pathChoicePrimary strong,
+  .pathChoiceSecondary strong { font-size: 23px; }
 
   .benefitsSection {
     padding: 54px 0;

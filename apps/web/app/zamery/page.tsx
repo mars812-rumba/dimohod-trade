@@ -42,16 +42,16 @@ export default async function MeasurementsPage({ searchParams }: MeasurementsPag
         <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
           <Link href="/">Главная</Link>
           <span aria-hidden>/</span>
-          <span aria-current="page">Мои замеры</span>
+          <span aria-current="page">Полный замер</span>
         </nav>
       </div>
 
       <header className={styles.measurementsPageHeader}>
         <div className={styles.shell}>
-          <h1>{edit ? (profileId ? "Редактирование замеров" : "Новый замер") : "Мои замеры"}</h1>
+          <h1>{edit ? (profileId ? "Редактирование полного замера" : "Новый полный замер") : "Полные замеры"}</h1>
           <p>
             {edit
-              ? "Заполните известные размеры выбранного маршрута. Профиль можно сохранить и позже открыть снова."
+              ? "Заполните известные размеры отопителя и маршрута для точной сметы. Профиль можно сохранить и продолжить позже."
               : "Сохраните размеры объекта и выбранного маршрута, чтобы затем загрузить их в конфигуратор."}
           </p>
         </div>

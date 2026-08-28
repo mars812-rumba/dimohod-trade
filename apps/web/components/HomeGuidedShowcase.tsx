@@ -26,8 +26,8 @@ const previewSlides: ShowcaseSlide[] = [
   {
     image: "/images/home/guided-showcase/result-pdf-cropped.webp",
     alt: "Предварительный расчёт дымохода в PDF со схемой, перечнем изделий и ценами",
-    title: "Получите предварительный расчёт",
-    text: "Схема трассы, совместимый комплект и смета — ещё до выезда специалиста.",
+    title: "Получите смету по вашим размерам",
+    text: "Схема трассы, совместимый комплект и смета для проверки менеджером и подготовки заказа.",
   },
 ];
 
@@ -58,7 +58,7 @@ function ShowcaseCarousel({
           <h2 id={id}>{title}</h2>
           <p>{description}</p>
           <Link href="/zamery?edit=1">
-            Начать предварительный расчёт
+            Начать полный замер
             <IconArrowRight aria-hidden size={19} strokeWidth={1.8} />
           </Link>
         </div>
@@ -143,11 +143,11 @@ export function HomeGuidedShowcase({ assetBasePath = "" }: { assetBasePath?: str
     <div className={styles.showcase}>
       <ShowcaseCarousel
         assetBasePath={assetBasePath}
-        description="Заполните понятный вопросник с наглядными подсказками. По базовым данным об объекте вы получите полезный предварительный результат, а специалист подключится там, где нужна дополнительная проверка."
+        description="Готовите реальный заказ? Заполните размеры с наглядными подсказками. Данные сохранятся, а менеджер проверит состав комплекта и итоговую смету."
         id="home-preliminary-estimate-showcase"
         note="Для удалённых объектов предварительный расчёт может сэкономить отдельный платный выезд на первичный замер."
         slides={previewSlides}
-        title="Сначала поймите, что вам нужно и сколько это стоит"
+        title="Полный замер для подготовки заказа"
       />
     </div>
   );

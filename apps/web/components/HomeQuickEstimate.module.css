@@ -1,4 +1,5 @@
 .section {
+  scroll-margin-top: 76px;
   padding: clamp(64px, 8vw, 104px) 0;
   border-bottom: 1px solid #ccd5d7;
   background: #eef1f0;
@@ -171,6 +172,17 @@
 .assumptions strong { display: block; margin-bottom: 8px; }
 .assumptions ul { display: grid; gap: 4px; margin: 0; padding-left: 18px; color: #5a676c; font-size: 12px; line-height: 1.45; }
 .status { margin: 0; color: #5a6c72; }
+.precisionNotice {
+  margin: 22px 0 0;
+  padding: 16px 18px;
+  border: 1px solid #e5bca9;
+  border-radius: 10px;
+  color: #5d473d;
+  background: #fff5ef;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.precisionNotice strong { color: #8f3217; }
 .leadGate {
   display: grid;
   width: min(100%, 620px);

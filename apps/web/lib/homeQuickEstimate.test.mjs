@@ -17,6 +17,8 @@ test("quick estimate uses the existing catalog and transfers answers to measurem
   assert.match(component, /\/api\/v1\/products/);
   assert.match(component, /buildChimneyEstimate/);
   assert.match(component, /saveConfiguratorDraft\(window\.sessionStorage, draft\)/);
+  assert.match(component, /MEASUREMENTS_INTAKE_STORAGE_KEY/);
+  assert.match(component, /window\.sessionStorage\.setItem\(MEASUREMENTS_INTAKE_STORAGE_KEY/);
   assert.match(component, /router\.push\(`\/zamery\?/);
 });
 
@@ -26,6 +28,12 @@ test("price and BOM stay gated until the existing lead form saves the estimate",
   assert.match(component, /<EstimateLeadDialog/);
   assert.match(component, /source="chimney-quick-estimate"/);
   assert.match(component, /onSubmitted=\{\(\) => setLeadSubmitted\(true\)\}/);
+});
+
+test("quick result states its accuracy and links to a prefilled full measurement", () => {
+  assert.match(component, /отклонением ±30%/);
+  assert.match(component, /Уточнить размеры и получить точную смету/);
+  assert.match(component, /Тип отопителя, выход и диаметр уже перенесём/);
 });
 
 test("route choices use raster renders and existing measurement icons", () => {

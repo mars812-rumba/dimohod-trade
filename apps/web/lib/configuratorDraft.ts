@@ -68,6 +68,7 @@ export type ScenarioConfiguratorDraft = {
 };
 
 export const CONFIGURATOR_DRAFT_STORAGE_KEY = "dimohod-trade:configurator-draft";
+export const MEASUREMENTS_INTAKE_STORAGE_KEY = "dimohod-trade:measurements-intake:v2";
 
 type DraftStorage = Pick<Storage, "getItem" | "setItem">;
 

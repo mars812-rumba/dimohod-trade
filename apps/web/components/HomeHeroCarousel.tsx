@@ -31,7 +31,7 @@ const mobileVideoCues = [
     start: 0,
     end: 8,
     title: "Собственное производство",
-    description: "Точное изготовление и контроль качества",
+    description: "Дымоходы высокого качества на точном оборудовании",
     Icon: IconBuildingFactory2,
   },
   {
@@ -119,6 +119,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
+  const mobileVideoPosterPath = `${assetBasePath}/images/home/hero-projects/0826-poster.webp`;
   const videoCue = activeVideoCue === null ? null : mobileVideoCues[activeVideoCue];
   const displayedVideoCue = videoCue ?? mobileVideoCues[0];
   const usesMobileVideo = isMobile && !reduceMotion && !mobileVideoFailed;
@@ -178,6 +179,16 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             unoptimized
             sizes="100vw"
           />
+          <Image
+            className={styles.mobilePoster}
+            src={mobileVideoPosterPath}
+            alt=""
+            fill
+            priority
+            unoptimized
+            sizes="(max-width: 720px) 100vw, 0px"
+            aria-hidden="true"
+          />
           {usesMobileVideo ? (
             <video
               ref={mobileVideoRef}
@@ -187,7 +198,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
               muted
               playsInline
               preload="metadata"
-              poster={imagePath}
+              poster={mobileVideoPosterPath}
               aria-hidden="true"
               onPlaying={(event) => {
                 setMobileVideoPlaying(true);
@@ -215,23 +226,30 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
           <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
         ) : null}
 
-        <Link className={styles.cta} href="/zamery?edit=1">
-          <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
-          <div className={styles.ctaCopy}>
-            {usesMobileVideo ? (
-              <>
-                <h1 className={styles.ctaHeroTitle}>Дымоход под ваш отопитель</h1>
-                <strong>Получить предварительный расчёт</strong>
-              </>
-            ) : (
-              <>
-                <strong>Получить предварительный расчёт</strong>
-                <span>Схема, комплект и цена до выезда специалиста</span>
-              </>
-            )}
-          </div>
-          <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
-        </Link>
+        <div className={styles.heroActions}>
+          <Link className={styles.cta} href="/zamery?edit=1">
+            <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
+            <div className={styles.ctaCopy}>
+              {usesMobileVideo ? (
+                <>
+                  <h1 className={styles.ctaHeroTitle}>Дымоход под ваш отопитель</h1>
+                  <strong>Полный замер для заказа</strong>
+                </>
+              ) : (
+                <>
+                  <strong>Полный замер для заказа</strong>
+                  <span>Точная смета по вашим размерам</span>
+                </>
+              )}
+            </div>
+            <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
+          </Link>
+
+          <Link className={styles.catalogCta} href="/catalog">
+            <span>Открыть каталог</span>
+            <IconArrowRight size={17} strokeWidth={1.8} aria-hidden />
+          </Link>
+        </div>
 
         <div className={styles.progress} aria-hidden="true">
           {slides.map(([name], index) => (
