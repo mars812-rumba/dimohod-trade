@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 def to_camel(value: str) -> str:
@@ -51,3 +51,53 @@ class LeadEstimate(LeadEstimateModel):
     removed_labels: list[str] = Field(default_factory=list, max_length=300)
     review_items: list[str] = Field(default_factory=list, max_length=100)
     calculation_errors: list[str] = Field(default_factory=list, max_length=100)
+
+
+ManagerMatchStatus = Literal["exact", "candidate", "nearest", "missing", "manual"]
+
+
+class ManagerLineCreate(LeadEstimateModel):
+    revision: int = Field(ge=1)
+    sku_id: UUID | None = None
+    label: str = Field(min_length=1, max_length=240)
+    article: str | None = Field(default=None, max_length=120)
+    sku_name: str | None = Field(default=None, max_length=220)
+    quantity: int = Field(default=1, ge=1, le=10_000)
+    unit_price_rub: float | None = Field(default=None, ge=0)
+    characteristics: list[str] = Field(default_factory=list, max_length=30)
+    note: str = Field(default="", max_length=4000)
+    match_status: ManagerMatchStatus = "manual"
+
+
+class ManagerLineUpdate(LeadEstimateModel):
+    revision: int = Field(ge=1)
+    sku_id: UUID | None = None
+    label: str | None = Field(default=None, min_length=1, max_length=240)
+    article: str | None = Field(default=None, max_length=120)
+    sku_name: str | None = Field(default=None, max_length=220)
+    quantity: int | None = Field(default=None, ge=1, le=10_000)
+    unit_price_rub: float | None = Field(default=None, ge=0)
+    characteristics: list[str] | None = Field(default=None, max_length=30)
+    note: str | None = Field(default=None, max_length=4000)
+    match_status: ManagerMatchStatus | None = None
+
+    @model_validator(mode="after")
+    def contains_change(self) -> "ManagerLineUpdate":
+        if self.model_fields_set == {"revision"}:
+            raise ValueError("At least one line field must be provided")
+        return self
+
+
+class ManagerRevision(LeadEstimateModel):
+    revision: int = Field(ge=1)
+
+
+class ManagerCatalogMetadataRequest(LeadEstimateModel):
+    sku_ids: list[UUID] = Field(default_factory=list, max_length=300)
+
+
+class ManagerCatalogSelection(LeadEstimateModel):
+    revision: int = Field(ge=1)
+    sku_id: UUID
+    quantity: int = Field(default=1, ge=1, le=10_000)
+    note: str = Field(default="", max_length=4000)

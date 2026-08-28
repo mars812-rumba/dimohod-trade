@@ -15,13 +15,13 @@ const pageSource = fs.readFileSync(
 );
 
 test("manager card exchanges a fragment token through a private header", () => {
-  assert.match(componentSource, /window\.location\.hash/);
+  assert.match(componentSource, /location\.hash/);
   assert.match(componentSource, /X-Lead-Manager-Token/);
   assert.match(componentSource, /history\.replaceState/);
-  assert.match(componentSource, /cache: "no-store"/);
-  assert.match(componentSource, /credentials: "include"/);
-  assert.match(componentSource, /usesAdminSession/);
-  assert.match(componentSource, /hashParams\.get\("admin"\) === "1"/);
+  assert.match(componentSource, /cache:\s*"no-store"/);
+  assert.match(componentSource, /credentials:\s*"include"/);
+  assert.match(componentSource, /setAdmin/);
+  assert.match(componentSource, /hash\.get\("admin"\)===\"1\"/);
 });
 
 test("manager card renders customer measurements and BOM", () => {
@@ -33,12 +33,23 @@ test("manager card renders customer measurements and BOM", () => {
 
 test("manager card exposes accessible CRUD controls and catalog search", () => {
   assert.match(componentSource, /Редактировать \$\{line\.label\}/);
-  assert.match(componentSource, /Заменить SKU для \$\{line\.label\}/);
+  assert.match(componentSource, /Заменить SKU \$\{line\.label\}/);
   assert.match(componentSource, /Удалить \$\{line\.label\}/);
   assert.match(componentSource, /aria-live="polite"/);
-  assert.match(componentSource, /manager-sku-search/);
+  assert.match(componentSource, /manager-catalog-search/);
   assert.match(componentSource, /\/items\/\$\{line\.id\}/);
   assert.match(componentSource, /\/restore/);
+});
+
+test("catalog BOM editing is constrained to exact catalog variants", () => {
+  assert.match(componentSource, /manager\/catalog\/metadata/);
+  assert.match(componentSource, /categorySlug/);
+  assert.match(componentSource, /Марка стали/);
+  assert.match(componentSource, /Толщина/);
+  assert.match(componentSource, /Длина/);
+  assert.match(componentSource, /\/catalog\/items/);
+  assert.match(componentSource, /skuMedia/);
+  assert.match(componentSource, /<Thumb media=/);
 });
 
 test("manager page is excluded from search indexing", () => {

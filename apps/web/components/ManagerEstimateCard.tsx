@@ -1,477 +1,76 @@
 "use client";
 
-import {
-  AlertTriangle,
-  ArrowLeft,
-  CheckCircle2,
-  ClipboardList,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Save,
-  Search,
-  Trash2,
-  X,
-  Mail,
-  MessageCircle,
-  Phone,
-  Ruler,
-  UserRound,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, ClipboardList, ImageIcon, Mail, MessageCircle, Pencil, Phone, Plus, RotateCcw, Ruler, Save, Search, Trash2, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
-import type { ProductListItem, ProductListResponse } from "@/lib/api";
+import type { MediaItem, Product, ProductListItem, ProductListResponse, SKU } from "@/lib/api";
 import styles from "./ManagerEstimateCard.module.css";
 
-type ManagerEstimateLine = {
-  id: string;
-  key: string;
-  sku_id: string | null;
-  label: string;
-  article: string | null;
-  sku_name: string | null;
-  quantity: number;
-  unit_price_rub: number | null;
-  line_total_rub: number | null;
-  characteristics: string[];
-  note: string;
-  match_status: "exact" | "candidate" | "nearest" | "missing" | "manual";
-  removed_at?: string;
-};
+type Line = { id:string; key:string; sku_id:string|null; label:string; article:string|null; sku_name:string|null; quantity:number; unit_price_rub:number|null; line_total_rub:number|null; characteristics:string[]; note:string; match_status:"exact"|"candidate"|"nearest"|"missing"|"manual"; removed_at?:string; image?:MediaItem|null };
+type Envelope = { schema_version:number; lead_id:string; status:string; revision:number; removed_lines:Line[]; customer:{name:string;contact_method:"phone"|"whatsapp"|"telegram"|"email";contact:string}; estimate:{profile_name:string;generated_at:string;source_url:string;measurements:Array<{label:string;value:string}>;lines:Line[];known_subtotal_rub:number;priced_line_count:number;unpriced_line_count:number;total_units:number;review_items:string[];calculation_errors:string[]} };
+type Meta = { sku_id:string; product_id:string; product_slug:string; product_name:string; category_id:string; category_slug:string; category_name:string; article:string; sku_name:string; steel_grade:string|null; wall_thickness_mm:number|null; diameter_mm:number|null; outer_diameter_mm:number|null; length_mm:number|null; unit_price_rub:number|null; image:MediaItem|null };
+type Draft = {label:string;quantity:string;unitPrice:string;characteristics:string;note:string};
+type Picker = {target:string|null;categorySlug:string|null;categoryName:string|null;diameter:number|null;outer:number|null;quantity:number;note:string};
+const api = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const none = "__none__";
 
-type ManagerEstimateEnvelope = {
-  schema_version: number;
-  lead_id: string;
-  status: string;
-  revision: number;
-  removed_lines: ManagerEstimateLine[];
-  customer: {
-    name: string;
-    contact_method: "phone" | "whatsapp" | "telegram" | "email";
-    contact: string;
-  };
-  estimate: {
-    profile_name: string;
-    generated_at: string;
-    source_url: string;
-    measurements: Array<{ label: string; value: string }>;
-    lines: ManagerEstimateLine[];
-    known_subtotal_rub: number;
-    priced_line_count: number;
-    unpriced_line_count: number;
-    total_units: number;
-    review_items: string[];
-    calculation_errors: string[];
-  };
-};
+function rub(value:number){return new Intl.NumberFormat("ru-RU",{style:"currency",currency:"RUB",maximumFractionDigits:0}).format(value)}
+function val(value:string|number|null){return value===null?none:String(value)}
+function unique(values:Array<string|number|null>){return [...new Set(values.map(val))]}
+function contactHref(method:Envelope["customer"]["contact_method"], contact:string){if(method==="email")return `mailto:${contact}`;if(method==="telegram")return `https://t.me/${contact.replace(/^@/,"")}`;if(method==="whatsapp")return `https://wa.me/${contact.replace(/\D/g,"")}`;return `tel:${contact.replace(/[^+\d]/g,"")}`}
+function ContactIcon({method}:{method:Envelope["customer"]["contact_method"]}){return method==="email"?<Mail aria-hidden size={18}/>:method==="phone"?<Phone aria-hidden size={18}/>:<MessageCircle aria-hidden size={18}/>}
+function draftFor(line:Line):Draft{return {label:line.label,quantity:String(line.quantity),unitPrice:line.unit_price_rub===null?"":String(line.unit_price_rub),characteristics:line.characteristics.join("\n"),note:line.note}}
+function imageUrl(media:MediaItem|null|undefined){const url=media?.thumbnail_url??media?.url;if(!url)return null;return /^(?:https?:)?\/\//.test(url)||url.startsWith("data:")?url:`${api}${url.startsWith("/")?"":"/"}${url}`}
+function Thumb({media,large=false}:{media:MediaItem|null|undefined;large?:boolean}){const src=imageUrl(media);return <div className={`${styles.thumbnail} ${large?styles.thumbnailLarge:""}`}>{src?<img alt="" loading="lazy" src={src}/>:<ImageIcon aria-hidden size={large?30:22}/>}</div>}
+function skuMedia(product:Product, sku:SKU):MediaItem|null{const list=sku.attributes.sku_media;if(Array.isArray(list)){const item=list.find((x)=>x&&typeof x==="object"&&"url" in x&&x.role==="general");if(item)return item as MediaItem}const photo=sku.attributes.sku_photo;if(photo&&typeof photo==="object"&&"url" in photo)return photo as MediaItem;const family=product.extra_attributes.media;if(!Array.isArray(family))return null;const key=sku.diameter_mm===null?null:`${sku.diameter_mm}${sku.outer_diameter_mm===null?"":`/${sku.outer_diameter_mm}`}`;const items=family.filter((x)=>{if(!x||typeof x!=="object"||!("url" in x)||x.role!=="general")return false;const ds=Array.isArray(x.diameter_keys)?x.diameter_keys:[];const ls=Array.isArray(x.lengths_mm)?x.lengths_mm:[];return(!ds.length||ds.includes(key))&&(!ls.length||ls.includes(sku.length_mm))});return(items.at(-1) as MediaItem|undefined)??null}
+function eligible(product:Product|null,picker:Picker|null){if(!product)return[];if(!picker||picker.diameter===null)return product.skus;const exact=product.skus.filter((sku)=>sku.diameter_mm===picker.diameter&&(picker.outer===null||sku.outer_diameter_mm===picker.outer));return exact.length?exact:product.skus.every((sku)=>sku.diameter_mm===null)?product.skus:[]}
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-type AccessHeader = "X-Lead-Manager-Token" | "X-BOM-Admin-Token";
+export function ManagerEstimateCard({leadId}:{leadId:string}){
+  const [status,setStatus]=useState<"loading"|"ready"|"error">("loading");
+  const [payload,setPayload]=useState<Envelope|null>(null); const [meta,setMeta]=useState<Record<string,Meta>>({});
+  const [token,setToken]=useState(""); const [admin,setAdmin]=useState(false); const [busy,setBusy]=useState(false); const [notice,setNotice]=useState("");
+  const [editing,setEditing]=useState<string|null>(null); const [draft,setDraft]=useState<Draft|null>(null); const [manual,setManual]=useState(false);
+  const [manualDraft,setManualDraft]=useState<Draft>({label:"",quantity:"1",unitPrice:"",characteristics:"",note:""});
+  const [picker,setPicker]=useState<Picker|null>(null); const [query,setQuery]=useState(""); const [results,setResults]=useState<ProductListItem[]>([]); const [searching,setSearching]=useState(false); const [product,setProduct]=useState<Product|null>(null);
+  const [steel,setSteel]=useState(none); const [thickness,setThickness]=useState(none); const [length,setLength]=useState(none);
+  const headers=(customToken=token,useAdmin=admin):Record<string,string>=>useAdmin?{}:{"X-Lead-Manager-Token":customToken};
 
-type LineDraft = {
-  label: string;
-  quantity: string;
-  unitPrice: string;
-  characteristics: string;
-  note: string;
-};
+  async function hydrate(data:Envelope,customToken=token,useAdmin=admin){const skuIds=[...data.estimate.lines,...data.removed_lines].flatMap((line)=>line.sku_id?[line.sku_id]:[]);if(!skuIds.length)return;try{const response=await fetch(`${api}/api/v1/leads/${leadId}/manager/catalog/metadata`,{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json",...headers(customToken,useAdmin)},body:JSON.stringify({skuIds})});if(!response.ok)return;const body=await response.json() as {items:Meta[]};setMeta(Object.fromEntries(body.items.map((item)=>[item.sku_id,item])))}catch{}}
+  useEffect(()=>{const key=`dimohod-trade:lead-manager:${leadId}`;const hash=new URLSearchParams(location.hash.slice(1));const hashToken=hash.get("token");const useAdmin=!hashToken&&(hash.get("admin")==="1"||!sessionStorage.getItem(key));let access=hashToken??sessionStorage.getItem(key)??"";if(hashToken)sessionStorage.setItem(key,hashToken);if(hashToken||hash.get("admin")==="1")history.replaceState(null,"",location.pathname+location.search);setToken(access);setAdmin(useAdmin);const controller=new AbortController();fetch(`${api}/api/v1/leads/${leadId}/manager`,{cache:"no-store",credentials:"include",headers:useAdmin?{}:{"X-Lead-Manager-Token":access},signal:controller.signal}).then(async r=>{if(!r.ok)throw Error();return r.json() as Promise<Envelope>}).then(data=>{setPayload(data);setStatus("ready");void hydrate(data,access,useAdmin)}).catch(e=>{if(!(e instanceof DOMException&&e.name==="AbortError"))setStatus("error")});return()=>controller.abort()
+  // Authentication is initialized once for each private lead URL.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[leadId]);
 
-function formatRub(value: number): string {
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "RUB",
-    maximumFractionDigits: 0,
-  }).format(value);
+  function closePicker(){setPicker(null);setProduct(null);setResults([]);setQuery("")}
+  async function mutate(path:string,method:"POST"|"PATCH"|"DELETE",body:object){if(!payload||busy)return;setBusy(true);setNotice("");try{const response=await fetch(`${api}/api/v1/leads/${leadId}/manager${path}`,{method,credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json",...headers()},body:JSON.stringify({revision:payload.revision,...body})});const data=await response.json().catch(()=>null);if(!response.ok)throw Error(data?.detail??"Не удалось сохранить изменение");setPayload(data);void hydrate(data);setNotice("Изменение сохранено");setEditing(null);setDraft(null);closePicker()}catch(e){setNotice(e instanceof Error?e.message:"Не удалось сохранить изменение")}finally{setBusy(false)}}
+  function openPicker(line?:Line){const item=line?.sku_id?meta[line.sku_id]:null;if(line?.sku_id&&!item){setNotice("SKU этой позиции не найден в активном каталоге");return}const anchor=item??Object.values(meta).find(x=>x.diameter_mm!==null)??null;setPicker({target:line?.id??null,categorySlug:item?.category_slug??null,categoryName:item?.category_name??null,diameter:anchor?.diameter_mm??null,outer:anchor?.outer_diameter_mm??null,quantity:line?.quantity??1,note:line?.note??"Добавлено менеджером из каталога"});setQuery(line?.label??"");setResults([]);setProduct(null);setTimeout(()=>document.getElementById("manager-catalog-search")?.focus(),0)}
+  async function search(){if(!picker||query.trim().length<2)return;setSearching(true);setNotice("");try{const params=new URLSearchParams({q:query.trim(),limit:"20"});if(picker.categorySlug)params.set("category",picker.categorySlug);if(picker.target&&picker.diameter!==null)params.set("diameter",`${picker.diameter}:${picker.outer??""}`);const response=await fetch(`${api}/api/v1/products?${params}`,{cache:"no-store"});if(!response.ok)throw Error("Поиск каталога временно недоступен");const data=await response.json() as ProductListResponse;setResults(data.items);if(!data.items.length)setNotice("Нет товаров этой категории с диаметром сметы")}catch(e){setNotice(e instanceof Error?e.message:"Ошибка поиска")}finally{setSearching(false)}}
+  async function choose(item:ProductListItem){setSearching(true);try{const response=await fetch(`${api}/api/v1/products/${encodeURIComponent(item.slug)}?include_compatible=false`,{cache:"no-store"});if(!response.ok)throw Error();const data=await response.json() as Product;const variants=eligible(data,picker);if(!variants.length)throw Error("У товара нет доступного SKU для диаметра сметы");setProduct(data);setSteel(val(variants[0].steel_grade));setThickness(val(variants[0].wall_thickness_mm));setLength(val(variants[0].length_mm))}catch(e){setNotice(e instanceof Error&&e.message?e.message:"Не удалось открыть варианты товара")}finally{setSearching(false)}}
+  function saveLine(line:Line){if(!draft)return;const catalog=Boolean(line.sku_id&&meta[line.sku_id]);void mutate(`/items/${line.id}`,"PATCH",catalog?{quantity:Number(draft.quantity),note:draft.note.trim()}:{label:draft.label.trim(),quantity:Number(draft.quantity),unitPriceRub:draft.unitPrice?Number(draft.unitPrice.replace(",",".")):null,characteristics:draft.characteristics.split("\n").map(x=>x.trim()).filter(Boolean),note:draft.note.trim()})}
+  function addManual(){void mutate("/items","POST",{label:manualDraft.label.trim(),quantity:Number(manualDraft.quantity),unitPriceRub:manualDraft.unitPrice?Number(manualDraft.unitPrice.replace(",",".")):null,characteristics:manualDraft.characteristics.split("\n").map(x=>x.trim()).filter(Boolean),note:manualDraft.note.trim(),matchStatus:"manual"});setManual(false)}
+
+  const base=useMemo(()=>eligible(product,picker),[product,picker]);const steels=useMemo(()=>unique(base.map(x=>x.steel_grade)),[base]);const bySteel=useMemo(()=>base.filter(x=>val(x.steel_grade)===steel),[base,steel]);const thicknesses=useMemo(()=>unique(bySteel.map(x=>x.wall_thickness_mm)),[bySteel]);const byThickness=useMemo(()=>bySteel.filter(x=>val(x.wall_thickness_mm)===thickness),[bySteel,thickness]);const lengths=useMemo(()=>unique(byThickness.map(x=>x.length_mm)),[byThickness]);const selected=useMemo(()=>byThickness.find(x=>val(x.length_mm)===length)??null,[byThickness,length]);
+  useEffect(()=>{if(steels.length&&!steels.includes(steel))setSteel(steels[0])},[steels,steel]);useEffect(()=>{if(thicknesses.length&&!thicknesses.includes(thickness))setThickness(thicknesses[0])},[thicknesses,thickness]);useEffect(()=>{if(lengths.length&&!lengths.includes(length))setLength(lengths[0])},[lengths,length]);
+  const generated=useMemo(()=>payload?new Intl.DateTimeFormat("ru-RU",{dateStyle:"long",timeStyle:"short"}).format(new Date(payload.estimate.generated_at)):"",[payload]);
+  if(status==="loading")return <main className={styles.shell}><div className={styles.stateCard} role="status"><ClipboardList aria-hidden size={28}/><h1>Открываем заявку</h1><p>Загружаем клиента, замеры и состав комплекта.</p></div></main>;
+  if(status==="error"||!payload)return <main className={styles.shell}><div className={styles.stateCard} role="alert"><AlertTriangle aria-hidden size={28}/><h1>Ссылка недействительна</h1><p>Откройте исходную ссылку из письма или войдите в админку.</p><Link href="/admin"><ArrowLeft aria-hidden size={17}/> В админку</Link></div></main>;
+  const warnings=[...payload.estimate.calculation_errors,...payload.estimate.review_items], customer=payload.customer;
+  return <main className={styles.shell}>
+    <div className={styles.topbar}><Link href={admin?"/admin/customers":"/admin"}><ArrowLeft aria-hidden size={17}/> {admin?"Все клиенты":"Каталог"}</Link><span>Заявка {payload.lead_id.slice(0,8).toUpperCase()}</span></div>
+    <header className={styles.header}><div><span className={styles.eyebrow}>Заявка · редакция {payload.revision}</span><h1>{payload.estimate.profile_name}</h1><p>Сформирована {generated}</p></div><div className={styles.total}><span>{payload.estimate.unpriced_line_count?"Итого по известным ценам":"Итого"}</span><strong>{rub(payload.estimate.known_subtotal_rub)}</strong><small>{payload.estimate.lines.length} поз. · {payload.estimate.total_units} шт.</small></div></header>
+    <section className={styles.summaryGrid} aria-label="Клиент и параметры замера"><article className={styles.panel}><div className={styles.panelTitle}><UserRound aria-hidden size={19}/><h2>Клиент</h2></div><strong className={styles.customerName}>{customer.name}</strong><a href={contactHref(customer.contact_method,customer.contact)}><ContactIcon method={customer.contact_method}/>{customer.contact}</a></article><article className={styles.panel}><div className={styles.panelTitle}><Ruler aria-hidden size={19}/><h2>Замеры</h2></div><dl className={styles.measurements}>{payload.estimate.measurements.map(x=><div key={x.label+x.value}><dt>{x.label}</dt><dd>{x.value}</dd></div>)}</dl></article></section>
+    <section className={styles.bomSection}><div className={styles.sectionHeading}><div><span>BOM</span><h2>Состав комплекта</h2></div><div className={styles.headingActions}><button className={styles.primaryButton} onClick={()=>openPicker()} type="button"><Plus aria-hidden size={16}/> Добавить из каталога</button><button className={styles.secondaryButton} onClick={()=>setManual(!manual)} type="button">{manual?<X aria-hidden size={16}/>:<Plus aria-hidden size={16}/>} {manual?"Отменить":"Ручная позиция"}</button></div></div>
+      {picker?<section className={styles.catalogPicker} aria-labelledby="catalog-picker-title"><div className={styles.pickerHeading}><div><span>Каталог</span><h3 id="catalog-picker-title">{picker.target?"Заменить позицию":"Добавить позицию"}</h3><p>{picker.categoryName?`Категория зафиксирована: ${picker.categoryName}. `:""}{picker.diameter!==null?`Диаметр сметы: Ø ${picker.diameter}${picker.outer===null?"":`/${picker.outer}`} мм.`:""}</p></div><button aria-label="Закрыть выбор" className={styles.iconButton} onClick={closePicker} type="button"><X aria-hidden size={18}/></button></div><div className={styles.catalogSearch}><label htmlFor="manager-catalog-search">Название или артикул</label><div><input id="manager-catalog-search" value={query} onChange={e=>setQuery(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();void search()}}}/><button disabled={query.trim().length<2||searching} onClick={()=>void search()} type="button"><Search aria-hidden size={16}/> {searching?"Ищем…":"Найти"}</button></div></div>
+        {results.length?<ul className={styles.searchResults}>{results.map(item=><li key={item.id}><Thumb media={item.primary_image}/><div><strong>{item.name}</strong><span>{item.category.name} · {item.article??"Без артикула"}</span></div><button onClick={()=>void choose(item)} type="button">Выбрать</button></li>)}</ul>:null}
+        {product?<div className={styles.variantPanel}><div className={styles.selectedProduct}><Thumb media={selected?skuMedia(product,selected):null} large/><div><span>{product.category.name}</span><strong>{product.name}</strong>{selected?<small>Арт. {selected.article} · {selected.price_rub===null?"Цена по запросу":rub(Number(selected.price_rub))}</small>:null}</div></div><div className={styles.variantFields}><Select id="bom-steel" label="Марка стали" options={steels} value={steel} set={setSteel} suffix=""/><Select id="bom-thickness" label="Толщина" options={thicknesses} value={thickness} set={setThickness} suffix=" мм"/><Select id="bom-length" label="Длина" options={lengths} value={length} set={setLength} suffix=" мм"/><label><span>Количество</span><input min="1" type="number" value={picker.quantity} onChange={e=>setPicker({...picker,quantity:Math.max(1,Number(e.target.value))})}/></label></div><label className={styles.pickerNote}><span>Примечание</span><textarea rows={2} value={picker.note} onChange={e=>setPicker({...picker,note:e.target.value})}/></label><button className={styles.primaryButton} disabled={!selected||busy} onClick={()=>selected&&void mutate(`/catalog/items${picker.target?`/${picker.target}`:""}`,picker.target?"PATCH":"POST",{skuId:selected.id,quantity:picker.quantity,note:picker.note.trim()})} type="button"><Save aria-hidden size={16}/> {picker.target?"Заменить SKU":"Добавить SKU"}</button></div>:null}
+      </section>:null}
+      {manual?<ManualForm value={manualDraft} set={setManualDraft} busy={busy} submit={addManual}/>:null}<p aria-live="polite" className={styles.saveNotice}>{busy?"Сохраняем изменение…":notice}</p>
+      <div className={styles.tableWrap}><table><thead><tr><th>Позиция</th><th>Кол.</th><th>Цена</th><th>Сумма</th><th><span className={styles.srOnly}>Действия</span></th></tr></thead><tbody>{payload.estimate.lines.map(line=>{const m=line.sku_id?meta[line.sku_id]:null;return <Fragment key={line.id}><tr><td><div className={styles.lineProduct}><Thumb media={m?.image??line.image}/><div><strong>{line.label}</strong><span>{line.article?`Арт. ${line.article}`:"Артикул уточняется"}{m?` · ${m.category_name}`:""}</span>{line.characteristics.length?<small>{line.characteristics.join(" · ")}</small>:null}{line.note?<small>{line.note}</small>:null}</div></div></td><td>{line.quantity}</td><td>{line.unit_price_rub===null?"По запросу":rub(line.unit_price_rub)}</td><td>{line.line_total_rub===null?"—":rub(line.line_total_rub)}</td><td className={styles.rowActions}><button aria-label={`Редактировать ${line.label}`} onClick={()=>{setEditing(line.id);setDraft(draftFor(line))}} type="button"><Pencil aria-hidden size={16}/></button>{m?<button aria-label={`Заменить SKU ${line.label}`} onClick={()=>openPicker(line)} type="button"><RotateCcw aria-hidden size={16}/></button>:null}<button aria-label={`Удалить ${line.label}`} onClick={()=>void mutate(`/items/${line.id}`,"DELETE",{})} type="button"><Trash2 aria-hidden size={16}/></button></td></tr>{editing===line.id&&draft?<tr className={styles.editorRow}><td colSpan={5}><EditForm line={line} catalog={Boolean(m)} draft={draft} set={setDraft} busy={busy} save={()=>saveLine(line)} cancel={()=>{setEditing(null);setDraft(null)}}/></td></tr>:null}</Fragment>})}</tbody></table></div>
+      {payload.removed_lines.length?<div className={styles.removedLines}><h3>Удалённые позиции</h3><ul>{payload.removed_lines.map(line=><li key={line.id}><span>{line.label} · {line.quantity} шт.</span><button onClick={()=>void mutate(`/items/${line.id}/restore`,"POST",{})} type="button"><RotateCcw aria-hidden size={15}/> Вернуть</button></li>)}</ul></div>:null}
+    </section>{warnings.length?<section className={styles.warningPanel}><div className={styles.panelTitle}><AlertTriangle aria-hidden size={19}/><h2>Проверить менеджеру</h2></div><ul>{warnings.map(x=><li key={x}>{x}</li>)}</ul></section>:<div className={styles.okay}><CheckCircle2 aria-hidden size={18}/> В расчёте нет дополнительных предупреждений.</div>}
+  </main>
 }
 
-function contactHref(method: ManagerEstimateEnvelope["customer"]["contact_method"], contact: string) {
-  if (method === "email") return `mailto:${contact}`;
-  if (method === "telegram") return `https://t.me/${contact.replace(/^@/, "")}`;
-  if (method === "whatsapp") return `https://wa.me/${contact.replace(/\D/g, "")}`;
-  return `tel:${contact.replace(/[^+\d]/g, "")}`;
-}
-
-function ContactIcon({ method }: { method: ManagerEstimateEnvelope["customer"]["contact_method"] }) {
-  if (method === "email") return <Mail aria-hidden size={18} />;
-  if (method === "telegram" || method === "whatsapp") return <MessageCircle aria-hidden size={18} />;
-  return <Phone aria-hidden size={18} />;
-}
-
-function productCharacteristics(item: ProductListItem): string[] {
-  return [
-    item.diameter_mm === null ? null : `Ø ${item.diameter_mm}${item.outer_diameter_mm === null ? "" : `/${item.outer_diameter_mm}`} мм`,
-    item.length_mm === null ? null : `L ${item.length_mm} мм`,
-    item.steel_grade,
-    item.wall_thickness_mm ? `${item.wall_thickness_mm} мм` : null,
-  ].filter((value): value is string => Boolean(value));
-}
-
-function lineDraft(line: ManagerEstimateLine): LineDraft {
-  return {
-    label: line.label,
-    quantity: String(line.quantity),
-    unitPrice: line.unit_price_rub === null ? "" : String(line.unit_price_rub),
-    characteristics: line.characteristics.join("\n"),
-    note: line.note,
-  };
-}
-
-export function ManagerEstimateCard({ leadId }: { leadId: string }) {
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [payload, setPayload] = useState<ManagerEstimateEnvelope | null>(null);
-  const [accessToken, setAccessToken] = useState("");
-  const [accessHeader, setAccessHeader] = useState<AccessHeader>("X-Lead-Manager-Token");
-  const [usesAdminSession, setUsesAdminSession] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<LineDraft | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<ProductListItem[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [replaceLineId, setReplaceLineId] = useState<string | null>(null);
-  const [manualOpen, setManualOpen] = useState(false);
-  const [manualDraft, setManualDraft] = useState<LineDraft>({ label: "", quantity: "1", unitPrice: "", characteristics: "", note: "" });
-
-  useEffect(() => {
-    const storageKey = `dimohod-trade:lead-manager:${leadId}`;
-    const hashParams = new URLSearchParams(window.location.hash.slice(1));
-    const hashToken = hashParams.get("token");
-    const requestedAdminSession = !hashToken && hashParams.get("admin") === "1";
-    const header: AccessHeader = "X-Lead-Manager-Token";
-    let token = hashToken;
-    try {
-      if (hashToken) window.sessionStorage.setItem(storageKey, hashToken);
-      if (!requestedAdminSession) token ??= window.sessionStorage.getItem(storageKey);
-    } catch {
-      // The email link still works when session storage is unavailable.
-    }
-    const useAdminSession = requestedAdminSession || !token;
-    if (hashToken || requestedAdminSession) {
-      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-    }
-    setAccessToken(token ?? "");
-    setAccessHeader(header);
-    setUsesAdminSession(useAdminSession);
-
-    const controller = new AbortController();
-    fetch(`${apiBaseUrl}/api/v1/leads/${encodeURIComponent(leadId)}/manager`, {
-      cache: "no-store",
-      credentials: "include",
-      headers: useAdminSession ? {} : { [header]: token ?? "" },
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("access-denied");
-        return response.json() as Promise<ManagerEstimateEnvelope>;
-      })
-      .then((data) => {
-        setPayload(data);
-        setStatus("ready");
-      })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        if (!useAdminSession) {
-          try {
-            window.sessionStorage.removeItem(storageKey);
-          } catch {
-            // Nothing else to clean up.
-          }
-        }
-        setStatus("error");
-      });
-    return () => controller.abort();
-  }, [leadId]);
-
-  async function mutate(path: string, method: "POST" | "PATCH" | "DELETE", body: object) {
-    if (!payload || (!usesAdminSession && !accessToken) || busy) return;
-    setBusy(true);
-    setNotice("");
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/v1/leads/${encodeURIComponent(leadId)}/manager${path}`, {
-        method,
-        cache: "no-store",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...(usesAdminSession ? {} : { [accessHeader]: accessToken }),
-        },
-        body: JSON.stringify({ revision: payload.revision, ...body }),
-      });
-      const data = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(data?.detail ?? "Не удалось сохранить изменение");
-      setPayload(data as ManagerEstimateEnvelope);
-      setNotice("Изменение сохранено");
-      setEditingId(null);
-      setDraft(null);
-      setReplaceLineId(null);
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Не удалось сохранить изменение");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function searchProducts() {
-    const query = searchQuery.trim();
-    if (query.length < 2 || searching) return;
-    setSearching(true);
-    setNotice("");
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/v1/products?q=${encodeURIComponent(query)}&limit=10`, { cache: "no-store" });
-      if (!response.ok) throw new Error("Поиск каталога временно недоступен");
-      const data = await response.json() as ProductListResponse;
-      setSearchResults(data.items);
-      if (!data.items.length) setNotice("В каталоге ничего не найдено");
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Не удалось выполнить поиск");
-    } finally {
-      setSearching(false);
-    }
-  }
-
-  function addOrReplaceProduct(item: ProductListItem) {
-    const values = {
-      skuId: item.selected_sku_id,
-      label: item.name,
-      article: item.article,
-      skuName: item.name,
-      quantity: 1,
-      unitPriceRub: item.price_rub === null ? null : Number(item.price_rub),
-      characteristics: productCharacteristics(item),
-      note: "Добавлено менеджером из каталога",
-      matchStatus: "exact",
-    };
-    void mutate(replaceLineId ? `/items/${replaceLineId}` : "/items", replaceLineId ? "PATCH" : "POST", values);
-  }
-
-  function saveDraft(lineId: string) {
-    if (!draft) return;
-    void mutate(`/items/${lineId}`, "PATCH", {
-      label: draft.label.trim(),
-      quantity: Number(draft.quantity),
-      unitPriceRub: draft.unitPrice.trim() ? Number(draft.unitPrice.replace(",", ".")) : null,
-      characteristics: draft.characteristics.split("\n").map((value) => value.trim()).filter(Boolean),
-      note: draft.note.trim(),
-    });
-  }
-
-  function addManualLine() {
-    void mutate("/items", "POST", {
-      label: manualDraft.label.trim(),
-      quantity: Number(manualDraft.quantity),
-      unitPriceRub: manualDraft.unitPrice.trim() ? Number(manualDraft.unitPrice.replace(",", ".")) : null,
-      characteristics: manualDraft.characteristics.split("\n").map((value) => value.trim()).filter(Boolean),
-      note: manualDraft.note.trim(),
-      matchStatus: "manual",
-    });
-    setManualOpen(false);
-    setManualDraft({ label: "", quantity: "1", unitPrice: "", characteristics: "", note: "" });
-  }
-
-  const generatedAt = useMemo(() => {
-    if (!payload) return "";
-    return new Intl.DateTimeFormat("ru-RU", { dateStyle: "long", timeStyle: "short" })
-      .format(new Date(payload.estimate.generated_at));
-  }, [payload]);
-
-  if (status === "loading") {
-    return (
-      <main className={styles.shell}>
-        <div className={styles.stateCard} role="status">
-          <ClipboardList aria-hidden size={28} />
-          <h1>Открываем заявку</h1>
-          <p>Загружаем клиента, замеры и состав комплекта.</p>
-        </div>
-      </main>
-    );
-  }
-
-  if (status === "error" || !payload) {
-    return (
-      <main className={styles.shell}>
-        <div className={styles.stateCard} role="alert">
-          <AlertTriangle aria-hidden size={28} />
-          <h1>Ссылка недействительна</h1>
-          <p>Откройте исходную ссылку из письма менеджеру или запросите новую.</p>
-          <Link href="/admin"><ArrowLeft aria-hidden size={17} /> В админку</Link>
-        </div>
-      </main>
-    );
-  }
-
-  const warnings = [...payload.estimate.calculation_errors, ...payload.estimate.review_items];
-  const contact = payload.customer;
-
-  return (
-    <main className={styles.shell}>
-      <div className={styles.topbar}>
-        <Link href={usesAdminSession ? "/admin/customers" : "/admin"}>
-          <ArrowLeft aria-hidden size={17} /> {usesAdminSession ? "Все клиенты" : "Каталог"}
-        </Link>
-        <span>Заявка {payload.lead_id.slice(0, 8).toUpperCase()}</span>
-      </div>
-
-      <header className={styles.header}>
-        <div>
-          <span className={styles.eyebrow}>Заявка · редакция {payload.revision}</span>
-          <h1>{payload.estimate.profile_name}</h1>
-          <p>Сформирована {generatedAt}</p>
-        </div>
-        <div className={styles.total}>
-          <span>{payload.estimate.unpriced_line_count ? "Итого по известным ценам" : "Итого"}</span>
-          <strong>{formatRub(payload.estimate.known_subtotal_rub)}</strong>
-          <small>{payload.estimate.lines.length} поз. · {payload.estimate.total_units} шт.</small>
-        </div>
-      </header>
-
-      <section className={styles.summaryGrid} aria-label="Клиент и параметры замера">
-        <article className={styles.panel}>
-          <div className={styles.panelTitle}><UserRound aria-hidden size={19} /><h2>Клиент</h2></div>
-          <strong className={styles.customerName}>{contact.name}</strong>
-          <a
-            href={contactHref(contact.contact_method, contact.contact)}
-            rel={contact.contact_method === "phone" ? undefined : "noreferrer"}
-            target={contact.contact_method === "phone" ? undefined : "_blank"}
-          >
-            <ContactIcon method={contact.contact_method} />
-            {contact.contact}
-          </a>
-        </article>
-
-        <article className={styles.panel}>
-          <div className={styles.panelTitle}><Ruler aria-hidden size={19} /><h2>Замеры</h2></div>
-          <dl className={styles.measurements}>
-            {payload.estimate.measurements.map((item) => (
-              <div key={`${item.label}-${item.value}`}><dt>{item.label}</dt><dd>{item.value}</dd></div>
-            ))}
-          </dl>
-        </article>
-      </section>
-
-      <section className={styles.bomSection}>
-        <div className={styles.sectionHeading}>
-          <div><span>BOM</span><h2>Состав комплекта</h2></div>
-          <button className={styles.secondaryButton} onClick={() => setManualOpen((value) => !value)} type="button">
-            {manualOpen ? <X aria-hidden size={16} /> : <Plus aria-hidden size={16} />}
-            {manualOpen ? "Отменить" : "Ручная позиция"}
-          </button>
-        </div>
-
-        <div className={styles.catalogSearch}>
-          <label htmlFor="manager-sku-search">Добавить или заменить SKU из каталога</label>
-          <div>
-            <input
-              id="manager-sku-search"
-              onChange={(event) => setSearchQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void searchProducts();
-                }
-              }}
-              placeholder="Название или артикул"
-              value={searchQuery}
-            />
-            <button disabled={searchQuery.trim().length < 2 || searching} onClick={() => void searchProducts()} type="button">
-              <Search aria-hidden size={16} /> {searching ? "Ищем…" : "Найти"}
-            </button>
-          </div>
-          {replaceLineId ? (
-            <p className={styles.replaceNotice} role="status">
-              Выберите SKU для замены позиции.
-              <button onClick={() => setReplaceLineId(null)} type="button">Отменить замену</button>
-            </p>
-          ) : null}
-          {searchResults.length ? (
-            <ul className={styles.searchResults}>
-              {searchResults.map((item) => (
-                <li key={`${item.id}-${item.selected_sku_id ?? item.article}`}>
-                  <div><strong>{item.name}</strong><span>{item.article ?? "Без артикула"} · {productCharacteristics(item).join(" · ")}</span></div>
-                  <button disabled={busy || !item.selected_sku_id} onClick={() => addOrReplaceProduct(item)} type="button">
-                    {replaceLineId ? "Заменить" : "Добавить"}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-
-        {manualOpen ? (
-          <form className={styles.lineForm} onSubmit={(event) => { event.preventDefault(); addManualLine(); }}>
-            <label><span>Название</span><input required value={manualDraft.label} onChange={(event) => setManualDraft({ ...manualDraft, label: event.target.value })} /></label>
-            <label><span>Количество</span><input min="1" required type="number" value={manualDraft.quantity} onChange={(event) => setManualDraft({ ...manualDraft, quantity: event.target.value })} /></label>
-            <label><span>Цена за единицу</span><input min="0" step="0.01" type="number" value={manualDraft.unitPrice} onChange={(event) => setManualDraft({ ...manualDraft, unitPrice: event.target.value })} /></label>
-            <label className={styles.wideField}><span>Характеристики, каждая с новой строки</span><textarea rows={2} value={manualDraft.characteristics} onChange={(event) => setManualDraft({ ...manualDraft, characteristics: event.target.value })} /></label>
-            <label className={styles.wideField}><span>Примечание</span><textarea rows={2} value={manualDraft.note} onChange={(event) => setManualDraft({ ...manualDraft, note: event.target.value })} /></label>
-            <button disabled={busy} type="submit"><Plus aria-hidden size={16} /> Добавить позицию</button>
-          </form>
-        ) : null}
-
-        <p aria-live="polite" className={styles.saveNotice}>{busy ? "Сохраняем изменение…" : notice}</p>
-        <div className={styles.tableWrap}>
-          <table>
-            <thead><tr><th>Позиция</th><th>Кол.</th><th>Цена</th><th>Сумма</th><th><span className={styles.srOnly}>Действия</span></th></tr></thead>
-            <tbody>
-              {payload.estimate.lines.map((line) => (
-                <Fragment key={line.id}>
-                  <tr>
-                    <td>
-                      <strong>{line.label}</strong>
-                      <span>{line.article ? `Арт. ${line.article}` : "Артикул уточняется"}</span>
-                      {line.characteristics.length ? <small>{line.characteristics.join(" · ")}</small> : null}
-                      {line.note ? <small>{line.note}</small> : null}
-                    </td>
-                    <td>{line.quantity}</td>
-                    <td>{line.unit_price_rub === null ? "По запросу" : formatRub(line.unit_price_rub)}</td>
-                    <td>{line.line_total_rub === null ? "—" : formatRub(line.line_total_rub)}</td>
-                    <td className={styles.rowActions}>
-                      <button aria-label={`Редактировать ${line.label}`} disabled={busy} onClick={() => { setEditingId(line.id); setDraft(lineDraft(line)); }} type="button"><Pencil aria-hidden size={15} /></button>
-                      <button aria-label={`Заменить SKU для ${line.label}`} disabled={busy} onClick={() => { setReplaceLineId(line.id); document.getElementById("manager-sku-search")?.focus(); }} type="button"><RotateCcw aria-hidden size={15} /></button>
-                      <button aria-label={`Удалить ${line.label}`} disabled={busy} onClick={() => void mutate(`/items/${line.id}`, "DELETE", {})} type="button"><Trash2 aria-hidden size={15} /></button>
-                    </td>
-                  </tr>
-                  {editingId === line.id && draft ? (
-                    <tr className={styles.editorRow}>
-                      <td colSpan={5}>
-                        <form className={styles.lineForm} onSubmit={(event) => { event.preventDefault(); saveDraft(line.id); }}>
-                          <label><span>Название</span><input required value={draft.label} onChange={(event) => setDraft({ ...draft, label: event.target.value })} /></label>
-                          <label><span>Количество</span><input min="1" required type="number" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: event.target.value })} /></label>
-                          <label><span>Цена за единицу</span><input min="0" step="0.01" type="number" value={draft.unitPrice} onChange={(event) => setDraft({ ...draft, unitPrice: event.target.value })} /></label>
-                          <label className={styles.wideField}><span>Характеристики</span><textarea rows={2} value={draft.characteristics} onChange={(event) => setDraft({ ...draft, characteristics: event.target.value })} /></label>
-                          <label className={styles.wideField}><span>Примечание</span><textarea rows={2} value={draft.note} onChange={(event) => setDraft({ ...draft, note: event.target.value })} /></label>
-                          <div className={styles.formActions}>
-                            <button disabled={busy} type="submit"><Save aria-hidden size={16} /> Сохранить</button>
-                            <button disabled={busy} onClick={() => { setEditingId(null); setDraft(null); }} type="button"><X aria-hidden size={16} /> Отменить</button>
-                          </div>
-                        </form>
-                      </td>
-                    </tr>
-                  ) : null}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {payload.removed_lines.length ? (
-          <div className={styles.removedLines}>
-            <h3>Удалённые позиции</h3>
-            <ul>{payload.removed_lines.map((line) => (
-              <li key={line.id}><span>{line.label} · {line.quantity} шт.</span><button disabled={busy} onClick={() => void mutate(`/items/${line.id}/restore`, "POST", {})} type="button"><RotateCcw aria-hidden size={15} /> Вернуть</button></li>
-            ))}</ul>
-          </div>
-        ) : null}
-      </section>
-
-      {warnings.length ? (
-        <section className={styles.warningPanel}>
-          <div className={styles.panelTitle}><AlertTriangle aria-hidden size={19} /><h2>Проверить менеджеру</h2></div>
-          <ul>{warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
-        </section>
-      ) : (
-        <div className={styles.okay}><CheckCircle2 aria-hidden size={18} /> В расчёте нет дополнительных предупреждений.</div>
-      )}
-    </main>
-  );
-}
+function Select({id,label,options,value,set,suffix}:{id:string;label:string;options:string[];value:string;set:(x:string)=>void;suffix:string}){return <label htmlFor={id}><span>{label}</span><select id={id} disabled={options.length<=1} value={value} onChange={e=>set(e.target.value)}>{options.map(x=><option key={x} value={x}>{x===none?"Не указана":`${x}${suffix}`}</option>)}</select></label>}
+function ManualForm({value,set,busy,submit}:{value:Draft;set:(x:Draft)=>void;busy:boolean;submit:()=>void}){return <form className={styles.lineForm} onSubmit={e=>{e.preventDefault();submit()}}><label><span>Название</span><input required value={value.label} onChange={e=>set({...value,label:e.target.value})}/></label><label><span>Количество</span><input min="1" required type="number" value={value.quantity} onChange={e=>set({...value,quantity:e.target.value})}/></label><label><span>Цена</span><input min="0" type="number" value={value.unitPrice} onChange={e=>set({...value,unitPrice:e.target.value})}/></label><label className={styles.wideField}><span>Характеристики</span><textarea rows={2} value={value.characteristics} onChange={e=>set({...value,characteristics:e.target.value})}/></label><label className={styles.wideField}><span>Примечание</span><textarea rows={2} value={value.note} onChange={e=>set({...value,note:e.target.value})}/></label><button disabled={busy} type="submit"><Plus aria-hidden size={16}/> Добавить</button></form>}
+function EditForm({catalog,draft,set,busy,save,cancel}:{line:Line;catalog:boolean;draft:Draft;set:(x:Draft)=>void;busy:boolean;save:()=>void;cancel:()=>void}){return <form className={styles.lineForm} onSubmit={e=>{e.preventDefault();save()}}>{catalog?<p className={styles.catalogLock}>Название, цена и характеристики берутся из каталога. Исполнение меняется кнопкой замены SKU.</p>:<><label><span>Название</span><input required value={draft.label} onChange={e=>set({...draft,label:e.target.value})}/></label><label><span>Цена</span><input min="0" type="number" value={draft.unitPrice} onChange={e=>set({...draft,unitPrice:e.target.value})}/></label><label className={styles.wideField}><span>Характеристики</span><textarea rows={2} value={draft.characteristics} onChange={e=>set({...draft,characteristics:e.target.value})}/></label></>}<label><span>Количество</span><input min="1" required type="number" value={draft.quantity} onChange={e=>set({...draft,quantity:e.target.value})}/></label><label className={styles.wideField}><span>Примечание</span><textarea rows={2} value={draft.note} onChange={e=>set({...draft,note:e.target.value})}/></label><div className={styles.formActions}><button disabled={busy} type="submit"><Save aria-hidden size={16}/> Сохранить</button><button onClick={cancel} type="button"><X aria-hidden size={16}/> Отменить</button></div></form>}

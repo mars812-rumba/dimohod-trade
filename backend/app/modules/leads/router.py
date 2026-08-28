@@ -12,6 +12,7 @@ from urllib.parse import quote
 from fastapi import (
     APIRouter,
     Cookie,
+    Depends,
     File,
     Form,
     Header,
@@ -21,17 +22,25 @@ from fastapi import (
     status,
 )
 from pydantic import ValidationError
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
+from app.db.session import get_db
 from app.modules.admin.auth import ADMIN_SESSION_COOKIE, valid_admin_session
 from app.modules.leads.customers import sync_customer_estimate, upsert_customer
 from app.modules.leads.email import send_customer_confirmation_email, send_lead_email
 from app.modules.leads.schemas import (
     LeadEstimate,
+    ManagerCatalogMetadataRequest,
+    ManagerCatalogSelection,
     ManagerLineCreate,
     ManagerLineUpdate,
     ManagerRevision,
 )
+from app.modules.products.models import SKU, Product
+from app.modules.products.router import primary_product_image, primary_visual_sku_image
 
 router = APIRouter()
 
@@ -185,6 +194,79 @@ def find_line(lines: list[object], item_id: str) -> dict[str, object]:
     return line
 
 
+async def catalog_skus(session: AsyncSession, sku_ids: list[uuid.UUID]) -> dict[str, SKU]:
+    if not sku_ids:
+        return {}
+    result = await session.execute(
+        select(SKU)
+        .join(SKU.product)
+        .options(
+            selectinload(SKU.product).selectinload(Product.category),
+            selectinload(SKU.product).selectinload(Product.skus),
+        )
+        .where(SKU.id.in_(sku_ids), SKU.is_active.is_(True), Product.is_active.is_(True))
+    )
+    return {str(sku.id): sku for sku in result.scalars().unique()}
+
+
+def catalog_sku_metadata(sku: SKU) -> dict[str, object]:
+    product = sku.product
+    image = primary_visual_sku_image(sku, product.skus) or primary_product_image(
+        product.extra_attributes, sku
+    )
+    return {
+        "sku_id": str(sku.id),
+        "product_id": str(product.id),
+        "product_slug": product.slug,
+        "product_name": product.name,
+        "category_id": str(product.category.id),
+        "category_slug": product.category.slug,
+        "category_name": product.category.name,
+        "article": sku.article,
+        "sku_name": sku.name,
+        "steel_grade": sku.steel_grade,
+        "wall_thickness_mm": float(sku.wall_thickness_mm)
+        if sku.wall_thickness_mm is not None
+        else None,
+        "diameter_mm": sku.diameter_mm,
+        "outer_diameter_mm": sku.outer_diameter_mm,
+        "length_mm": sku.length_mm,
+        "unit_price_rub": float(sku.price_rub) if sku.price_rub is not None else None,
+        "image": image.model_dump(mode="json") if image is not None else None,
+    }
+
+
+def catalog_line(sku: SKU, *, quantity: int, note: str, line_id: str | None = None) -> dict[str, object]:
+    metadata = catalog_sku_metadata(sku)
+    characteristics = []
+    if sku.diameter_mm is not None:
+        diameter = str(sku.diameter_mm)
+        if sku.outer_diameter_mm is not None:
+            diameter += f"/{sku.outer_diameter_mm}"
+        characteristics.append(f"Ø {diameter} мм")
+    if sku.steel_grade:
+        characteristics.append(sku.steel_grade)
+    if sku.wall_thickness_mm is not None:
+        characteristics.append(f"{sku.wall_thickness_mm.normalize()} мм")
+    if sku.length_mm is not None:
+        characteristics.append(f"L {sku.length_mm} мм")
+    return {
+        "id": line_id or uuid.uuid4().hex,
+        "key": f"catalog-{sku.id}",
+        "sku_id": str(sku.id),
+        "label": sku.product.name,
+        "article": sku.article,
+        "sku_name": sku.name,
+        "quantity": quantity,
+        "unit_price_rub": metadata["unit_price_rub"],
+        "line_total_rub": None,
+        "characteristics": characteristics,
+        "note": note,
+        "match_status": "exact",
+        **{key: value for key, value in metadata.items() if key not in {"sku_id", "article", "sku_name", "unit_price_rub"}},
+    }
+
+
 @router.get("/{lead_id}/manager")
 async def read_manager_lead(
     lead_id: str,
@@ -198,6 +280,102 @@ async def read_manager_lead(
     )
     estimate = read_estimate_record(lead_dir, record)
 
+    response.headers["Cache-Control"] = "no-store"
+    return estimate
+
+
+@router.post("/{lead_id}/manager/catalog/metadata")
+async def read_manager_catalog_metadata(
+    lead_id: str,
+    payload: ManagerCatalogMetadataRequest,
+    response: Response,
+    manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
+    admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
+    session: AsyncSession = Depends(get_db),  # noqa: B008 - FastAPI dependency declaration.
+) -> dict[str, object]:
+    authorized_manager_lead(lead_id, manager_token, admin_token, admin_session)
+    unique_ids = list(dict.fromkeys(payload.sku_ids))
+    found = await catalog_skus(session, unique_ids)
+    response.headers["Cache-Control"] = "no-store"
+    return {"items": [catalog_sku_metadata(found[str(sku_id)]) for sku_id in unique_ids if str(sku_id) in found]}
+
+
+@router.post(
+    "/{lead_id}/manager/catalog/items",
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_manager_catalog_line(
+    lead_id: str,
+    payload: ManagerCatalogSelection,
+    response: Response,
+    manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
+    admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
+    session: AsyncSession = Depends(get_db),  # noqa: B008 - FastAPI dependency declaration.
+) -> dict[str, object]:
+    lead_dir, record = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
+    estimate = read_estimate_record(lead_dir, record)
+    check_revision(estimate, payload.revision)
+    sku = (await catalog_skus(session, [payload.sku_id])).get(str(payload.sku_id))
+    if sku is None:
+        raise HTTPException(status_code=404, detail="Активный SKU не найден в каталоге")
+    estimate["estimate"]["lines"].append(
+        catalog_line(sku, quantity=payload.quantity, note=payload.note)
+    )
+    estimate["revision"] = payload.revision + 1
+    recalculate_estimate(estimate)
+    save_manager_estimate(lead_dir, record, estimate)
+    response.headers["Cache-Control"] = "no-store"
+    return estimate
+
+
+@router.patch("/{lead_id}/manager/catalog/items/{item_id}")
+async def replace_manager_catalog_line(
+    lead_id: str,
+    item_id: str,
+    payload: ManagerCatalogSelection,
+    response: Response,
+    manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
+    admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
+    session: AsyncSession = Depends(get_db),  # noqa: B008 - FastAPI dependency declaration.
+) -> dict[str, object]:
+    lead_dir, record = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
+    estimate = read_estimate_record(lead_dir, record)
+    check_revision(estimate, payload.revision)
+    lines = estimate["estimate"]["lines"]
+    current_line = find_line(lines, item_id)
+    current_sku_id = current_line.get("sku_id")
+    lookup_ids = [payload.sku_id]
+    try:
+        if current_sku_id:
+            lookup_ids.append(uuid.UUID(str(current_sku_id)))
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail="Исходный SKU отсутствует в каталоге") from error
+    found = await catalog_skus(session, lookup_ids)
+    replacement = found.get(str(payload.sku_id))
+    current = found.get(str(current_sku_id)) if current_sku_id else None
+    if replacement is None:
+        raise HTTPException(status_code=404, detail="Активный SKU не найден в каталоге")
+    if current is None:
+        raise HTTPException(status_code=409, detail="Ручную позицию нельзя заменить как каталожную")
+    if replacement.product.category_id != current.product.category_id:
+        raise HTTPException(status_code=422, detail="Замену можно выбрать только из той же категории")
+    index = lines.index(current_line)
+    lines[index] = catalog_line(
+        replacement,
+        quantity=payload.quantity,
+        note=payload.note,
+        line_id=item_id,
+    )
+    estimate["revision"] = payload.revision + 1
+    recalculate_estimate(estimate)
+    save_manager_estimate(lead_dir, record, estimate)
     response.headers["Cache-Control"] = "no-store"
     return estimate
 
