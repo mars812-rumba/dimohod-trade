@@ -30,6 +30,7 @@ import {
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
 import { HomeHeroCarousel } from "../components/HomeHeroCarousel";
 import { LeadForm } from "../components/LeadForm";
+import { PhoneMockup3D } from "../components/PhoneMockup3D";
 import { ProductGalleryPreview } from "../components/ProductGalleryPreview";
 import { YANDEX_MAPS_RATING } from "../components/YandexRatingBadge";
 import {
@@ -431,20 +432,7 @@ export default async function HomePage() {
             </div>
 
             <div className={styles.calculationShowcase}>
-              <picture className={styles.calculationRender}>
-                <source
-                  media="(max-width: 720px)"
-                  srcSet={`${basePath}/images/home/calculation-benefits/configurator-mobile.webp`}
-                />
-                <Image
-                  alt="Конфигуратор дымохода с монтажной схемой и перечнем изделий"
-                  height={810}
-                  sizes="(max-width: 720px) calc(100vw - 28px), 72vw"
-                  src={`${basePath}/images/home/calculation-benefits/configurator-desktop.webp`}
-                  unoptimized
-                  width={1440}
-                />
-              </picture>
+              <PhoneMockup3D assetBasePath={basePath} />
 
               <div className={styles.calculationDetails}>
                 <ol className={styles.calculationResults} aria-label="Что вы получите после полного замера">

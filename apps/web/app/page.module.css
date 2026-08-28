@@ -124,24 +124,10 @@
 
 .calculationShowcase {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(340px, 0.7fr);
+  grid-template-columns: minmax(430px, 1.05fr) minmax(340px, 0.75fr);
   gap: clamp(28px, 4vw, 52px);
   align-items: center;
   margin-top: clamp(40px, 6vw, 72px);
-}
-
-.calculationRender {
-  display: block;
-  overflow: hidden;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 20px 54px rgba(3, 14, 19, 0.28);
-}
-
-.calculationRender img {
-  display: block;
-  width: 100%;
-  height: auto;
 }
 
 .calculationDetails {
@@ -2421,7 +2407,7 @@
   }
 
   .calculationShowcase {
-    grid-template-columns: minmax(0, 1.3fr) minmax(330px, 0.7fr);
+    grid-template-columns: minmax(390px, 1fr) minmax(330px, .8fr);
   }
 
   .routeExamplesGrid {
@@ -2505,11 +2491,6 @@
   .calculationShowcase {
     grid-template-columns: 1fr;
     margin-top: 44px;
-  }
-
-  .calculationRender {
-    width: min(100%, 560px);
-    margin: 0 auto;
   }
 
   .calculationResults {

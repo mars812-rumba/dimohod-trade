@@ -1,0 +1,304 @@
+.stage {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 680px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 42%, rgba(74, 124, 143, .32), transparent 54%);
+  isolation: isolate;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.stage::after {
+  position: absolute;
+  z-index: -1;
+  bottom: 58px;
+  left: 50%;
+  width: 270px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(2, 10, 14, .42);
+  filter: blur(16px);
+  transform: translateX(-50%);
+  content: "";
+  pointer-events: none;
+}
+
+.scene {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  perspective: 1600px;
+}
+
+.scaleFrame {
+  position: relative;
+  width: 300px;
+  height: 620px;
+}
+
+.rig,
+.phone {
+  width: 300px;
+  height: 620px;
+  transform-style: preserve-3d;
+}
+
+.rig {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -310px 0 0 -150px;
+  cursor: grab;
+  transform: rotateX(-6deg) rotateY(14deg);
+  transform-origin: center;
+}
+
+.stage[data-animating="true"] .rig { will-change: transform; }
+.rig:active { cursor: grabbing; }
+
+.phone { position: relative; }
+
+.face {
+  position: absolute;
+  inset: 0;
+  width: 300px;
+  height: 620px;
+  border-radius: 42px;
+  background: linear-gradient(145deg, #191a1d, #303136);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .06);
+}
+
+.frontFace {
+  box-sizing: border-box;
+  padding: 14px;
+  transform: translateZ(9px);
+}
+
+.backFace {
+  background: linear-gradient(145deg, #242529, #101114);
+  transform: translateZ(-9px) rotateY(180deg);
+}
+
+.edge {
+  position: absolute;
+  left: 0;
+  width: 300px;
+  height: 18px;
+  background: linear-gradient(180deg, #111216, #2c2d32 50%, #111216);
+}
+
+.topEdge {
+  top: -9px;
+  border-radius: 42px 42px 0 0 / 18px 18px 0 0;
+  transform: rotateX(90deg) translateZ(9px);
+  transform-origin: top;
+}
+
+.bottomEdge {
+  top: 611px;
+  border-radius: 0 0 42px 42px / 0 0 18px 18px;
+  transform: rotateX(-90deg) translateZ(9px);
+  transform-origin: bottom;
+}
+
+.sideEdge {
+  position: absolute;
+  top: 0;
+  width: 18px;
+  height: 620px;
+  background: linear-gradient(90deg, #111216, #2c2d32 50%, #111216);
+}
+
+.leftEdge {
+  left: -9px;
+  border-radius: 42px 0 0 42px;
+  transform: rotateY(-90deg) translateZ(9px);
+  transform-origin: left;
+}
+
+.rightEdge {
+  left: 291px;
+  border-radius: 0 42px 42px 0;
+  transform: rotateY(90deg) translateZ(9px);
+  transform-origin: right;
+}
+
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 30px;
+  background: #050607;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
+  touch-action: pan-y;
+}
+
+.track {
+  display: flex;
+  height: 100%;
+  transition: transform 350ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.slide {
+  position: relative;
+  min-width: 100%;
+  height: 100%;
+}
+
+.slide img {
+  object-fit: cover;
+  object-position: top;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.notch {
+  position: absolute;
+  z-index: 6;
+  top: 14px;
+  left: 50%;
+  width: 90px;
+  height: 22px;
+  border-radius: 14px;
+  background: #0d0d0d;
+  transform: translateX(-50%);
+}
+
+.dots {
+  position: absolute;
+  z-index: 7;
+  right: 0;
+  bottom: 22px;
+  left: 0;
+  display: flex;
+  gap: 0;
+  justify-content: center;
+}
+
+.dots button {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dots button::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .42);
+  transform: translate(-50%, -50%);
+  transition: background 150ms ease, transform 150ms ease;
+  content: "";
+}
+
+.dots button:hover::after { background: rgba(255, 255, 255, .72); }
+.dots button.activeDot::after { background: #fff; transform: translate(-50%, -50%) scale(1.3); }
+
+.sideButtons {
+  position: absolute;
+  inset: 0;
+  width: 300px;
+  height: 620px;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.sideButtons span {
+  position: absolute;
+  width: 6px;
+  border-radius: 3px;
+  background: #0e0e10;
+}
+
+.powerButton { top: 150px; right: -12px; height: 70px; }
+.volumeButtonOne { top: 130px; left: -12px; height: 40px; }
+.volumeButtonTwo { top: 180px; left: -12px; height: 40px; }
+
+.arrow {
+  position: absolute;
+  z-index: 8;
+  top: 50%;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(11, 29, 36, .76);
+  box-shadow: 0 8px 24px rgba(2, 10, 14, .2);
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.arrow:hover {
+  border-color: rgba(255, 255, 255, .48);
+  background: rgba(32, 77, 93, .94);
+}
+
+.previous { left: clamp(8px, 2.4vw, 24px); }
+.next { right: clamp(8px, 2.4vw, 24px); }
+
+.arrow:focus-visible,
+.dots button:focus-visible {
+  outline: 3px solid rgba(255, 117, 72, .9);
+  outline-offset: 3px;
+}
+
+.hint {
+  position: absolute;
+  right: 20px;
+  bottom: 14px;
+  left: 20px;
+  margin: 0;
+  color: #bed0d5;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+}
+
+@media (max-width: 1020px) {
+  .stage { min-height: 620px; }
+  .scaleFrame { width: 270px; height: 558px; transform: scale(.9); }
+}
+
+@media (max-width: 720px) {
+  .stage {
+    min-height: 520px;
+    border-radius: 10px;
+  }
+
+  .scaleFrame { width: 228px; height: 471px; transform: scale(.76); }
+  .stage::after { bottom: 38px; width: 220px; }
+  .arrow { width: 42px; height: 42px; }
+  .hint { bottom: 8px; font-size: 11px; }
+}
+
+@media (max-width: 390px) {
+  .stage { min-height: 480px; }
+  .scaleFrame { width: 204px; height: 422px; transform: scale(.68); }
+  .arrow { width: 38px; height: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track,
+  .arrow,
+  .dots button { transition: none; }
+}
