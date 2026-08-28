@@ -27,7 +27,11 @@ import {
   IconTool as Wrench,
   IconBolt as Zap,
 } from "@tabler/icons-react";
-import { ArrowRight as LucideArrowRight, ClipboardCheck } from "lucide-react";
+import {
+  ArrowRight as LucideArrowRight,
+  Gauge as LucideGauge,
+  Ruler as LucideRuler,
+} from "lucide-react";
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
 import { HomeHeroCarousel } from "../components/HomeHeroCarousel";
 import { LeadForm } from "../components/LeadForm";
@@ -423,10 +427,14 @@ export default async function HomePage() {
 
                 <div className={styles.calculationAction}>
                   <Link className={styles.calculationFormatCta} href="/raschet">
-                    <ClipboardCheck aria-hidden size={30} strokeWidth={2} />
-                    <span>
-                      <small>Дымоход под ваш отопитель</small>
+                    <span className={styles.calculationFormatIcons} aria-hidden>
+                      <LucideGauge size={25} strokeWidth={2} />
+                      <LucideRuler size={25} strokeWidth={2} />
+                    </span>
+                    <span className={styles.calculationFormatCopy}>
+                      <small>Быстрый расчёт или глубокий замер</small>
                       <strong>Начать замер</strong>
+                      <em>На следующем экране подскажем, какой путь подойдёт именно вам.</em>
                     </span>
                     <LucideArrowRight aria-hidden size={27} strokeWidth={2} />
                   </Link>

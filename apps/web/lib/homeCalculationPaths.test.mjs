@@ -9,14 +9,16 @@ const hero = readFileSync(new URL("../components/HomeHeroCarousel.tsx", import.m
 
 test("homepage sends measurement entry points to one format choice", () => {
   assert.match(page, /Полный замер для точной сметы/);
-  assert.match(page, /Дымоход под ваш отопитель/);
   assert.match(page, /Начать замер/);
   assert.match(page, /href="\/raschet"/);
   assert.doesNotMatch(page, /Сначала выберите формат/);
   assert.doesNotMatch(page, /Готовите реальный заказ\? Укажите размеры/);
   assert.doesNotMatch(page, /<HomeQuickEstimate/);
   assert.doesNotMatch(page, /<HomeGuidedShowcase/);
-  assert.match(page, /ClipboardCheck/);
+  assert.match(page, /LucideGauge/);
+  assert.match(page, /LucideRuler/);
+  assert.match(page, /Быстрый расчёт или глубокий замер/);
+  assert.match(page, /На следующем экране подскажем, какой путь подойдёт именно вам/);
   assert.match(pageStyles, /\.calculationFormatCta[\s\S]*border-radius: 30px/);
 });
 

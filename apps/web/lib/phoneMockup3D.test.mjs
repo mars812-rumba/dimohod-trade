@@ -34,6 +34,7 @@ test("slide controls have accessible names", () => {
 
 test("phone presentation is enlarged without a translucent outer panel", () => {
   assert.match(styles, /\.scaleFrame[\s\S]*transform: scale\(1\.23\)/);
+  assert.match(styles, /\.scaleFrame[\s\S]*translate: 0 -20px/);
   assert.match(styles, /\.stage[\s\S]*background: transparent/);
   assert.match(styles, /\.arrow[\s\S]*border: 0/);
   assert.doesNotMatch(component, /styles\.(?:edge|sideEdge|topEdge|bottomEdge|leftEdge|rightEdge)/);
