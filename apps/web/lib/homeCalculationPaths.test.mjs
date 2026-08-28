@@ -12,6 +12,7 @@ test("homepage sends measurement entry points to one format choice", () => {
   assert.match(page, /Полный замер для точной сметы/);
   assert.match(page, /href="\/raschet"/);
   assert.doesNotMatch(page, /<HomeQuickEstimate/);
+  assert.doesNotMatch(page, /<HomeGuidedShowcase/);
 });
 
 test("hero and navigation open the same format choice", () => {
