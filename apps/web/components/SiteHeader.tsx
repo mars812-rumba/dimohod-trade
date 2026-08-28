@@ -2,7 +2,6 @@
 
 import {
   IconAdjustmentsHorizontal as SlidersHorizontal,
-  IconBolt as Bolt,
   IconChevronDown as ChevronDown,
   IconMail as Mail,
   IconMapPin as MapPin,
@@ -139,9 +138,9 @@ export function SiteHeader() {
             <Phone aria-hidden size={17} />
             <span>+7 (965) 075-65-55</span>
           </a>
-          <Link className="header-configurator" href="/zamery?edit=1">
+          <Link className="header-configurator" href="/raschet">
             <SlidersHorizontal aria-hidden size={17} />
-            <span>Полный <span className="header-configurator-extra">замер</span></span>
+            <span>Начать <span className="header-configurator-extra">замер</span></span>
           </Link>
         </div>
       </header>
@@ -207,13 +206,9 @@ export function SiteHeader() {
               </div>
             </details>
             <Link href="/guides" onClick={closeMenu}>Статьи и инструкции</Link>
-            <Link className="mobile-menu-path mobile-menu-path-primary" href="/zamery?edit=1" onClick={closeMenu}>
+            <Link className="mobile-menu-path mobile-menu-path-primary" href="/raschet" onClick={closeMenu}>
               <Ruler aria-hidden size={18} />
-              <span><strong>Готовите заказ? Полный замер</strong><small>Точная смета по вашим размерам</small></span>
-            </Link>
-            <Link className="mobile-menu-path" href="/#quick-estimate" onClick={closeMenu}>
-              <Bolt aria-hidden size={18} />
-              <span><strong>Не знаете размеры? Быстрый расчёт</strong><small>Порядок бюджета примерно за 2 минуты</small></span>
+              <span><strong>Начать замер</strong><small>Выберите быстрый расчёт или глубокий замер</small></span>
             </Link>
             <Link className="mobile-menu-feature-link" href="/configurator" onClick={closeMenu}>
               <span><Construction aria-hidden size={17} /> Сохранённые расчёты</span>

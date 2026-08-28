@@ -227,18 +227,18 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         ) : null}
 
         <div className={styles.heroActions}>
-          <Link className={styles.cta} href="/zamery?edit=1">
+          <Link className={styles.cta} href="/raschet">
             <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
             <div className={styles.ctaCopy}>
               {usesMobileVideo ? (
                 <>
                   <h1 className={styles.ctaHeroTitle}>Дымоход под ваш отопитель</h1>
-                  <strong>Полный замер для заказа</strong>
+                  <strong>Начать замер</strong>
                 </>
               ) : (
                 <>
-                  <strong>Полный замер для заказа</strong>
-                  <span>Точная смета по вашим размерам</span>
+                  <strong>Начать замер</strong>
+                  <span>Быстрый расчёт или глубокий замер</span>
                 </>
               )}
             </div>

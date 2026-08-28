@@ -57,8 +57,8 @@ function ShowcaseCarousel({
         <div className={styles.introPanel}>
           <h2 id={id}>{title}</h2>
           <p>{description}</p>
-          <Link href="/zamery?edit=1">
-            Начать полный замер
+          <Link href="/raschet">
+            Выбрать формат замера
             <IconArrowRight aria-hidden size={19} strokeWidth={1.8} />
           </Link>
         </div>

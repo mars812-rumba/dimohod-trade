@@ -1,0 +1,26 @@
+.main {
+  min-height: calc(100dvh - 74px);
+  color: #102127;
+  background: #eef1f0;
+}
+
+.shell {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 22px 0 0;
+  color: #57696f;
+  font-size: 13px;
+}
+
+.breadcrumbs a:hover { color: #bd3d16; }
+.breadcrumbs a:focus-visible { outline: 3px solid rgba(237, 91, 42, .36); outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  .shell { width: min(100% - 28px, 1120px); }
+}

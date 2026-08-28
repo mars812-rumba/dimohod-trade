@@ -30,7 +30,6 @@ import {
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
 import { HomeHeroCarousel } from "../components/HomeHeroCarousel";
 import { HomeGuidedShowcase } from "../components/HomeGuidedShowcase";
-import { HomeQuickEstimate } from "../components/HomeQuickEstimate";
 import { LeadForm } from "../components/LeadForm";
 import { ProductGalleryPreview } from "../components/ProductGalleryPreview";
 import { YANDEX_MAPS_RATING } from "../components/YandexRatingBadge";
@@ -404,27 +403,22 @@ export default async function HomePage() {
 
         <section className={styles.pathChoiceSection} aria-labelledby="calculation-path-title">
           <div className={styles.shell}>
-            <h2 id="calculation-path-title">Какой результат вам нужен?</h2>
-            <div className={styles.pathChoiceGrid}>
-              <Link className={styles.pathChoicePrimary} href="/zamery?edit=1">
-                <Ruler aria-hidden size={25} strokeWidth={1.7} />
-                <span>
-                  <small>Готовите реальный заказ?</small>
-                  <strong>Полный замер</strong>
-                  <em>Точная смета по вашим размерам. Экономит платный выезд замерщика — от ~10 000 ₽ за город.</em>
-                </span>
-                <ArrowRight aria-hidden size={21} />
-              </Link>
-              <Link className={styles.pathChoiceSecondary} href="/#quick-estimate">
-                <Gauge aria-hidden size={25} strokeWidth={1.7} />
-                <span>
-                  <small>Не знаете размеры?</small>
-                  <strong>Быстрый расчёт</strong>
-                  <em>Прикинуть бюджет за 2 минуты. Ориентировочная точность ±30% — поможет понять порядок цифр.</em>
-                </span>
-                <ArrowRight aria-hidden size={21} />
-              </Link>
+            <div className={styles.pathChoiceHeading}>
+              <h2 id="calculation-path-title">Сначала выберите формат</h2>
+              <p>Не знаете размеры — прикиньте бюджет. Готовите заказ — переходите к глубокому замеру.</p>
             </div>
+            <Link className={styles.pathChoicePrimary} href="/raschet">
+              <span className={styles.pathChoiceSymbols} aria-hidden>
+                <Gauge size={24} strokeWidth={1.7} />
+                <Ruler size={24} strokeWidth={1.7} />
+              </span>
+              <span>
+                <small>Быстрый расчёт или глубокий замер</small>
+                <strong>Начать замер</strong>
+                <em>На следующем экране подскажем, какой путь подойдёт именно вам.</em>
+              </span>
+              <ArrowRight aria-hidden size={22} />
+            </Link>
           </div>
         </section>
 
@@ -464,8 +458,8 @@ export default async function HomePage() {
                 </ol>
 
                 <div className={styles.calculationAction}>
-                  <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/zamery?edit=1">
-                    Начать полный замер
+                  <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/raschet">
+                    Выбрать формат замера
                     <ArrowRight aria-hidden size={18} strokeWidth={1.8} />
                   </Link>
                   <span>Размеры сохранятся — к заполнению можно вернуться позже</span>
@@ -474,8 +468,6 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-
-        <HomeQuickEstimate assetBasePath={basePath} />
 
         <HomeGuidedShowcase assetBasePath={basePath} />
 
