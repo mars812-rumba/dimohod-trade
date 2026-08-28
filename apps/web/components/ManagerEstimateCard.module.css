@@ -464,7 +464,8 @@
   padding: 12px 14px;
   color: #345461;
   background: #eaf1f2;
-  border-left: 3px solid #39768a;
+  border: 1px solid #cbdadd;
+  border-radius: 7px;
   font-size: 12px;
   line-height: 1.5;
 }
@@ -504,7 +505,7 @@
 
 .tableWrap table {
   width: 100%;
-  min-width: 700px;
+  min-width: 980px;
   border-collapse: collapse;
 }
 
@@ -542,10 +543,74 @@
 
 .lineProduct > div:last-child { display: grid; gap: 4px; min-width: 0; }
 
+.inlineVariants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 5px;
+}
+
+.inlineVariants label {
+  display: grid;
+  gap: 3px;
+  min-width: 112px;
+  color: #69787d;
+  font-size: 10px;
+  font-weight: 720;
+}
+
+.inlineVariants select {
+  min-height: 36px;
+  padding: 6px 28px 6px 8px;
+  color: #173d4c;
+  background: #fff;
+  border: 1px solid #b9c7c9;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.inlineVariants select:disabled {
+  color: #51666e;
+  background: #f3f6f5;
+  opacity: 1;
+}
+
+.inlineVariants select:focus-visible,
+.quantityField input:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, .4);
+  outline-offset: 2px;
+}
+
+.quantityField {
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.quantityField input {
+  width: 66px;
+  min-height: 44px;
+  padding: 7px 6px;
+  color: #173d4c;
+  background: #fff;
+  border: 1px solid #b9c7c9;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 780;
+  text-align: center;
+}
+
+.moneyCell {
+  padding-top: 27px !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .tableWrap .rowActions {
   display: flex;
   gap: 5px;
-  width: 126px;
+  width: 142px;
 }
 
 .rowActions button {

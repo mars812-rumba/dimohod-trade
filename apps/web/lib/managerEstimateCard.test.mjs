@@ -50,6 +50,11 @@ test("catalog BOM editing is constrained to exact catalog variants", () => {
   assert.match(componentSource, /\/catalog\/items/);
   assert.match(componentSource, /skuMedia/);
   assert.match(componentSource, /<Thumb media=/);
+  assert.match(componentSource, /PipeVariantControls/);
+  assert.match(componentSource, /quantityDrafts/);
+  assert.match(componentSource, /saveQuantity/);
+  assert.match(componentSource, /replaceVariant/);
+  assert.match(componentSource, /product_kind\?\.includes\("труб"\)/);
 });
 
 test("manager page is excluded from search indexing", () => {
