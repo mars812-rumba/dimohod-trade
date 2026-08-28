@@ -235,9 +235,9 @@ const checks = [
 ];
 
 const calculationResults = [
-  "Стоимость",
+  "Стоимость комплекта",
   "Подробный список изделий",
-  "Индивидуальная монтажная схема под ваш замер с основными узлами и проходами",
+  "Схема монтажа по замерам",
   "Готовая PDF-смета",
 ];
 
@@ -407,13 +407,6 @@ export default async function HomePage() {
               <h2 id="home-benefits-title">Рассчитайте дымоход прямо на сайте</h2>
               <div className={styles.benefitsIntroContent}>
                 <p>Получите стоимость, состав комплекта, персональную схему монтажа и готовую смету до оформления заказа.</p>
-                <div className={styles.benefitsIntroAction}>
-                  <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/zamery?edit=1">
-                    Рассчитать дымоход
-                    <ArrowRight aria-hidden size={18} strokeWidth={1.8} />
-                  </Link>
-                  <span>Расчёт займёт несколько минут</span>
-                </div>
               </div>
             </div>
 
@@ -433,14 +426,24 @@ export default async function HomePage() {
                 />
               </picture>
 
-              <ol className={styles.calculationResults} aria-label="Что вы получите после расчёта">
-                {calculationResults.map((result, index) => (
-                  <li className={styles.calculationResult} key={result}>
-                    <span aria-hidden>{index + 1}</span>
-                    <h3>{result}</h3>
-                  </li>
-                ))}
-              </ol>
+              <div className={styles.calculationDetails}>
+                <ol className={styles.calculationResults} aria-label="Что вы получите после расчёта">
+                  {calculationResults.map((result, index) => (
+                    <li className={styles.calculationResult} key={result}>
+                      <span aria-hidden>{index + 1}</span>
+                      <h3>{result}</h3>
+                    </li>
+                  ))}
+                </ol>
+
+                <div className={styles.calculationAction}>
+                  <Link className={`${styles.primaryButton} ${styles.calculationButton}`} href="/zamery?edit=1">
+                    Рассчитать дымоход
+                    <ArrowRight aria-hidden size={18} strokeWidth={1.8} />
+                  </Link>
+                  <span>Расчёт займёт несколько минут</span>
+                </div>
+              </div>
             </div>
           </div>
         </section>

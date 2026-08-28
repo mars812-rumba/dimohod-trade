@@ -66,27 +66,14 @@
   text-wrap: pretty;
 }
 
-.benefitsIntroAction {
-  display: flex;
-  gap: 14px 18px;
-  align-items: center;
-  margin-top: 24px;
-}
-
-.benefitsIntroAction > span {
-  max-width: 18ch;
-  color: #c4d4d8;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
 .calculationButton {
+  width: 100%;
   white-space: nowrap;
 }
 
 .calculationShowcase {
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.55fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(340px, 0.7fr);
   gap: clamp(28px, 4vw, 52px);
   align-items: center;
   margin-top: clamp(40px, 6vw, 72px);
@@ -104,6 +91,10 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+.calculationDetails {
+  min-width: 0;
 }
 
 .calculationResults {
@@ -139,11 +130,24 @@
 
 .calculationResult h3 {
   margin: 0;
-  font-size: clamp(21px, 2vw, 28px);
+  font-size: clamp(18px, 1.8vw, 26px);
   font-weight: 660;
   line-height: 1.12;
   letter-spacing: -0.025em;
   text-wrap: pretty;
+}
+
+.calculationAction {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+  text-align: center;
+}
+
+.calculationAction > span {
+  color: #c4d4d8;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .hero {
@@ -2366,7 +2370,7 @@
   }
 
   .calculationShowcase {
-    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+    grid-template-columns: minmax(0, 1.3fr) minmax(330px, 0.7fr);
   }
 
   .routeExamplesGrid {
@@ -2462,7 +2466,7 @@
   }
 
   .calculationResult h3 {
-    font-size: clamp(20px, 6vw, 26px);
+    font-size: clamp(17px, 5vw, 24px);
   }
 
   .hero {
@@ -2938,15 +2942,6 @@
 }
 
 @media (max-width: 460px) {
-  .benefitsIntroAction {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .benefitsIntroAction .calculationButton {
-    width: 100%;
-  }
-
   .calculationResult {
     grid-template-columns: 32px minmax(0, 1fr);
     gap: 12px;

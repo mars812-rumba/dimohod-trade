@@ -14,6 +14,13 @@ test("homepage calculation section exposes one call to action and no duplicated 
   assert.doesNotMatch(pageSource, /Вы рассчитываете — мы проверяем и отправляем/u);
   assert.doesNotMatch(pageSource, /Проверка специалистом/u);
   assert.equal(pageSource.match(/href="\/zamery\?edit=1"/gu)?.length, 1);
+  assert.match(pageSource, /Стоимость комплекта/u);
+  assert.match(pageSource, /Схема монтажа по замерам/u);
+  assert.doesNotMatch(pageSource, /Индивидуальная монтажная схема под ваш замер/u);
+  assert.ok(
+    pageSource.indexOf("calculationResults") < pageSource.indexOf("calculationAction"),
+    "the calculation action must follow the result list",
+  );
 });
 
 test("calculation showcase uses committed mobile and desktop WebP renders", () => {
