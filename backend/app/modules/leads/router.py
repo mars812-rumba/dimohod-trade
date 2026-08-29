@@ -622,9 +622,14 @@ async def create_lead(
 
     email_status = "pending"
     try:
+        email_record = (
+            {**record, "_estimate": estimate.model_dump(mode="json")}
+            if estimate
+            else record
+        )
         sent = await to_thread(
             send_lead_email,
-            record,
+            email_record,
             lead_dir / attachment_name if attachment_name else None,
             manager_url,
         )

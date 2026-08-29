@@ -50,7 +50,60 @@ def test_sends_lead_with_attachment(tmp_path: Path, monkeypatch) -> None:
         "attachment": "plan.pdf",
     }
 
-    assert send_lead_email(record, attachment) is True
+    manager_url = "https://dimohod-trade.pro/admin/estimates/lead-1#token=secret"
+    assert send_lead_email(record, attachment, manager_url) is True
     assert FakeSMTP.message["To"] == "office@dimohod-trade.pro"
-    assert "Иван" in FakeSMTP.message.get_body().get_content()
+    body = FakeSMTP.message.get_body().get_content()
+    assert "Иван" in body
+    assert manager_url in body
     assert next(FakeSMTP.message.iter_attachments()).get_filename() == "plan.pdf"
+
+
+def test_sends_estimate_as_compact_html_table(monkeypatch) -> None:
+    monkeypatch.setattr("app.modules.leads.email.settings.smtp_host", "smtp.example.test")
+    monkeypatch.setattr("app.modules.leads.email.settings.smtp_port", 587)
+    monkeypatch.setattr("app.modules.leads.email.settings.smtp_username", "sender")
+    monkeypatch.setattr("app.modules.leads.email.settings.smtp_password", "secret")
+    monkeypatch.setattr("app.modules.leads.email.settings.smtp_use_tls", True)
+    monkeypatch.setattr("app.modules.leads.email.settings.smtp_use_ssl", False)
+    monkeypatch.setattr("app.modules.leads.email.smtplib.SMTP", FakeSMTP)
+    record = {
+        "id": "lead-2",
+        "created_at": "2026-08-29T00:00:00+00:00",
+        "source": "quick-estimate",
+        "name": "Иван",
+        "contact_method": "phone",
+        "contact": "+79991234567",
+        "comment": "",
+        "configuration": "Старая длинная конфигурация",
+        "attachment": None,
+    }
+    estimate = {
+        "known_subtotal_rub": 9361,
+        "total_units": 2,
+        "unpriced_line_count": 0,
+        "lines": [
+            {
+                "label": "Сэндвич-труба 1000 мм",
+                "quantity": 2,
+                "line_total_rub": 9361,
+                "characteristics": [
+                    "Ø 120/220 мм",
+                    "нержавеющая сталь · AISI 304 · 0.80 мм",
+                    "наружный кожух: нержавеющая сталь · AISI 430 · 0.5",
+                ],
+            }
+        ],
+    }
+
+    record["_estimate"] = estimate
+    assert send_lead_email(record) is True
+    plain = FakeSMTP.message.get_body(preferencelist=("plain",)).get_content()
+    html = FakeSMTP.message.get_body(preferencelist=("html",)).get_content()
+    assert "Старая длинная конфигурация" not in plain
+    assert "Название | Марка внутр. | Марка наруж." in plain
+    assert "AISI 304 | AISI 430 | 0,80 / 0,5 | 2 шт. | 9\xa0361 ₽" in plain
+    assert "<table" in html
+    assert "Сэндвич-труба 1000 мм" in html
+    assert "Марка<br>внутр." in html
+    assert "арт." not in html
