@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeft,
   CalendarDays,
   ClipboardList,
   ExternalLink,
@@ -135,7 +134,6 @@ export function AdminCustomerManager() {
   return (
     <main className={styles.shell}>
       <nav className={styles.topbar} aria-label="Навигация администратора">
-        <Link href="/admin/catalog"><ArrowLeft aria-hidden size={17} /> Управление каталогом</Link>
         <button onClick={() => void logout()} type="button"><LogOut aria-hidden size={16} /> Выйти</button>
       </nav>
 
