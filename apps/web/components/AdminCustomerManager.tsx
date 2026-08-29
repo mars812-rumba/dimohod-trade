@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  CalendarDays,
+  ChevronDown,
   ClipboardList,
   ExternalLink,
   LogOut,
@@ -63,6 +63,20 @@ function formatRub(value: number): string {
     currency: "RUB",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function sortedEstimates(estimates: CustomerEstimate[]): CustomerEstimate[] {
+  return [...estimates].sort(
+    (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
+  );
+}
+
+function estimateLabel(count: number): string {
+  if (count % 10 === 1 && count % 100 !== 11) return "расчёт";
+  if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+    return "расчёта";
+  }
+  return "расчётов";
 }
 
 function contactHref(contact: CustomerContact): string {
@@ -178,10 +192,12 @@ export function AdminCustomerManager() {
       ) : null}
 
       <section className={styles.customerList} aria-label="Список клиентов">
-        {customers.map((customer) => (
+        {customers.map((customer) => {
+          const [latestEstimate, ...previousEstimates] = sortedEstimates(customer.estimates);
+          return (
           <article className={styles.customerCard} key={customer.id}>
-            <header className={styles.customerHeader}>
-              <div>
+            <div className={styles.customerSummary}>
+              <div className={styles.customerIdentity}>
                 <h2>{customer.name || "Без имени"}</h2>
                 <div className={styles.contacts}>
                   {customer.contacts.map((contact) => (
@@ -195,37 +211,69 @@ export function AdminCustomerManager() {
                     </a>
                   ))}
                 </div>
+                <p className={styles.customerMeta}>
+                  {customer.estimates.length} {estimateLabel(customer.estimates.length)}
+                  <span aria-hidden> · </span>
+                  обновлено {formatDate(customer.updated_at)}
+                </p>
               </div>
-              <div className={styles.customerMeta}>
-                <strong>{customer.estimates.length}</strong>
-                <span>{customer.estimates.length === 1 ? "смета" : "смет"}</span>
-                <small>обновлено {formatDate(customer.updated_at)}</small>
-              </div>
-            </header>
 
-            <div className={styles.estimateList}>
-              {customer.estimates.map((estimate) => (
-                <div className={styles.estimateRow} key={estimate.lead_id}>
-                  <div className={styles.estimateIdentity}>
-                    <ClipboardList aria-hidden size={18} />
-                    <div>
-                      <strong>{estimate.profile_name}</strong>
-                      <span><CalendarDays aria-hidden size={14} /> {formatDate(estimate.created_at)}</span>
-                    </div>
+              {latestEstimate ? (
+                <>
+                  <div className={styles.estimateOverview}>
+                    <strong className={styles.estimateProfile}>{latestEstimate.profile_name}</strong>
+                    <dl className={styles.estimateStats}>
+                      <div>
+                        <dt>Позиций</dt>
+                        <dd>{latestEstimate.item_count}</dd>
+                      </div>
+                      <div className={styles.estimateTotal}>
+                        <dt>Сумма</dt>
+                        <dd>{formatRub(latestEstimate.known_total_rub)}</dd>
+                      </div>
+                    </dl>
                   </div>
-                  <dl className={styles.estimateStats}>
-                    <div><dt>Позиций</dt><dd>{estimate.item_count}</dd></div>
-                    <div><dt>Единиц</dt><dd>{estimate.total_units}</dd></div>
-                    <div><dt>Сумма</dt><dd>{formatRub(estimate.known_total_rub)}</dd></div>
-                  </dl>
-                  <Link href={`/admin/estimates/${estimate.lead_id}#admin=1`}>
-                    Открыть смету «{estimate.profile_name}» <ExternalLink aria-hidden size={16} />
+                  <Link
+                    className={styles.openEstimate}
+                    href={`/admin/estimates/${latestEstimate.lead_id}#admin=1`}
+                  >
+                    Открыть смету <ExternalLink aria-hidden size={16} />
                   </Link>
-                </div>
-              ))}
+                </>
+              ) : null}
             </div>
+
+            {latestEstimate && previousEstimates.length ? (
+              <details className={styles.previousEstimates}>
+                <summary>
+                  <span>Предыдущие расчёты · {previousEstimates.length}</span>
+                  <ChevronDown aria-hidden className={styles.chevron} size={18} />
+                </summary>
+                <div className={styles.compactEstimateList}>
+                  {previousEstimates.map((estimate) => (
+                    <Link
+                      className={styles.compactEstimateRow}
+                      href={`/admin/estimates/${estimate.lead_id}#admin=1`}
+                      key={estimate.lead_id}
+                    >
+                      <span className={styles.compactEstimateIdentity}>
+                        <strong>{estimate.profile_name}</strong>
+                        <small>{formatDate(estimate.created_at)}</small>
+                      </span>
+                      <span className={styles.compactEstimateStats}>
+                        <span>{estimate.item_count} поз.</span>
+                        <span>{estimate.total_units} шт.</span>
+                        <strong>{formatRub(estimate.known_total_rub)}</strong>
+                      </span>
+                      <ExternalLink aria-hidden size={16} />
+                    </Link>
+                  ))}
+                </div>
+              </details>
+            ) : null}
           </article>
-        ))}
+          );
+        })}
       </section>
     </main>
   );

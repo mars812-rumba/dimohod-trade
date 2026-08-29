@@ -25,9 +25,22 @@ test("customer manager supports search and links to editable estimates", () => {
   assert.match(componentSource, /role="search"/);
   assert.match(componentSource, /Поиск клиента или замера/);
   assert.match(componentSource, /\/admin\/estimates\/\$\{estimate\.lead_id\}#admin=1/);
-  assert.match(componentSource, /customer\.estimates\.map/);
+  assert.match(componentSource, /previousEstimates\.map/);
   assert.doesNotMatch(componentSource, /href="\/admin\/catalog"/);
   assert.doesNotMatch(componentSource, /Управление каталогом/);
+});
+
+test("customer estimates keep the latest visible and collapse previous calculations", () => {
+  assert.match(componentSource, /sortedEstimates\(customer\.estimates\)/);
+  assert.match(componentSource, /className=\{styles\.customerSummary\}/);
+  assert.match(componentSource, /className=\{styles\.estimateOverview\}/);
+  assert.match(componentSource, /className=\{styles\.estimateTotal\}/);
+  assert.match(componentSource, /className=\{styles\.openEstimate\}/);
+  assert.match(componentSource, /<details className=\{styles\.previousEstimates\}>/);
+  assert.match(componentSource, /<summary>/);
+  assert.match(componentSource, /Предыдущие расчёты/);
+  assert.match(componentSource, /previousEstimates\.map/);
+  assert.match(componentSource, /Открыть смету/);
 });
 
 test("customer manager exposes status feedback", () => {

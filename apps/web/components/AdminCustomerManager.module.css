@@ -173,20 +173,23 @@
   box-shadow: 0 8px 28px rgba(24, 60, 69, 0.055);
 }
 
-.customerHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 18px 20px;
-  border-bottom: 1px solid #e4eaeb;
-  background: #f7f9f9;
+.customerSummary {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.1fr) minmax(250px, 0.9fr) auto;
+  align-items: center;
+  gap: 28px;
+  padding: 20px;
 }
 
-.customerHeader h2 {
+.customerIdentity {
+  min-width: 0;
+}
+
+.customerIdentity h2 {
   margin: 0 0 9px;
   color: #183c45;
   font-size: 21px;
+  text-wrap: balance;
 }
 
 .contacts {
@@ -212,81 +215,34 @@
 }
 
 .customerMeta {
-  display: grid;
-  grid-template-columns: auto auto;
-  align-items: baseline;
-  gap: 3px 7px;
-  text-align: right;
-}
-
-.customerMeta strong {
-  color: #183c45;
-  font-size: 22px;
-}
-
-.customerMeta span {
-  color: #65777c;
-  font-size: 13px;
-}
-
-.customerMeta small {
-  grid-column: 1 / -1;
+  margin: 9px 0 0;
   color: #7b8a8e;
   font-size: 11px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
 }
 
-.estimateList {
+.estimateOverview {
   display: grid;
-}
-
-.estimateRow {
-  display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(270px, auto) minmax(210px, auto);
-  align-items: center;
-  gap: 22px;
-  padding: 15px 20px;
-}
-
-.estimateRow + .estimateRow {
-  border-top: 1px solid #edf1f2;
-}
-
-.estimateIdentity {
-  display: flex;
   min-width: 0;
-  align-items: flex-start;
-  gap: 10px;
-  color: #3c6871;
+  gap: 12px;
+  padding-left: 28px;
+  border-left: 1px solid #e2e8e9;
 }
 
-.estimateIdentity > div {
-  min-width: 0;
-}
-
-.estimateIdentity strong,
-.estimateIdentity span {
-  display: flex;
-  align-items: center;
-}
-
-.estimateIdentity strong {
+.estimateProfile {
   overflow: hidden;
   color: #203f47;
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.estimateIdentity span {
-  gap: 5px;
-  margin-top: 5px;
-  color: #77868a;
-  font-size: 12px;
-}
-
 .estimateStats {
   display: grid;
-  grid-template-columns: repeat(3, auto);
+  grid-template-columns: auto minmax(0, 1fr);
+  justify-content: start;
   gap: 18px;
   margin: 0;
 }
@@ -307,18 +263,25 @@
 .estimateStats dd {
   margin: 0;
   color: #183c45;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.estimateRow > a {
+.estimateTotal dd {
+  color: #c9501b;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.openEstimate {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid #b8c9cd;
   border-radius: 8px;
   color: #244f59;
@@ -326,12 +289,103 @@
   font-weight: 800;
   text-align: center;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.estimateRow > a:hover {
+.openEstimate:hover {
   border-color: #e9682c;
   color: #c9501b;
   background: #fff7f2;
+}
+
+.previousEstimates {
+  border-top: 1px solid #e4eaeb;
+}
+
+.previousEstimates > summary {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 20px;
+  color: #365963;
+  font-size: 13px;
+  font-weight: 800;
+  list-style: none;
+  cursor: pointer;
+}
+
+.previousEstimates > summary::-webkit-details-marker {
+  display: none;
+}
+
+.previousEstimates > summary:hover {
+  color: #c9501b;
+  background: #fffaf7;
+}
+
+.previousEstimates[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.compactEstimateList {
+  display: grid;
+  border-top: 1px solid #edf1f2;
+}
+
+.compactEstimateRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 58px;
+  padding: 9px 20px;
+  color: #244f59;
+  text-align: left;
+  text-decoration: none;
+}
+
+.compactEstimateRow + .compactEstimateRow {
+  border-top: 1px solid #edf1f2;
+}
+
+.compactEstimateRow:hover {
+  color: #c9501b;
+  background: #fffaf7;
+}
+
+.compactEstimateIdentity {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.compactEstimateIdentity strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compactEstimateIdentity small {
+  color: #7b8a8e;
+  font-size: 11px;
+}
+
+.compactEstimateStats {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  color: #65777c;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.compactEstimateStats strong {
+  color: #183c45;
+  font-size: 13px;
 }
 
 .emptyState,
@@ -418,22 +472,30 @@
 .searchBar button:focus-visible,
 .loginCard form button:focus-visible,
 .contacts a:focus-visible,
-.estimateRow > a:focus-visible {
+.openEstimate:focus-visible,
+.previousEstimates > summary:focus-visible,
+.compactEstimateRow:focus-visible {
   outline: 3px solid rgba(233, 104, 44, 0.35);
   outline-offset: 3px;
 }
 
 @media (max-width: 900px) {
-  .estimateRow {
-    grid-template-columns: 1fr auto;
+  .customerSummary {
+    grid-template-columns: minmax(0, 1fr) minmax(230px, 0.8fr);
   }
 
-  .estimateStats {
-    justify-content: start;
-  }
-
-  .estimateRow > a {
+  .openEstimate {
     grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .compactEstimateRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .compactEstimateStats {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 }
 
@@ -443,8 +505,7 @@
     padding-top: 14px;
   }
 
-  .header,
-  .customerHeader {
+  .header {
     align-items: stretch;
     flex-direction: column;
   }
@@ -461,22 +522,35 @@
     grid-column: 1 / -1;
   }
 
-  .customerMeta {
-    text-align: left;
+  .customerSummary {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 18px;
   }
 
-  .estimateRow {
-    grid-template-columns: 1fr;
-    gap: 14px;
+  .estimateOverview {
+    padding-top: 18px;
+    padding-left: 0;
+    border-top: 1px solid #e2e8e9;
+    border-left: 0;
+  }
+
+  .openEstimate {
+    width: 100%;
   }
 
   .estimateStats {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 18px;
   }
 
-  .estimateRow > a {
-    grid-column: auto;
+  .compactEstimateRow {
+    gap: 4px 12px;
+    padding-block: 11px;
+  }
+
+  .compactEstimateStats {
+    gap: 9px;
   }
 
   .loginCard {
