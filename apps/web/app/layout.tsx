@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { SiteHeader } from "../components/SiteHeader";
+import { YandexMetrika } from "../components/YandexMetrika";
 import "./globals.css";
 
 const basePath = process.env.NEXT_BASE_PATH ?? "";
@@ -50,6 +51,7 @@ export default function RootLayout({
       <body>
         <SiteHeader />
         {children}
+        <YandexMetrika />
       </body>
     </html>
   );
