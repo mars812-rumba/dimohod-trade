@@ -8,7 +8,7 @@ const header = readFileSync(new URL("../components/SiteHeader.tsx", import.meta.
 const hero = readFileSync(new URL("../components/HomeHeroCarousel.tsx", import.meta.url), "utf8");
 
 test("homepage sends measurement entry points to one format choice", () => {
-  assert.match(page, /Полный замер для точной сметы/);
+  assert.match(page, /<span>Полный замер<\/span>\s*<span>для точной сметы<\/span>/);
   assert.match(page, /Начать замер/);
   assert.match(page, /href="\/raschet"/);
   assert.doesNotMatch(page, /Сначала выберите формат/);
@@ -22,10 +22,25 @@ test("homepage sends measurement entry points to one format choice", () => {
   assert.match(page, /Для замера понадобится рулетка 5–10 м — больше ничего готовить не нужно/);
   assert.match(
     page,
-    /<h2 id="home-benefits-title">Полный замер для точной сметы<\/h2>\s*<p className=\{styles\.benefitsIntroNote\}>\s*Для замера понадобится рулетка 5–10 м/,
+    /<h2 id="home-benefits-title">\s*<span>Полный замер<\/span>\s*<span>для точной сметы<\/span>\s*<\/h2>\s*<p className=\{styles\.benefitsIntroNote\}>\s*Для замера понадобится рулетка 5–10 м/,
   );
   assert.doesNotMatch(page, /calculationEquipmentNote/);
   assert.match(pageStyles, /\.calculationFormatCta[\s\S]*border-radius: 30px/);
+});
+
+test("positioning promise replaces the old comparison and leads into measurement choice", () => {
+  const positioningStart = page.indexOf("positioningSection");
+  const measurementStart = page.indexOf('id="measurement-choice"');
+
+  assert.ok(positioningStart > -1);
+  assert.ok(measurementStart > positioningStart);
+  assert.match(page, /Мы продаём не трубы — мы продаём дымоход, который точно встанет/);
+  assert.match(page, /Проверяемая совместимость/);
+  assert.match(page, /Единая система/);
+  assert.match(page, /Проверка перед заказом/);
+  assert.match(page, /className=\{styles\.positioningLink\} href="#measurement-choice"/);
+  assert.doesNotMatch(page, /Трубу купить легко\. Сложнее собрать правильный дымоход/);
+  assert.equal(page.match(/Не просто трубы/g)?.length, 1);
 });
 
 test("hero and navigation open the same format choice", () => {

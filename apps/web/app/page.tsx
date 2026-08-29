@@ -16,7 +16,6 @@ import {
   IconHome as Home,
   IconStack3 as Layers3,
   IconLink as Link2,
-  IconListCheck as ListChecks,
   IconMail as Mail,
   IconMapPin as MapPin,
   IconPhone as Phone,
@@ -25,6 +24,7 @@ import {
   IconShieldCheck as ShieldCheck,
   IconStar as Star,
   IconTool as Wrench,
+  IconTruckDelivery as TruckDelivery,
   IconBolt as Zap,
 } from "@tabler/icons-react";
 import {
@@ -406,10 +406,65 @@ export default async function HomePage() {
       <main className={styles.main}>
         <HomeHeroCarousel assetBasePath={basePath} />
 
-        <section className={styles.benefitsSection} aria-labelledby="home-benefits-title">
+        <section className={styles.positioningSection} aria-labelledby="positioning-title">
+          <div className={styles.shell}>
+            <div className={styles.positioningIntro}>
+              <p className={styles.overline}>Не просто трубы</p>
+              <h2 id="positioning-title">
+                Мы продаём не трубы — мы продаём дымоход, который точно встанет
+              </h2>
+              <p className={styles.positioningLead}>
+                Каждая деталь в каталоге подобрана под единую систему соединений. Диаметр,
+                толщина стали, узел прохода — всё это подходит друг другу по конструкции, а не по
+                случайному совпадению размеров. Конфигуратор показывает, что реально совместимо с
+                вашим отопителем и маршрутом.
+              </p>
+            </div>
+
+            <div className={styles.positioningPoints}>
+              <article className={styles.positioningPoint}>
+                <span className={styles.positioningIcon} aria-hidden>
+                  <Link2 size={24} strokeWidth={1.8} />
+                </span>
+                <h3>Проверяемая совместимость</h3>
+                <p>На каждую позицию каталога указано, с чем она стыкуется.</p>
+              </article>
+
+              <article className={styles.positioningPoint}>
+                <span className={styles.positioningIcon} aria-hidden>
+                  <Ruler size={24} strokeWidth={1.8} />
+                </span>
+                <h3>Единая система</h3>
+                <p>Переходники и трубы одного стандарта, без гадания на глаз.</p>
+              </article>
+
+              <article className={styles.positioningPoint}>
+                <span className={styles.positioningIcon} aria-hidden>
+                  <ShieldCheck size={24} strokeWidth={1.8} />
+                </span>
+                <h3>Проверка перед заказом</h3>
+                <p>Специалист сверяет схему до передачи в производство.</p>
+              </article>
+            </div>
+
+            <Link className={styles.positioningLink} href="#measurement-choice">
+              Собрать совместимый комплект
+              <ArrowRight size={19} strokeWidth={1.8} aria-hidden />
+            </Link>
+          </div>
+        </section>
+
+        <section
+          className={styles.benefitsSection}
+          id="measurement-choice"
+          aria-labelledby="home-benefits-title"
+        >
           <div className={styles.shell}>
             <div className={styles.benefitsIntro}>
-              <h2 id="home-benefits-title">Полный замер для точной сметы</h2>
+              <h2 id="home-benefits-title">
+                <span>Полный замер</span>
+                <span>для точной сметы</span>
+              </h2>
               <p className={styles.benefitsIntroNote}>
                 Для замера понадобится рулетка 5–10 м — больше ничего готовить не нужно.
               </p>
@@ -447,64 +502,6 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-
-      <section className={styles.differenceSection} aria-labelledby="difference-title">
-        <div className={styles.shell}>
-          <div className={styles.differenceIntro}>
-            <div>
-              <p className={styles.overline}>Не просто трубы</p>
-              <h2 id="difference-title">
-                Трубу купить легко. Сложнее собрать правильный дымоход.
-              </h2>
-            </div>
-            <p>
-              Укажите параметры отопителя и трассы — конфигуратор соберёт комплект целиком:
-              покажет элементы и их количество.
-            </p>
-          </div>
-
-          <div className={styles.differenceFlow}>
-            <article className={styles.differenceScenario}>
-              <span className={styles.differenceIcon} aria-hidden>
-                <Boxes size={23} strokeWidth={1.65} />
-              </span>
-              <div>
-                <span className={styles.differenceLabel}>Самостоятельный подбор</span>
-                <h3>Покупать по отдельности</h3>
-                <p>
-                  Трубы, переходники, тройники и крепёж нужно самостоятельно сверять по диаметру,
-                  типу и связям между элементами.
-                </p>
-              </div>
-            </article>
-
-            <div className={styles.differenceDirection} aria-hidden>
-              <ArrowRight size={25} strokeWidth={1.7} />
-            </div>
-
-            <article className={`${styles.differenceScenario} ${styles.differenceScenarioResolved}`}>
-              <span className={styles.differenceIcon} aria-hidden>
-                <ListChecks size={23} strokeWidth={1.65} />
-              </span>
-              <div>
-                <span className={styles.differenceLabel}>Подбор по параметрам</span>
-                <h3>Собрать комплект</h3>
-                <p>
-                  Вы задаёте параметры отопителя и трассы. Конфигуратор показывает собранный состав
-                  системы и количество элементов на одном экране.
-                </p>
-              </div>
-            </article>
-
-            <div className={styles.differenceFooter}>
-              <p>Вы описываете задачу — мы помогаем собрать систему.</p>
-              <Link className={styles.primaryButton} href="/configurator">
-                Собрать комплект <ArrowRight size={17} aria-hidden />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <section className={styles.productGuidanceSection} aria-labelledby="product-guidance-title">
         <div className={styles.shell}>
@@ -1006,6 +1003,27 @@ export default async function HomePage() {
             </div>
             <LeadForm source="homepage-materials" compact />
             <div className={styles.contactAlternatives}><a href="tel:+79650756555"><Phone size={16} /> +7 (965) 075-65-55</a><a href="mailto:office@dimohod-trade.pro"><Mail size={16} /> office@dimohod-trade.pro</a></div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.deliverySection} aria-labelledby="delivery-title">
+        <div className={styles.shell}>
+          <div className={styles.deliveryBand}>
+            <span className={styles.deliveryMark} aria-hidden>
+              <TruckDelivery size={34} strokeWidth={1.7} />
+            </span>
+            <div className={styles.deliveryCopy}>
+              <h2 id="delivery-title">Доставка по всей России.</h2>
+              <p>
+                Стоимость и способ доставки рассчитываем индивидуально для каждого заказа — после
+                уточнения состава комплекта и адреса получения.
+              </p>
+            </div>
+            <a className={styles.deliveryAction} href="tel:+79650756555">
+              <Phone aria-hidden size={18} />
+              Уточнить доставку
+            </a>
           </div>
         </div>
       </section>
