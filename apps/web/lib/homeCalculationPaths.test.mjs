@@ -19,6 +19,7 @@ test("homepage sends measurement entry points to one format choice", () => {
   assert.match(page, /LucideRuler/);
   assert.match(page, /Быстрый расчёт или глубокий замер/);
   assert.match(page, /На следующем экране подскажем, какой путь подойдёт именно вам/);
+  assert.match(page, /Для замера понадобится рулетка 5–10 м — больше ничего готовить не нужно/);
   assert.match(pageStyles, /\.calculationFormatCta[\s\S]*border-radius: 30px/);
 });
 

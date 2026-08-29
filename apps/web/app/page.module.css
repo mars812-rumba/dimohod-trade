@@ -107,6 +107,13 @@
   text-align: center;
 }
 
+.calculationEquipmentNote {
+  margin: 0 0 4px;
+  color: #d8e3e6;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .calculationAction > span {
   color: #c4d4d8;
   font-size: 12px;
