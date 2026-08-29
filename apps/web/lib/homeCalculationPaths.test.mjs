@@ -20,6 +20,11 @@ test("homepage sends measurement entry points to one format choice", () => {
   assert.match(page, /Быстрый расчёт или глубокий замер/);
   assert.match(page, /На следующем экране подскажем, какой путь подойдёт именно вам/);
   assert.match(page, /Для замера понадобится рулетка 5–10 м — больше ничего готовить не нужно/);
+  assert.match(
+    page,
+    /<h2 id="home-benefits-title">Полный замер для точной сметы<\/h2>\s*<p className=\{styles\.benefitsIntroNote\}>\s*Для замера понадобится рулетка 5–10 м/,
+  );
+  assert.doesNotMatch(page, /calculationEquipmentNote/);
   assert.match(pageStyles, /\.calculationFormatCta[\s\S]*border-radius: 30px/);
 });
 

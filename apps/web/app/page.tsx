@@ -410,6 +410,9 @@ export default async function HomePage() {
           <div className={styles.shell}>
             <div className={styles.benefitsIntro}>
               <h2 id="home-benefits-title">Полный замер для точной сметы</h2>
+              <p className={styles.benefitsIntroNote}>
+                Для замера понадобится рулетка 5–10 м — больше ничего готовить не нужно.
+              </p>
             </div>
 
             <div className={styles.calculationShowcase}>
@@ -426,9 +429,6 @@ export default async function HomePage() {
                 </ol>
 
                 <div className={styles.calculationAction}>
-                  <p className={styles.calculationEquipmentNote}>
-                    Для замера понадобится рулетка 5–10 м — больше ничего готовить не нужно.
-                  </p>
                   <Link className={styles.calculationFormatCta} href="/raschet">
                     <span className={styles.calculationFormatIcons} aria-hidden>
                       <LucideGauge size={25} strokeWidth={2} />
