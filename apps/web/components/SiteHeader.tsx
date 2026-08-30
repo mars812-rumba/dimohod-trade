@@ -215,9 +215,12 @@ export function SiteHeader() {
               <span><Construction aria-hidden size={17} /> Сохранённые расчёты</span>
             </Link>
             <Link href="/#send-materials" onClick={closeMenu}>Отправить фото или схему</Link>
-            <Link href={privacyPolicyPath} onClick={closeMenu}>Политика персональных данных</Link>
-            <Link href={personalDataConsentPath} onClick={closeMenu}>Согласие на обработку данных</Link>
-            <Link href={userAgreementPath} onClick={closeMenu}>Пользовательское соглашение</Link>
+            <div className="mobile-menu-legal" aria-label="Правовые документы">
+              <p className="mobile-menu-legal-title">Документы</p>
+              <Link href={privacyPolicyPath} onClick={closeMenu}>Политика персональных данных</Link>
+              <Link href={personalDataConsentPath} onClick={closeMenu}>Согласие на обработку данных</Link>
+              <Link href={userAgreementPath} onClick={closeMenu}>Пользовательское соглашение</Link>
+            </div>
           </nav>
 
           <div className="mobile-menu-footer">
