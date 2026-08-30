@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Dimohod Trade",
   description: "Каталог и калькулятор дымоходных систем.",
   verification: {
-    yandex: "64cfdbb67586fb64",
+    yandex: "a2b0b12d9985ab70",
   },
   manifest: `${basePath}/manifest.webmanifest`,
   icons: {
