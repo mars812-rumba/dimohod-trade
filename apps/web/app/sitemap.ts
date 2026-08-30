@@ -27,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     { url: absoluteUrl("/solutions") },
     { url: absoluteUrl("/guides") },
+    { url: absoluteUrl("/delivery") },
     { url: absoluteUrl("/configurator") },
     { url: absoluteUrl("/solutions/banya/zamery") },
     { url: absoluteUrl("/zamery") },

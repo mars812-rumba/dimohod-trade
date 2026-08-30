@@ -206,6 +206,7 @@ export function SiteHeader() {
               </div>
             </details>
             <Link href="/guides" onClick={closeMenu}>Статьи и инструкции</Link>
+            <Link href="/delivery" onClick={closeMenu}>Доставка по России</Link>
             <Link className="mobile-menu-path mobile-menu-path-primary" href="/raschet" onClick={closeMenu}>
               <Ruler aria-hidden size={18} />
               <span><strong>Начать замер</strong><small>Выберите быстрый расчёт или глубокий замер</small></span>

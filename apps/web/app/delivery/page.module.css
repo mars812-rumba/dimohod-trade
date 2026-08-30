@@ -1,0 +1,206 @@
+.main {
+  min-height: calc(100vh - 68px);
+  background: #f7f6f2;
+}
+
+.shell {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.hero {
+  padding: clamp(68px, 9vw, 116px) 0 76px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 82% 16%, rgba(237, 91, 42, 0.2), transparent 24rem),
+    linear-gradient(118deg, #102127, #173d4c 66%, #102127);
+}
+
+.eyebrow,
+.kicker {
+  margin: 0 0 16px;
+  color: #ed5b2a;
+  font-size: 13px;
+  font-weight: 760;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  max-width: 880px;
+  margin: 0 0 24px;
+  font-size: clamp(42px, 6vw, 72px);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+}
+
+.lead {
+  max-width: 720px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(17px, 2vw, 20px);
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.primaryAction,
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 720;
+}
+
+.primaryAction {
+  color: #fff;
+  background: #ed5b2a;
+}
+
+.secondaryAction {
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  color: #fff;
+}
+
+.primaryAction:hover { background: #cf471d; }
+.secondaryAction:hover { background: rgba(255, 255, 255, 0.1); }
+.primaryAction:focus-visible,
+.secondaryAction:focus-visible,
+.cta a:focus-visible {
+  outline: 3px solid rgba(237, 91, 42, 0.55);
+  outline-offset: 3px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: -28px;
+  overflow: hidden;
+  border: 1px solid #d8dcda;
+  border-radius: 10px;
+  background: #d8dcda;
+  box-shadow: 0 18px 50px rgba(16, 33, 39, 0.09);
+}
+
+.fact {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  min-height: 112px;
+  padding: 24px;
+  background: #fff;
+}
+
+.factIcon,
+.ctaIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #ed5b2a;
+  background: rgba(237, 91, 42, 0.1);
+}
+
+.fact strong,
+.fact span { display: block; }
+.fact strong { margin-bottom: 5px; font-size: 15px; }
+.fact div > span { color: #637277; font-size: 14px; }
+
+.process {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(420px, 1.28fr);
+  gap: clamp(44px, 8vw, 96px);
+  padding: 96px 0;
+}
+
+.sectionIntro h2 {
+  margin: 0 0 18px;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.06;
+}
+
+.sectionIntro > p:last-child {
+  margin: 0;
+  color: #637277;
+  line-height: 1.65;
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #ccd5d7;
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 18px;
+  padding: 22px 0;
+  border-bottom: 1px solid #ccd5d7;
+}
+
+.steps span {
+  color: #ed5b2a;
+  font-size: 13px;
+  font-weight: 780;
+}
+
+.steps p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.cta {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 80px;
+  padding: 30px;
+  border: 1px solid #ccd5d7;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.cta h2 { margin: 0 0 5px; font-size: clamp(25px, 3vw, 34px); }
+.cta p { margin: 0; color: #637277; line-height: 1.5; }
+.cta a {
+  padding: 13px 17px;
+  border-radius: 3px;
+  color: #fff;
+  background: #173d4c;
+  font-size: 14px;
+  font-weight: 740;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .shell { width: min(100% - 28px, 1120px); }
+  .hero { padding: 58px 0 64px; }
+  .facts { grid-template-columns: 1fr; margin-top: -20px; }
+  .fact { min-height: 92px; padding: 19px; }
+  .process { grid-template-columns: 1fr; gap: 36px; padding: 70px 0; }
+  .cta { grid-template-columns: auto 1fr; margin-bottom: 56px; padding: 23px; }
+  .cta a { grid-column: 1 / -1; text-align: center; }
+}
+
+@media (max-width: 420px) {
+  .actions { display: grid; }
+  .primaryAction,
+  .secondaryAction { width: 100%; }
+}
