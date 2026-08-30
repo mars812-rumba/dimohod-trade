@@ -11,6 +11,12 @@ class Settings(BaseSettings):
     media_storage_dir: str = "../storage"
     openai_api_key: str | None = None
     openai_seo_model: str = "gpt-5.6-luna"
+    yandex_oauth_token: str | None = None
+    yandex_webmaster_token: str | None = None
+    yandex_webmaster_host_url: str = "https://dimohod-trade.pro"
+    yandex_metrika_token: str | None = None
+    yandex_metrika_counter_id: int = 112091795
+    yandex_wordstat_token: str | None = None
     lead_recipient_email: str = "office@dimohod-trade.pro"
     lead_from_email: str = "office@dimohod-trade.pro"
     lead_manager_base_url: str = "https://dimohod-trade.pro/admin/estimates"
