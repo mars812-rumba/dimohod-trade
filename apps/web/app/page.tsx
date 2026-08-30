@@ -15,6 +15,7 @@ import {
   IconGauge as Gauge,
   IconHome as Home,
   IconStack3 as Layers3,
+  IconBrandTelegram as BrandTelegram,
   IconLink as Link2,
   IconMail as Mail,
   IconMapPin as MapPin,
@@ -59,7 +60,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Дымоход Трейд — подбор комплекта дымохода",
   description:
-    "Соберите в конфигураторе комплект дымохода для бани, печи, камина или котла. Уточним маршрут, исходные данные и позиции перед заказом.",
+    "Получите схему, состав комплекта и предварительную смету дымохода для бани, печи, камина или котла. Перед заказом специалист проверит исходные данные и позиции.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -409,15 +410,13 @@ export default async function HomePage() {
         <section className={styles.positioningSection} aria-labelledby="positioning-title">
           <div className={styles.shell}>
             <div className={styles.positioningIntro}>
-              <p className={styles.overline}>Не просто трубы</p>
+              <p className={styles.overline}>Без ручного подбора деталей</p>
               <h2 id="positioning-title">
-                Мы продаём не трубы — мы продаём дымоход, который точно встанет
+                Получите комплект дымохода под ваш отопитель и маршрут
               </h2>
               <p className={styles.positioningLead}>
-                Каждая деталь в каталоге подобрана под единую систему соединений. Диаметр,
-                толщина стали, узел прохода — всё это подходит друг другу по конструкции, а не по
-                случайному совпадению размеров. Конфигуратор показывает, что реально совместимо с
-                вашим отопителем и маршрутом.
+                Укажите отопитель и основные размеры трассы. Получите список деталей, понятную
+                схему для себя или монтажника и стоимость комплекта после проверки специалистом.
               </p>
             </div>
 
@@ -426,29 +425,29 @@ export default async function HomePage() {
                 <span className={styles.positioningIcon} aria-hidden>
                   <Link2 size={24} strokeWidth={1.8} />
                 </span>
-                <h3>Проверяемая совместимость</h3>
-                <p>На каждую позицию каталога указано, с чем она стыкуется.</p>
+                <h3>Не подбираете детали вручную</h3>
+                <p>Диаметры, соединения и исполнения сверяем внутри одного комплекта.</p>
               </article>
 
               <article className={styles.positioningPoint}>
                 <span className={styles.positioningIcon} aria-hidden>
                   <Ruler size={24} strokeWidth={1.8} />
                 </span>
-                <h3>Единая система</h3>
-                <p>Переходники и трубы одного стандарта, без гадания на глаз.</p>
+                <h3>Получаете схему монтажа</h3>
+                <p>По вашим размерам формируется схема, которую можно обсудить с монтажником.</p>
               </article>
 
               <article className={styles.positioningPoint}>
                 <span className={styles.positioningIcon} aria-hidden>
                   <ShieldCheck size={24} strokeWidth={1.8} />
                 </span>
-                <h3>Проверка перед заказом</h3>
-                <p>Специалист сверяет схему до передачи в производство.</p>
+                <h3>Знаете состав и стоимость</h3>
+                <p>Видите количество деталей, а после проверки получаете точную смету.</p>
               </article>
             </div>
 
             <Link className={styles.positioningLink} href="#measurement-choice">
-              Собрать совместимый комплект
+              Получить схему и смету
               <ArrowRight size={19} strokeWidth={1.8} aria-hidden />
             </Link>
           </div>
@@ -462,11 +461,12 @@ export default async function HomePage() {
           <div className={styles.shell}>
             <div className={styles.benefitsIntro}>
               <h2 id="home-benefits-title">
-                <span>Полный замер</span>
-                <span>для точной сметы</span>
+                <span>Узнайте стоимость сейчас</span>
+                <span>или подготовьте точную смету</span>
               </h2>
               <p className={styles.benefitsIntroNote}>
-                Для замера понадобится рулетка 5–10 м — больше ничего готовить не нужно.
+                Для быстрого расчёта достаточно основных параметров. Для точной сметы понадобится
+                рулетка 5–10 м и полный замер.
               </p>
             </div>
 
@@ -490,9 +490,9 @@ export default async function HomePage() {
                       <LucideRuler size={25} strokeWidth={2} />
                     </span>
                     <span className={styles.calculationFormatCopy}>
-                      <small>Быстрый расчёт или глубокий замер</small>
-                      <strong>Начать замер</strong>
-                      <em>На следующем экране подскажем, какой путь подойдёт именно вам.</em>
+                      <small>Два варианта под вашу задачу</small>
+                      <strong>Начать расчёт</strong>
+                      <em>Получите ориентировочную стоимость или пройдите полный замер для сметы.</em>
                     </span>
                     <LucideArrowRight aria-hidden size={27} strokeWidth={2} />
                   </Link>
@@ -1097,7 +1097,19 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
-          <div className={styles.footerBottom}>© 2026 Дымоход Трейд</div>
+          <div className={styles.footerBottom}>
+            <span>© 2026 Дымоход Трейд</span>
+            <a
+              className={styles.developerLink}
+              href="https://t.me/marseloid"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Сайт разработан @marseloid — открыть Telegram"
+            >
+              <BrandTelegram aria-hidden size={15} />
+              <span>Сайт разработан: @marseloid</span>
+            </a>
+          </div>
         </div>
       </footer>
       </main>

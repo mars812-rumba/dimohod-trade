@@ -2445,9 +2445,37 @@
 }
 
 .footerBottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 24px;
   padding: 18px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 11px;
+}
+
+.developerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: inherit;
+  line-height: 1.4;
+}
+
+.developerLink:hover {
+  color: #fff;
+}
+
+.developerLink:focus-visible {
+  border-radius: 4px;
+  outline: 3px solid rgba(237, 91, 42, 0.55);
+  outline-offset: 4px;
+}
+
+.developerLink svg {
+  flex: 0 0 auto;
 }
 
 @media (max-width: 1020px) {
