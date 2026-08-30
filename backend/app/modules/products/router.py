@@ -26,6 +26,7 @@ from app.modules.products.schemas import (
     ProductVariantCombination,
 )
 from app.modules.products.models import Product, SKU
+from app.modules.products.publication import public_sku_ready
 from app.modules.products.content import (
     RETIRED_SINGLE_WALL_RULE_CODE,
     is_single_wall_contour,
@@ -366,8 +367,13 @@ def select_active_sku(
     strict: bool = False,
     diameter_mm: int | None = None,
     outer_diameter_mm: int | None = None,
+    public_only: bool = False,
 ) -> SKU | None:
-    active_skus = [sku for sku in product.skus if sku.is_active]
+    active_skus = [
+        sku
+        for sku in product.skus
+        if sku.is_active and (not public_only or public_sku_ready(product, sku))
+    ]
     if sku_key:
         selected = next(
             (
@@ -456,7 +462,8 @@ async def compatible_items_for_sku(
             ),
             price_rub=target_sku.price_rub,
             stock_status=target_sku.stock_status,
-            primary_image=primary_product_image(target_product.extra_attributes, target_sku),
+            primary_image=primary_sku_image(target_sku.attributes)
+            or primary_product_image(target_product.extra_attributes, target_sku),
         )
         for target_sku, target_product in compatible_items
         if compatible_product_matches(
@@ -523,7 +530,8 @@ async def read_products(
         active_skus = [
             sku
             for sku in product.skus
-            if sku_matches_filters(
+            if public_sku_ready(product, sku)
+            and sku_matches_filters(
                 sku,
                 diameter_mm=diameter_mm,
                 outer_diameter_mm=outer_diameter_mm,
@@ -569,6 +577,8 @@ async def read_products(
         )
         if representative_sku is None and active_skus:
             representative_sku = representative_pool[0]
+        if representative_sku is None:
+            continue
         product_outer_diameter_mm = product.extra_attributes.get("outer_diameter_mm")
         if not isinstance(product_outer_diameter_mm, int):
             product_outer_diameter_mm = None
@@ -743,13 +753,19 @@ async def read_product(
     source_sku = select_active_sku(
         product,
         sku,
+        strict=sku is not None,
         diameter_mm=diameter_mm,
         outer_diameter_mm=outer_diameter_mm,
+        public_only=True,
     )
+    if source_sku is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
     product_read = ProductRead.model_validate(product)
     sku_by_id = {sku.id: sku for sku in product.skus}
     product_read.skus = [
-        sku_read for sku_read in product_read.skus if sku_by_id[sku_read.id].is_active
+        sku_read
+        for sku_read in product_read.skus
+        if public_sku_ready(product, sku_by_id[sku_read.id])
     ]
 
     for sku_read in product_read.skus:
@@ -854,6 +870,7 @@ async def read_compatible_products(
         session,
         product_slug=slug,
         sku_key=sku,
+        public_only=True,
     )
     if product_sku is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")

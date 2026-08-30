@@ -9,6 +9,7 @@ from app.modules.catalog.models import Category
 from app.modules.catalog.schemas import CatalogMediaItem, CategoryTreeNode
 from app.modules.catalog.visibility import visible_category_ids
 from app.modules.products.models import Product, SKU
+from app.modules.products.publication import public_sku_ready
 
 
 def category_cover(extra_attributes: dict[str, object] | None) -> CatalogMediaItem | None:
@@ -34,47 +35,39 @@ async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
         .order_by(Category.sort_order.asc(), Category.name.asc())
     )
     categories = list(result.scalars())
-    active_product_category_ids = set(
-        (
-            await session.scalars(
-                select(Product.category_id)
-                .join(SKU, SKU.product_id == Product.id)
-                .where(Product.is_active.is_(True), SKU.is_active.is_(True))
-                .distinct()
-            )
-        ).all()
+    sku_result = await session.execute(
+        select(Product, SKU)
+        .join(SKU, SKU.product_id == Product.id)
+        .where(Product.is_active.is_(True), SKU.is_active.is_(True))
     )
+    ready_rows = [
+        (product, sku)
+        for product, sku in sku_result.all()
+        if public_sku_ready(product, sku)
+    ]
+    active_product_category_ids = {product.category_id for product, _sku in ready_rows}
     visible_ids = visible_category_ids(categories, active_product_category_ids)
     categories = [category for category in categories if category.id in visible_ids]
 
     product_names: dict[UUID, set[str]] = defaultdict(set)
-    product_rows = await session.execute(
-        select(Product.category_id, Product.name)
-        .join(SKU, SKU.product_id == Product.id)
-        .where(
-            Product.is_active.is_(True),
-            Product.category_id.in_(visible_ids),
-            SKU.is_active.is_(True),
-        )
-        .distinct()
-    )
-    for category_id, product_name in product_rows:
+    for product, _sku in ready_rows:
+        category_id = product.category_id
+        product_name = product.name
+        if category_id not in visible_ids:
+            continue
         cleaned_name = product_name.strip() if product_name else ""
         if cleaned_name:
             product_names[category_id].add(cleaned_name)
 
     standard_lengths: dict[UUID, set[int]] = defaultdict(set)
     steel_grades: dict[UUID, set[str]] = defaultdict(set)
-    sku_rows = await session.execute(
-        select(Product.category_id, SKU.length_mm, SKU.steel_grade, SKU.attributes)
-        .join(SKU, SKU.product_id == Product.id)
-        .where(
-            Product.is_active.is_(True),
-            Product.category_id.in_(visible_ids),
-            SKU.is_active.is_(True),
-        )
-    )
-    for category_id, length_mm, steel_grade, attributes in sku_rows:
+    for product, sku in ready_rows:
+        category_id = product.category_id
+        if category_id not in visible_ids:
+            continue
+        length_mm = sku.length_mm
+        steel_grade = sku.steel_grade
+        attributes = sku.attributes
         if length_mm is not None:
             standard_lengths[category_id].add(length_mm)
         for grade in (steel_grade, outer_pipe_attributes(attributes).get("outer_steel_grade")):

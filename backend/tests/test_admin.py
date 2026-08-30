@@ -207,6 +207,33 @@ async def test_variant_filters_keep_only_real_inner_outer_pipe_combinations() ->
             "сэндвич",
         ),
     ]
+    rows = [
+        (
+            SimpleNamespace(
+                is_active=True,
+                short_description="Описание",
+                description=None,
+                extra_attributes={
+                    "media": [{"role": "general", "url": "/media/product.webp"}]
+                },
+            ),
+            SimpleNamespace(
+                product_id=row[0],
+                diameter_mm=row[1],
+                outer_diameter_mm=row[2],
+                steel_grade=row[3],
+                material=row[4],
+                attributes=row[5],
+                length_mm=row[6],
+                wall_thickness_mm=row[7],
+                angle_deg=row[8],
+                insulation_mm=row[9],
+                contour=row[10],
+                is_active=True,
+            ),
+        )
+        for row in rows
+    ]
     query_result = SimpleNamespace(all=lambda: rows)
     session = SimpleNamespace(execute=AsyncMock(return_value=query_result))
 

@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from app.modules.catalog.models import Category
 from app.modules.products.models import Product, SKU
+from app.modules.products.publication import public_sku_ready
 from app.db.price_section_attributes import outer_pipe_attributes
 from app.db.steel_selection_profiles import steel_selection_label
 
@@ -361,7 +362,8 @@ async def list_compatible_product_skus(
         return [
             (sku, product)
             for sku, product in result.all()
-            if any(
+            if public_sku_ready(product, sku)
+            and any(
                 compatible_product_matches(
                     source_sku,
                     product,
@@ -395,7 +397,11 @@ async def list_compatible_product_skus(
     return [
         (sku, product)
         for sku, product in result.all()
-        if any(compatible_product_matches(source_sku, product, sku) for source_sku in active_source_skus)
+        if public_sku_ready(product, sku)
+        and any(
+            compatible_product_matches(source_sku, product, sku)
+            for source_sku in active_source_skus
+        )
     ]
 
 
@@ -435,6 +441,7 @@ async def list_products(
     angle_deg: int | None = None,
     insulation_mm: int | None = None,
     contour: str | None = None,
+    base_size: str | None = None,
 ) -> tuple[list[Product], int]:
     kind_order = case(
         (Product.product_kind == "труба", 10),
@@ -489,10 +496,11 @@ async def list_products(
         sku_filters.append(SKU.insulation_mm == insulation_mm)
     if contour:
         sku_filters.append(func.lower(func.trim(SKU.contour)) == contour.casefold().strip())
+    if base_size:
+        sku_filters.append(SKU.attributes["base_size"].as_string() == base_size)
     if len(sku_filters) > 2:
         filters.append(exists(select(SKU.id).where(*sku_filters)))
 
-    total = await session.scalar(select(func.count(Product.id)).where(*filters))
     result = await session.execute(
         select(Product)
         .where(*filters)
@@ -502,20 +510,29 @@ async def list_products(
             Product.diameter_mm.asc(),
             Product.name.asc(),
         )
-        .limit(limit)
-        .offset(offset)
     )
-    return list(result.scalars()), int(total or 0)
+    products = [
+        product
+        for product in result.scalars()
+        if any(public_sku_ready(product, sku) for sku in product.skus)
+    ]
+    return products[offset : offset + limit], len(products)
 
 
 async def list_product_kind_filters(session: AsyncSession) -> list[tuple[str, int]]:
     result = await session.execute(
-        select(Product.product_kind, func.count(Product.id))
+        select(Product)
         .where(Product.is_active.is_(True), Product.product_kind.is_not(None))
-        .group_by(Product.product_kind)
-        .order_by(func.count(Product.id).desc(), Product.product_kind.asc())
+        .options(selectinload(Product.skus))
     )
-    return [(str(kind), int(count)) for kind, count in result.all() if kind]
+    counts: dict[str, int] = {}
+    for product in result.scalars():
+        if not any(public_sku_ready(product, sku) for sku in product.skus):
+            continue
+        kind = product.product_kind
+        if kind:
+            counts[kind] = counts.get(kind, 0) + 1
+    return sorted(counts.items(), key=lambda item: (-item[1], item[0]))
 
 
 async def list_product_seo_pages(
@@ -523,16 +540,17 @@ async def list_product_seo_pages(
 ) -> list[tuple[str, int | None, int | None]]:
     """Return one indexable page key per active product-family diameter."""
     result = await session.execute(
-        select(Product.slug, SKU.diameter_mm, SKU.outer_diameter_mm)
+        select(Product, SKU)
         .join(SKU, SKU.product_id == Product.id)
         .where(Product.is_active.is_(True), SKU.is_active.is_(True))
-        .distinct()
         .order_by(Product.slug, SKU.diameter_mm, SKU.outer_diameter_mm)
     )
-    return [
-        (str(slug), diameter_mm, outer_diameter_mm)
-        for slug, diameter_mm, outer_diameter_mm in result.all()
-    ]
+    pages = {
+        (product.slug, sku.diameter_mm, sku.outer_diameter_mm)
+        for product, sku in result.all()
+        if public_sku_ready(product, sku)
+    }
+    return sorted(pages, key=lambda item: (item[0], item[1] or 0, item[2] or 0))
 
 
 async def list_variant_filter_options(
@@ -544,19 +562,7 @@ async def list_variant_filter_options(
     if category_slug:
         filters.append(Category.slug == category_slug)
     result = await session.execute(
-        select(
-            SKU.product_id,
-            SKU.diameter_mm,
-            SKU.outer_diameter_mm,
-            SKU.steel_grade,
-            SKU.material,
-            SKU.attributes,
-            SKU.length_mm,
-            SKU.wall_thickness_mm,
-            SKU.angle_deg,
-            SKU.insulation_mm,
-            SKU.contour,
-        )
+        select(Product, SKU)
         .join(Product, SKU.product_id == Product.id)
         .join(Category, Product.category_id == Category.id)
         .where(*filters)
@@ -585,19 +591,20 @@ async def list_variant_filter_options(
     def decimal_option_label(value: str) -> str:
         return value.replace(".", ",")
 
-    for (
-        product_id,
-        diameter,
-        outer_diameter,
-        steel,
-        raw_material,
-        attributes,
-        length,
-        thickness,
-        angle,
-        insulation,
-        contour,
-    ) in result.all():
+    for product, sku in result.all():
+        if not public_sku_ready(product, sku):
+            continue
+        product_id = sku.product_id
+        diameter = sku.diameter_mm
+        outer_diameter = sku.outer_diameter_mm
+        steel = sku.steel_grade
+        raw_material = sku.material
+        attributes = sku.attributes
+        length = sku.length_mm
+        thickness = sku.wall_thickness_mm
+        angle = sku.angle_deg
+        insulation = sku.insulation_mm
+        contour = sku.contour
         diameter_value = ""
         if diameter is not None or outer_diameter is not None:
             diameter_value = f"{diameter or ''}:{outer_diameter or ''}"
@@ -803,7 +810,10 @@ async def get_product_by_slug(session: AsyncSession, slug: str) -> Product | Non
         )
         .options(joinedload(Product.category), selectinload(Product.skus))
     )
-    return result.scalar_one_or_none()
+    product = result.scalar_one_or_none()
+    if product is None or not any(public_sku_ready(product, sku) for sku in product.skus):
+        return None
+    return product
 
 
 async def get_product_sku_by_key(
@@ -811,6 +821,7 @@ async def get_product_sku_by_key(
     *,
     product_slug: str,
     sku_key: str,
+    public_only: bool = False,
 ) -> tuple[Product, SKU] | None:
     """Load one active SKU directly, without hydrating the whole product family."""
     identifiers = [SKU.slug == sku_key, SKU.article == sku_key]
@@ -830,4 +841,8 @@ async def get_product_sku_by_key(
         )
         .limit(1)
     )
-    return result.one_or_none()
+    product_sku = result.one_or_none()
+    if product_sku is None:
+        return None
+    product, sku = product_sku
+    return product_sku if not public_only or public_sku_ready(product, sku) else None
