@@ -1,4 +1,6 @@
 from pathlib import Path
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 from app.modules.leads.email import send_lead_email
 
@@ -53,6 +55,10 @@ def test_sends_lead_with_attachment(tmp_path: Path, monkeypatch) -> None:
     manager_url = "https://dimohod-trade.pro/admin/estimates/lead-1#token=secret"
     assert send_lead_email(record, attachment, manager_url) is True
     assert FakeSMTP.message["To"] == "office@dimohod-trade.pro"
+    sent_at = parsedate_to_datetime(FakeSMTP.message["Date"])
+    assert sent_at.year >= 2026
+    assert abs((datetime.now(timezone.utc) - sent_at.astimezone(timezone.utc)).total_seconds()) < 60
+    assert FakeSMTP.message["Message-ID"].endswith("@dimohod-trade.pro>")
     body = FakeSMTP.message.get_body().get_content()
     assert "Иван" in body
     assert manager_url in body

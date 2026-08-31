@@ -2,6 +2,7 @@ import mimetypes
 import re
 import smtplib
 from email.message import EmailMessage
+from email.utils import formatdate, make_msgid, parseaddr
 from html import escape
 from pathlib import Path
 from typing import Any
@@ -192,6 +193,12 @@ def attach_file(message: EmailMessage, attachment_path: Path | None, filename: s
 
 
 def deliver_message(message: EmailMessage) -> None:
+    if "Date" not in message:
+        message["Date"] = formatdate(localtime=True)
+    if "Message-ID" not in message:
+        sender_address = parseaddr(str(message.get("From", "")))[1]
+        sender_domain = sender_address.rpartition("@")[2] or None
+        message["Message-ID"] = make_msgid(domain=sender_domain)
     smtp_class = smtplib.SMTP_SSL if settings.smtp_use_ssl else smtplib.SMTP
     with smtp_class(settings.smtp_host, settings.smtp_port, timeout=20) as smtp:
         if settings.smtp_use_tls and not settings.smtp_use_ssl:
