@@ -32,6 +32,7 @@ import { LeadForm } from "@/components/LeadForm";
 import { YandexRatingBadge } from "@/components/YandexRatingBadge";
 import type { CompatibleProduct, Product } from "@/lib/api";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
+import { productFaqItems } from "@/lib/productFaq";
 import { productPublicPath, productSelectionPath } from "@/lib/productUrls";
 import {
   steelSelectionBadges,
@@ -622,21 +623,6 @@ function buildVariantDimensions(skus: Product["skus"]): VariantDimension[] {
   });
 }
 
-const faqItems = [
-  {
-    q: "Как выбрать нужный вариант?",
-    a: "Сверьте диаметр, контур, материал, толщину стали и размеры выбранного SKU. Если товар входит в общую трассу, безопаснее проверить весь комплект, а не одну деталь отдельно.",
-  },
-  {
-    q: "Совпадения диаметра достаточно для совместимости?",
-    a: "Нет. Карточка показывает подтверждённые правила совместимости, если они есть в каталоге. Перед заказом специалист проверяет соединение с соседними элементами и исходные данные трассы.",
-  },
-  {
-    q: "Можно рассчитать комплект с этим товаром?",
-    a: "Да. Перейдите к замерам, укажите отопитель и маршрут. Конфигуратор соберёт предварительный состав, который затем можно передать специалисту на проверку.",
-  },
-];
-
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const publicApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -996,6 +982,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   );
   const compatibilityRequests = useRef(new Map<string, Promise<CompatibleProduct[]>>());
   const activeSku = product.skus.find((sku) => sku.id === selectedSkuId) ?? product.skus[0] ?? null;
+  const faqItems = useMemo(() => productFaqItems(product, activeSku), [activeSku, product]);
   const skuH1 = skuSeoText(activeSku, "h1") ?? product.name;
   const skuShortDescription = skuSeoText(activeSku, "short_description") ?? product.short_description;
   const skuDescription = skuSeoText(activeSku, "description") ?? product.description;

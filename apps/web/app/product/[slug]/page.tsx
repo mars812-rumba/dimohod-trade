@@ -10,6 +10,7 @@ import {
   productSelectionPath,
 } from "@/lib/productUrls";
 import { ensureDiameterInTitle } from "@/lib/productMetadata";
+import { productFaqItems } from "@/lib/productFaq";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -228,6 +229,7 @@ function productJsonLd(product: Product, sku: SKU | null) {
         isVariantOf: { "@id": `${familyUrl}#group` },
       }
     : undefined;
+  const faq = productFaqItems(product, sku);
 
   return {
     "@context": "https://schema.org",
@@ -256,6 +258,17 @@ function productJsonLd(product: Product, sku: SKU | null) {
           },
           { "@type": "ListItem", position: 4, name: product.name, item: canonicalUrl },
         ],
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: faq.map((item) => ({
+          "@type": "Question",
+          name: item.q,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: item.a,
+          },
+        })),
       },
     ],
   };
