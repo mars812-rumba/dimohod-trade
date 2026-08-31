@@ -7,6 +7,7 @@
 
 .topbar,
 .header,
+.documentBar,
 .summaryGrid,
 .bomSection,
 .warningPanel,
@@ -42,6 +43,46 @@
   color: #fff;
   background: #173d4c;
   border-radius: 18px 18px 0 0;
+}
+
+.documentBar {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px clamp(24px, 4vw, 40px);
+  background: #f8faf9;
+  border-bottom: 1px solid #cdd6d7;
+}
+
+.documentBar > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.documentBar strong {
+  color: #173d4c;
+  font-size: 13px;
+}
+
+.documentBar span {
+  color: #69787d;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.documentActions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.spinner {
+  animation: document-spin .8s linear infinite;
+}
+
+@keyframes document-spin {
+  to { transform: rotate(360deg); }
 }
 
 .eyebrow,
@@ -222,7 +263,8 @@
   cursor: pointer;
 }
 
-.primaryButton:disabled { cursor: not-allowed; opacity: .5; }
+.primaryButton:disabled,
+.secondaryButton:disabled { cursor: not-allowed; opacity: .5; }
 
 .secondaryButton:focus-visible,
 .catalogSearch button:focus-visible,
@@ -718,6 +760,9 @@
 @media (max-width: 760px) {
   .shell { padding: 16px 12px 36px; }
   .header { align-items: stretch; flex-direction: column; border-radius: 14px 14px 0 0; }
+  .documentBar { align-items: stretch; flex-direction: column; gap: 12px; }
+  .documentActions { flex-direction: column; }
+  .documentActions button { width: 100%; }
   .total { padding: 18px 0 0; border-top: 1px solid rgba(255, 255, 255, .2); border-left: 0; }
   .summaryGrid { grid-template-columns: 1fr; }
   .measurements { grid-template-columns: 1fr; }

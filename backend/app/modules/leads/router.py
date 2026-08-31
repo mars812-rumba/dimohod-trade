@@ -21,6 +21,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.responses import FileResponse
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,6 +46,7 @@ from app.modules.products.router import primary_product_image, primary_visual_sk
 router = APIRouter()
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
+MAX_MANAGER_PDF_SIZE = 12 * 1024 * 1024
 CURRENT_CONSENT_VERSION = "2026-08-11"
 ALLOWED_CONTENT_TYPES = {
     "application/pdf",
@@ -168,6 +170,39 @@ def write_estimate_record(lead_dir: Path, estimate: dict[str, object]) -> None:
     temporary_path.replace(estimate_path)
 
 
+def write_lead_record(lead_dir: Path, record: dict[str, object]) -> None:
+    temporary_path = lead_dir / "lead.json.tmp"
+    temporary_path.write_text(
+        json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    temporary_path.replace(lead_dir / "lead.json")
+
+
+def save_estimate_snapshot(
+    lead_dir: Path,
+    lead_record: dict[str, object],
+    estimate: dict[str, object],
+) -> dict[str, object]:
+    revision = int(estimate.get("revision", 1))
+    saved_at = datetime.now(UTC).isoformat()
+    revisions_dir = lead_dir / "estimate-revisions"
+    revisions_dir.mkdir(exist_ok=True)
+    filename = f"revision-{revision}.json"
+    temporary_path = revisions_dir / f"{filename}.tmp"
+    temporary_path.write_text(
+        json.dumps(estimate, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    temporary_path.replace(revisions_dir / filename)
+    metadata = {
+        "revision": revision,
+        "saved_at": saved_at,
+        "filename": f"estimate-revisions/{filename}",
+    }
+    lead_record["manager_save"] = metadata
+    write_lead_record(lead_dir, lead_record)
+    return metadata
+
+
 def save_manager_estimate(
     lead_dir: Path, lead_record: dict[str, object], estimate: dict[str, object]
 ) -> None:
@@ -282,6 +317,90 @@ async def read_manager_lead(
 
     response.headers["Cache-Control"] = "no-store"
     return estimate
+
+
+@router.post("/{lead_id}/manager/save")
+async def save_manager_lead_snapshot(
+    lead_id: str,
+    payload: ManagerRevision,
+    response: Response,
+    manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
+    admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
+) -> dict[str, object]:
+    lead_dir, record = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
+    estimate = read_estimate_record(lead_dir, record)
+    check_revision(estimate, payload.revision)
+    metadata = save_estimate_snapshot(lead_dir, record, estimate)
+    response.headers["Cache-Control"] = "no-store"
+    return metadata
+
+
+@router.post("/{lead_id}/manager/pdf", status_code=status.HTTP_201_CREATED)
+async def save_manager_lead_pdf(
+    lead_id: str,
+    revision: int = Form(..., ge=1),
+    pdf_file: UploadFile = File(...),
+    manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
+    admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
+) -> dict[str, object]:
+    lead_dir, record = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
+    estimate = read_estimate_record(lead_dir, record)
+    check_revision(estimate, revision)
+    if pdf_file.content_type != "application/pdf":
+        raise HTTPException(status_code=415, detail="Ожидается PDF-файл")
+    content = await pdf_file.read(MAX_MANAGER_PDF_SIZE + 1)
+    if len(content) > MAX_MANAGER_PDF_SIZE:
+        raise HTTPException(status_code=413, detail="PDF должен быть не больше 12 МБ")
+    if not content.startswith(b"%PDF-"):
+        raise HTTPException(status_code=422, detail="Файл не является корректным PDF")
+
+    save_estimate_snapshot(lead_dir, record, estimate)
+    versioned_filename = f"estimate-r{revision}.pdf"
+    versioned_temporary = lead_dir / f"{versioned_filename}.tmp"
+    versioned_temporary.write_bytes(content)
+    versioned_path = lead_dir / versioned_filename
+    versioned_temporary.replace(versioned_path)
+    latest_temporary = lead_dir / "manager-estimate.pdf.tmp"
+    shutil.copyfile(versioned_path, latest_temporary)
+    latest_temporary.replace(lead_dir / "manager-estimate.pdf")
+
+    generated_at = datetime.now(UTC).isoformat()
+    metadata = {
+        "revision": revision,
+        "generated_at": generated_at,
+        "filename": versioned_filename,
+        "download_url": f"/api/v1/leads/{lead_id}/manager/pdf",
+    }
+    record["manager_pdf"] = metadata
+    write_lead_record(lead_dir, record)
+    return metadata
+
+
+@router.get("/{lead_id}/manager/pdf", response_class=FileResponse)
+async def download_manager_lead_pdf(
+    lead_id: str,
+    manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
+    admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
+) -> FileResponse:
+    lead_dir, _ = authorized_manager_lead(
+        lead_id, manager_token, admin_token, admin_session
+    )
+    pdf_path = lead_dir / "manager-estimate.pdf"
+    if not pdf_path.is_file():
+        raise HTTPException(status_code=404, detail="PDF для этой сметы ещё не сформирован")
+    return FileResponse(
+        pdf_path,
+        media_type="application/pdf",
+        filename=f"smeta-{lead_id[:8].upper()}.pdf",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @router.post("/{lead_id}/manager/catalog/metadata")

@@ -41,6 +41,15 @@ test("manager card exposes accessible CRUD controls and catalog search", () => {
   assert.match(componentSource, /\/restore/);
 });
 
+test("manager can save a revision and generate its protected PDF", () => {
+  assert.match(componentSource, /\/manager\/save/);
+  assert.match(componentSource, /\/manager\/pdf/);
+  assert.match(componentSource, /createChimneyEstimatePdfBlob/);
+  assert.match(componentSource, /Сохранить смету/);
+  assert.match(componentSource, /Сформировать PDF/);
+  assert.match(componentSource, /pdf_file/);
+});
+
 test("catalog BOM editing is constrained to exact catalog variants", () => {
   assert.match(componentSource, /manager\/catalog\/metadata/);
   assert.match(componentSource, /categorySlug/);

@@ -271,6 +271,33 @@ def test_saves_structured_estimate_with_customer_and_sku_links(tmp_path, monkeyp
     assert added.json()["estimate"]["known_subtotal_rub"] == 8700
     assert added.json()["estimate"]["lines"][-1]["match_status"] == "manual"
 
+    revision = added.json()["revision"]
+    snapshot = client.post(
+        f"/api/v1/leads/{lead['id']}/manager/save",
+        headers={"X-Lead-Manager-Token": token},
+        json={"revision": revision},
+    )
+    assert snapshot.status_code == 200
+    assert snapshot.json()["revision"] == revision
+    assert (lead_dir / "estimate-revisions" / f"revision-{revision}.json").is_file()
+
+    pdf_content = b"%PDF-1.7\nmanager estimate\n%%EOF"
+    generated_pdf = client.post(
+        f"/api/v1/leads/{lead['id']}/manager/pdf",
+        headers={"X-Lead-Manager-Token": token},
+        data={"revision": str(revision)},
+        files={"pdf_file": ("estimate.pdf", pdf_content, "application/pdf")},
+    )
+    assert generated_pdf.status_code == 201
+    assert generated_pdf.json()["revision"] == revision
+    assert (lead_dir / "manager-estimate.pdf").read_bytes() == pdf_content
+    downloaded_pdf = client.get(
+        f"/api/v1/leads/{lead['id']}/manager/pdf",
+        headers={"X-Lead-Manager-Token": token},
+    )
+    assert downloaded_pdf.status_code == 200
+    assert downloaded_pdf.content == pdf_content
+
 
 def test_rejects_invalid_structured_estimate_before_creating_lead(tmp_path, monkeypatch):
     monkeypatch.setattr("app.modules.leads.router.settings.media_storage_dir", str(tmp_path))

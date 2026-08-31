@@ -25,10 +25,17 @@ export type ChimneyEstimateLine = {
   lineTotalRub: number | null;
   characteristics: string[];
   note: string;
-  matchStatus: "exact" | "candidate" | "nearest" | "missing";
+  matchStatus: "exact" | "candidate" | "nearest" | "missing" | "manual";
 };
 
 export type ChimneyEstimate = {
+  reference?: string;
+  revision?: number;
+  customer?: {
+    name: string;
+    contactMethod: "phone" | "whatsapp" | "telegram" | "email";
+    contact: string;
+  };
   profileName: string;
   generatedAt: Date;
   measurements: EstimateMeasurement[];

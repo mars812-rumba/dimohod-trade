@@ -7,6 +7,7 @@ const MATCH_LABELS = {
   candidate: "кандидат по типу — проверить",
   nearest: "ближайшая длина — проверить",
   missing: "SKU не найден — уточнить",
+  manual: "ручная позиция менеджера",
 } as const;
 
 function filenameDate(date: Date): string {
@@ -51,12 +52,32 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
     { text: "Предварительная смета дымохода", style: "title" },
     {
       columns: [
-        { text: `Объект: ${estimate.profileName}`, width: "*" },
+        {
+          text: [
+            `Объект: ${estimate.profileName}`,
+            estimate.reference ? `\n${estimate.reference}${estimate.revision ? ` · редакция ${estimate.revision}` : ""}` : "",
+          ],
+          width: "*",
+        },
         { text: `Сформировано: ${pdfDate(estimate.generatedAt)}`, width: "auto", alignment: "right", color: "#607075" },
       ],
       margin: [0, 0, 0, 16],
       fontSize: 9,
     },
+    ...(estimate.customer ? [
+      { text: "Клиент", style: "section" } as Content,
+      {
+        table: {
+          widths: ["42%", "58%"],
+          body: [
+            [{ text: "Имя", color: "#607075" }, { text: estimate.customer.name, bold: true }],
+            [{ text: "Контакт", color: "#607075" }, { text: estimate.customer.contact, bold: true }],
+          ],
+        },
+        layout: "lightHorizontalLines",
+        margin: [0, 0, 0, 16],
+      } as Content,
+    ] : []),
     { text: "Размеры и параметры клиента", style: "section" },
     {
       table: {
@@ -151,5 +172,6 @@ export async function createChimneyEstimatePdfBlob(estimate: ChimneyEstimate): P
 
 export async function downloadChimneyEstimatePdf(estimate: ChimneyEstimate): Promise<void> {
   const pdf = await createChimneyEstimatePdf(estimate);
-  pdf.download(`smeta-dymohoda-${filenameDate(estimate.generatedAt)}.pdf`);
+  const reference = estimate.reference?.toLocaleLowerCase("ru-RU") ?? "dymohoda";
+  pdf.download(`smeta-${reference}-${filenameDate(estimate.generatedAt)}.pdf`);
 }
