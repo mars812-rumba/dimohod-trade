@@ -1,0 +1,356 @@
+.showcase {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.34fr) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #ccd5d7;
+  background: #fff;
+}
+
+.objectList {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #ccd5d7;
+  background: #eef2f2;
+}
+
+.objectButton {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 18px;
+  gap: 14px;
+  align-items: center;
+  min-height: 96px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #ccd5d7;
+  color: #173d4c;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.objectButton:last-child {
+  border-bottom: 0;
+}
+
+.objectButton:hover {
+  background: #fff;
+}
+
+.objectButton[aria-pressed="true"] {
+  color: #fff;
+  background: #173d4c;
+}
+
+.objectButton:focus-visible,
+.stage:focus-visible,
+.photoButton:focus-visible,
+.closeButton:focus-visible,
+.dialogArrow:focus-visible {
+  z-index: 2;
+  outline: 3px solid rgba(237, 91, 42, 0.72);
+  outline-offset: -3px;
+}
+
+.objectThumb {
+  position: relative;
+  display: block;
+  width: 72px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #dce4e5;
+}
+
+.objectThumb img,
+.stage img,
+.photoButton img {
+  object-fit: cover;
+}
+
+.objectMeta {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.objectMeta strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.objectMeta small {
+  color: #65777d;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.objectButton[aria-pressed="true"] small {
+  color: #b9cbd1;
+}
+
+.viewer {
+  min-width: 0;
+  background: #102127;
+}
+
+.stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 520px;
+  overflow: hidden;
+  background: #102127;
+  cursor: zoom-in;
+}
+
+.stage img {
+  transition: transform 180ms ease;
+}
+
+.stage:hover img {
+  transform: scale(1.018);
+}
+
+.stageShade {
+  position: absolute;
+  inset: 45% 0 0;
+  background: linear-gradient(180deg, transparent, rgba(8, 22, 27, 0.82));
+}
+
+.stageCaption {
+  position: absolute;
+  right: 24px;
+  bottom: 22px;
+  left: 24px;
+  display: flex;
+  gap: 24px;
+  align-items: flex-end;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.stageCaption > span:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.stageCaption strong {
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.stageCaption small {
+  color: #c0d0d5;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.openLabel {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  background: rgba(16, 33, 39, 0.68);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.photoStrip {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 10px;
+  background: #102127;
+  scrollbar-color: #5f747c transparent;
+  scrollbar-width: thin;
+}
+
+.photoButton {
+  position: relative;
+  flex: 0 0 88px;
+  height: 66px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  opacity: 0.62;
+  background: #29434d;
+  cursor: pointer;
+  transition: opacity 160ms ease, border-color 160ms ease;
+}
+
+.photoButton:hover,
+.photoButton[aria-pressed="true"] {
+  opacity: 1;
+}
+
+.photoButton[aria-pressed="true"] {
+  border-color: #ed5b2a;
+}
+
+.dialog {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  color: #fff;
+  background: #0b171b;
+}
+
+.dialog::backdrop {
+  background: rgba(7, 16, 19, 0.94);
+}
+
+.dialogInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+
+.fullImage {
+  position: absolute;
+  inset: 58px 72px 54px;
+}
+
+.fullImage img {
+  object-fit: contain;
+}
+
+.closeButton,
+.dialogArrow {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(11, 23, 27, 0.78);
+  cursor: pointer;
+}
+
+.closeButton {
+  top: max(18px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+}
+
+.dialogArrow {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dialogArrowPrevious {
+  left: max(18px, env(safe-area-inset-left));
+}
+
+.dialogArrowNext {
+  right: max(18px, env(safe-area-inset-right));
+}
+
+.dialogCounter {
+  position: absolute;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  padding: 7px 10px;
+  background: rgba(11, 23, 27, 0.78);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .showcase {
+    grid-template-columns: 1fr;
+  }
+
+  .objectList {
+    overflow-x: auto;
+    flex-direction: row;
+    border-right: 0;
+    border-bottom: 1px solid #ccd5d7;
+    scrollbar-color: #9babad transparent;
+    scrollbar-width: thin;
+  }
+
+  .objectButton {
+    flex: 0 0 190px;
+    grid-template-columns: 58px minmax(0, 1fr);
+    min-height: 82px;
+    border-right: 1px solid #ccd5d7;
+    border-bottom: 0;
+  }
+
+  .objectButton > svg {
+    display: none;
+  }
+
+  .objectThumb {
+    width: 58px;
+  }
+
+  .stage {
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 620px) {
+  .stage {
+    min-height: 480px;
+  }
+
+  .stageCaption {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+  }
+
+  .stageCaption strong {
+    font-size: 19px;
+  }
+
+  .openLabel {
+    min-height: 38px;
+    padding-inline: 10px;
+  }
+
+  .photoButton {
+    flex-basis: 74px;
+    height: 58px;
+  }
+
+  .fullImage {
+    inset: 64px 12px 68px;
+  }
+
+  .dialogArrow {
+    top: auto;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    width: 42px;
+    height: 42px;
+    transform: none;
+  }
+
+  .dialogArrowPrevious {
+    left: max(14px, env(safe-area-inset-left));
+  }
+
+  .dialogArrowNext {
+    right: max(14px, env(safe-area-inset-right));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .objectButton,
+  .stage img,
+  .photoButton {
+    transition: none;
+  }
+}

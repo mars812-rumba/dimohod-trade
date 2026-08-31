@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { CompatibleProductsCarousel } from "../components/CompatibleProductsCarousel";
 import { HomeHeroCarousel } from "../components/HomeHeroCarousel";
+import { HomeWorksShowcase } from "../components/HomeWorksShowcase";
 import { LeadForm } from "../components/LeadForm";
 import { PhoneMockup3D } from "../components/PhoneMockup3D";
 import { ProductGalleryPreview } from "../components/ProductGalleryPreview";
@@ -831,6 +832,21 @@ export default async function HomePage() {
             <article><Wrench size={24} /><strong>Инженерная проверка</strong><span>Собранный в конфигураторе комплект не становится заказом, пока специалист не проверит исходные данные.</span></article>
           </div>
           <div className={styles.companyLine}><MapPin size={16} /><span>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2</span><FileCheck2 size={16} /><span>ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span></div>
+        </div>
+      </section>
+
+      <section className={styles.worksSection} aria-labelledby="works-title">
+        <div className={styles.shell}>
+          <div className={styles.sectionHeading}>
+            <div>
+              <h2 id="works-title">Дымоходы на реальных объектах.</h2>
+            </div>
+            <p>
+              Пять фотосерий показывают подключение внутри помещений, проходы через
+              конструкции и завершение дымохода над кровлей.
+            </p>
+          </div>
+          <HomeWorksShowcase />
         </div>
       </section>
 

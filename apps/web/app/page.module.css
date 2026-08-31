@@ -1746,6 +1746,7 @@
 }
 
 .trustSection,
+.worksSection,
 .reviewsSection,
 .documentsSection,
 .faqSection {
@@ -1754,6 +1755,12 @@
 
 .trustSection {
   background: #eef2f2;
+}
+
+.worksSection {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
 }
 
 .trustGrid {
@@ -3008,6 +3015,7 @@
   }
 
   .trustSection,
+  .worksSection,
   .reviewsSection,
   .documentsSection,
   .faqSection { padding: 68px 0; }
