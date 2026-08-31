@@ -5,6 +5,11 @@ from urllib.parse import parse_qs, urlparse
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.catalog_cache import (
+    catalog_cache_field,
+    get_catalog_cache,
+    set_catalog_cache,
+)
 from app.core.config import settings
 from app.db.price_section_attributes import outer_pipe_attributes
 from app.db.session import get_db
@@ -23,7 +28,7 @@ from app.modules.products.content import (
 )
 from app.modules.products.display_attributes import public_sku_display_attributes
 from app.modules.products.models import SKU, Product
-from app.modules.products.publication import public_sku_ready
+from app.modules.products.publication import prepare_publication_policy
 from app.modules.products.schemas import (
     CompatibleProductItem,
     ProductFilterOption,
@@ -371,10 +376,12 @@ def select_active_sku(
     outer_diameter_mm: int | None = None,
     public_only: bool = False,
 ) -> SKU | None:
+    publication_policy = prepare_publication_policy(product) if public_only else None
     active_skus = [
         sku
         for sku in product.skus
-        if sku.is_active and (not public_only or public_sku_ready(product, sku))
+        if sku.is_active
+        and (publication_policy is None or publication_policy.sku_ready(sku))
     ]
     if sku_key:
         selected = next(
@@ -479,6 +486,7 @@ async def compatible_items_for_sku(
 
 @router.get("", response_model=ProductListResponse)
 async def read_products(
+    response: Response,
     limit: int = Query(default=48, ge=1, le=96),
     offset: int = Query(default=0, ge=0),
     product_kind: str | None = Query(default=None, min_length=1, max_length=64),
@@ -503,6 +511,36 @@ async def read_products(
     preferred_outer_material: str | None = Query(default=None, min_length=1, max_length=32),
     session: AsyncSession = Depends(get_db),
 ) -> ProductListResponse:
+    cache_field = catalog_cache_field(
+        "products",
+        limit=limit,
+        offset=offset,
+        product_kind=product_kind,
+        category=category,
+        q=q,
+        diameter=diameter,
+        steel_grade=steel_grade,
+        material=material,
+        outer_steel_grade=outer_steel_grade,
+        outer_material=outer_material,
+        length_mm=length_mm,
+        wall_thickness_mm=wall_thickness_mm,
+        outer_wall_thickness_mm=outer_wall_thickness_mm,
+        angle_deg=angle_deg,
+        insulation_mm=insulation_mm,
+        contour=contour,
+        base_size=base_size,
+        preferred_diameter=preferred_diameter,
+        preferred_steel_grade=preferred_steel_grade,
+        preferred_material=preferred_material,
+        preferred_outer_steel_grade=preferred_outer_steel_grade,
+        preferred_outer_material=preferred_outer_material,
+    )
+    cached = await get_catalog_cache(cache_field)
+    if isinstance(cached, dict):
+        response.headers["X-Catalog-Cache"] = "HIT"
+        return ProductListResponse.model_validate(cached)
+
     diameter_mm, outer_diameter_mm = parse_diameter_filter(diameter)
     preferred_diameter_mm, preferred_outer_diameter_mm = parse_diameter_filter(preferred_diameter)
     products, total = await list_products(
@@ -529,10 +567,11 @@ async def read_products(
     items: list[ProductListItem] = []
 
     for product in products:
+        publication_policy = prepare_publication_policy(product)
         active_skus = [
             sku
             for sku in product.skus
-            if public_sku_ready(product, sku)
+            if publication_policy.sku_ready(sku)
             and sku_matches_filters(
                 sku,
                 diameter_mm=diameter_mm,
@@ -631,17 +670,27 @@ async def read_products(
             )
         )
 
-    return ProductListResponse(items=items, total=total, limit=limit, offset=offset)
+    result = ProductListResponse(items=items, total=total, limit=limit, offset=offset)
+    await set_catalog_cache(cache_field, result.model_dump(mode="json"))
+    response.headers["X-Catalog-Cache"] = "MISS"
+    return result
 
 
 @router.get("/filters", response_model=ProductFiltersResponse)
 async def read_product_filters(
+    response: Response,
     category: str | None = Query(default=None, min_length=1, max_length=180),
     session: AsyncSession = Depends(get_db),
 ) -> ProductFiltersResponse:
+    cache_field = catalog_cache_field("filters", category=category)
+    cached = await get_catalog_cache(cache_field)
+    if isinstance(cached, dict):
+        response.headers["X-Catalog-Cache"] = "HIT"
+        return ProductFiltersResponse.model_validate(cached)
+
     product_kinds = await list_product_kind_filters(session)
     variant_filters = await list_variant_filter_options(session, category_slug=category)
-    return ProductFiltersResponse(
+    result = ProductFiltersResponse(
         product_kinds=[
             ProductKindFilter(
                 value=value,
@@ -719,14 +768,24 @@ async def read_product_filters(
             for value, label, count in variant_filters["contours"]
         ],
     )
+    await set_catalog_cache(cache_field, result.model_dump(mode="json"))
+    response.headers["X-Catalog-Cache"] = "MISS"
+    return result
 
 
 @router.get("/seo-pages", response_model=list[ProductSeoPage])
 async def read_product_seo_pages(
+    response: Response,
     session: AsyncSession = Depends(get_db),
 ) -> list[ProductSeoPage]:
+    cache_field = catalog_cache_field("seo-pages")
+    cached = await get_catalog_cache(cache_field)
+    if isinstance(cached, list):
+        response.headers["X-Catalog-Cache"] = "HIT"
+        return [ProductSeoPage.model_validate(item) for item in cached]
+
     pages = await list_product_seo_pages(session)
-    return [
+    result = [
         ProductSeoPage(
             product_slug=slug,
             diameter_mm=diameter_mm,
@@ -734,6 +793,12 @@ async def read_product_seo_pages(
         )
         for slug, diameter_mm, outer_diameter_mm in pages
     ]
+    await set_catalog_cache(
+        cache_field,
+        [item.model_dump(mode="json") for item in result],
+    )
+    response.headers["X-Catalog-Cache"] = "MISS"
+    return result
 
 
 @router.get("/yandex-feed.yml", response_class=Response)
@@ -775,10 +840,11 @@ async def read_product(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
     product_read = ProductRead.model_validate(product)
     sku_by_id = {sku.id: sku for sku in product.skus}
+    publication_policy = prepare_publication_policy(product)
     product_read.skus = [
         sku_read
         for sku_read in product_read.skus
-        if public_sku_ready(product, sku_by_id[sku_read.id])
+        if publication_policy.sku_ready(sku_by_id[sku_read.id])
     ]
 
     for sku_read in product_read.skus:

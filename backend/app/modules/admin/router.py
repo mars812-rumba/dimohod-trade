@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.catalog_cache import invalidate_catalog_cache
 from app.db.session import get_db
 from app.modules.admin.schemas import (
     AdminCategoryRead,
@@ -29,18 +30,23 @@ from app.modules.admin.service import (
     delete_category_cover,
     delete_product_photo,
     delete_sku_photo,
-    get_admin_product,
     generate_product_seo,
+    get_admin_product,
     list_admin_categories,
     list_admin_products,
     list_admin_skus,
     product_to_admin_read,
-    update_sku,
     update_product,
     update_product_photo_scope,
+    update_sku,
 )
 
 router = APIRouter()
+
+
+async def _catalog_changed(result):
+    await invalidate_catalog_cache()
+    return result
 
 
 @router.get("/categories", response_model=list[AdminCategoryRead])
@@ -66,7 +72,7 @@ async def upload_admin_category_cover(
     payload: AdminPhotoUpload,
     session: AsyncSession = Depends(get_db),
 ) -> AdminMediaItem:
-    return await attach_category_cover(session, category_id, payload)
+    return await _catalog_changed(await attach_category_cover(session, category_id, payload))
 
 
 @router.delete("/categories/{category_id}/cover", status_code=204)
@@ -75,6 +81,7 @@ async def delete_admin_category_cover(
     session: AsyncSession = Depends(get_db),
 ) -> Response:
     await delete_category_cover(session, category_id)
+    await invalidate_catalog_cache()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -126,7 +133,7 @@ async def update_admin_product(
     payload: AdminProductUpdate,
     session: AsyncSession = Depends(get_db),
 ) -> AdminProductRead:
-    return await update_product(session, product_id, payload)
+    return await _catalog_changed(await update_product(session, product_id, payload))
 
 
 @router.post("/products/{product_id}/seo/generate", response_model=AdminSEOGenerateResponse)
@@ -149,7 +156,7 @@ async def create_admin_sku(
     payload: AdminSKUCreate,
     session: AsyncSession = Depends(get_db),
 ) -> AdminSKURead:
-    return await create_sku(session, product_id, payload)
+    return await _catalog_changed(await create_sku(session, product_id, payload))
 
 
 @router.patch("/skus/{sku_id}", response_model=AdminSKURead)
@@ -158,12 +165,12 @@ async def update_admin_sku(
     payload: AdminSKUUpdate,
     session: AsyncSession = Depends(get_db),
 ) -> AdminSKURead:
-    return await update_sku(session, sku_id, payload)
+    return await _catalog_changed(await update_sku(session, sku_id, payload))
 
 
 @router.delete("/skus/{sku_id}", response_model=AdminSKURead)
 async def delete_admin_sku(sku_id: UUID, session: AsyncSession = Depends(get_db)) -> AdminSKURead:
-    return await deactivate_sku(session, sku_id)
+    return await _catalog_changed(await deactivate_sku(session, sku_id))
 
 
 @router.post("/skus/{sku_id}/photo", response_model=AdminMediaItem, status_code=201)
@@ -172,7 +179,7 @@ async def upload_admin_sku_photo(
     payload: AdminPhotoUpload,
     session: AsyncSession = Depends(get_db),
 ) -> AdminMediaItem:
-    return await attach_sku_photo(session, sku_id, payload)
+    return await _catalog_changed(await attach_sku_photo(session, sku_id, payload))
 
 
 @router.delete("/skus/{sku_id}/photo", status_code=204)
@@ -182,6 +189,7 @@ async def delete_admin_sku_photo(
     session: AsyncSession = Depends(get_db),
 ) -> Response:
     await delete_sku_photo(session, sku_id, role=role)
+    await invalidate_catalog_cache()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -191,7 +199,7 @@ async def upload_admin_product_photo(
     payload: AdminPhotoUpload,
     session: AsyncSession = Depends(get_db),
 ) -> AdminProductRead:
-    return await attach_product_photo(session, product_id, payload)
+    return await _catalog_changed(await attach_product_photo(session, product_id, payload))
 
 
 @router.post("/products/{product_id}/photos/upload", response_model=AdminProductRead, status_code=201)
@@ -216,14 +224,16 @@ async def upload_admin_product_photo_file(
     content = await file.read()
     alt = form.get("alt")
     role = form.get("role")
-    return await attach_product_photo_content(
-        session,
-        product_id,
-        file_name=file_name,
-        content=content,
-        alt=alt if isinstance(alt, str) else None,
-        role=role if isinstance(role, str) else None,
-        scope="family",
+    return await _catalog_changed(
+        await attach_product_photo_content(
+            session,
+            product_id,
+            file_name=file_name,
+            content=content,
+            alt=alt if isinstance(alt, str) else None,
+            role=role if isinstance(role, str) else None,
+            scope="family",
+        )
     )
 
 
@@ -234,12 +244,14 @@ async def update_admin_product_photo_scope(
     payload: AdminPhotoScopeUpdate,
     session: AsyncSession = Depends(get_db),
 ) -> AdminProductRead:
-    return await update_product_photo_scope(
-        session,
-        product_id,
-        photo_key,
-        diameter_keys=payload.diameter_keys,
-        lengths_mm=payload.lengths_mm,
+    return await _catalog_changed(
+        await update_product_photo_scope(
+            session,
+            product_id,
+            photo_key,
+            diameter_keys=payload.diameter_keys,
+            lengths_mm=payload.lengths_mm,
+        )
     )
 
 
@@ -249,4 +261,4 @@ async def delete_admin_product_photo(
     photo_key: str,
     session: AsyncSession = Depends(get_db),
 ) -> AdminProductRead:
-    return await delete_product_photo(session, product_id, photo_key)
+    return await _catalog_changed(await delete_product_photo(session, product_id, photo_key))
