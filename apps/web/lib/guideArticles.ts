@@ -18,6 +18,7 @@ export type GuideArticle = {
   eyebrow: string;
   image: string;
   imageAlt: string;
+  imageCaption?: string;
   readingTime: string;
   summary: string;
   quickAnswer: string;
@@ -71,8 +72,9 @@ export const guideArticles: GuideArticle[] = [
     description:
       "Какие данные нужны для подбора дымохода банной печи: паспорт, диаметр патрубка, маршрут, перекрытия и кровля. Переход к конфигуратору комплекта.",
     eyebrow: "Сценарий: баня и сауна",
-    image: "/images/guides/dymohod-dlya-bani.webp",
-    imageAlt: "Концептуальная визуализация банной печи с вертикальным модульным дымоходом",
+    image: "/images/works/object-2/05.webp",
+    imageAlt: "Банная печь с вертикальным дымоходом в деревянной парной",
+    imageCaption: "Фотография с реального объекта",
     readingTime: "6 минут",
     summary:
       "В бане недостаточно выбрать трубу только по диаметру. На состав системы влияют конкретная модель печи, положение патрубка, слои перекрытия и кровли, а также весь маршрут от отопителя до оголовка.",

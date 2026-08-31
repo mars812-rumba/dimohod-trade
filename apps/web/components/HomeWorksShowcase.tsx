@@ -20,7 +20,6 @@ const workObjects: WorkObject[] = [
     id: 1,
     photos: [
       { src: "/images/works/object-1/07.webp", alt: "Дымоход на зелёной кровле частного дома" },
-      { src: "/images/works/object-1/01.webp", alt: "Выход дымохода над кровлей" },
       { src: "/images/works/object-1/04.webp", alt: "Подключение металлической печи к дымоходу внутри дома" },
       { src: "/images/works/object-1/02.webp", alt: "Проход дымохода через перекрытие" },
       { src: "/images/works/object-1/03.webp", alt: "Кровельный узел дымохода" },

@@ -62,7 +62,7 @@ export default function GuidesPage() {
                   sizes={index === 0 ? "(max-width: 760px) 100vw, 65vw" : "(max-width: 760px) 100vw, 33vw"}
                   src={`${assetBasePath}${article.image}`}
                 />
-                <span>Концептуальная визуализация</span>
+                <span>{article.imageCaption ?? "Концептуальная визуализация"}</span>
               </Link>
               <div className={styles.cardBody}>
                 <p>{article.eyebrow} · {article.readingTime}</p>

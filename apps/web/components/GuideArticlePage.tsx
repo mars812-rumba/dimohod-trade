@@ -61,7 +61,7 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                 sizes="(max-width: 860px) 100vw, 48vw"
                 src={`${assetBasePath}${article.image}`}
               />
-              <figcaption>Концептуальная визуализация — не монтажная схема</figcaption>
+              <figcaption>{article.imageCaption ?? "Концептуальная визуализация — не монтажная схема"}</figcaption>
             </figure>
           </div>
         </header>
