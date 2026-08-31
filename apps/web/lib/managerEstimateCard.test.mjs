@@ -13,6 +13,10 @@ const pageSource = fs.readFileSync(
   path.join(here, "../app/admin/estimates/[leadId]/page.tsx"),
   "utf8",
 );
+const stylesSource = fs.readFileSync(
+  path.join(here, "../components/ManagerEstimateCard.module.css"),
+  "utf8",
+);
 
 test("manager card exchanges a fragment token through a private header", () => {
   assert.match(componentSource, /location\.hash/);
@@ -68,4 +72,17 @@ test("catalog BOM editing is constrained to exact catalog variants", () => {
 
 test("manager page is excluded from search indexing", () => {
   assert.match(pageSource, /robots: \{ index: false, follow: false \}/);
+});
+
+test("manager estimate stays inside the mobile viewport", () => {
+  assert.match(componentSource, /data-label="Количество"/);
+  assert.match(componentSource, /quantityPrefix}>×</);
+  assert.match(componentSource, /data-label="Цена"/);
+  assert.match(componentSource, /data-label="Сумма"/);
+  assert.match(stylesSource, /overflow-x:\s*clip/);
+  assert.match(stylesSource, /tbody > tr:not\(\.editorRow\)/);
+  assert.match(stylesSource, /\.tableWrap thead \{ display:\s*none; \}/);
+  assert.match(stylesSource, /\.quantityCell\s*\{[\s\S]*?grid-column:\s*3;/);
+  assert.match(stylesSource, /\.quantityField\s*\{[\s\S]*?min-height:\s*36px;/);
+  assert.match(stylesSource, /min-width:\s*0/);
 });
