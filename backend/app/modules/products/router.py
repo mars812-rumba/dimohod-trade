@@ -5,14 +5,25 @@ from urllib.parse import parse_qs, urlparse
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import get_db
+from app.core.config import settings
 from app.db.price_section_attributes import outer_pipe_attributes
+from app.db.session import get_db
 from app.db.steel_selection_profiles import with_steel_selection_profile
 from app.modules.compatibility.service import (
     context_from_product_sku,
     evaluate_rules,
     list_active_rules,
 )
+from app.modules.products.content import (
+    RETIRED_SINGLE_WALL_RULE_CODE,
+    is_single_wall_contour,
+    remove_single_wall_placement_rule,
+    sanitize_seo_knowledge_dict,
+    sanitize_sku_seo_dict,
+)
+from app.modules.products.display_attributes import public_sku_display_attributes
+from app.modules.products.models import SKU, Product
+from app.modules.products.publication import public_sku_ready
 from app.modules.products.schemas import (
     CompatibleProductItem,
     ProductFilterOption,
@@ -25,16 +36,6 @@ from app.modules.products.schemas import (
     ProductSeoPage,
     ProductVariantCombination,
 )
-from app.modules.products.models import Product, SKU
-from app.modules.products.publication import public_sku_ready
-from app.modules.products.content import (
-    RETIRED_SINGLE_WALL_RULE_CODE,
-    is_single_wall_contour,
-    remove_single_wall_placement_rule,
-    sanitize_seo_knowledge_dict,
-    sanitize_sku_seo_dict,
-)
-from app.modules.products.display_attributes import public_sku_display_attributes
 from app.modules.products.service import (
     compatible_product_matches,
     get_product_by_slug,
@@ -48,6 +49,7 @@ from app.modules.products.service import (
     normalized_compatible_product_ids,
     variant_preservation_score,
 )
+from app.modules.products.yandex_feed import build_yandex_feed, load_yandex_feed_products
 
 router = APIRouter()
 
@@ -732,6 +734,17 @@ async def read_product_seo_pages(
         )
         for slug, diameter_mm, outer_diameter_mm in pages
     ]
+
+
+@router.get("/yandex-feed.yml", response_class=Response)
+async def read_yandex_feed(session: AsyncSession = Depends(get_db)) -> Response:
+    products = await load_yandex_feed_products(session)
+    content = build_yandex_feed(products, base_url=settings.yandex_webmaster_host_url)
+    return Response(
+        content=content,
+        media_type="application/xml",
+        headers={"Cache-Control": "public, max-age=900, stale-while-revalidate=3600"},
+    )
 
 
 @router.get("/{slug}", response_model=ProductRead)

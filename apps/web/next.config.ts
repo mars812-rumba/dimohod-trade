@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/yandex-feed.yml",
+        destination: `${apiBaseUrl}/api/v1/products/yandex-feed.yml`,
+      },
+      {
         source: "/api/:path*",
         destination: `${apiBaseUrl}/api/:path*`,
       },
