@@ -53,6 +53,21 @@ function CategoryLinks({
   );
 }
 
+function DesktopCategoryLinks({ categories }: { categories: CategoryNode[] }) {
+  return (
+    <ul className="desktop-nav-categories">
+      {categories.map((category) => (
+        <li key={category.id}>
+          <Link href={`/catalog/${category.slug}`}>{category.name}</Link>
+          {category.children.length ? (
+            <DesktopCategoryLinks categories={category.children} />
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function SiteHeader() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -117,12 +132,48 @@ export function SiteHeader() {
         </div>
 
         <nav className="top-nav" aria-label="Основная навигация">
-          <Link href="/catalog">Каталог</Link>
+          <details className="desktop-nav-menu">
+            <summary>
+              <span>Каталог</span>
+              <ChevronDown aria-hidden size={14} />
+            </summary>
+            <div className="desktop-nav-dropdown desktop-nav-dropdown-catalog">
+              <Link className="desktop-nav-all" href="/catalog">Все категории</Link>
+              {categories.length ? <DesktopCategoryLinks categories={categories} /> : null}
+            </div>
+          </details>
           <Link href="/pechi">Печи</Link>
-          <Link href="/solutions">Решения</Link>
+          <details className="desktop-nav-menu">
+            <summary>
+              <span>Решения</span>
+              <ChevronDown aria-hidden size={14} />
+            </summary>
+            <div className="desktop-nav-dropdown">
+              <Link className="desktop-nav-all" href="/solutions">Все сценарии</Link>
+              <Link href="/solutions/banya">Для бани и сауны</Link>
+              <Link href="/solutions/dom">Для частного дома</Link>
+              <Link href="/solutions/pech">Для отопительной печи</Link>
+              <Link href="/solutions/kamin">Для камина</Link>
+              <Link href="/solutions/tverdotoplivny-kotel">Для твердотопливного котла</Link>
+              <Link href="/solutions/gazovyy-kotel">Для газового котла</Link>
+            </div>
+          </details>
           <Link href="/guides">Статьи</Link>
-          <Link href="/solutions/banya">Для бани</Link>
-          <Link href="/solutions/dom">Для дома</Link>
+          <Link href="/delivery">Доставка</Link>
+          <details className="desktop-nav-menu desktop-nav-menu-end">
+            <summary>
+              <span>Ещё</span>
+              <ChevronDown aria-hidden size={14} />
+            </summary>
+            <div className="desktop-nav-dropdown">
+              <Link href="/configurator">Сохранённые расчёты</Link>
+              <Link href="/#send-materials">Отправить фото или схему</Link>
+              <span className="desktop-nav-label">Документы</span>
+              <Link href={privacyPolicyPath}>Политика персональных данных</Link>
+              <Link href={personalDataConsentPath}>Согласие на обработку данных</Link>
+              <Link href={userAgreementPath}>Пользовательское соглашение</Link>
+            </div>
+          </details>
         </nav>
 
         <div className="header-right">
