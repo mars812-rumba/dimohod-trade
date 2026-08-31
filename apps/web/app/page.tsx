@@ -112,6 +112,17 @@ const organizationJsonLd = {
       inLanguage: "ru-RU",
       publisher: { "@id": "https://dimohod-trade.pro/#organization" },
     },
+    {
+      "@type": "WebPage",
+      "@id": "https://dimohod-trade.pro/#webpage",
+      url: "https://dimohod-trade.pro/",
+      name: "Дымоход Трейд — подбор комплекта дымохода",
+      description:
+        "Подбор дымохода по отопителю и маршруту: схема, состав комплекта и предварительная смета.",
+      inLanguage: "ru-RU",
+      isPartOf: { "@id": "https://dimohod-trade.pro/#website" },
+      about: { "@id": "https://dimohod-trade.pro/#organization" },
+    },
   ],
 };
 

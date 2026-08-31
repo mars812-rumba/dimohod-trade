@@ -20,7 +20,7 @@ type ProductPageProps = {
   }>;
 };
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro";
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 function absoluteUrl(path: string) {
@@ -187,6 +187,9 @@ function productImage(product: Product, sku: SKU | null) {
 function productJsonLd(product: Product, sku: SKU | null) {
   const familyUrl = absoluteUrl(`/product/${product.slug}`);
   const canonicalUrl = absoluteUrl(productPublicPath(product.slug, sku));
+  const productGroupId = `${familyUrl}#group`;
+  const productId = `${canonicalUrl}#product`;
+  const breadcrumbId = `${canonicalUrl}#breadcrumb`;
   const additionalProperty = sku
     ? [
         ["L", sku.length_mm],
@@ -218,17 +221,37 @@ function productJsonLd(product: Product, sku: SKU | null) {
   const variant = sku
     ? {
         "@type": "Product",
+        "@id": productId,
         name: skuSeoAttribute(sku, "h1") ?? sku.name,
         sku: sku.article,
         url: canonicalUrl,
         description: metadataDescription(product, sku),
+        size: [diameterLabel(sku), sku.length_mm ? `L=${sku.length_mm} мм` : null]
+          .filter(Boolean)
+          .join(", ") || undefined,
         material: sku.steel_grade ?? sku.material ?? undefined,
         image: image ?? undefined,
         additionalProperty,
         offers: offer,
-        isVariantOf: { "@id": `${familyUrl}#group` },
+        isVariantOf: { "@id": productGroupId },
+        mainEntityOfPage: { "@id": `${canonicalUrl}#webpage` },
       }
     : undefined;
+  const otherVariantUrls = [...new Set(
+    product.skus.map((item) => absoluteUrl(productPublicPath(product.slug, item))),
+  )]
+    .filter((url) => url !== canonicalUrl)
+    .map((url) => ({ "@type": "Product", url }));
+  const sizeValues = new Set(
+    product.skus.map((item) => `${item.diameter_mm ?? ""}:${item.outer_diameter_mm ?? ""}:${item.length_mm ?? ""}`),
+  );
+  const materialValues = new Set(
+    product.skus.map((item) => `${item.material ?? ""}:${item.steel_grade ?? ""}`),
+  );
+  const variesBy = [
+    sizeValues.size > 1 ? "https://schema.org/size" : null,
+    materialValues.size > 1 ? "https://schema.org/material" : null,
+  ].filter((value): value is string => Boolean(value));
   const faq = productFaqItems(product, sku);
 
   return {
@@ -236,17 +259,28 @@ function productJsonLd(product: Product, sku: SKU | null) {
     "@graph": [
       {
         "@type": "ProductGroup",
-        "@id": `${familyUrl}#group`,
+        "@id": productGroupId,
         productGroupID: product.id,
         name: product.name,
         description: product.description ?? product.short_description ?? product.name,
-        url: canonicalUrl,
         brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
-        variesBy: ["https://schema.org/size", "https://schema.org/material"],
-        hasVariant: variant ? [variant] : undefined,
+        variesBy: variesBy.length ? variesBy : undefined,
+        hasVariant: variant ? [variant, ...otherVariantUrls] : otherVariantUrls,
+      },
+      {
+        "@type": "WebPage",
+        "@id": `${canonicalUrl}#webpage`,
+        url: canonicalUrl,
+        name: metadataTitle(product, sku),
+        description: metadataDescription(product, sku),
+        inLanguage: "ru-RU",
+        isPartOf: { "@id": `${new URL(appUrl).origin}/#website` },
+        breadcrumb: { "@id": breadcrumbId },
+        mainEntity: { "@id": productId },
       },
       {
         "@type": "BreadcrumbList",
+        "@id": breadcrumbId,
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Главная", item: absoluteUrl("/") },
           { "@type": "ListItem", position: 2, name: "Каталог", item: absoluteUrl("/catalog") },
@@ -259,8 +293,10 @@ function productJsonLd(product: Product, sku: SKU | null) {
           { "@type": "ListItem", position: 4, name: product.name, item: canonicalUrl },
         ],
       },
-      {
+      ...(faq.length ? [{
         "@type": "FAQPage",
+        "@id": `${canonicalUrl}#faq`,
+        url: canonicalUrl,
         mainEntity: faq.map((item) => ({
           "@type": "Question",
           name: item.q,
@@ -269,7 +305,7 @@ function productJsonLd(product: Product, sku: SKU | null) {
             text: item.a,
           },
         })),
-      },
+      }] : []),
     ],
   };
 }
@@ -281,7 +317,10 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
   const initialLengthMm = requestedLengthMm(query.length);
   const product = await getProduct(route.familySlug, initialSkuKey, route.diameter);
   if (!product) {
-    return { title: "Товар не найден | Дымоход Трейд" };
+    return {
+      title: "Товар не найден | Дымоход Трейд",
+      robots: { index: false, follow: false },
+    };
   }
   const sku = selectSku(product, initialSkuKey, route.diameter, initialLengthMm);
   const title = metadataTitle(product, sku);
@@ -293,7 +332,7 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
     title,
     description,
     alternates: { canonical: absoluteUrl(canonicalPath) },
-    robots: initialSkuKey || route.legacySku
+    robots: initialSkuKey || route.legacySku || initialLengthMm !== null
       ? { index: false, follow: true }
       : { index: true, follow: true },
     openGraph: {

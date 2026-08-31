@@ -7,6 +7,8 @@ import { scenarioPages } from "@/lib/scenarioPages";
 import styles from "@/components/ScenarioPageTemplate.module.css";
 
 const assetBasePath = process.env.NEXT_BASE_PATH ?? "";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro";
+const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const scenarioOrder = [
   "dom",
   "banya",
@@ -63,9 +65,54 @@ export const metadata: Metadata = {
 
 export default function SolutionsPage() {
   const scenarios = scenarioOrder.map((slug) => scenarioPages[slug]);
+  const origin = new URL(appUrl).origin;
+  const absoluteUrl = (path: string) => new URL(`${appBasePath}${path}`, origin).toString();
+  const canonicalUrl = absoluteUrl("/solutions");
+  const breadcrumbId = `${canonicalUrl}#breadcrumb`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${canonicalUrl}#webpage`,
+        url: canonicalUrl,
+        name: "Подбор дымохода по отопителю и объекту",
+        description:
+          "Сценарии подбора дымохода для бани, дома, печи, камина и котлов.",
+        inLanguage: "ru-RU",
+        isPartOf: { "@id": `${origin}/#website` },
+        breadcrumb: { "@id": breadcrumbId },
+        mainEntity: { "@id": `${canonicalUrl}#scenarios` },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": breadcrumbId,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Главная", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Решения", item: canonicalUrl },
+        ],
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${canonicalUrl}#scenarios`,
+        numberOfItems: scenarios.length,
+        itemListElement: scenarios.map((scenario, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: scenario.eyebrow,
+          url: absoluteUrl(`/solutions/${scenario.slug}`),
+        })),
+      },
+    ],
+  };
 
   return (
-    <main className={styles.main}>
+    <>
+      <script
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        type="application/ld+json"
+      />
+      <main className={styles.main}>
       <section className={`${styles.routeSection} ${styles.solutionsSection}`}>
         <div className={styles.shell}>
           <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
@@ -162,6 +209,7 @@ export default function SolutionsPage() {
           </article>
         </div>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
       url: path,
       title: article.title,
       description: article.description,
-      publishedTime: "2026-08-22T12:00:00Z",
-      modifiedTime: "2026-08-22T12:00:00Z",
+      publishedTime: article.publishedAt,
+      modifiedTime: article.modifiedAt,
       images: [{ url: article.image, width: 1672, height: 941, alt: article.imageAlt }],
     },
     twitter: {
@@ -47,34 +47,51 @@ export default async function GuidePage({ params }: GuidePageProps) {
   const article = guideArticleBySlug[slug];
   if (!article) notFound();
 
-  const canonical = new URL(`/guides/${article.slug}`, siteUrl).toString();
-  const image = new URL(article.image, siteUrl).toString();
+  const origin = new URL(siteUrl).origin;
+  const canonical = new URL(`/guides/${article.slug}`, origin).toString();
+  const image = new URL(article.image, origin).toString();
+  const articleId = `${canonical}#article`;
+  const webPageId = `${canonical}#webpage`;
+  const breadcrumbId = `${canonical}#breadcrumb`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Article",
-        "@id": `${canonical}#article`,
+        "@id": articleId,
         headline: article.title,
         description: article.description,
         image: [image],
-        datePublished: "2026-08-22T12:00:00Z",
-        dateModified: "2026-08-22T12:00:00Z",
+        datePublished: article.publishedAt,
+        dateModified: article.modifiedAt,
         inLanguage: "ru-RU",
-        mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+        mainEntityOfPage: { "@id": webPageId },
         author: {
           "@type": "Organization",
-          "@id": `${siteUrl}/#organization`,
+          "@id": `${origin}/#organization`,
           name: "Дымоход Трейд",
-          url: siteUrl,
+          url: `${origin}/`,
         },
-        publisher: { "@id": `${siteUrl}/#organization` },
+        publisher: { "@id": `${origin}/#organization` },
+      },
+      {
+        "@type": "WebPage",
+        "@id": webPageId,
+        url: canonical,
+        name: article.title,
+        description: article.description,
+        inLanguage: "ru-RU",
+        isPartOf: { "@id": `${origin}/#website` },
+        breadcrumb: { "@id": breadcrumbId },
+        primaryImageOfPage: { "@type": "ImageObject", url: image, caption: article.imageAlt },
+        mainEntity: { "@id": articleId },
       },
       {
         "@type": "BreadcrumbList",
+        "@id": breadcrumbId,
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Главная", item: siteUrl },
-          { "@type": "ListItem", position: 2, name: "Статьи", item: `${siteUrl}/guides` },
+          { "@type": "ListItem", position: 1, name: "Главная", item: `${origin}/` },
+          { "@type": "ListItem", position: 2, name: "Статьи", item: `${origin}/guides` },
           { "@type": "ListItem", position: 3, name: article.shortTitle, item: canonical },
         ],
       },

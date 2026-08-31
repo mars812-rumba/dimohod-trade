@@ -27,6 +27,13 @@ import { RouteImageViewer } from "./RouteImageViewer";
 import { SolutionHouseGallery } from "./SolutionHouseGallery";
 import styles from "./ScenarioPageTemplate.module.css";
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro";
+const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+function absoluteUrl(path: string) {
+  return new URL(`${appBasePath}${path}`, appUrl).toString();
+}
+
 const iconByName: Record<ScenarioIconName, LucideIcon> = {
   building: Building2,
   camera: Camera,
@@ -114,6 +121,37 @@ export function ScenarioPageTemplate({
 }: ScenarioPageTemplateProps) {
   const configuratorHref = scenarioConfiguratorHref(content);
   const isBanyaScenario = content.slug === "banya";
+  const canonicalUrl = absoluteUrl(`/solutions/${content.slug}`);
+  const breadcrumbId = `${canonicalUrl}#breadcrumb`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${canonicalUrl}#webpage`,
+        url: canonicalUrl,
+        name: content.metadata.title,
+        description: content.metadata.description,
+        inLanguage: "ru-RU",
+        isPartOf: { "@id": `${new URL(appUrl).origin}/#website` },
+        breadcrumb: { "@id": breadcrumbId },
+        primaryImageOfPage: {
+          "@type": "ImageObject",
+          url: absoluteUrl(content.heroImage),
+          caption: content.heroImageAlt,
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": breadcrumbId,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Главная", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Решения", item: absoluteUrl("/solutions") },
+          { "@type": "ListItem", position: 3, name: content.eyebrow, item: canonicalUrl },
+        ],
+      },
+    ],
+  };
   const review = content.review ?? {
     label: "Граница ответственности",
     title: "Что видно сразу, а что требует проверки",
@@ -132,7 +170,12 @@ export function ScenarioPageTemplate({
   };
 
   return (
-    <main className={styles.main}>
+    <>
+      <script
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        type="application/ld+json"
+      />
+      <main className={styles.main}>
       <div className={styles.shell}>
         <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
           <Link href="/">Главная</Link>
@@ -493,6 +536,7 @@ export function ScenarioPageTemplate({
           </Link>
         </div>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

@@ -18,6 +18,8 @@ export type GuideImage = {
 
 export type GuideArticle = {
   slug: string;
+  publishedAt: string;
+  modifiedAt: string;
   title: string;
   shortTitle: string;
   description: string;
@@ -75,6 +77,8 @@ const tmfManualSource: GuideSource = {
 export const guideArticles: GuideArticle[] = [
   {
     slug: "dymohod-dlya-bani",
+    publishedAt: "2026-08-22T12:11:55Z",
+    modifiedAt: "2026-08-31T03:11:04Z",
     title: "Дымоход для бани: как подготовить данные для подбора комплекта",
     shortTitle: "Дымоход для бани",
     description:
@@ -125,6 +129,8 @@ export const guideArticles: GuideArticle[] = [
   },
   {
     slug: "dymohod-cherez-stenu",
+    publishedAt: "2026-08-22T12:11:55Z",
+    modifiedAt: "2026-08-31T03:11:04Z",
     title: "Дымоход через стену: какие размеры нужны для наружной трассы",
     shortTitle: "Дымоход через стену",
     description:
@@ -175,6 +181,8 @@ export const guideArticles: GuideArticle[] = [
   },
   {
     slug: "dymohod-cherez-krovlyu",
+    publishedAt: "2026-08-22T12:11:55Z",
+    modifiedAt: "2026-08-31T03:11:04Z",
     title: "Дымоход через кровлю: как рассчитать прямой вертикальный маршрут",
     shortTitle: "Дымоход через кровлю",
     description:
@@ -236,6 +244,8 @@ export const guideArticles: GuideArticle[] = [
   },
   {
     slug: "komplekt-dymohoda-dlya-pechi",
+    publishedAt: "2026-08-22T12:11:55Z",
+    modifiedAt: "2026-08-31T03:11:04Z",
     title: "Комплект дымохода для печи: что входит и как не ошибиться с исходными данными",
     shortTitle: "Комплект для печи",
     description:
@@ -290,6 +300,8 @@ export const guideArticles: GuideArticle[] = [
   },
   {
     slug: "komplekt-s-troynikom-90",
+    publishedAt: "2026-08-22T12:11:55Z",
+    modifiedAt: "2026-08-22T12:11:55Z",
     title: "Комплект дымохода с тройником 90°: когда он появляется в схеме через стену",
     shortTitle: "Комплект с тройником 90°",
     description:

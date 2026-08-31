@@ -6,6 +6,8 @@ import { guideArticles, guideConfiguratorHref } from "@/lib/guideArticles";
 import styles from "./page.module.css";
 
 const assetBasePath = process.env.NEXT_BASE_PATH ?? "";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro";
+const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const metadata: Metadata = {
   title: "Статьи о подборе и маршрутах дымохода — Дымоход Трейд",
@@ -34,8 +36,54 @@ export const metadata: Metadata = {
 };
 
 export default function GuidesPage() {
+  const origin = new URL(appUrl).origin;
+  const absoluteUrl = (path: string) => new URL(`${appBasePath}${path}`, origin).toString();
+  const canonicalUrl = absoluteUrl("/guides");
+  const breadcrumbId = `${canonicalUrl}#breadcrumb`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${canonicalUrl}#webpage`,
+        url: canonicalUrl,
+        name: "Статьи о подборе и маршрутах дымохода",
+        description:
+          "Практические статьи о дымоходах для бани и печи, проходах через стену и кровлю.",
+        inLanguage: "ru-RU",
+        isPartOf: { "@id": `${origin}/#website` },
+        breadcrumb: { "@id": breadcrumbId },
+        mainEntity: { "@id": `${canonicalUrl}#articles` },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": breadcrumbId,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Главная", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Статьи", item: canonicalUrl },
+        ],
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${canonicalUrl}#articles`,
+        numberOfItems: guideArticles.length,
+        itemListElement: guideArticles.map((article, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: article.shortTitle,
+          url: absoluteUrl(`/guides/${article.slug}`),
+        })),
+      },
+    ],
+  };
+
   return (
-    <main className={styles.main}>
+    <>
+      <script
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        type="application/ld+json"
+      />
+      <main className={styles.main}>
       <div className={styles.shell}>
         <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
           <Link href="/">Главная</Link><span aria-hidden>/</span><span aria-current="page">Статьи</span>
@@ -76,6 +124,7 @@ export default function GuidesPage() {
           ))}
         </section>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
