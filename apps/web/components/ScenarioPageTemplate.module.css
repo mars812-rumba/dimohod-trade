@@ -8,12 +8,11 @@
   --scenario-deep: #173d4c;
   --scenario-signal: #ed5b2a;
   --scenario-signal-dark: #bd3d16;
-  --scenario-font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  --scenario-font-heading: "Arial Narrow", "Aptos Narrow", "Roboto Condensed", sans-serif;
-  --scenario-heading-size: clamp(32px, 3.8vw, 46px);
+  --scenario-font-body: var(--font-body);
+  --scenario-font-heading: var(--font-heading);
+  --scenario-heading-size: var(--type-section-title);
   --scenario-heading-weight: 600;
-  --scenario-card-heading-size: 18px;
+  --scenario-card-heading-size: var(--type-card-title);
   --scenario-card-heading-weight: 600;
   overflow: hidden;
   color: var(--scenario-ink);
@@ -50,6 +49,9 @@
 .breadcrumbs a:focus-visible,
 .primaryButton:focus-visible,
 .secondaryButton:focus-visible,
+.routeChoiceGuide:focus-visible,
+.routeOptionAction:focus-visible,
+.routeOptionGuide:focus-visible,
 .groupItem:focus-visible,
 .faqList summary:focus-visible {
   outline: 3px solid rgba(237, 91, 42, 0.3);
@@ -86,7 +88,7 @@
 .heroCopy h1 {
   max-width: 720px;
   margin: 0;
-  font-size: clamp(38px, 5vw, 56px);
+  font-size: var(--type-page-title);
   font-weight: 620;
   line-height: 0.98;
   letter-spacing: -0.045em;
@@ -194,7 +196,7 @@
 .measurementsPageHeader h1 {
   max-width: 900px;
   margin: 0;
-  font-size: clamp(36px, 4.6vw, 52px);
+  font-size: var(--type-page-title);
   font-weight: 650;
   line-height: 0.98;
   letter-spacing: -0.038em;
@@ -650,6 +652,22 @@
   line-height: 1.55;
 }
 
+.routeChoiceGuide {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  justify-self: start;
+  margin: 0 18px 18px;
+  color: var(--scenario-signal-dark);
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.routeChoiceGuide:hover {
+  color: var(--scenario-deep);
+}
+
 .routeChoiceUnknown {
   grid-column: 1 / -1;
   grid-template-rows: auto;
@@ -1090,7 +1108,7 @@
 .solutionsIntro h1 {
   max-width: 760px;
   margin: 0;
-  font-size: clamp(36px, 4.5vw, 52px);
+  font-size: var(--type-page-title);
   font-weight: var(--scenario-heading-weight);
   line-height: 0.98;
   letter-spacing: -0.04em;
@@ -1528,6 +1546,21 @@
   color: var(--scenario-deep);
 }
 
+.routeOptionGuide {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  margin-top: 12px;
+  color: var(--scenario-steel);
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.routeOptionGuide:hover {
+  color: var(--scenario-deep);
+}
+
 @media (max-width: 980px) {
   .routeGridEqual {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1765,7 +1798,7 @@ a.groupItem:hover {
   }
 
   .heroCopy h1 {
-    font-size: clamp(32px, 9vw, 42px);
+    font-size: var(--type-page-title);
   }
 
   .heroMedia {
@@ -1825,7 +1858,7 @@ a.groupItem:hover {
   }
 
   .solutionsIntro h1 {
-    font-size: clamp(30px, 8.5vw, 40px);
+    font-size: var(--type-page-title);
   }
 
   .solutionsArticleSection {

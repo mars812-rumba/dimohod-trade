@@ -25,6 +25,8 @@ export type ScenarioRouteOption = {
   imagePresentation?: "portrait-scheme";
   href?: string;
   linkLabel?: string;
+  guideHref?: string;
+  guideLabel?: string;
 };
 
 export type ScenarioQuestion = {
@@ -178,6 +180,8 @@ export const banyaScenario: ScenarioPageContent = {
       imagePresentation: "portrait-scheme",
       href: "/zamery?edit=1&object=banya&route=ceiling",
       linkLabel: "Выбрать этот вариант",
+      guideHref: "/guides/dymohod-cherez-krovlyu",
+      guideLabel: "Маршрут и фото",
     },
     {
       slug: "through-wall",
@@ -188,6 +192,8 @@ export const banyaScenario: ScenarioPageContent = {
       imagePresentation: "portrait-scheme",
       href: "/zamery?edit=1&object=banya&route=wall",
       linkLabel: "Выбрать этот вариант",
+      guideHref: "/guides/dymohod-cherez-stenu",
+      guideLabel: "Маршрут и фото",
     },
     {
       slug: "through-wall-direct",
@@ -198,6 +204,8 @@ export const banyaScenario: ScenarioPageContent = {
       imagePresentation: "portrait-scheme",
       href: "/zamery?edit=1&object=banya&route=wall-direct",
       linkLabel: "Выбрать этот вариант",
+      guideHref: "/guides/dymohod-cherez-stenu",
+      guideLabel: "Маршрут и фото",
     },
   ],
   selectionQuestions: [
@@ -394,6 +402,8 @@ export const pechScenario: ScenarioPageContent = {
       description:
         "Трасса проходит через помещения и кровлю. В расчёте отмечаем каждую конструкцию на её пути.",
       image: "/images/home/scenario-kamin.webp",
+      guideHref: "/guides/dymohod-cherez-krovlyu",
+      guideLabel: "Маршрут и фото",
     },
     {
       slug: "wall-facade",
@@ -401,6 +411,8 @@ export const pechScenario: ScenarioPageContent = {
       description:
         "Трасса меняет направление у печи, выходит через стену и продолжается снаружи здания.",
       image: "/images/home/hero-chimney-system.webp",
+      guideHref: "/guides/dymohod-cherez-stenu",
+      guideLabel: "Маршрут и фото",
     },
   ],
   selectionQuestions: [
@@ -783,6 +795,8 @@ export const solidFuelBoilerScenario: ScenarioPageContent = {
       description:
         "Маршрут проходит от котла к кровле. Все изменения направления и конструкции отмечаем на плане.",
       image: "/images/home/scenario-tt-kotel.webp",
+      guideHref: "/guides/dymohod-cherez-krovlyu",
+      guideLabel: "Маршрут и фото",
     },
     {
       slug: "facade-route",
@@ -790,6 +804,8 @@ export const solidFuelBoilerScenario: ScenarioPageContent = {
       description:
         "Маршрут выходит через стену котельной и продолжается снаружи. Состав зависит от полной геометрии.",
       image: "/images/home/hero-chimney-system.webp",
+      guideHref: "/guides/dymohod-cherez-stenu",
+      guideLabel: "Маршрут и фото",
     },
   ],
   selectionQuestions: [
@@ -946,6 +962,8 @@ export const homeScenario: ScenarioPageContent = {
       description:
         "Дымоход поднимается от отопителя внутри дома, проходит перекрытия и выходит через кровлю.",
       image: "/images/home/banya-route-through-roof.webp",
+      guideHref: "/guides/dymohod-cherez-krovlyu",
+      guideLabel: "Маршрут и фото",
     },
     {
       slug: "through-wall",
@@ -953,6 +971,8 @@ export const homeScenario: ScenarioPageContent = {
       description:
         "Дымоход выходит через стену и далее поднимается снаружи по фасаду дома.",
       image: "/images/home/banya-route-through-wall-top-elbow.png",
+      guideHref: "/guides/dymohod-cherez-stenu",
+      guideLabel: "Маршрут и фото",
     },
     {
       slug: "through-wall-direct",
@@ -960,6 +980,8 @@ export const homeScenario: ScenarioPageContent = {
       description:
         "Задний патрубок направлен к проходу стены, затем дымоход поднимается снаружи по фасаду дома.",
       image: "/images/home/banya-route-through-wall-direct.webp",
+      guideHref: "/guides/dymohod-cherez-stenu",
+      guideLabel: "Маршрут и фото",
     },
   ],
   selectionQuestions: [

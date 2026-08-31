@@ -688,6 +688,12 @@ export function BanyaIntakeFlow({
                       <strong>{option.title}</strong>
                       <small>{option.description}</small>
                     </label>
+                    {option.guideHref ? (
+                      <Link className={styles.routeChoiceGuide} href={option.guideHref}>
+                        {option.guideLabel ?? "Посмотреть маршрут и фото"}
+                        <ArrowRight size={15} aria-hidden />
+                      </Link>
+                    ) : null}
                     </div>
                   );
                 })}

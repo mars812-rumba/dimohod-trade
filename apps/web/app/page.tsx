@@ -171,18 +171,21 @@ const routeExamples = [
     title: "Наружный маршрут через стену",
     text: "Подготовьте размеры подключения, стены и наружного участка — они лягут в основу схемы и предварительного состава.",
     image: "/images/home/hero-projects/log-house-facade.webp",
-    href: "/solutions/banya",
+    href: "/guides/dymohod-cherez-stenu",
+    action: "Маршрут и фото",
   },
   {
     title: "Вертикальный маршрут через кровлю",
     text: "Сценарий помогает последовательно собрать исходные данные по помещениям, перекрытиям и кровле.",
     image: "/images/home/hero-projects/roof-chimney.webp",
-    href: "/solutions/dom",
+    href: "/guides/dymohod-cherez-krovlyu",
+    action: "Маршрут и фото",
   },
   {
     title: "Подключение отопительного котла",
     text: "Начните с точной модели оборудования и параметров патрубка, затем опишите маршрут дымохода.",
     image: "/images/home/hero-projects/boiler-room.webp",
+    action: "Подготовить расчёт",
     href: "/solutions/tverdotoplivny-kotel",
   },
 ];
@@ -758,7 +761,7 @@ export default async function HomePage() {
                 <span className={styles.routeExampleBody}>
                   <h3>{item.title}</h3>
                   <span>{item.text}</span>
-                  <b>Подготовить расчёт <ArrowRight size={15} aria-hidden /></b>
+                  <b>{item.action} <ArrowRight size={15} aria-hidden /></b>
                 </span>
               </Link>
             ))}
