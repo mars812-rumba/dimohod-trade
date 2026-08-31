@@ -5,6 +5,7 @@ import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels"
 import { productSelectionPath } from "@/lib/productUrls";
 import { steelSelectionBadges } from "@/lib/steelSelection";
 import { YandexRatingBadge } from "@/components/YandexRatingBadge";
+import { CartAddButton } from "@/components/CartAddButton";
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -96,9 +97,15 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
   const hasLaserWeldedSeam = isLaserWeldedPipe(product);
   const href = productSelectionPath(product.slug, product, product.selected_sku);
 
+  const imageUrl = product.primary_image
+    ? publicMediaUrl(product.primary_image.thumbnail_url ?? product.primary_image.url)
+    : null;
+  const price = product.price_rub && Number(product.price_rub) > 0 ? Number(product.price_rub) : null;
+
   return (
-    <Link className="catalog-product-card" href={href}>
-      <div className="catalog-product-media">
+    <article className="catalog-product-card">
+      <Link className="catalog-product-card-link" href={href}>
+        <div className="catalog-product-media">
         <YandexRatingBadge />
         {product.primary_image ? (
           <img
@@ -134,8 +141,8 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
             ))}
           </div>
         ) : null}
-      </div>
-      <div className="catalog-product-body">
+        </div>
+        <div className="catalog-product-body">
         <p className="meta">{product.category.name}</p>
         <h3>{product.name}</h3>
         <div className="catalog-product-specs">
@@ -145,13 +152,33 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
             </span>
           ))}
         </div>
-        <div className="catalog-product-footer">
+          <div className="catalog-product-footer">
           <strong>{formatPrice(product.price_rub)}</strong>
           <span>
             {product.sku_count} SKU <ArrowRight size={14} />
           </span>
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+      {product.selected_sku_id && product.selected_sku ? (
+        <CartAddButton
+          className="catalog-cart-add"
+          compact
+          item={{
+            skuId: product.selected_sku_id,
+            productId: product.id,
+            productSlug: product.slug,
+            productName: product.name,
+            article: product.article ?? product.selected_sku,
+            skuName: product.name,
+            unitPriceRub: price,
+            characteristics: specs,
+            imageUrl,
+          }}
+        />
+      ) : (
+        <Link className="catalog-cart-select" href={href}>Выбрать исполнение</Link>
+      )}
+    </article>
   );
 }

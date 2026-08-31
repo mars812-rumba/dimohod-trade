@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { CategoryNode, CatalogTreeResponse } from "@/lib/api";
 import { InstallAppButton } from "./InstallAppButton";
+import { CartHeaderLink } from "./CartHeaderLink";
 import {
   personalDataConsentPath,
   privacyPolicyPath,
@@ -180,6 +181,7 @@ export function SiteHeader() {
           <div className="header-install">
             <InstallAppButton />
           </div>
+          <CartHeaderLink />
           <a
             aria-label="Позвонить: +7 965 075-65-55"
             className="header-phone"
@@ -236,6 +238,7 @@ export function SiteHeader() {
                 ) : null}
               </div>
             </details>
+            <CartHeaderLink mobile onClick={closeMenu} />
             <Link href="/pechi" onClick={closeMenu}>Печи</Link>
             <details className="mobile-menu-catalog">
               <summary>

@@ -28,6 +28,7 @@ import {
   type TablerIcon,
 } from "@tabler/icons-react";
 import { DimensionScheme } from "@/components/DimensionScheme";
+import { CartAddButton } from "@/components/CartAddButton";
 import { LeadForm } from "@/components/LeadForm";
 import { YandexRatingBadge } from "@/components/YandexRatingBadge";
 import type { CompatibleProduct, Product } from "@/lib/api";
@@ -1164,6 +1165,15 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
         { label: "Марка стали наружной трубы", value: outerSteelLabel },
       ].filter((item): item is { label: string; value: string } => Boolean(item.value))
     : [];
+  const cartCharacteristics = activeSku
+    ? [
+        diameterMm !== null ? `Ø ${diameterMm}${outerDiameter === null ? "" : `/${outerDiameter}`} мм` : null,
+        activeSku.length_mm !== null ? `L ${activeSku.length_mm} мм` : null,
+        steelGrade ? `сталь ${steelGrade}` : material,
+        wallThicknessMm ? `толщина ${compactDecimal(wallThicknessMm)} мм` : null,
+        outerSteelLabel ? `наружный кожух ${outerSteelLabel}` : null,
+      ].filter((value): value is string => Boolean(value))
+    : [];
 
   function selectVariant(dimensionIndex: number, value: string) {
     if (!activeSku) {
@@ -1622,6 +1632,25 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
           )}
 
           <div className="sku-cta">
+            {activeSku ? (
+              <CartAddButton
+                className="button full-button product-cart-add"
+                compact
+                item={{
+                  skuId: activeSku.id,
+                  productId: product.id,
+                  productSlug: product.slug,
+                  productName: product.name,
+                  article: activeSku.article,
+                  skuName: activeSku.name,
+                  unitPriceRub: activeSku.price_rub && Number(activeSku.price_rub) > 0
+                    ? Number(activeSku.price_rub)
+                    : null,
+                  characteristics: cartCharacteristics,
+                  imageUrl: productPhotos[0]?.src ?? null,
+                }}
+              />
+            ) : null}
             <button
               className="button full-button"
               type="button"
