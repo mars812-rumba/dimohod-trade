@@ -10,6 +10,12 @@ export type GuideSection = {
   items?: string[];
 };
 
+export type GuideImage = {
+  src: string;
+  alt: string;
+  caption: string;
+};
+
 export type GuideArticle = {
   slug: string;
   title: string;
@@ -19,6 +25,8 @@ export type GuideArticle = {
   image: string;
   imageAlt: string;
   imageCaption?: string;
+  imageLayout?: "landscape" | "portrait";
+  inlineImages?: GuideImage[];
   readingTime: string;
   summary: string;
   quickAnswer: string;
@@ -75,6 +83,7 @@ export const guideArticles: GuideArticle[] = [
     image: "/images/works/object-2/05.webp",
     imageAlt: "Банная печь с вертикальным дымоходом в деревянной парной",
     imageCaption: "Фотография с реального объекта",
+    imageLayout: "portrait",
     readingTime: "6 минут",
     summary:
       "В бане недостаточно выбрать трубу только по диаметру. На состав системы влияют конкретная модель печи, положение патрубка, слои перекрытия и кровли, а также весь маршрут от отопителя до оголовка.",
@@ -121,8 +130,10 @@ export const guideArticles: GuideArticle[] = [
     description:
       "Как описать дымоход через стену: подключение отопителя, стеновой проход, тройник, наружный подъём и крепления. Расчёт комплекта в конфигураторе.",
     eyebrow: "Сценарий: выход на фасад",
-    image: "/images/guides/dymohod-cherez-stenu.webp",
-    imageAlt: "Концептуальная визуализация дымохода через стену с наружным тройником и вертикальной трассой",
+    image: "/images/guides/real-dymohod-cherez-stenu.webp",
+    imageAlt: "Наружный вертикальный дымоход, выведенный через стену дома",
+    imageCaption: "Фотография с реального объекта",
+    imageLayout: "portrait",
     readingTime: "7 минут",
     summary:
       "В маршруте через стену важен не только горизонтальный участок. Нужно связать высоту патрубка, толщину и материал стены, положение наружного тройника, высоту фасада, вынос кровли и точки крепления.",
@@ -169,8 +180,17 @@ export const guideArticles: GuideArticle[] = [
     description:
       "Какие замеры нужны для дымохода через потолок, перекрытие, чердак и кровлю. Принцип расчёта вертикального маршрута и переход в конфигуратор.",
     eyebrow: "Сценарий: прямой маршрут",
-    image: "/images/guides/dymohod-cherez-krovlyu.webp",
-    imageAlt: "Концептуальная визуализация прямого дымохода через перекрытие, чердак и скатную кровлю",
+    image: "/images/guides/real-dymohod-cherez-krovlyu-interior.webp",
+    imageAlt: "Вертикальный дымоход внутри деревянного помещения у скатной кровли",
+    imageCaption: "Фотография с реального объекта",
+    imageLayout: "portrait",
+    inlineImages: [
+      {
+        src: "/images/guides/real-dymohod-cherez-krovlyu-roof.webp",
+        alt: "Металлический дымоход и проходной элемент на скатной кровле",
+        caption: "Наружная часть дымохода на кровле",
+      },
+    ],
     readingTime: "7 минут",
     summary:
       "Прямая трасса выглядит проще фасадной, но в расчёте нужно отдельно описать помещение, каждое перекрытие, чердак и кровлю. Общая высота сама по себе не показывает, где находятся соединения и проходные узлы.",
@@ -221,8 +241,10 @@ export const guideArticles: GuideArticle[] = [
     description:
       "Из чего складывается комплект дымохода для печи и почему его нельзя выбирать только по диаметру. Паспорт, маршрут, материалы и расчёт в конфигураторе.",
     eyebrow: "Сценарий: отопительная печь",
-    image: "/images/guides/komplekt-dymohoda-dlya-pechi.webp",
-    imageAlt: "Концептуальная раскладка печи и элементов модульного комплекта дымохода",
+    image: "/images/guides/real-komplekt-dymohoda-dlya-pechi.webp",
+    imageAlt: "Печь с вертикальным металлическим дымоходом в интерьере",
+    imageCaption: "Фотография с реального объекта",
+    imageLayout: "portrait",
     readingTime: "6 минут",
     summary:
       "Комплект — это не фиксированный набор одинаковых труб. Его состав появляется на пересечении требований конкретной печи, выбранного маршрута, строительных конструкций и совместимой линейки элементов.",

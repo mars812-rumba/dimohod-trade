@@ -42,7 +42,8 @@
 .heroCopy h1 {
   max-width: 720px;
   margin: 12px 0 20px;
-  font-size: clamp(38px, 5.3vw, 68px);
+  font-family: var(--font-heading);
+  font-size: var(--type-page-title);
   line-height: .98;
   letter-spacing: -.045em;
   text-wrap: balance;
@@ -109,6 +110,12 @@
 }
 
 .heroFigure img { object-fit: cover; }
+
+.heroFigurePortrait {
+  width: min(100%, 560px);
+  aspect-ratio: 3 / 4;
+  justify-self: center;
+}
 .heroFigure figcaption {
   position: absolute;
   right: 12px;
@@ -138,7 +145,8 @@
 .safetyNote h2,
 .sources h2 {
   margin: 0 0 18px;
-  font-size: clamp(27px, 3vw, 38px);
+  font-family: var(--font-heading);
+  font-size: var(--type-section-title);
   line-height: 1.12;
   letter-spacing: -.025em;
   text-wrap: balance;
@@ -172,6 +180,39 @@
 }
 
 .quickAnswer > p:last-child { margin-bottom: 0; }
+
+.articlePhotos {
+  display: grid;
+  gap: 18px;
+  margin-top: 40px;
+}
+
+.articlePhoto {
+  position: relative;
+  width: min(100%, 560px);
+  aspect-ratio: 3 / 4;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #d9dedb;
+}
+
+.articlePhoto img {
+  object-fit: cover;
+}
+
+.articlePhoto figcaption {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  color: #fff;
+  background: rgba(16, 33, 39, .84);
+  font-size: 12px;
+  line-height: 1.4;
+}
 
 .checkList {
   display: grid;
@@ -233,7 +274,7 @@
 .secondaryLink { display: block; margin-top: 16px; color: #fff; font-size: 14px; font-weight: 650; text-align: center; }
 
 .relatedSection { padding: 72px 0 92px; background: #e9ece8; }
-.relatedHeading h2 { margin: 8px 0 28px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -.035em; }
+.relatedHeading h2 { margin: 8px 0 28px; font-family: var(--font-heading); font-size: var(--type-section-title); letter-spacing: -.035em; }
 .relatedGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .relatedCard {
   display: flex;
@@ -250,7 +291,7 @@
 
 .relatedCard:hover { transform: translateY(-2px); border-color: #9cacaa; }
 .relatedCard > span { color: var(--guide-accent); font-size: 11px; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
-.relatedCard h3 { margin: 12px 0 10px; font-size: 24px; letter-spacing: -.02em; }
+.relatedCard h3 { margin: 12px 0 10px; font-family: var(--font-heading); font-size: var(--type-card-title); letter-spacing: -.02em; }
 .relatedCard p { margin: 0; color: var(--guide-muted); line-height: 1.55; }
 .relatedCard strong { display: flex; align-items: center; gap: 7px; margin-top: auto; padding-top: 24px; color: #214e57; }
 
@@ -258,8 +299,9 @@
   .shell { width: min(100% - 28px, 720px); }
   .hero { padding-top: 10px; padding-bottom: 42px; }
   .heroGrid { grid-template-columns: 1fr; gap: 30px; }
-  .heroCopy h1 { font-size: clamp(38px, 11vw, 58px); }
+  .heroCopy h1 { font-size: var(--type-page-title); }
   .heroFigure { aspect-ratio: 16 / 10; }
+  .heroFigurePortrait { aspect-ratio: 3 / 4; }
   .articleGrid { grid-template-columns: 1fr; padding-top: 46px; padding-bottom: 60px; }
   .sidebar { position: static; }
 }

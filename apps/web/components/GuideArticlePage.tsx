@@ -52,7 +52,9 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                 Рассчитать свой комплект <ArrowRight size={18} aria-hidden />
               </Link>
             </div>
-            <figure className={styles.heroFigure}>
+            <figure
+              className={`${styles.heroFigure} ${article.imageLayout === "portrait" ? styles.heroFigurePortrait : ""}`}
+            >
               <Image
                 alt={article.imageAlt}
                 fill
@@ -73,6 +75,24 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
               <h2 id="quick-answer-title">С чего начать</h2>
               <p>{article.quickAnswer}</p>
             </section>
+
+            {article.inlineImages?.length ? (
+              <div className={styles.articlePhotos} aria-label="Фотографии с объекта">
+                {article.inlineImages.map((image) => (
+                  <figure className={styles.articlePhoto} key={image.src}>
+                    <Image
+                      alt={image.alt}
+                      fill
+                      loading="lazy"
+                      quality={84}
+                      sizes="(max-width: 760px) 100vw, 560px"
+                      src={`${assetBasePath}${image.src}`}
+                    />
+                    <figcaption>{image.caption}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            ) : null}
 
             <section className={styles.section} aria-labelledby="source-data-title">
               <h2 id="source-data-title">Что подготовить для расчёта</h2>
