@@ -11,12 +11,14 @@ const layout = readFileSync(new URL("../app/layout.tsx", import.meta.url), "utf8
 const cookiePolicy = readFileSync(new URL("../app/cookie-policy/page.tsx", import.meta.url), "utf8");
 const privacyPolicy = readFileSync(new URL("../app/privacy/page.tsx", import.meta.url), "utf8");
 
-test("Yandex Metrika loads only after explicit analytics consent", () => {
+test("Yandex Metrika loads immediately unless analytics were previously declined", () => {
   assert.match(metrika, /YANDEX_METRIKA_COUNTER_ID = 112091795/);
-  assert.match(component, /consent === "accepted"/);
+  assert.match(component, /consent === "loading" \|\| consent === "declined"/);
+  assert.match(metrika, /!== "declined"/);
   assert.match(metrika, /dimohod_analytics_consent_v1/);
-  assert.match(component, /Разрешить аналитику/);
-  assert.match(component, /Только необходимые/);
+  assert.match(component, /Отключить аналитику/);
+  assert.match(component, /Понятно/);
+  assert.match(component, /YANDEX_METRIKA_COUNTER_ID, "destruct"/);
   assert.match(component, /pathname\.startsWith\("\/admin"\)/);
   assert.doesNotMatch(component, /<noscript/);
 });
@@ -44,6 +46,10 @@ test("the requested counter options are preserved", () => {
     assert.match(component, option);
   }
   assert.match(component, /mc\.yandex\.ru\/metrika\/tag\.js/);
+  assert.match(component, /queuedYm\.a\.push\(args\)/);
+  assert.match(component, /document\.head\.appendChild\(script\)/);
+  assert.match(component, /__dimohodMetrikaInitialized/);
+  assert.doesNotMatch(component, /tag\.js\?id=/);
 });
 
 test("the counter is global, accessible and disclosed", () => {
@@ -51,6 +57,6 @@ test("the counter is global, accessible and disclosed", () => {
   assert.match(component, /aria-labelledby="analytics-consent-title"/);
   assert.match(styles, /\.actions button:focus-visible/);
   assert.match(styles, /@media \(max-width: 720px\)/);
-  assert.match(cookiePolicy, /счётчик № 112091795/);
-  assert.match(privacyPolicy, /счётчик № 112091795/);
+  assert.match(cookiePolicy, /счётчик\s*№ 112091795/);
+  assert.match(privacyPolicy, /счётчик\s*№ 112091795/);
 });

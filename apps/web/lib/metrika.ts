@@ -23,9 +23,9 @@ type MetrikaWindow = Window & {
 
 function analyticsAllowed() {
   try {
-    return window.localStorage.getItem(ANALYTICS_CONSENT_STORAGE_KEY) === "accepted";
+    return window.localStorage.getItem(ANALYTICS_CONSENT_STORAGE_KEY) !== "declined";
   } catch {
-    return false;
+    return true;
   }
 }
 
