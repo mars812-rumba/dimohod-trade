@@ -70,6 +70,15 @@ test("catalog BOM editing is constrained to exact catalog variants", () => {
   assert.match(componentSource, /product_kind\?\.includes\("труб"\)/);
 });
 
+test("flange rows expose the verified base size as an inline SKU selector", () => {
+  assert.match(componentSource, /product_kind==="фланец"/);
+  assert.match(componentSource, /FlangeVariantControls/);
+  assert.match(componentSource, /skuTextAttribute\(current,"base_size"\)/);
+  assert.match(componentSource, /skuTextAttribute\(current,"execution"\)/);
+  assert.match(componentSource, /label="Размер"/);
+  assert.match(componentSource, /onSelect=\{sku=>replaceVariant\(line,sku\)\}/);
+});
+
 test("manager page is excluded from search indexing", () => {
   assert.match(pageSource, /robots: \{ index: false, follow: false \}/);
 });
