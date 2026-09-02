@@ -15,52 +15,65 @@ import styles from "./YandexMetrika.module.css";
 
 type ConsentState = "loading" | "undecided" | "accepted" | "declined";
 
-type MetrikaFunction = ((...args: unknown[]) => void) & {
-  a?: unknown[][];
-  l?: number;
-};
+type MetrikaFunction = (counterId: number, method: string, ...args: unknown[]) => void;
+type MetrikaCounter = Record<string, unknown> & { destruct?: () => void };
+type MetrikaConstructor = new (options: Record<string, unknown>) => MetrikaCounter;
 
 type MetrikaWindow = Window & {
   dataLayer?: unknown[];
   ym?: MetrikaFunction;
+  Ya?: { Metrika2?: MetrikaConstructor };
+  __dimohodMetrikaCounter?: MetrikaCounter;
   __dimohodMetrikaInitialized?: boolean;
 };
 
 const METRIKA_SCRIPT_ID = "yandex-metrika-script";
 
+function startMetrikaCounter() {
+  const metrikaWindow = window as MetrikaWindow;
+  if (metrikaWindow.__dimohodMetrikaCounter) return;
+
+  const Counter = metrikaWindow.Ya?.Metrika2;
+  if (!Counter) return;
+
+  metrikaWindow.dataLayer = metrikaWindow.dataLayer ?? [];
+  const counter = new Counter({
+    id: YANDEX_METRIKA_COUNTER_ID,
+    ssr: true,
+    webvisor: true,
+    clickmap: true,
+    ecommerce: "dataLayer",
+    referrer: document.referrer,
+    url: window.location.href,
+    accurateTrackBounce: true,
+    trackLinks: true,
+  });
+  metrikaWindow.__dimohodMetrikaCounter = counter;
+  metrikaWindow.__dimohodMetrikaInitialized = true;
+  metrikaWindow.ym = (counterId, method, ...args) => {
+    if (counterId !== YANDEX_METRIKA_COUNTER_ID) return;
+    const handler = counter[method];
+    if (typeof handler === "function") handler.apply(counter, args);
+  };
+  flushMetrikaGoals();
+}
+
 function initializeMetrika() {
   const metrikaWindow = window as MetrikaWindow;
-
-  if (!metrikaWindow.ym) {
-    const queuedYm: MetrikaFunction = (...args: unknown[]) => {
-      queuedYm.a = queuedYm.a ?? [];
-      queuedYm.a.push(args);
-    };
-    queuedYm.l = Date.now();
-    metrikaWindow.ym = queuedYm;
+  if (metrikaWindow.Ya?.Metrika2) {
+    startMetrikaCounter();
+    return;
   }
 
-  if (!metrikaWindow.__dimohodMetrikaInitialized) {
-    metrikaWindow.dataLayer = metrikaWindow.dataLayer ?? [];
-    metrikaWindow.ym(YANDEX_METRIKA_COUNTER_ID, "init", {
-      ssr: true,
-      webvisor: true,
-      clickmap: true,
-      ecommerce: "dataLayer",
-      referrer: document.referrer,
-      url: window.location.href,
-      accurateTrackBounce: true,
-      trackLinks: true,
-    });
-    metrikaWindow.__dimohodMetrikaInitialized = true;
-  }
-
-  if (!document.getElementById(METRIKA_SCRIPT_ID)) {
+  const existingScript = document.getElementById(METRIKA_SCRIPT_ID);
+  if (existingScript) {
+    existingScript.addEventListener("load", startMetrikaCounter, { once: true });
+  } else {
     const script = document.createElement("script");
     script.id = METRIKA_SCRIPT_ID;
     script.async = true;
     script.src = "https://mc.yandex.ru/metrika/tag.js";
-    script.addEventListener("load", flushMetrikaGoals, { once: true });
+    script.addEventListener("load", startMetrikaCounter, { once: true });
     document.head.appendChild(script);
   }
 }
@@ -108,7 +121,9 @@ export function YandexMetrika() {
     }
     if (value === "declined") {
       const metrikaWindow = window as MetrikaWindow;
-      metrikaWindow.ym?.(YANDEX_METRIKA_COUNTER_ID, "destruct");
+      metrikaWindow.__dimohodMetrikaCounter?.destruct?.();
+      delete metrikaWindow.__dimohodMetrikaCounter;
+      delete metrikaWindow.ym;
       metrikaWindow.__dimohodMetrikaInitialized = false;
     }
     setConsent(value);

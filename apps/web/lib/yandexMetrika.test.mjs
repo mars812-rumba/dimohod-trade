@@ -18,7 +18,7 @@ test("Yandex Metrika loads immediately unless analytics were previously declined
   assert.match(metrika, /dimohod_analytics_consent_v1/);
   assert.match(component, /Отключить аналитику/);
   assert.match(component, /Понятно/);
-  assert.match(component, /YANDEX_METRIKA_COUNTER_ID, "destruct"/);
+  assert.match(component, /__dimohodMetrikaCounter\?\.destruct\?\.\(\)/);
   assert.match(component, /pathname\.startsWith\("\/admin"\)/);
   assert.doesNotMatch(component, /<noscript/);
 });
@@ -46,7 +46,9 @@ test("the requested counter options are preserved", () => {
     assert.match(component, option);
   }
   assert.match(component, /mc\.yandex\.ru\/metrika\/tag\.js/);
-  assert.match(component, /queuedYm\.a\.push\(args\)/);
+  assert.match(component, /new Counter\(\{/);
+  assert.match(component, /__dimohodMetrikaCounter = counter/);
+  assert.match(component, /handler\.apply\(counter, args\)/);
   assert.match(component, /document\.head\.appendChild\(script\)/);
   assert.match(component, /__dimohodMetrikaInitialized/);
   assert.doesNotMatch(component, /tag\.js\?id=/);
