@@ -10,7 +10,23 @@ test("quick estimate keeps the confirmed calculation defaults", () => {
   assert.match(helper, /QUICK_ESTIMATE_FLOOR_HEIGHT_MM = 2500/);
   assert.match(helper, /QUICK_ESTIMATE_ATTIC_HEIGHT_MM = 1500/);
   assert.match(helper, /QUICK_ESTIMATE_ROOF_OUTLET_HEIGHT_MM = 1500/);
+  assert.match(helper, /QUICK_ESTIMATE_HEATER_HEIGHT_MM = 800/);
+  assert.match(helper, /QUICK_ESTIMATE_WARMUP_PIPE_LENGTH_MM = 1000/);
+  assert.match(helper, /QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM = 1000/);
+  assert.match(helper, /QUICK_ESTIMATE_BASE_SANDWICH_PIPE_QUANTITY = 3/);
+  assert.match(helper, /QUICK_ESTIMATE_EXTRA_FLOOR_SANDWICH_PIPE_QUANTITY = 2/);
   assert.match(helper, /Кровельный комплект: УПК \+ мастер-флеш/);
+});
+
+test("quick ceiling estimate subtracts the assumed heater and fixes the confirmed pipe kit", () => {
+  assert.match(helper, /totalHeightMm - QUICK_ESTIMATE_HEATER_HEIGHT_MM - QUICK_ESTIMATE_WARMUP_PIPE_LENGTH_MM/);
+  assert.match(helper, /answers\.floors - 1/);
+  assert.match(helper, /line\.key === "rotary-damper"/);
+  assert.match(helper, /thicknessProfile: "first-floor-0\.8"/);
+  assert.match(helper, /thicknessProfile: "upper-outdoor-0\.5"/);
+  assert.match(helper, /answers\.route !== "ceiling" \|\| !answers\.hasAttic/);
+  assert.match(component, /applyQuickEstimateBomRules\(bomForVariant/);
+  assert.match(component, /if \(line\.thicknessProfile\)/);
 });
 
 test("quick estimate uses the existing catalog and transfers answers to measurements", () => {

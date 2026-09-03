@@ -24,7 +24,9 @@ import {
   saveConfiguratorDraft,
   type EquipmentStatus,
 } from "@/lib/configuratorDraft";
+import { METRIKA_GOALS } from "@/lib/metrika";
 import {
+  applyQuickEstimateBomRules,
   quickEstimateAssumptions,
   quickEstimateDraft,
   quickEstimateHeightM,
@@ -116,7 +118,7 @@ async function matchBomLine({
         ? CHIMNEY_ENGINEERING_RULES.combustionMaterials.outerSteelGrade
         : CHIMNEY_ENGINEERING_RULES.standardMaterials.outerSteelGrade));
     }
-    if ((!combustionSteel || Boolean(line.preferredSteelGrade)) && line.thicknessProfile) {
+    if (line.thicknessProfile) {
       params.set("wall_thickness_mm", String(line.thicknessProfile === "first-floor-0.8"
         ? CHIMNEY_ENGINEERING_RULES.standardMaterials.firstFloorInnerThicknessMm
         : CHIMNEY_ENGINEERING_RULES.standardMaterials.upperAndOutdoorInnerThicknessMm));
@@ -205,7 +207,9 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
     roofType: "pitched",
     draft,
   }) : null, [answers, draft]);
-  const bom = useMemo(() => calculation ? bomForVariant(calculation, calculation.selectedVariant) : [], [calculation]);
+  const bom = useMemo(() => calculation && answers
+    ? applyQuickEstimateBomRules(bomForVariant(calculation, calculation.selectedVariant), answers)
+    : [], [answers, calculation]);
 
   useEffect(() => {
     if (step !== 4 || !answers || !bom.length) return;
@@ -383,6 +387,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
                     disabled={matchStatus !== "ready" && matchStatus !== "error"}
                     estimate={estimate}
                     heading="Получить стоимость и BOM"
+                    metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
                     onSubmitted={() => setLeadSubmitted(true)}
                     source="chimney-quick-estimate"
                     submitLabel="Отправить и показать результат"
