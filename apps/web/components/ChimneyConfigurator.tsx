@@ -1662,7 +1662,9 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     }
     if (transferredDraft.outlet) setOutlet(transferredDraft.outlet === "top" ? "vertical" : "horizontal");
 
-    const draftStove = transferredDraft.equipmentType
+    const draftStove = transferredDraft.objectType === "banya"
+      ? "bania"
+      : transferredDraft.equipmentType
       || (transferredDraft.scenario === "banya" ? "bania" : "pech");
     setStove(draftStove as StoveType);
 
@@ -1717,6 +1719,9 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       wallDistance: route === "wall" ? String(Math.round(distanceM * 1000)) : transferredDraft.wallDistance,
     };
   }, [distanceM, floors, hasAttic, heightM, outlet, passageWoolKits, rotaryDamperHeightMm, route, supportCapLengthMm, transferredDraft, warmupLengthMm]);
+  const availableStoveOptions = transferredDraft?.objectType === "banya"
+    ? STOVE_OPTIONS.filter((option) => option.id === "bania")
+    : STOVE_OPTIONS;
 
   const calculation = useMemo(
     () => calculateChimney({
@@ -2106,7 +2111,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               role="group"
               aria-labelledby="configurator-source-label"
             >
-              {STOVE_OPTIONS.map((option) => (
+              {availableStoveOptions.map((option) => (
                 <button
                   key={option.id}
                   type="button"

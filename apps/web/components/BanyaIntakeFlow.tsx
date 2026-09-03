@@ -62,9 +62,17 @@ function ChoiceIcon({ src }: { src: string }) {
   );
 }
 
+const intakeEquipmentChoices = [
+  ["bania", "Банная печь", "/images/measurements/icons/heater-sauna.webp"],
+  ["pech", "Печь", "/images/measurements/icons/heater-stove.webp"],
+  ["tt-kotel", "Твердотопливный котёл", "/images/measurements/icons/heater-solid-fuel.webp"],
+  ["gaz", "Газовый котёл", "/images/measurements/icons/heater-gas.webp"],
+  ["diesel", "Дизельный котёл", "/images/measurements/icons/heater-diesel.webp"],
+] as const;
+
 function normalizeIntakeDraft(draft: ScenarioConfiguratorDraft): ScenarioConfiguratorDraft {
   const objectType = draft.objectType === "banya" ? "banya" : "house";
-  const equipmentType = draft.equipmentType === "bania"
+  const normalizedEquipmentType = draft.equipmentType === "bania"
     || draft.equipmentType === "pech"
     || draft.equipmentType === "kamin"
     || draft.equipmentType === "tt-kotel"
@@ -72,6 +80,7 @@ function normalizeIntakeDraft(draft: ScenarioConfiguratorDraft): ScenarioConfigu
     || draft.equipmentType === "diesel"
     ? draft.equipmentType
     : "";
+  const equipmentType = objectType === "banya" ? "bania" : normalizedEquipmentType;
   const legacyDiameter = !draft.diameter
     && ((draft.diameterX && !draft.diameterY)
       || (!draft.diameterX && draft.diameterY)
@@ -269,6 +278,9 @@ export function BanyaIntakeFlow({
   const [profileDirty, setProfileDirty] = useState(true);
   const scenario = intake.scenario;
   const isHome = intake.objectType !== "banya";
+  const availableEquipmentChoices = isHome
+    ? intakeEquipmentChoices
+    : intakeEquipmentChoices.filter(([value]) => value === "bania");
   const schemes = {
     stoveHeight: {
       src: `${assetBasePath}/images/measurements/stove-height-mobile.webp`,
@@ -499,6 +511,7 @@ export function BanyaIntakeFlow({
                           ...current,
                           objectType: value as ScenarioConfiguratorDraft["objectType"],
                           scenario: value === "banya" ? "banya" : "dom",
+                          equipmentType: value === "banya" ? "bania" : current.equipmentType,
                         }));
                       }}
                       type="radio"
@@ -537,13 +550,7 @@ export function BanyaIntakeFlow({
               <fieldset className={styles.choiceFieldset}>
                 <legend>Тип отопителя</legend>
                 <div className={`${styles.choiceRow} ${styles.visualChoiceGrid}`}>
-                  {[
-                    ["bania", "Банная печь", "/images/measurements/icons/heater-sauna.webp"],
-                    ["pech", "Печь", "/images/measurements/icons/heater-stove.webp"],
-                    ["tt-kotel", "Твердотопливный котёл", "/images/measurements/icons/heater-solid-fuel.webp"],
-                    ["gaz", "Газовый котёл", "/images/measurements/icons/heater-gas.webp"],
-                    ["diesel", "Дизельный котёл", "/images/measurements/icons/heater-diesel.webp"],
-                  ].map(([value, label, icon]) => (
+                  {availableEquipmentChoices.map(([value, label, icon]) => (
                     <label key={label}>
                       <input
                         checked={intake.equipmentType === value}

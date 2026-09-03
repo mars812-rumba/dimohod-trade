@@ -179,6 +179,9 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
   const [matches, setMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [matchStatus, setMatchStatus] = useState<MatchStatus>("idle");
   const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const availableHeaterChoices = objectType === "banya"
+    ? heaterChoices.filter((choice) => choice.id === "bania")
+    : heaterChoices;
 
   const answers = useMemo<QuickEstimateAnswers | null>(() => {
     if (!objectType || !equipmentStatus || !outlet || !route) return null;
@@ -296,7 +299,10 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
             {step === 0 ? <>
               <div className={styles.heading}><small>Объект</small><h3>Где нужен дымоход?</h3></div>
               <div className={styles.choices}>
-                {objectChoices.map((choice) => <button className={`${styles.choice} ${objectType === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => setObjectType(choice.id)} type="button" aria-pressed={objectType === choice.id}>
+                {objectChoices.map((choice) => <button className={`${styles.choice} ${objectType === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => {
+                  setObjectType(choice.id);
+                  if (choice.id === "banya") setEquipmentType("bania");
+                }} type="button" aria-pressed={objectType === choice.id}>
                   <Image alt="" aria-hidden height={96} src={withBase(choice.icon, assetBasePath)} unoptimized width={96} />
                   {choice.label}
                 </button>)}
@@ -310,7 +316,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
               </div>
               <p className={styles.subheading}>Тип отопителя</p>
               <div className={`${styles.choices} ${styles.heaterChoices}`}>
-                {heaterChoices.map((choice) => <button className={`${styles.choice} ${equipmentType === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => setEquipmentType(equipmentType === choice.id ? "" : choice.id)} type="button" aria-pressed={equipmentType === choice.id}>
+                {availableHeaterChoices.map((choice) => <button className={`${styles.choice} ${equipmentType === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => setEquipmentType(equipmentType === choice.id ? "" : choice.id)} type="button" aria-pressed={equipmentType === choice.id}>
                   <Image alt="" aria-hidden height={64} src={withBase(choice.icon, assetBasePath)} unoptimized width={64} />{choice.label}
                 </button>)}
               </div>
