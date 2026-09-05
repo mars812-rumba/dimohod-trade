@@ -32,6 +32,7 @@ from app.modules.admin.service import (
     safe_storage_key,
 )
 from app.modules.products.router import (
+    compact_product_attributes,
     parse_diameter_filter,
     primary_product_image,
     primary_sku_image,
@@ -207,17 +208,20 @@ async def test_variant_filters_keep_only_real_inner_outer_pipe_combinations() ->
             "сэндвич",
         ),
     ]
-    rows = [
-        (
+    sku_rows = []
+    for row in rows:
+        product = SimpleNamespace(
+            id=row[0],
+            is_active=True,
+            short_description="Описание",
+            description=None,
+            extra_attributes={
+                "media": [{"role": "general", "url": "/media/product.webp"}]
+            },
+        )
+        sku_rows.append(
             SimpleNamespace(
-                is_active=True,
-                short_description="Описание",
-                description=None,
-                extra_attributes={
-                    "media": [{"role": "general", "url": "/media/product.webp"}]
-                },
-            ),
-            SimpleNamespace(
+                product=product,
                 product_id=row[0],
                 diameter_mm=row[1],
                 outer_diameter_mm=row[2],
@@ -230,11 +234,9 @@ async def test_variant_filters_keep_only_real_inner_outer_pipe_combinations() ->
                 insulation_mm=row[9],
                 contour=row[10],
                 is_active=True,
-            ),
+            )
         )
-        for row in rows
-    ]
-    query_result = SimpleNamespace(all=lambda: rows)
+    query_result = SimpleNamespace(scalars=lambda: sku_rows)
     session = SimpleNamespace(execute=AsyncMock(return_value=query_result))
 
     filters = await list_variant_filter_options(session)
@@ -289,6 +291,7 @@ def test_admin_routes_are_registered() -> None:
     assert "/api/v1/admin/categories/{category_id}/cover" in paths
     assert "/api/v1/admin/skus/{sku_id}/photo" in paths
     assert "/api/v1/products/{slug}/compatible" in paths
+    assert "/api/v1/products/{slug}/sku/{sku_key}" in paths
     assert "/api/v1/products/seo-pages" in paths
 
 
@@ -459,6 +462,27 @@ def test_public_sku_attributes_expose_gallery_and_seo_only() -> None:
         {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "sku_seo": seo, "internal": "hidden"}
     ) == {"sku_photo": {"url": "/legacy.jpg"}, "sku_media": media, "sku_seo": seo}
     assert public_sku_media_attributes({}) == {}
+
+
+def test_compact_product_attributes_keep_only_public_page_content() -> None:
+    assert compact_product_attributes(
+        {
+            "media": [{"url": "/media/catalog/photo.jpg"}],
+            "seo_knowledge": {"summary": "Описание"},
+            "faq": [{"q": "Вопрос", "a": "Ответ"}],
+            "seo_title": "Заголовок",
+            "seo_description": "Описание страницы",
+            "outer_diameter_mm": 200,
+            "source_rows": ["large", "internal", "payload"],
+        }
+    ) == {
+        "media": [{"url": "/media/catalog/photo.jpg"}],
+        "seo_knowledge": {"summary": "Описание"},
+        "faq": [{"q": "Вопрос", "a": "Ответ"}],
+        "seo_title": "Заголовок",
+        "seo_description": "Описание страницы",
+        "outer_diameter_mm": 200,
+    }
 
 
 def test_public_sku_display_attributes_expose_variant_labels_not_range_helpers() -> None:

@@ -40,6 +40,7 @@ from app.modules.products.schemas import (
     ProductRead,
     ProductSeoPage,
     ProductVariantCombination,
+    SKURead,
 )
 from app.modules.products.service import (
     compatible_product_matches,
@@ -280,6 +281,70 @@ def public_sku_media_attributes(attributes: dict[str, object] | None) -> dict[st
         for key in ("sku_photo", "sku_media", "sku_seo")
         if (value := values.get(key))
     }
+
+
+def compact_product_attributes(attributes: dict[str, object] | None) -> dict[str, object]:
+    """Keep only fields rendered by the public product page."""
+    values = attributes or {}
+    allowed = {
+        "media",
+        "seo_knowledge",
+        "faq",
+        "seo_title",
+        "seo_description",
+        "outer_diameter_mm",
+    }
+    return {key: value for key, value in values.items() if key in allowed}
+
+
+def public_sku_read(
+    product: Product,
+    sku: SKU,
+    *,
+    include_content: bool,
+) -> SKURead:
+    sku_read = SKURead.model_validate(sku)
+    attributes = public_attributes_for_sku(product, sku)
+    if include_content:
+        attributes = {**attributes, **public_sku_media_attributes(sku.attributes)}
+        raw_sku_seo = attributes.get("sku_seo")
+        if isinstance(raw_sku_seo, dict):
+            attributes["sku_seo"] = sanitize_sku_seo_dict(
+                raw_sku_seo,
+                single_wall_context=is_single_wall_contour(sku.contour),
+            )
+    sku_read.attributes = attributes
+    return sku_read
+
+
+def compact_sku_row(product: Product, sku: SKU) -> tuple[object, ...]:
+    """Represent a selectable SKU without repeating JSON property names."""
+    variant_attribute_keys = {
+        "diameter_range",
+        "base_size",
+        "execution",
+        "size_range",
+        "outer_material",
+        "outer_steel_grade",
+        "outer_wall_thickness_mm",
+    }
+    attributes = public_attributes_for_sku(product, sku)
+    return (
+        sku.id,
+        sku.article,
+        sku.material,
+        sku.steel_grade,
+        sku.wall_thickness_mm,
+        sku.diameter_mm,
+        sku.outer_diameter_mm,
+        sku.contour,
+        sku.insulation_mm,
+        sku.length_mm,
+        sku.angle_deg,
+        sku.price_rub,
+        sku.stock_status,
+        {key: value for key, value in attributes.items() if key in variant_attribute_keys},
+    )
 
 
 def parse_diameter_filter(value: str | None) -> tuple[int | None, int | None]:
@@ -790,8 +855,9 @@ async def read_product_seo_pages(
             product_slug=slug,
             diameter_mm=diameter_mm,
             outer_diameter_mm=outer_diameter_mm,
+            updated_at=updated_at,
         )
-        for slug, diameter_mm, outer_diameter_mm in pages
+        for slug, diameter_mm, outer_diameter_mm, updated_at in pages
     ]
     await set_catalog_cache(
         cache_field,
@@ -819,6 +885,7 @@ async def read_product(
     sku: str | None = Query(default=None, min_length=1, max_length=240),
     diameter: str | None = Query(default=None, pattern=r"^(?:\d+:\d*|\d*:\d+)$"),
     include_compatible: bool = Query(default=True),
+    compact: bool = Query(default=False),
     session: AsyncSession = Depends(get_db),
 ) -> ProductRead:
     started_at = perf_counter()
@@ -846,21 +913,29 @@ async def read_product(
         for sku_read in product_read.skus
         if publication_policy.sku_ready(sku_by_id[sku_read.id])
     ]
+    if compact:
+        public_sku_ids = {sku_read.id for sku_read in product_read.skus}
+        product_read.compact_skus = [
+            compact_sku_row(product, sku_model)
+            for sku_model in product.skus
+            if sku_model.id in public_sku_ids
+        ]
 
     for sku_read in product_read.skus:
         sku_model = sku_by_id.get(sku_read.id)
         if sku_model is None:
             continue
-        sku_read.attributes = {
-            **public_attributes_for_sku(product, sku_model),
-            **public_sku_media_attributes(sku_model.attributes),
-        }
-        raw_sku_seo = sku_read.attributes.get("sku_seo")
-        if isinstance(raw_sku_seo, dict):
-            sku_read.attributes["sku_seo"] = sanitize_sku_seo_dict(
-                raw_sku_seo,
-                single_wall_context=is_single_wall_contour(sku_model.contour),
-            )
+        projected = public_sku_read(
+            product,
+            sku_model,
+            include_content=not compact or sku_model.id == source_sku.id,
+        )
+        sku_read.attributes = projected.attributes
+
+    if compact:
+        product_read.skus = [
+            sku_read for sku_read in product_read.skus if sku_read.id == source_sku.id
+        ]
 
     single_wall_context = is_single_wall_contour(
         source_sku.contour if source_sku is not None else product.contour
@@ -898,7 +973,9 @@ async def read_product(
             extra_attributes["seo_knowledge"],
             single_wall_context=single_wall_context,
         )
-    product_read.extra_attributes = extra_attributes
+    product_read.extra_attributes = (
+        compact_product_attributes(extra_attributes) if compact else extra_attributes
+    )
     product_built_at = perf_counter()
 
     product_read.compatible_products = (
@@ -936,6 +1013,33 @@ async def read_product(
     response.headers["X-Product-SKU-Count"] = str(len(product_read.skus))
 
     return product_read
+
+
+@router.get("/{slug}/sku/{sku_key}", response_model=SKURead)
+async def read_product_sku(
+    slug: str,
+    sku_key: str,
+    response: Response,
+    session: AsyncSession = Depends(get_db),
+) -> SKURead:
+    product_sku = await get_product_sku_by_key(
+        session,
+        product_slug=slug,
+        sku_key=sku_key,
+        public_only=True,
+    )
+    if product_sku is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SKU not found")
+    product, sku = product_sku
+    result = public_sku_read(product, sku, include_content=True)
+    rules = await list_active_rules(session)
+    result.compatibility_messages = [
+        message
+        for message in evaluate_rules(rules, context_from_product_sku(product, sku))
+        if message.code != RETIRED_SINGLE_WALL_RULE_CODE
+    ]
+    response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+    return result
 
 
 @router.get("/{slug}/compatible", response_model=list[CompatibleProductItem])

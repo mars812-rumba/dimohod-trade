@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
@@ -52,6 +53,24 @@ class SKURead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+CompactSKURow = tuple[
+    UUID,
+    str,
+    str | None,
+    str | None,
+    Decimal | None,
+    int | None,
+    int | None,
+    str | None,
+    int | None,
+    int | None,
+    int | None,
+    Decimal | None,
+    str,
+    dict[str, Any],
+]
+
+
 class ProductListItem(BaseModel):
     id: UUID
     category: CategorySummary
@@ -90,6 +109,7 @@ class ProductSeoPage(BaseModel):
     product_slug: str
     diameter_mm: int | None
     outer_diameter_mm: int | None
+    updated_at: datetime | None = None
 
 
 class ProductKindFilter(BaseModel):
@@ -179,6 +199,7 @@ class ProductRead(BaseModel):
     application_tags: list[str]
     compatibility_notes: str | None
     skus: list[SKURead]
+    compact_skus: list[CompactSKURow] = Field(default_factory=list)
     compatible_products: list[CompatibleProductItem] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

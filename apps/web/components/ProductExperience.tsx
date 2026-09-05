@@ -31,7 +31,7 @@ import { DimensionScheme } from "@/components/DimensionScheme";
 import { CartAddButton } from "@/components/CartAddButton";
 import { LeadForm } from "@/components/LeadForm";
 import { YandexRatingBadge } from "@/components/YandexRatingBadge";
-import type { CompatibleProduct, Product } from "@/lib/api";
+import { productSkus, type CompatibleProduct, type Product, type SKU } from "@/lib/api";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productFaqItems } from "@/lib/productFaq";
 import { productPublicPath, productSelectionPath } from "@/lib/productUrls";
@@ -962,13 +962,15 @@ function seoConfiguratorCta(product: Product): { text: string; href: string } | 
 }
 
 export function ProductExperience({ product, initialSkuKey }: { product: Product; initialSkuKey?: string }) {
+  const initialSkus = useMemo(() => productSkus(product), [product]);
   const initialSku =
-    product.skus.find((sku) => sku.id === initialSkuKey || sku.article === initialSkuKey || sku.slug === initialSkuKey) ??
-    product.skus[0] ??
+    initialSkus.find((sku) => sku.id === initialSkuKey || sku.article === initialSkuKey || sku.slug === initialSkuKey) ??
+    initialSkus[0] ??
     null;
   const initialCompatibleProducts = initialSku
     ? (product.compatible_products ?? []).filter((item) => item.source_sku_id === initialSku.id)
     : [];
+  const [skus, setSkus] = useState(initialSkus);
   const [selectedSkuId, setSelectedSkuId] = useState<string | null>(initialSku?.id ?? null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [compatibleProducts, setCompatibleProducts] = useState(initialCompatibleProducts);
@@ -982,12 +984,14 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     ),
   );
   const compatibilityRequests = useRef(new Map<string, Promise<CompatibleProduct[]>>());
-  const activeSku = product.skus.find((sku) => sku.id === selectedSkuId) ?? product.skus[0] ?? null;
+  const detailedSkuIds = useRef(new Set(initialSku ? [initialSku.id] : []));
+  const skuDetailRequests = useRef(new Map<string, Promise<SKU>>());
+  const activeSku = skus.find((sku) => sku.id === selectedSkuId) ?? skus[0] ?? null;
   const faqItems = useMemo(() => productFaqItems(product, activeSku), [activeSku, product]);
   const skuH1 = skuSeoText(activeSku, "h1") ?? product.name;
   const skuShortDescription = skuSeoText(activeSku, "short_description") ?? product.short_description;
   const skuDescription = skuSeoText(activeSku, "description") ?? product.description;
-  const variantDimensions = useMemo(() => buildVariantDimensions(product.skus), [product.skus]);
+  const variantDimensions = useMemo(() => buildVariantDimensions(skus), [skus]);
   const variantAttributes = publicVariantAttributes(activeSku);
   const steelBadges = steelSelectionBadges(activeSku);
   const hasLaserWeldedSeam = isLaserWeldedPipe(product);
@@ -1027,6 +1031,39 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     [product.slug],
   );
 
+  const loadSkuDetails = useCallback(
+    (sku: SKU) => {
+      if (detailedSkuIds.current.has(sku.id)) {
+        return Promise.resolve(sku);
+      }
+      const pending = skuDetailRequests.current.get(sku.id);
+      if (pending) {
+        return pending;
+      }
+
+      const apiPath = `/api/v1/products/${encodeURIComponent(product.slug)}/sku/${encodeURIComponent(sku.id)}`;
+      const requestUrl = publicApiBaseUrl ? `${publicApiBaseUrl}${apiPath}` : `${appBasePath}${apiPath}`;
+      const request = fetch(requestUrl)
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`SKU detail request failed: ${response.status}`);
+          }
+          return (await response.json()) as SKU;
+        })
+        .then((detail) => {
+          detailedSkuIds.current.add(detail.id);
+          setSkus((current) => current.map((item) => (item.id === detail.id ? detail : item)));
+          return detail;
+        })
+        .finally(() => {
+          skuDetailRequests.current.delete(sku.id);
+        });
+      skuDetailRequests.current.set(sku.id, request);
+      return request;
+    },
+    [product.slug],
+  );
+
   useEffect(() => {
     if (initialSku) {
       setSelectedSkuId(initialSku.id);
@@ -1034,6 +1071,9 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   }, [initialSku?.id]);
 
   useEffect(() => {
+    setSkus(initialSkus);
+    detailedSkuIds.current = new Set(initialSku ? [initialSku.id] : []);
+    skuDetailRequests.current = new Map();
     compatibilityCache.current = new Map(
       initialSku && initialCompatibleProducts.length > 0
         ? [[compatibilityCacheKey(initialSku), initialCompatibleProducts]]
@@ -1042,6 +1082,13 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     compatibilityRequests.current = new Map();
     setCompatibleProducts(initialCompatibleProducts);
   }, [product.id]);
+
+  useEffect(() => {
+    if (!activeSku || detailedSkuIds.current.has(activeSku.id)) {
+      return;
+    }
+    void loadSkuDetails(activeSku).catch(() => undefined);
+  }, [activeSku, loadSkuDetails]);
 
   useEffect(() => {
     if (!activeSku) {
@@ -1123,7 +1170,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     steelGrade ?? "не указана"
   }`;
   const sharedPhotos = sharedProductMediaByRole(product, activeSku);
-  const skuPhotos = visualSkuMediaByRole(product.skus, activeSku);
+  const skuPhotos = visualSkuMediaByRole(skus, activeSku);
   const productPhotos = galleryPhotoRoles.flatMap((role) => {
     const photo = skuPhotos[role] ?? sharedPhotos[role];
     return photo ? [photo] : [];
@@ -1181,7 +1228,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     }
     const dimension = variantDimensions[dimensionIndex];
     const selected = selectVariantCandidate({
-      items: product.skus,
+      items: skus,
       current: activeSku,
       targetKey: dimension.key,
       targetValue: value,
@@ -1522,7 +1569,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                 <summary className="variant-picker-head">
                   <span>Выберите исполнение</span>
                   <strong>
-                    {product.skus.length} вариантов
+                    {skus.length} вариантов
                     <ChevronDown aria-hidden="true" className="variant-picker-chevron" size={16} />
                   </strong>
                 </summary>
@@ -1547,7 +1594,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                       disabled:
                         option.value !== selectedValue &&
                         !variantValueAvailable(
-                          product.skus,
+                          skus,
                           activeSku,
                           dimension.key,
                           option.value,

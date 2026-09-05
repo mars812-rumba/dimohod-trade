@@ -18,6 +18,10 @@ const serviceSource = fs.readFileSync(
   path.join(here, "../../../backend/app/modules/products/service.py"),
   "utf8",
 );
+const productPageSource = fs.readFileSync(
+  path.join(here, "../app/product/[slug]/page.tsx"),
+  "utf8",
+);
 
 test("the initial product request does not wait for compatible products", () => {
   assert.match(apiSource, /params\.set\("include_compatible", "false"\)/);
@@ -34,4 +38,26 @@ test("compatibility loads on demand without speculative fan-out", () => {
 test("explicit family compatibility is narrowed before ORM hydration", () => {
   assert.match(serviceSource, /SKU\.diameter_mm\.in_\(source_diameters\)/);
   assert.match(serviceSource, /or_\(\*candidate_filters\)/);
+});
+
+test("the initial product payload contains a compact variant matrix", () => {
+  assert.match(apiSource, /params\.set\("compact", "true"\)/);
+  assert.match(routerSource, /compact: bool = Query\(default=False\)/);
+  assert.match(routerSource, /include_content=not compact or sku_model\.id == source_sku\.id/);
+  assert.match(routerSource, /compact_product_attributes\(extra_attributes\)/);
+  assert.match(routerSource, /product_read\.compact_skus/);
+  assert.match(routerSource, /sku_read\.id == source_sku\.id/);
+  assert.match(apiSource, /export function productSkus/);
+});
+
+test("heavy SKU content loads only after a variant is selected", () => {
+  assert.match(routerSource, /@router\.get\("\/\{slug\}\/sku\/\{sku_key\}"/);
+  assert.match(experienceSource, /const \[skus, setSkus\] = useState\(initialSkus\)/);
+  assert.match(experienceSource, /skuDetailRequests/);
+  assert.match(experienceSource, /\/sku\/\$\{encodeURIComponent\(sku\.id\)\}/);
+});
+
+test("metadata and page rendering share one product request", () => {
+  assert.match(productPageSource, /const getProductForPage = cache\(getProduct\)/);
+  assert.equal((productPageSource.match(/getProductForPage\(/g) ?? []).length, 2);
 });

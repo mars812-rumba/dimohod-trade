@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { getProduct, type Product, type SKU } from "@/lib/api";
+import { cache } from "react";
+import { getProduct, productSkus, type Product, type SKU } from "@/lib/api";
 import { ProductExperience } from "@/components/ProductExperience";
 import {
   isUuidReference,
@@ -22,6 +23,7 @@ type ProductPageProps = {
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro";
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const getProductForPage = cache(getProduct);
 
 function absoluteUrl(path: string) {
   if (/^https?:\/\//i.test(path)) {
@@ -56,12 +58,13 @@ function requestedLengthMm(value: string | string[] | undefined): number | null 
 }
 
 function selectSku(product: Product, key?: string, diameter?: string | null, lengthMm?: number | null): SKU | null {
+  const skus = productSkus(product);
   return (
-    product.skus.find((sku) => sku.id === key || sku.article === key || sku.slug === key) ??
-    product.skus.find((sku) => productDiameterValue(sku) === diameter && sku.length_mm === lengthMm) ??
-    product.skus.find((sku) => productDiameterValue(sku) === diameter) ??
-    product.skus.find((sku) => sku.length_mm === lengthMm) ??
-    product.skus[0] ??
+    skus.find((sku) => sku.id === key || sku.article === key || sku.slug === key) ??
+    skus.find((sku) => productDiameterValue(sku) === diameter && sku.length_mm === lengthMm) ??
+    skus.find((sku) => productDiameterValue(sku) === diameter) ??
+    skus.find((sku) => sku.length_mm === lengthMm) ??
+    skus[0] ??
     null
   );
 }
@@ -185,6 +188,7 @@ function productImage(product: Product, sku: SKU | null) {
 }
 
 function productJsonLd(product: Product, sku: SKU | null) {
+  const skus = productSkus(product);
   const familyUrl = absoluteUrl(`/product/${product.slug}`);
   const canonicalUrl = absoluteUrl(productPublicPath(product.slug, sku));
   const productGroupId = `${familyUrl}#group`;
@@ -238,15 +242,15 @@ function productJsonLd(product: Product, sku: SKU | null) {
       }
     : undefined;
   const otherVariantUrls = [...new Set(
-    product.skus.map((item) => absoluteUrl(productPublicPath(product.slug, item))),
+    skus.map((item) => absoluteUrl(productPublicPath(product.slug, item))),
   )]
     .filter((url) => url !== canonicalUrl)
     .map((url) => ({ "@type": "Product", url }));
   const sizeValues = new Set(
-    product.skus.map((item) => `${item.diameter_mm ?? ""}:${item.outer_diameter_mm ?? ""}:${item.length_mm ?? ""}`),
+    skus.map((item) => `${item.diameter_mm ?? ""}:${item.outer_diameter_mm ?? ""}:${item.length_mm ?? ""}`),
   );
   const materialValues = new Set(
-    product.skus.map((item) => `${item.material ?? ""}:${item.steel_grade ?? ""}`),
+    skus.map((item) => `${item.material ?? ""}:${item.steel_grade ?? ""}`),
   );
   const variesBy = [
     sizeValues.size > 1 ? "https://schema.org/size" : null,
@@ -315,7 +319,7 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
   const route = parseProductRoute(slug);
   const initialSkuKey = requestedSkuKey(query.sku) ?? route.legacySku ?? undefined;
   const initialLengthMm = requestedLengthMm(query.length);
-  const product = await getProduct(route.familySlug, initialSkuKey, route.diameter);
+  const product = await getProductForPage(route.familySlug, initialSkuKey, route.diameter);
   if (!product) {
     return {
       title: "Товар не найден | Дымоход Трейд",
@@ -356,7 +360,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const route = parseProductRoute(slug);
   const initialSkuKey = requestedSkuKey(query.sku) ?? route.legacySku ?? undefined;
   const initialLengthMm = requestedLengthMm(query.length);
-  const product = await getProduct(route.familySlug, initialSkuKey, route.diameter);
+  const product = await getProductForPage(route.familySlug, initialSkuKey, route.diameter);
 
   if (!product) {
     notFound();

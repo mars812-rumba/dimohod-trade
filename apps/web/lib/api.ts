@@ -5,6 +5,7 @@ export type CategoryNode = {
   slug: string;
   description: string | null;
   sort_order: number;
+  updated_at: string | null;
   cover: MediaItem | null;
   product_names: string[];
   standard_lengths_mm: number[];
@@ -56,6 +57,23 @@ export type SKU = {
   }>;
 };
 
+export type CompactSKU = [
+  id: string,
+  article: string,
+  material: string | null,
+  steelGrade: string | null,
+  wallThicknessMm: string | null,
+  diameterMm: number | null,
+  outerDiameterMm: number | null,
+  contour: string | null,
+  insulationMm: number | null,
+  lengthMm: number | null,
+  angleDeg: number | null,
+  priceRub: string | null,
+  stockStatus: string,
+  attributes: Record<string, unknown>,
+];
+
 export type ProductListItem = {
   id: string;
   category: {
@@ -96,6 +114,7 @@ export type ProductSeoPage = {
   product_slug: string;
   diameter_mm: number | null;
   outer_diameter_mm: number | null;
+  updated_at: string | null;
 };
 
 export type ProductKindFilter = {
@@ -189,8 +208,41 @@ export type Product = {
   application_tags: string[];
   compatibility_notes: string | null;
   skus: SKU[];
+  compact_skus: CompactSKU[];
   compatible_products: CompatibleProduct[];
 };
+
+export function productSkus(product: Pick<Product, "skus" | "compact_skus">): SKU[] {
+  if (!product.compact_skus.length) {
+    return product.skus;
+  }
+  const detailedById = new Map(product.skus.map((sku) => [sku.id, sku]));
+  return product.compact_skus.map((row) => {
+    const detailed = detailedById.get(row[0]);
+    if (detailed) {
+      return detailed;
+    }
+    return {
+      id: row[0],
+      article: row[1],
+      name: row[1],
+      slug: null,
+      material: row[2],
+      steel_grade: row[3],
+      wall_thickness_mm: row[4],
+      diameter_mm: row[5],
+      outer_diameter_mm: row[6],
+      contour: row[7],
+      insulation_mm: row[8],
+      length_mm: row[9],
+      angle_deg: row[10],
+      price_rub: row[11],
+      stock_status: row[12],
+      attributes: row[13],
+      compatibility_messages: [],
+    };
+  });
+}
 
 const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8000";
 
@@ -387,6 +439,7 @@ export async function getProduct(
 ): Promise<Product | null> {
   const params = new URLSearchParams();
   params.set("include_compatible", "false");
+  params.set("compact", "true");
   if (sku) {
     params.set("sku", sku);
   }
