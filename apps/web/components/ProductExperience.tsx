@@ -665,6 +665,23 @@ function skuSeoText(sku: Product["skus"][number] | null, key: string): string | 
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function productHeading(product: Product, sku: SKU | null) {
+  const heading = skuSeoText(sku, "h1") ?? product.name;
+  if (!sku) return heading;
+  const inner = sku.diameter_mm;
+  const outer = sku.outer_diameter_mm;
+  const label = inner !== null && outer !== null
+    ? `${inner}/${outer} мм`
+    : inner ?? outer;
+  if (label === null) return heading;
+  const diameterPattern = inner !== null && outer !== null
+    ? new RegExp(`(?:Ø\\s*)?${inner}\\s*(?:/|×|x|х)\\s*${outer}(?:\\s*мм)?`, "i")
+    : new RegExp(`(?:Ø|[dD]\\s*=?|диаметр\\s*)${label}(?:\\s*мм)?|\\b${label}\\s*мм\\b`, "i");
+  return diameterPattern.test(heading)
+    ? heading
+    : `${heading} ${typeof label === "number" ? `${label} мм` : label}`;
+}
+
 function photoFromValue(
   value: unknown,
   role: GalleryPhotoRole,
@@ -988,7 +1005,7 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
   const skuDetailRequests = useRef(new Map<string, Promise<SKU>>());
   const activeSku = skus.find((sku) => sku.id === selectedSkuId) ?? skus[0] ?? null;
   const faqItems = useMemo(() => productFaqItems(product, activeSku), [activeSku, product]);
-  const skuH1 = skuSeoText(activeSku, "h1") ?? product.name;
+  const skuH1 = productHeading(product, activeSku);
   const skuShortDescription = skuSeoText(activeSku, "short_description") ?? product.short_description;
   const skuDescription = skuSeoText(activeSku, "description") ?? product.description;
   const variantDimensions = useMemo(() => buildVariantDimensions(skus), [skus]);

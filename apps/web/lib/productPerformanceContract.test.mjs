@@ -57,6 +57,11 @@ test("heavy SKU content loads only after a variant is selected", () => {
   assert.match(experienceSource, /\/sku\/\$\{encodeURIComponent\(sku\.id\)\}/);
 });
 
+test("a diameter page exposes its diameter in the visible product heading", () => {
+  assert.match(experienceSource, /function productHeading\(product: Product, sku: SKU \| null\)/);
+  assert.match(experienceSource, /const skuH1 = productHeading\(product, activeSku\)/);
+});
+
 test("metadata and page rendering share one product request", () => {
   assert.match(productPageSource, /const getProductForPage = cache\(getProduct\)/);
   assert.equal((productPageSource.match(/getProductForPage\(/g) ?? []).length, 2);

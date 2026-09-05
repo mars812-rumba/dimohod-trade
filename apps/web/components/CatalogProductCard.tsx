@@ -35,6 +35,15 @@ function stockLabel(value: string | null) {
   }[value] ?? value;
 }
 
+function executionCountLabel(count: number) {
+  const lastTwo = count % 100;
+  const last = count % 10;
+  if (lastTwo >= 11 && lastTwo <= 14) return `${count} исполнений`;
+  if (last === 1) return `${count} исполнение`;
+  if (last >= 2 && last <= 4) return `${count} исполнения`;
+  return `${count} исполнений`;
+}
+
 function textAttribute(attributes: Record<string, unknown>, key: string) {
   const value = attributes[key];
   return typeof value === "string" || typeof value === "number" ? String(value) : null;
@@ -155,7 +164,7 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
           <div className="catalog-product-footer">
           <strong>{formatPrice(product.price_rub)}</strong>
           <span>
-            {product.sku_count} SKU <ArrowRight size={14} />
+            {executionCountLabel(product.sku_count)} <ArrowRight size={14} />
           </span>
           </div>
         </div>

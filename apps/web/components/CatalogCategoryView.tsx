@@ -20,7 +20,13 @@ import {
   catalogSeoPagesForCategory,
   type CatalogSeoPage,
 } from "@/lib/catalogSeoPages";
-import { getProductFilters, getProducts, type CategoryNode } from "@/lib/api";
+import {
+  getProductFilters,
+  getProductSeoPages,
+  getProducts,
+  type CategoryNode,
+  type ProductSeoPage,
+} from "@/lib/api";
 import { productPublicPath } from "@/lib/productUrls";
 import { filterVariantItems } from "@/lib/variantSelection";
 
@@ -64,6 +70,14 @@ function combinationValue(
 
 function isPipeCategory(category: CategoryNode) {
   return /(?:труб|trub)/iu.test(`${category.name} ${category.slug}`);
+}
+
+function diameterPageLabel(page: ProductSeoPage) {
+  if (page.diameter_mm !== null && page.outer_diameter_mm !== null) {
+    return `${page.diameter_mm}/${page.outer_diameter_mm} мм`;
+  }
+  const diameter = page.diameter_mm ?? page.outer_diameter_mm;
+  return diameter === null ? null : `${diameter} мм`;
 }
 
 export async function CatalogCategoryView({
@@ -153,26 +167,29 @@ export async function CatalogCategoryView({
     allValue: defaultLength ? "all" : "",
   }];
 
-  const productResponse = await getProducts({
-    limit: PAGE_SIZE,
-    offset,
-    category: category.slug,
-    diameter: appliedDiameter,
-    steelGrade: steel,
-    material,
-    outerSteelGrade: outerSteel,
-    outerMaterial,
-    length,
-    wallThickness: innerThickness,
-    outerWallThickness: outerThickness,
-    angle,
-    insulation,
-    preferredDiameter: diameter,
-    preferredSteelGrade: preferredSteel,
-    preferredMaterial,
-    preferredOuterSteelGrade: preferredOuterSteel,
-    preferredOuterMaterial,
-  });
+  const [productResponse, productSeoPages] = await Promise.all([
+    getProducts({
+      limit: PAGE_SIZE,
+      offset,
+      category: category.slug,
+      diameter: appliedDiameter,
+      steelGrade: steel,
+      material,
+      outerSteelGrade: outerSteel,
+      outerMaterial,
+      length,
+      wallThickness: innerThickness,
+      outerWallThickness: outerThickness,
+      angle,
+      insulation,
+      preferredDiameter: diameter,
+      preferredSteelGrade: preferredSteel,
+      preferredMaterial,
+      preferredOuterSteelGrade: preferredOuterSteel,
+      preferredOuterMaterial,
+    }),
+    getProductSeoPages(),
+  ]);
   const totalPages = Math.max(1, Math.ceil(productResponse.total / PAGE_SIZE));
   if (productResponse.total > 0 && page > totalPages) notFound();
 
@@ -211,6 +228,23 @@ export async function CatalogCategoryView({
     ],
   };
   const relatedSeoPages = catalogSeoPagesForCategory(category.slug);
+  const productNamesBySlug = new Map(
+    productResponse.items.map((product) => [product.slug, product.name]),
+  );
+  const diameterPages = productSeoPages
+    .flatMap((pageItem) => {
+      const productName = productNamesBySlug.get(pageItem.product_slug);
+      const label = diameterPageLabel(pageItem);
+      if (!productName || !label) return [];
+      return [{
+        href: productPublicPath(pageItem.product_slug, pageItem),
+        label: productResponse.items.length > 1 ? `${productName} — ${label}` : label,
+        diameter: pageItem.diameter_mm ?? pageItem.outer_diameter_mm ?? 0,
+        outerDiameter: pageItem.outer_diameter_mm ?? 0,
+      }];
+    })
+    .filter((item, index, items) => items.findIndex((candidate) => candidate.href === item.href) === index)
+    .sort((left, right) => left.diameter - right.diameter || left.outerDiameter - right.outerDiameter);
   const categoryHeading = catalogFilteredHeading(category.name, {
     diameter: appliedDiameter,
     inner_pipe: appliedInnerPipe,
@@ -248,6 +282,17 @@ export async function CatalogCategoryView({
           </div>
           {seoPage?.intro || category.description ? (
             <p className="lead catalog-category-description">{seoPage?.intro ?? category.description}</p>
+          ) : null}
+
+          {diameterPages.length ? (
+            <nav className="catalog-diameter-links" aria-label="Страницы товаров по диаметру">
+              <strong>Выберите диаметр</strong>
+              <div>
+                {diameterPages.map((item) => (
+                  <Link href={item.href} key={item.href}>{item.label}</Link>
+                ))}
+              </div>
+            </nav>
           ) : null}
 
           {relatedSeoPages.length ? (

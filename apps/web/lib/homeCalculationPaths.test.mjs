@@ -8,8 +8,8 @@ const header = readFileSync(new URL("../components/SiteHeader.tsx", import.meta.
 const hero = readFileSync(new URL("../components/HomeHeroCarousel.tsx", import.meta.url), "utf8");
 
 test("homepage sends measurement entry points to one format choice", () => {
-  assert.match(page, /<span>Полный замер<\/span>\s*<span>для точной сметы<\/span>/);
-  assert.match(page, /Начать замер/);
+  assert.match(page, /<span>Узнайте ориентировочную стоимость<\/span>\s*<span>или подготовьте точную смету<\/span>/);
+  assert.match(page, /Начать расчёт/);
   assert.match(page, /href="\/raschet"/);
   assert.doesNotMatch(page, /Сначала выберите формат/);
   assert.doesNotMatch(page, /Готовите реальный заказ\? Укажите размеры/);
@@ -17,12 +17,12 @@ test("homepage sends measurement entry points to one format choice", () => {
   assert.doesNotMatch(page, /<HomeGuidedShowcase/);
   assert.match(page, /LucideGauge/);
   assert.match(page, /LucideRuler/);
-  assert.match(page, /Быстрый расчёт или глубокий замер/);
-  assert.match(page, /На следующем экране подскажем, какой путь подойдёт именно вам/);
-  assert.match(page, /Для замера понадобится рулетка 5–10 м — больше ничего готовить не нужно/);
+  assert.match(page, /Два варианта под вашу задачу/);
+  assert.match(page, /Получите ориентировочную стоимость или пройдите полный замер для сметы/);
+  assert.match(page, /Для быстрого расчёта достаточно основных параметров/);
   assert.match(
     page,
-    /<h2 id="home-benefits-title">\s*<span>Полный замер<\/span>\s*<span>для точной сметы<\/span>\s*<\/h2>\s*<p className=\{styles\.benefitsIntroNote\}>\s*Для замера понадобится рулетка 5–10 м/,
+    /<h2 id="home-benefits-title">\s*<span>Узнайте ориентировочную стоимость<\/span>\s*<span>или подготовьте точную смету<\/span>/,
   );
   assert.doesNotMatch(page, /calculationEquipmentNote/);
   assert.match(pageStyles, /\.calculationFormatCta[\s\S]*border-radius: 30px/);
@@ -34,18 +34,19 @@ test("positioning promise replaces the old comparison and leads into measurement
 
   assert.ok(positioningStart > -1);
   assert.ok(measurementStart > positioningStart);
-  assert.match(page, /Мы продаём не трубы — мы продаём дымоход, который точно встанет/);
-  assert.match(page, /Проверяемая совместимость/);
-  assert.match(page, /Единая система/);
-  assert.match(page, /Проверка перед заказом/);
+  assert.match(page, /Получите комплект дымохода под ваш отопитель и маршрут/);
+  assert.match(page, /Не подбираете детали вручную/);
+  assert.match(page, /Получаете схему монтажа/);
+  assert.match(page, /Видите состав и предварительную стоимость/);
   assert.match(page, /className=\{styles\.positioningLink\} href="#measurement-choice"/);
   assert.doesNotMatch(page, /Трубу купить легко\. Сложнее собрать правильный дымоход/);
-  assert.equal(page.match(/Не просто трубы/g)?.length, 1);
+  assert.doesNotMatch(page, /Мы продаём не трубы/);
 });
 
 test("hero and navigation open the same format choice", () => {
   assert.match(hero, /href="\/raschet"/);
-  assert.match(hero, /Начать замер/);
+  assert.match(hero, /Получить расчёт/);
+  assert.match(hero, /Схема, полный состав дымохода и смета до заказа/);
   assert.match(header, /header-configurator" href="\/raschet"/);
   assert.match(header, /Выберите быстрый расчёт или глубокий замер/);
 });

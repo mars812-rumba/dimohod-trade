@@ -8290,7 +8290,8 @@ body.mobile-menu-open {
   border-top: 1px solid var(--line);
 }
 
-.catalog-page .catalog-seo-links {
+.catalog-page .catalog-seo-links,
+.catalog-page .catalog-diameter-links {
   display: grid;
   gap: 10px;
   margin: 22px 0;
@@ -8300,18 +8301,21 @@ body.mobile-menu-open {
   background: rgba(255, 255, 255, 0.72);
 }
 
-.catalog-page .catalog-seo-links > strong {
+.catalog-page .catalog-seo-links > strong,
+.catalog-page .catalog-diameter-links > strong {
   font-family: var(--font-heading);
   font-size: 15px;
 }
 
-.catalog-page .catalog-seo-links > div {
+.catalog-page .catalog-seo-links > div,
+.catalog-page .catalog-diameter-links > div {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 14px;
 }
 
-.catalog-page .catalog-seo-links a {
+.catalog-page .catalog-seo-links a,
+.catalog-page .catalog-diameter-links a {
   color: var(--catalog-steel-deep);
   font-size: 13px;
   font-weight: 700;
