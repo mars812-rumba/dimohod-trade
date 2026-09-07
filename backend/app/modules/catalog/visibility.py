@@ -22,15 +22,18 @@ def visible_category_ids(
     categories: Iterable[CategoryNode],
     active_product_category_ids: set[object],
 ) -> set[object]:
-    """Keep publication-ready categories and every ancestor needed for navigation."""
+    """Keep populated categories and every ancestor needed for navigation.
+
+    A cover is editorial content, not proof that a category or its products
+    exist. Missing media is reported in the admin instead of breaking public
+    catalog navigation.
+    """
     category_list = list(categories)
     parent_by_id = {category.id: category.parent_id for category in category_list}
-    category_by_id = {category.id: category for category in category_list}
     visible = {
         category_id
         for category_id in active_product_category_ids
         if category_id in parent_by_id
-        and has_public_category_cover(category_by_id[category_id])
     }
     pending = list(visible)
     while pending:

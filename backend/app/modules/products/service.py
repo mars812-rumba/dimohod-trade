@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 from uuid import UUID
@@ -6,13 +7,29 @@ from sqlalchemy import and_, case, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.modules.catalog.models import Category
-from app.modules.products.models import Product, SKU
-from app.modules.products.publication import public_sku_ready
 from app.db.price_section_attributes import outer_pipe_attributes
 from app.db.steel_selection_profiles import steel_selection_label
+from app.modules.catalog.models import Category
+from app.modules.products.models import SKU, Product
+from app.modules.products.publication import (
+    ProductPublicationPolicy,
+    prepare_publication_policy,
+    public_sku_ready,
+)
 
 COMPATIBLE_PRODUCT_IDS_KEY = "compatible_product_ids"
+
+
+def _publication_policy(
+    product: Product,
+    policies: dict[object, ProductPublicationPolicy],
+) -> ProductPublicationPolicy:
+    product_key = getattr(product, "id", None) or id(product)
+    policy = policies.get(product_key)
+    if policy is None:
+        policy = prepare_publication_policy(product)
+        policies[product_key] = policy
+    return policy
 
 
 def normalized_compatible_product_ids(extra_attributes: dict | None) -> list[UUID] | None:
@@ -359,10 +376,12 @@ async def list_compatible_product_skus(
             )
             .order_by(Product.name.asc(), SKU.length_mm.asc().nulls_last(), SKU.article.asc())
         )
+        rows = result.all()
+        publication_policies: dict[object, ProductPublicationPolicy] = {}
         return [
             (sku, product)
-            for sku, product in result.all()
-            if public_sku_ready(product, sku)
+            for sku, product in rows
+            if _publication_policy(product, publication_policies).sku_ready(sku)
             and any(
                 compatible_product_matches(
                     source_sku,
@@ -394,10 +413,12 @@ async def list_compatible_product_skus(
         )
         .order_by(Product.name.asc(), SKU.length_mm.asc().nulls_last(), SKU.article.asc())
     )
+    rows = result.all()
+    publication_policies: dict[object, ProductPublicationPolicy] = {}
     return [
         (sku, product)
-        for sku, product in result.all()
-        if public_sku_ready(product, sku)
+        for sku, product in rows
+        if _publication_policy(product, publication_policies).sku_ready(sku)
         and any(
             compatible_product_matches(source_sku, product, sku)
             for source_sku in active_source_skus
@@ -511,11 +532,11 @@ async def list_products(
             Product.name.asc(),
         )
     )
-    products = [
-        product
-        for product in result.scalars()
-        if any(public_sku_ready(product, sku) for sku in product.skus)
-    ]
+    products: list[Product] = []
+    for product in result.scalars():
+        policy = prepare_publication_policy(product)
+        if any(policy.sku_ready(sku) for sku in product.skus):
+            products.append(product)
     return products[offset : offset + limit], len(products)
 
 
@@ -527,7 +548,8 @@ async def list_product_kind_filters(session: AsyncSession) -> list[tuple[str, in
     )
     counts: dict[str, int] = {}
     for product in result.scalars():
-        if not any(public_sku_ready(product, sku) for sku in product.skus):
+        policy = prepare_publication_policy(product)
+        if not any(policy.sku_ready(sku) for sku in product.skus):
             continue
         kind = product.product_kind
         if kind:
@@ -537,20 +559,27 @@ async def list_product_kind_filters(session: AsyncSession) -> list[tuple[str, in
 
 async def list_product_seo_pages(
     session: AsyncSession,
-) -> list[tuple[str, int | None, int | None]]:
+) -> list[tuple[str, int | None, int | None, datetime]]:
     """Return one indexable page key per active product-family diameter."""
     result = await session.execute(
-        select(Product, SKU)
-        .join(SKU, SKU.product_id == Product.id)
+        select(SKU)
+        .join(Product, SKU.product_id == Product.id)
         .where(Product.is_active.is_(True), SKU.is_active.is_(True))
+        .options(selectinload(SKU.product))
         .order_by(Product.slug, SKU.diameter_mm, SKU.outer_diameter_mm)
     )
-    pages = {
-        (product.slug, sku.diameter_mm, sku.outer_diameter_mm)
-        for product, sku in result.all()
-        if public_sku_ready(product, sku)
-    }
-    return sorted(pages, key=lambda item: (item[0], item[1] or 0, item[2] or 0))
+    pages: dict[tuple[str, int | None, int | None], datetime] = {}
+    publication_policies: dict[object, ProductPublicationPolicy] = {}
+    for sku in result.scalars():
+        product = sku.product
+        if _publication_policy(product, publication_policies).sku_ready(sku):
+            key = (product.slug, sku.diameter_mm, sku.outer_diameter_mm)
+            updated_at = max(product.updated_at, sku.updated_at)
+            pages[key] = max(pages.get(key, updated_at), updated_at)
+    return sorted(
+        ((*key, updated_at) for key, updated_at in pages.items()),
+        key=lambda item: (item[0], item[1] or 0, item[2] or 0),
+    )
 
 
 async def list_variant_filter_options(
@@ -562,10 +591,11 @@ async def list_variant_filter_options(
     if category_slug:
         filters.append(Category.slug == category_slug)
     result = await session.execute(
-        select(Product, SKU)
+        select(SKU)
         .join(Product, SKU.product_id == Product.id)
         .join(Category, Product.category_id == Category.id)
         .where(*filters)
+        .options(selectinload(SKU.product))
     )
 
     diameter_products: dict[str, set[object]] = {}
@@ -591,8 +621,10 @@ async def list_variant_filter_options(
     def decimal_option_label(value: str) -> str:
         return value.replace(".", ",")
 
-    for product, sku in result.all():
-        if not public_sku_ready(product, sku):
+    publication_policies: dict[object, ProductPublicationPolicy] = {}
+    for sku in result.scalars():
+        product = sku.product
+        if not _publication_policy(product, publication_policies).sku_ready(sku):
             continue
         product_id = sku.product_id
         diameter = sku.diameter_mm
@@ -811,9 +843,50 @@ async def get_product_by_slug(session: AsyncSession, slug: str) -> Product | Non
         .options(joinedload(Product.category), selectinload(Product.skus))
     )
     product = result.scalar_one_or_none()
-    if product is None or not any(public_sku_ready(product, sku) for sku in product.skus):
+    if product is None:
+        return None
+    policy = prepare_publication_policy(product)
+    if not any(policy.sku_ready(sku) for sku in product.skus):
         return None
     return product
+
+
+async def public_product_reference_exists(
+    session: AsyncSession,
+    *,
+    product_slug: str,
+    sku_key: str | None = None,
+    diameter_mm: int | None = None,
+    outer_diameter_mm: int | None = None,
+) -> bool:
+    """Resolve a public product route without hydrating its variant matrix."""
+    filters = [
+        or_(
+            Product.slug == product_slug,
+            Product.extra_attributes["_seo_public_slug_previous"].as_string()
+            == product_slug,
+        ),
+        Product.is_active.is_(True),
+        SKU.is_active.is_(True),
+    ]
+    if diameter_mm is not None:
+        filters.append(SKU.diameter_mm == diameter_mm)
+    if outer_diameter_mm is not None:
+        filters.append(SKU.outer_diameter_mm == outer_diameter_mm)
+    if sku_key:
+        identifiers = [SKU.slug == sku_key, SKU.article == sku_key]
+        try:
+            identifiers.append(SKU.id == UUID(sku_key))
+        except ValueError:
+            pass
+        filters.append(or_(*identifiers))
+    result = await session.scalar(
+        select(SKU.id)
+        .join(Product, SKU.product_id == Product.id)
+        .where(*filters)
+        .limit(1)
+    )
+    return result is not None
 
 
 async def get_product_sku_by_key(

@@ -72,6 +72,12 @@ class AdminSKUListResponse(BaseModel):
     offset: int
 
 
+class AdminProductContentQuality(BaseModel):
+    active_sku_count: int = 0
+    missing_photo_sku_count: int = 0
+    missing_description_sku_count: int = 0
+
+
 class AdminProductListItem(BaseModel):
     id: UUID
     category_id: UUID
@@ -82,6 +88,9 @@ class AdminProductListItem(BaseModel):
     sku_count: int
     media_count: int
     is_active: bool
+    content_quality: AdminProductContentQuality = Field(
+        default_factory=AdminProductContentQuality
+    )
 
 
 class AdminProductRead(AdminProductListItem):
@@ -138,6 +147,12 @@ class AdminSEOProductKnowledge(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
+class AdminProductFAQItem(BaseModel):
+    question: str = Field(min_length=1, max_length=240)
+    answer: str = Field(min_length=1, max_length=1600)
+    evidence: list[str] = Field(min_length=1, max_length=10)
+
+
 class AdminProductUpdate(BaseModel):
     short_description: str | None = Field(default=None, max_length=500)
     description: str | None = None
@@ -145,6 +160,9 @@ class AdminProductUpdate(BaseModel):
     seo_description: str | None = Field(default=None, max_length=320)
     seo_knowledge: AdminSEOProductKnowledge | None = Field(default=None, alias="seoKnowledge")
     compatible_product_ids: list[UUID] | None = Field(default=None, alias="compatibleProductIds")
+    faq_draft: list[AdminProductFAQItem] | None = Field(default=None, alias="faqDraft", max_length=8)
+    publish_faq: bool = Field(default=False, alias="publishFaq")
+    unpublish_faq: bool = Field(default=False, alias="unpublishFaq")
 
     model_config = ConfigDict(populate_by_name=True)
 

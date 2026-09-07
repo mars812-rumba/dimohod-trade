@@ -34,7 +34,7 @@ def test_category_reappears_when_it_gets_a_public_product() -> None:
     assert visible_category_ids(categories, {"bath"}) == {"bath"}
 
 
-def test_category_with_products_but_without_cover_stays_hidden() -> None:
+def test_category_with_products_remains_visible_without_cover() -> None:
     categories = [
         category("sandwich"),
         category("sandwich-pipes", "sandwich", has_cover=True),
@@ -44,7 +44,7 @@ def test_category_with_products_but_without_cover_stays_hidden() -> None:
     assert visible_category_ids(
         categories,
         {"sandwich-pipes", "sandwich-dampers"},
-    ) == {"sandwich", "sandwich-pipes"}
+    ) == {"sandwich", "sandwich-pipes", "sandwich-dampers"}
 
 
 def test_blank_cover_url_is_not_public() -> None:

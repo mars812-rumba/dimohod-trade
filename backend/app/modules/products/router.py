@@ -53,6 +53,7 @@ from app.modules.products.service import (
     list_variant_filter_options,
     material_group,
     normalized_compatible_product_ids,
+    public_product_reference_exists,
     variant_preservation_score,
 )
 from app.modules.products.yandex_feed import build_yandex_feed, load_yandex_feed_products
@@ -876,6 +877,27 @@ async def read_yandex_feed(session: AsyncSession = Depends(get_db)) -> Response:
         media_type="application/xml",
         headers={"Cache-Control": "public, max-age=900, stale-while-revalidate=3600"},
     )
+
+
+@router.get("/resolve/{slug}", response_class=Response)
+async def resolve_public_product(
+    slug: str,
+    sku: str | None = Query(default=None, min_length=1, max_length=240),
+    diameter: str | None = Query(default=None, pattern=r"^(?:\d+:\d*|\d*:\d+)$"),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    """Return 204 when a public product route points to an active SKU."""
+    diameter_mm, outer_diameter_mm = parse_diameter_filter(diameter)
+    exists = await public_product_reference_exists(
+        session,
+        product_slug=slug,
+        sku_key=sku,
+        diameter_mm=diameter_mm,
+        outer_diameter_mm=outer_diameter_mm,
+    )
+    if not exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/{slug}", response_model=ProductRead)

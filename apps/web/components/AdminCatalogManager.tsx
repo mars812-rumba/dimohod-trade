@@ -26,6 +26,11 @@ type AdminProductListItem = {
   sku_count: number;
   media_count: number;
   is_active: boolean;
+  content_quality: {
+    active_sku_count: number;
+    missing_photo_sku_count: number;
+    missing_description_sku_count: number;
+  };
 };
 
 type AdminMediaItem = {
@@ -144,6 +149,12 @@ type ProductSeoKnowledgeFormState = {
   sourceNotes: string;
   configuratorCtaText: string;
   configuratorCtaHref: string;
+};
+
+type ProductFaqDraftItem = {
+  question: string;
+  answer: string;
+  evidence: string;
 };
 
 type PhotoRole = "general" | "top" | "connection";
@@ -511,6 +522,39 @@ function lines(value: string): string[] {
   return value.split("\n").map((item) => item.trim()).filter(Boolean);
 }
 
+function faqDraftFromProduct(product: AdminProduct): ProductFaqDraftItem[] {
+  const draft = Array.isArray(product.extra_attributes.faq_draft)
+    ? product.extra_attributes.faq_draft
+    : Array.isArray(product.extra_attributes.faq)
+      ? product.extra_attributes.faq
+      : [];
+  return draft.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const value = item as Record<string, unknown>;
+    const question = typeof value.question === "string" ? value.question : "";
+    const answer = typeof value.answer === "string" ? value.answer : "";
+    const evidence = Array.isArray(value.evidence)
+      ? value.evidence.filter((entry): entry is string => typeof entry === "string").join("\n")
+      : "";
+    return question && answer ? [{ question, answer, evidence }] : [];
+  });
+}
+
+function compactValues(values: Array<string | number | null>): string {
+  return Array.from(new Set(values.filter((value): value is string | number => value !== null && value !== "")))
+    .sort((left, right) => String(left).localeCompare(String(right), "ru", { numeric: true }))
+    .join(", ");
+}
+
+function faqPayload(items: ProductFaqDraftItem[]) {
+  return items.flatMap((item) => {
+    const question = item.question.trim();
+    const answer = item.answer.trim();
+    const evidence = lines(item.evidence);
+    return question && answer && evidence.length ? [{ question, answer, evidence }] : [];
+  });
+}
+
 function knowledgeFromProduct(product: AdminProduct): ProductSeoKnowledgeFormState {
   const raw = product.extra_attributes.seo_knowledge;
   const knowledge = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
@@ -682,6 +726,7 @@ export default function AdminCatalogManager() {
   const [compatibleProductIds, setCompatibleProductIds] = useState<string[]>([]);
   const [skuForm, setSkuForm] = useState<SKUFormState>(emptySkuForm);
   const [productSeoForm, setProductSeoForm] = useState<ProductSeoFormState>(emptyProductSeoForm);
+  const [faqDraft, setFaqDraft] = useState<ProductFaqDraftItem[]>([]);
   const [photoDrafts, setPhotoDrafts] = useState<Record<PhotoRole, PhotoDraft>>(createEmptyPhotoDrafts);
   const [familyPhotoScopeDrafts, setFamilyPhotoScopeDrafts] = useState<Record<string, FamilyPhotoScopeDraft>>({});
   const [categoryCoverDraft, setCategoryCoverDraft] = useState<PhotoDraft>(createEmptyPhotoDraft);
@@ -796,6 +841,8 @@ export default function AdminCatalogManager() {
   const hasConeTerminationScheme =
     normalizedProductName.includes("конус") &&
     (normalizedProductName.includes("дефлектор") || normalizedProductName.includes("оголовок"));
+  const isFaqPublished = Array.isArray(selectedProduct?.extra_attributes.faq) &&
+    selectedProduct.extra_attributes.faq.length > 0;
 
   async function loadCategories() {
     const data = await apiRequest<AdminCategory[]>("/api/v1/admin/categories");
@@ -838,6 +885,7 @@ export default function AdminCatalogManager() {
     setSelectedProduct(data);
     setCompatibleProductIds(data.compatible_product_ids ?? []);
     setProductSeoForm(productToSeoForm(data));
+    setFaqDraft(faqDraftFromProduct(data));
     const activeSkus = data.skus.filter((sku) => sku.is_active);
     const selectedSku = skuId ? activeSkus.find((sku) => sku.id === skuId) : activeSkus[0];
     setSkuForm(selectedSku ? skuToForm(selectedSku) : emptySkuForm);
@@ -961,6 +1009,82 @@ export default function AdminCatalogManager() {
           ? `Ошибка [HTTP ${error.status}]\n${message}`
           : `Ошибка [NETWORK]\n${message}`,
       );
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  function generateFaqDraft() {
+    if (!selectedProduct) return;
+    const generated: ProductFaqDraftItem[] = [];
+    const sourceNotes = lines(productSeoForm.knowledge.sourceNotes);
+    const confirmedPurpose = selectedProduct.purpose.length
+      ? selectedProduct.purpose
+      : sourceNotes.length
+        ? lines(productSeoForm.knowledge.purpose)
+        : [];
+    if (confirmedPurpose.length) {
+      generated.push({
+        question: `Для чего используется «${selectedProduct.name}»?`,
+        answer: confirmedPurpose.join(" "),
+        evidence: selectedProduct.purpose.length ? "Product.purpose" : sourceNotes.join("\n"),
+      });
+    }
+
+    const activeSkus = selectedProduct.skus.filter((sku) => sku.is_active);
+    const variantFacts = [
+      compactValues(activeSkus.map((sku) => sku.diameter_mm)) ? `d: ${compactValues(activeSkus.map((sku) => sku.diameter_mm))} мм` : "",
+      compactValues(activeSkus.map((sku) => sku.outer_diameter_mm)) ? `D: ${compactValues(activeSkus.map((sku) => sku.outer_diameter_mm))} мм` : "",
+      compactValues(activeSkus.map((sku) => sku.length_mm)) ? `длина: ${compactValues(activeSkus.map((sku) => sku.length_mm))} мм` : "",
+      compactValues(activeSkus.map((sku) => sku.steel_grade)) ? `сталь: ${compactValues(activeSkus.map((sku) => sku.steel_grade))}` : "",
+      compactValues(activeSkus.map((sku) => sku.material)) ? `материал: ${compactValues(activeSkus.map((sku) => sku.material))}` : "",
+    ].filter(Boolean);
+    if (variantFacts.length) {
+      generated.push({
+        question: `Какие варианты «${selectedProduct.name}» есть в каталоге?`,
+        answer: `В активных SKU указаны ${variantFacts.join("; ")}. Перед заказом выберите конкретный вариант в карточке.`,
+        evidence: "Активные SKU семейства: diameter_mm, outer_diameter_mm, length_mm, steel_grade, material",
+      });
+    }
+
+    const selection = [
+      ...lines(productSeoForm.knowledge.selectionRules),
+      ...lines(productSeoForm.knowledge.requiredInputData),
+    ];
+    if (selection.length && sourceNotes.length) {
+      generated.push({
+        question: `Что проверить перед выбором «${selectedProduct.name}»?`,
+        answer: selection.join(" "),
+        evidence: sourceNotes.join("\n"),
+      });
+    }
+    setFaqDraft(generated);
+    setStatus(generated.length
+      ? "Черновик FAQ собран из подтверждённых полей. Проверьте ответы и основания перед сохранением."
+      : "Недостаточно подтверждённых данных для FAQ: заполните Product/SKU или данные SEO с источниками.");
+  }
+
+  async function persistFaq(action: "save" | "publish" | "unpublish") {
+    if (!selectedProduct) return;
+    const items = faqPayload(faqDraft);
+    if (action !== "unpublish" && (!items.length || items.length !== faqDraft.length)) {
+      setStatus("Заполните вопрос, ответ и хотя бы одно основание для каждого пункта FAQ.");
+      return;
+    }
+    setIsBusy(true);
+    try {
+      const body = action === "unpublish"
+        ? { unpublishFaq: true }
+        : { faqDraft: items, publishFaq: action === "publish" };
+      const response = await apiRequestWithStatus<AdminProduct>(
+        `/api/v1/admin/products/${selectedProduct.id}`,
+        { method: "PATCH", body: JSON.stringify(body) },
+      );
+      setSelectedProduct(response.data);
+      setFaqDraft(faqDraftFromProduct(response.data));
+      setStatus(action === "publish" ? "FAQ опубликован" : action === "unpublish" ? "FAQ снят с публикации, черновик сохранён" : "Черновик FAQ сохранён");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Не удалось обновить FAQ");
     } finally {
       setIsBusy(false);
     }
@@ -1735,7 +1859,7 @@ export default function AdminCatalogManager() {
               <LogOut aria-hidden size={15} /> Выйти
             </button>
           </div>
-          <div className={styles.status}>{status}</div>
+          <div aria-live="polite" className={styles.status} role="status">{status}</div>
         </div>
       </div>
 
@@ -1874,6 +1998,18 @@ export default function AdminCatalogManager() {
                   <span className={styles.rowDetails}>
                     {product.category_name} · {product.product_kind ?? "тип не задан"} · {product.sku_count} SKU
                   </span>
+                  {product.content_quality.missing_photo_sku_count || product.content_quality.missing_description_sku_count ? (
+                    <span className={styles.qualityWarningCompact}>
+                      Нужно заполнить: {[
+                        product.content_quality.missing_photo_sku_count
+                          ? `фото для ${product.content_quality.missing_photo_sku_count} SKU`
+                          : null,
+                        product.content_quality.missing_description_sku_count
+                          ? `описание для ${product.content_quality.missing_description_sku_count} SKU`
+                          : null,
+                      ].filter(Boolean).join("; ")}
+                    </span>
+                  ) : null}
                 </span>
                 <span className={styles.badge}>{product.is_active ? "on" : "off"}</span>
               </button>
@@ -1916,6 +2052,23 @@ export default function AdminCatalogManager() {
                   {selectedProduct.category_name} · {selectedProduct.slug} · SKU {selectedProduct.skus.length}
                 </span>
               </div>
+
+              {selectedProduct.content_quality.missing_photo_sku_count || selectedProduct.content_quality.missing_description_sku_count ? (
+                <section aria-labelledby="content-quality-title" className={styles.contentQualityWarning}>
+                  <div>
+                    <strong id="content-quality-title">Карточка опубликована, но данные заполнены не полностью</strong>
+                    <p>Недостающий контент не скрывает активный товар. Заполните его, когда появятся подтверждённые материалы.</p>
+                  </div>
+                  <ul>
+                    {selectedProduct.content_quality.missing_photo_sku_count ? (
+                      <li>Нет подходящего фото для {selectedProduct.content_quality.missing_photo_sku_count} из {selectedProduct.content_quality.active_sku_count} активных SKU.</li>
+                    ) : null}
+                    {selectedProduct.content_quality.missing_description_sku_count ? (
+                      <li>Нет описания для {selectedProduct.content_quality.missing_description_sku_count} из {selectedProduct.content_quality.active_sku_count} активных SKU.</li>
+                    ) : null}
+                  </ul>
+                </section>
+              ) : null}
 
               <section className={styles.skuEditor}>
                 <div className={styles.skuEditorHead}>
@@ -2221,6 +2374,88 @@ export default function AdminCatalogManager() {
                   </div>
                 </div>
               </form>
+
+              <section aria-labelledby="product-faq-title" className={styles.seoEditor}>
+                <div className={styles.mediaSectionHeader}>
+                  <h3 id="product-faq-title">Индивидуальный FAQ семейства</h3>
+                  <p>
+                    Черновик не виден на сайте. Для публикации у каждого ответа должно быть основание:
+                    поле Product/SKU, правило или утверждённый источник.
+                  </p>
+                </div>
+                <div aria-live="polite" className={styles.faqStatus}>
+                  {isFaqPublished ? "Опубликован" : "Не опубликован"} · пунктов в черновике: {faqDraft.length}
+                </div>
+                {faqDraft.map((item, index) => (
+                  <fieldset className={styles.faqItem} key={`faq-${index}`}>
+                    <legend>Вопрос {index + 1}</legend>
+                    <label className={styles.wideField} htmlFor={`faq-question-${index}`}>
+                      Вопрос
+                      <input
+                        id={`faq-question-${index}`}
+                        maxLength={240}
+                        onChange={(event) => setFaqDraft((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, question: event.target.value } : entry))}
+                        value={item.question}
+                      />
+                    </label>
+                    <label className={styles.wideField} htmlFor={`faq-answer-${index}`}>
+                      Ответ
+                      <textarea
+                        id={`faq-answer-${index}`}
+                        maxLength={1600}
+                        onChange={(event) => setFaqDraft((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, answer: event.target.value } : entry))}
+                        value={item.answer}
+                      />
+                    </label>
+                    <label className={styles.wideField} htmlFor={`faq-evidence-${index}`}>
+                      Основание ответа — по одному на строку
+                      <textarea
+                        aria-describedby={`faq-evidence-help-${index}`}
+                        id={`faq-evidence-${index}`}
+                        onChange={(event) => setFaqDraft((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, evidence: event.target.value } : entry))}
+                        value={item.evidence}
+                      />
+                      <small id={`faq-evidence-help-${index}`}>Например: Product.purpose, активные SKU или название утверждённого документа.</small>
+                    </label>
+                    <button
+                      aria-label={`Удалить вопрос ${index + 1}`}
+                      className={styles.clearButton}
+                      onClick={() => setFaqDraft((current) => current.filter((_, entryIndex) => entryIndex !== index))}
+                      type="button"
+                    >
+                      Удалить вопрос
+                    </button>
+                  </fieldset>
+                ))}
+                <div className={styles.seoEditorActions}>
+                  <div className={styles.seoEditorButtons}>
+                    <button className={styles.ghostButton} disabled={isBusy} onClick={generateFaqDraft} type="button">
+                      <Sparkles size={15} /> Собрать из подтверждённых данных
+                    </button>
+                    <button
+                      className={styles.ghostButton}
+                      disabled={isBusy || faqDraft.length >= 8}
+                      onClick={() => setFaqDraft((current) => [...current, { question: "", answer: "", evidence: "" }])}
+                      type="button"
+                    >
+                      <Plus size={15} /> Добавить вопрос
+                    </button>
+                  </div>
+                  <div className={styles.seoEditorButtons}>
+                    {isFaqPublished ? (
+                      <button className={styles.clearButton} disabled={isBusy} onClick={() => persistFaq("unpublish")} type="button">
+                        Снять с публикации
+                      </button>
+                    ) : null}
+                    <button className={styles.ghostButton} disabled={isBusy} onClick={() => persistFaq("save")} type="button">
+                      <Save size={15} /> Сохранить черновик
+                    </button>
+                    <button className={styles.button} disabled={isBusy} onClick={() => persistFaq("publish")} type="button">
+                      Опубликовать FAQ
+                    </button>
+                  </div>
+                </div>
+              </section>
 
               <div className={styles.mediaSectionHeader}>
                 <h3>Фотографии семейства</h3>

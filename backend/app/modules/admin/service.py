@@ -27,24 +27,31 @@ from app.media.images import (
 from app.modules.admin.schemas import (
     AdminMediaItem,
     AdminPhotoUpload,
+    AdminProductContentQuality,
+    AdminProductFAQItem,
     AdminProductListItem,
     AdminProductRead,
     AdminProductUpdate,
-    AdminSEOProductKnowledge,
     AdminSEOGenerateResponse,
+    AdminSEOProductKnowledge,
     AdminSKUCreate,
     AdminSKUListItem,
     AdminSKUUpdate,
 )
 from app.modules.catalog.models import Category
-from app.modules.compatibility.service import context_from_product_sku, list_active_rules, rule_matches
-from app.modules.products.models import Product, SKU
+from app.modules.compatibility.service import (
+    context_from_product_sku,
+    list_active_rules,
+    rule_matches,
+)
 from app.modules.products.content import (
     is_single_wall_contour,
     remove_single_wall_placement_rule,
     sanitize_seo_knowledge_dict,
     sanitize_sku_seo_dict,
 )
+from app.modules.products.models import SKU, Product
+from app.modules.products.publication import product_content_quality
 from app.modules.products.service import (
     COMPATIBLE_PRODUCT_IDS_KEY,
     normalized_compatible_product_ids,
@@ -69,6 +76,8 @@ SKU_PHOTO_ROLE_FILENAMES = {
 }
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 SEO_KNOWLEDGE_KEY = "seo_knowledge"
+FAQ_KEY = "faq"
+FAQ_DRAFT_KEY = "faq_draft"
 LEGACY_CONTENT_MIGRATION_KEY = "legacy_admin_content_migrated"
 SEO_EXCLUDED_COMPATIBILITY_RULE_CODES = frozenset({"single_wall_indoor_only"})
 SEO_JSON_SCHEMA = {
@@ -82,6 +91,21 @@ SEO_JSON_SCHEMA = {
     "required": ["short_description", "description", "seo_title", "seo_description"],
     "additionalProperties": False,
 }
+
+
+def sanitize_product_faq_items(items: list[AdminProductFAQItem]) -> list[dict[str, object]]:
+    sanitized: list[dict[str, object]] = []
+    seen_questions: set[str] = set()
+    for item in items:
+        question = item.question.strip()
+        answer = item.answer.strip()
+        evidence = list(dict.fromkeys(value.strip() for value in item.evidence if value.strip()))
+        normalized_question = question.casefold()
+        if not question or not answer or not evidence or normalized_question in seen_questions:
+            continue
+        seen_questions.add(normalized_question)
+        sanitized.append({"question": question, "answer": answer, "evidence": evidence})
+    return sanitized
 
 
 def extract_openai_output_text(payload: dict[str, Any]) -> str:
@@ -817,6 +841,7 @@ def product_to_admin_read(product: Product) -> AdminProductRead:
         product.category.extra_attributes,
         inspect_content=True,
     )
+    quality = product_content_quality(product)
     return AdminProductRead(
         id=product.id,
         category_id=product.category_id,
@@ -827,6 +852,11 @@ def product_to_admin_read(product: Product) -> AdminProductRead:
         sku_count=len(product.skus),
         media_count=len(media),
         is_active=product.is_active,
+        content_quality=AdminProductContentQuality(
+            active_sku_count=quality.active_sku_count,
+            missing_photo_sku_count=quality.missing_photo_sku_count,
+            missing_description_sku_count=quality.missing_description_sku_count,
+        ),
         short_description=product.short_description,
         description=product.description,
         brand=product.brand,
@@ -886,6 +916,11 @@ async def list_admin_products(
             sku_count=len(product.skus),
             media_count=len(resolve_product_media(product.extra_attributes, product.category.extra_attributes)),
             is_active=product.is_active,
+            content_quality=AdminProductContentQuality(
+                active_sku_count=(quality := product_content_quality(product)).active_sku_count,
+                missing_photo_sku_count=quality.missing_photo_sku_count,
+                missing_description_sku_count=quality.missing_description_sku_count,
+            ),
         )
         for product in products
     ]
@@ -1018,6 +1053,44 @@ async def update_product(
                 AdminSEOProductKnowledge.model_validate(knowledge),
                 single_wall_context=single_wall_context,
             )
+    if values.get("publish_faq") and values.get("unpublish_faq"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="FAQ cannot be published and unpublished in one request",
+        )
+    faq_draft: list[dict[str, object]] | None = None
+    if "faq_draft" in values:
+        raw_draft = values["faq_draft"]
+        validated_draft = [AdminProductFAQItem.model_validate(item) for item in (raw_draft or [])]
+        faq_draft = sanitize_product_faq_items(validated_draft)
+        if len(faq_draft) != len(validated_draft):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Every FAQ item must be unique and contain question, answer and evidence",
+            )
+        if faq_draft:
+            extra_attributes[FAQ_DRAFT_KEY] = faq_draft
+        else:
+            extra_attributes.pop(FAQ_DRAFT_KEY, None)
+    if values.get("publish_faq"):
+        publishable = faq_draft
+        if publishable is None:
+            stored_draft = extra_attributes.get(FAQ_DRAFT_KEY)
+            if isinstance(stored_draft, list):
+                validated_stored_draft = [AdminProductFAQItem.model_validate(item) for item in stored_draft]
+                publishable = sanitize_product_faq_items(validated_stored_draft)
+                if len(publishable) != len(validated_stored_draft):
+                    publishable = []
+            else:
+                publishable = []
+        if not publishable:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Save at least one FAQ item with evidence before publishing",
+            )
+        extra_attributes[FAQ_KEY] = publishable
+    if values.get("unpublish_faq"):
+        extra_attributes.pop(FAQ_KEY, None)
     if "compatible_product_ids" in values:
         requested_ids = list(dict.fromkeys(values["compatible_product_ids"] or []))
         if product_id in requested_ids:

@@ -86,21 +86,24 @@ def test_feed_excludes_sku_without_positive_price() -> None:
     assert root.findall("./shop/offers/offer") == []
 
 
-def test_feed_excludes_sku_without_applicable_photo_or_description() -> None:
-    wrong_photo = product()
-    wrong_photo.skus = [sku()]
-    wrong_photo.extra_attributes["media"][0]["diameter_keys"] = ["150/250"]
-    no_description = product(description=None)
-    no_description.skus = [sku()]
+def test_feed_still_requires_an_applicable_offer_photo() -> None:
+    family = product()
+    family.skus = [sku()]
+    family.extra_attributes["media"][0]["diameter_keys"] = ["150/250"]
 
-    root = ET.fromstring(
-        build_yandex_feed(
-            [wrong_photo, no_description],
-            base_url="https://dimohod-trade.pro",
-        )
-    )
+    root = parse_feed(family)
 
     assert root.findall("./shop/offers/offer") == []
+
+
+def test_feed_keeps_active_sku_without_editorial_description() -> None:
+    family = product(description=None)
+    family.skus = [sku()]
+
+    offer = parse_feed(family).find("./shop/offers/offer")
+
+    assert offer is not None
+    assert offer.findtext("description") == family.name
 
 
 def test_feed_prefers_confirmed_sku_copy_and_photo() -> None:

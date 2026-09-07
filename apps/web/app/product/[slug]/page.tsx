@@ -179,8 +179,44 @@ function productImage(product: Product, sku: SKU | null) {
   if (!Array.isArray(media)) {
     return null;
   }
+  const diameterKey = sku
+    ? sku.outer_diameter_mm === null
+      ? sku.diameter_mm?.toString() ?? null
+      : sku.diameter_mm === null
+        ? null
+        : `${sku.diameter_mm}/${sku.outer_diameter_mm}`
+    : null;
   const item = media.find(
-    (value) => value && typeof value === "object" && "url" in value && typeof value.url === "string",
+    (value) => {
+      if (
+        !value ||
+        typeof value !== "object" ||
+        !("url" in value) ||
+        typeof value.url !== "string" ||
+        !("role" in value) ||
+        value.role !== "general"
+      ) {
+        return false;
+      }
+      const diameterKeys = "diameter_keys" in value && Array.isArray(value.diameter_keys)
+        ? value.diameter_keys
+            .filter((key: unknown): key is string => typeof key === "string")
+            .map((key: string) => key.trim().replace(":", "/"))
+            .filter(Boolean)
+        : [];
+      const lengthsMm = "lengths_mm" in value && Array.isArray(value.lengths_mm)
+        ? value.lengths_mm.filter(
+            (length: unknown): length is number => Number.isInteger(length) && Number(length) >= 0,
+          )
+        : [];
+      return (
+        (!diameterKeys.length || (diameterKey !== null && diameterKeys.includes(diameterKey))) &&
+        (!lengthsMm.length ||
+          (sku?.length_mm !== null &&
+            sku?.length_mm !== undefined &&
+            lengthsMm.includes(sku.length_mm)))
+      );
+    },
   );
   return item && typeof item === "object" && "url" in item && typeof item.url === "string"
     ? absoluteUrl(item.url)
@@ -321,10 +357,7 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
   const initialLengthMm = requestedLengthMm(query.length);
   const product = await getProductForPage(route.familySlug, initialSkuKey, route.diameter);
   if (!product) {
-    return {
-      title: "Товар не найден | Дымоход Трейд",
-      robots: { index: false, follow: false },
-    };
+    notFound();
   }
   const sku = selectSku(product, initialSkuKey, route.diameter, initialLengthMm);
   const title = metadataTitle(product, sku);

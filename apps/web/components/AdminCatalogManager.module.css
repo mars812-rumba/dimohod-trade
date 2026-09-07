@@ -253,6 +253,12 @@
   display: block;
 }
 
+.qualityWarningCompact {
+  color: #8a3d1f;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .rowDetails {
   overflow: hidden;
   color: var(--steel);
@@ -285,6 +291,34 @@
 .productHead h2 {
   margin: 0;
   font-size: 24px;
+}
+
+.contentQualityWarning {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(217, 107, 43, 0.38);
+  border-left: 4px solid #d96b2b;
+  border-radius: 7px;
+  color: #633018;
+  background: #fff7ef;
+}
+
+.contentQualityWarning strong,
+.contentQualityWarning p,
+.contentQualityWarning ul {
+  margin: 0;
+}
+
+.contentQualityWarning p,
+.contentQualityWarning li {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.contentQualityWarning ul {
+  padding-left: 18px;
 }
 
 .skuEditor {
@@ -582,6 +616,35 @@
   display: flex;
   flex: 0 0 auto;
   gap: 8px;
+}
+
+.faqStatus {
+  width: fit-content;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--steel);
+  background: #fff;
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.faqItem {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.faqItem legend {
+  padding: 0 5px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .mediaSectionHeader {
@@ -1297,7 +1360,8 @@
   }
 
   .seoEditorButtons .button,
-  .seoEditorButtons .ghostButton {
+  .seoEditorButtons .ghostButton,
+  .seoEditorButtons .clearButton {
     width: 100%;
   }
 

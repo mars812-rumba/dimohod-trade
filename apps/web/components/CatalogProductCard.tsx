@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, ImageOff, Sparkles } from "lucide-react";
 import type { ProductListItem } from "@/lib/api";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productSelectionPath } from "@/lib/productUrls";
@@ -127,7 +127,10 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
             decoding="async"
           />
         ) : (
-          <span>{product.product_kind ?? "товар"}</span>
+          <span className="catalog-product-photo-placeholder">
+            <ImageOff aria-hidden="true" size={24} strokeWidth={1.6} />
+            Фото уточняется
+          </span>
         )}
         {hasLaserWeldedSeam ? (
           <div className="product-image-technology-badge catalog-product-technology-badge">

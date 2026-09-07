@@ -55,6 +55,7 @@ type ProductPhotoItem = {
   diameterKeys: string[];
   lengthsMm: number[];
   skuSpecific?: boolean;
+  source?: "family" | "sku";
 };
 
 type ProductSchemeItem = {
@@ -686,6 +687,7 @@ function photoFromValue(
   value: unknown,
   role: GalleryPhotoRole,
   fallbackAlt: string,
+  source: "family" | "sku",
 ): ProductPhotoItem | null {
   if (!value || typeof value !== "object" || !("url" in value) || typeof value.url !== "string") {
     return null;
@@ -716,6 +718,7 @@ function photoFromValue(
           )
         : [],
     skuSpecific: "sku_specific" in value && value.sku_specific === true,
+    source,
   };
 }
 
@@ -760,7 +763,12 @@ function sharedProductMediaByRole(
     if (!role) {
       return result;
     }
-    const photo = photoFromValue(value, role, `${product.name} — ${mediaRoleLabel(role).toLocaleLowerCase("ru-RU")}`);
+    const photo = photoFromValue(
+      value,
+      role,
+      `${product.name} — ${mediaRoleLabel(role).toLocaleLowerCase("ru-RU")}`,
+      "family",
+    );
     if (photo && familyPhotoAppliesToSku(photo, activeSku)) {
       const current = result[role];
       if (!current || familyPhotoSpecificity(photo) >= familyPhotoSpecificity(current)) {
@@ -790,6 +798,7 @@ function skuMediaByRole(
         value,
         role,
         `${sku.name} (${sku.article}) — ${mediaRoleLabel(role).toLocaleLowerCase("ru-RU")}`,
+        "sku",
       );
       if (photo) {
         result[role] = photo;
@@ -801,6 +810,7 @@ function skuMediaByRole(
       sku.attributes.sku_photo,
       "general",
       `${sku.name} (${sku.article}) — общий вид`,
+      "sku",
     );
     if (legacy) {
       result.general = legacy;
@@ -1304,9 +1314,17 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
                 />
               ) : (
                 <div className="product-image-placeholder">
-                  <span>Фото товара</span>
+                  <Package aria-hidden="true" size={34} strokeWidth={1.5} />
+                  <span>Фото уточняется</span>
                 </div>
               )}
+              {activeImage?.kind !== "scheme" && activeImage?.source === "family" ? (
+                <div className="product-family-photo-note">
+                  {activeImage.diameterKeys.length || activeImage.lengthsMm.length
+                    ? "Фото семейства"
+                    : "Фото семейства · исполнение может отличаться"}
+                </div>
+              ) : null}
               {activeImage?.kind !== "scheme" && hasLaserWeldedSeam ? (
                 <div className="product-image-technology-badge">
                   <Sparkles aria-hidden="true" size={13} strokeWidth={1.8} />
