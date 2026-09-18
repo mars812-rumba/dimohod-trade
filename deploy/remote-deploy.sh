@@ -2,7 +2,7 @@
 set -euo pipefail
 
 project_root=/opt/dimohod-trade
-lock_file=/run/lock/dimohod-trade-deploy.lock
+lock_file=${TMPDIR:-/tmp}/dimohod-trade-deploy.lock
 
 exec 9>"$lock_file"
 if ! flock -n 9; then
@@ -12,6 +12,17 @@ fi
 
 cd "$project_root"
 docker compose config --quiet
+
+# BuildKit cache is disposable but can grow quickly during frequent releases.
+# Keep enough headroom for a clean Next.js and backend image build without
+# touching running containers, application volumes, or uploaded media.
+min_available_kb=$((16 * 1024 * 1024))
+available_kb=$(df -Pk "$project_root" | awk 'NR == 2 { print $4 }')
+if (( available_kb < min_available_kb )); then
+  echo "Low disk space before build; pruning Docker builder cache"
+  docker builder prune -af
+fi
+
 docker compose --progress quiet up -d --build backend web
 
 for attempt in $(seq 1 30); do
