@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   IconArrowRight as ArrowRight,
   IconRefresh as Refresh,
@@ -19,11 +18,7 @@ import {
   type CatalogEstimateMatch,
 } from "@/lib/chimneyEstimate";
 import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
-import {
-  MEASUREMENTS_INTAKE_STORAGE_KEY,
-  saveConfiguratorDraft,
-  type EquipmentStatus,
-} from "@/lib/configuratorDraft";
+import type { EquipmentStatus } from "@/lib/configuratorDraft";
 import { METRIKA_GOALS } from "@/lib/metrika";
 import {
   applyQuickEstimateBomRules,
@@ -37,6 +32,7 @@ import {
   type QuickEstimateRoute,
 } from "@/lib/homeQuickEstimate";
 import styles from "./HomeQuickEstimate.module.css";
+import { CompactChimneyScheme } from "./CompactChimneyScheme";
 import { EstimateLeadDialog } from "./EstimateLeadDialog";
 
 type Step = 0 | 1 | 2 | 3 | 4;
@@ -164,7 +160,6 @@ async function matchBomLine({
 }
 
 export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: string }) {
-  const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [objectType, setObjectType] = useState<QuickEstimateObject | null>(null);
   const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatus | null>(null);
@@ -243,7 +238,13 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
   const estimate = useMemo(() => calculation && answers ? buildChimneyEstimate({
     selectedBom: bom,
     matches,
-    measurements: quickEstimateAssumptions(answers).map((value, index) => ({ label: `Допущение ${index + 1}`, value })),
+    measurements: [
+      { label: "Объект", value: answers.objectType === "banya" ? "Баня" : "Дом" },
+      { label: "Отопитель", value: answers.equipmentType || "Тип не выбран" },
+      { label: "Выход патрубка", value: answers.outlet === "top" ? "Сверху" : "Сзади" },
+      { label: "Маршрут", value: answers.route === "ceiling" ? "Через перекрытия и кровлю" : "Через стену и по фасаду" },
+      ...quickEstimateAssumptions(answers).map((value, index) => ({ label: `Допущение ${index + 1}`, value })),
+    ],
     profileName: "Быстрый предварительный расчёт",
     removedLabels: [],
     reviewItems: calculation.reviewItems,
@@ -254,18 +255,6 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
     : step === 1 ? Boolean(equipmentStatus && outlet)
     : step === 2 ? Boolean(route)
         : route === "ceiling" || (Number(outdoorHeight) > 0 && Number(wallDistance) > 0);
-
-  function goExact() {
-    if (!draft || !answers) return;
-    window.sessionStorage.setItem(MEASUREMENTS_INTAKE_STORAGE_KEY, JSON.stringify(draft));
-    saveConfiguratorDraft(window.sessionStorage, draft);
-    const params = new URLSearchParams({
-      edit: "1",
-      object: answers.objectType,
-      route: answers.route === "wall" && answers.outlet === "rear" ? "wall-direct" : answers.route,
-    });
-    router.push(`/zamery?${params.toString()}`);
-  }
 
   function restart() {
     setStep(0);
@@ -381,55 +370,80 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
               <div className={styles.heading}><small>Предварительный результат</small><h3>Ориентировочный состав комплекта</h3><p>Быстрый расчёт показывает порядок бюджета с возможным отклонением ±30%. Это не финальная смета для заказа.</p></div>
               {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
               {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
-              {estimate && !leadSubmitted ? (
-                <div aria-busy={matchStatus === "loading"} className={styles.leadGate}>
+              {estimate && calculation ? <>
+                <div aria-busy={matchStatus === "loading"} className={styles.resultOverview}>
+                  <div className={styles.schemeCard}>
+                    <div className={styles.schemeHeading}>
+                      <strong>Предварительная схема</strong>
+                      <span>Не монтажный чертёж</span>
+                    </div>
+                    <CompactChimneyScheme
+                      calculation={calculation}
+                      className={styles.compactScheme}
+                      variant={calculation.selectedVariant}
+                    />
+                    <p>Схема показывает выбранный маршрут и рассчитанную раскладку. Размеры и узлы проверит менеджер.</p>
+                  </div>
                   <div>
-                    <h4>Куда отправить результат?</h4>
-                    <p>Оставьте контакт — заявка вместе с предварительным BOM попадёт менеджеру. После отправки сразу покажем стоимость и состав комплекта.</p>
+                    <div className={styles.priceCard}>
+                      <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций · ±30%" : "Ориентировочная стоимость · ±30%"}</small>
+                      <strong>{matchStatus === "loading" ? "…" : formatRub(estimate.knownSubtotalRub)}</strong>
+                      <p>{estimate.lines.length} позиций · {estimate.totalUnits} изделий{estimate.unpricedLineCount ? ` · без цены: ${estimate.unpricedLineCount}` : ""}</p>
+                    </div>
+                    {answers ? <div className={styles.assumptions}><strong>Что приняли в расчёте</strong><ul>{quickEstimateAssumptions(answers).map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
                   </div>
-                  <EstimateLeadDialog
-                    buttonLabel="Получить расчёт"
-                    description="Укажите удобный способ связи. Сохраним заявку с предварительным BOM в системе менеджера и сразу откроем результат на этой странице."
-                    disabled={matchStatus !== "ready" && matchStatus !== "error"}
-                    estimate={estimate}
-                    heading="Получить стоимость и BOM"
-                    metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
-                    onSubmitted={() => setLeadSubmitted(true)}
-                    source="chimney-quick-estimate"
-                    submitLabel="Отправить и показать результат"
-                    triggerClassName={styles.gateButton}
-                  />
-                  <small>Контакт нужен только для обработки расчёта. Согласие на обработку данных подтверждается в форме.</small>
                 </div>
-              ) : null}
-              {estimate && leadSubmitted ? <div className={styles.resultGrid}>
-                <div>
-                  <div className={styles.priceCard}>
-                    <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций · ±30%" : "Ориентировочная стоимость · ±30%"}</small>
-                    <strong>{matchStatus === "loading" ? "…" : formatRub(estimate.knownSubtotalRub)}</strong>
-                    <p>{estimate.lines.length} позиций · {estimate.totalUnits} изделий{estimate.unpricedLineCount ? ` · без цены: ${estimate.unpricedLineCount}` : ""}</p>
-                  </div>
-                  {answers ? <div className={styles.assumptions}><strong>Что приняли в расчёте</strong><ul>{quickEstimateAssumptions(answers).map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
-                </div>
-                <div>
+
+                <details className={styles.bomDetails} open>
+                  <summary>
+                    <span>Состав комплекта</span>
+                    <small>{estimate.lines.length} позиций</small>
+                  </summary>
                   <ul className={styles.bom} aria-label="Состав комплекта">
-                    {estimate.lines.slice(0, 10).map((line) => <li key={line.key}><span>{line.skuName ?? line.label}</span><strong>{line.quantity} шт.</strong></li>)}
+                    {estimate.lines.map((line) => <li key={line.key}>
+                      <span>{line.skuName ?? line.label}</span>
+                      <strong>{line.quantity} шт.</strong>
+                      <small>{line.lineTotalRub === null ? "Цена по запросу" : formatRub(line.lineTotalRub)}</small>
+                    </li>)}
                   </ul>
-                  {estimate.lines.length > 10 ? <p className={styles.status}>Ещё {estimate.lines.length - 10} позиций будут в полной смете.</p> : null}
+                </details>
+
+                <p className={styles.precisionNotice}><strong>Это предварительный расчёт.</strong> Менеджер проверит размеры, совместимость и позиции без цены перед заказом.</p>
+
+                {!leadSubmitted ? (
+                  <div className={styles.leadGate}>
+                    <div>
+                      <h4>Отправить расчёт менеджеру</h4>
+                      <p>Сохраним показанные схему, стоимость и BOM. Менеджер проверит комплект и свяжется с вами.</p>
+                    </div>
+                    <EstimateLeadDialog
+                      buttonLabel="Отправить на проверку"
+                      description="Укажите удобный способ связи. Вместе с заявкой менеджер получит показанный вам предварительный BOM и исходные данные расчёта."
+                      disabled={matchStatus !== "ready" && matchStatus !== "error"}
+                      estimate={estimate}
+                      heading="Отправить расчёт менеджеру"
+                      metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
+                      onSubmitted={() => setLeadSubmitted(true)}
+                      source="chimney-quick-estimate"
+                      submitLabel="Отправить расчёт"
+                      triggerClassName={styles.gateButton}
+                    />
+                    <small>Контакт нужен только для проверки расчёта и обратной связи.</small>
+                  </div>
+                ) : (
+                  <p className={styles.sentNotice} role="status">Расчёт передан менеджеру. Можно изменить ответы или выполнить новый расчёт.</p>
+                )}
+
+                <div className={styles.resultActions}>
+                  <button className={styles.editButton} onClick={() => setStep(3)} type="button">Изменить ответы</button>
+                  <button className={styles.restartButton} onClick={restart} type="button"><Refresh aria-hidden size={16} /> Рассчитать заново</button>
                 </div>
-              </div> : null}
-              {leadSubmitted ? <p className={styles.precisionNotice}><strong>Нужна сумма для заказа?</strong> Уточните размеры — пересчитаем комплект по вашим данным и подготовим точную смету после проверки менеджером.</p> : null}
-              {leadSubmitted ? <div className={styles.resultFooter}>
-                <button className={styles.exactLink} onClick={goExact} type="button">Уточнить размеры и получить точную смету <ArrowRight aria-hidden size={18} /></button>
-                <small>Тип отопителя, выход и диаметр уже перенесём в полный замер — повторно вводить их не придётся.</small>
-              </div> : null}
+              </> : null}
             </> : null}
 
             {step < 4 ? <div className={styles.footer}>
               <button className={styles.next} disabled={!canContinue} onClick={() => setStep((step + 1) as Step)} type="button">Продолжить <ArrowRight aria-hidden size={18} /></button>
-            </div> : <div className={styles.footer}>
-              <button className={styles.back} onClick={restart} type="button"><Refresh aria-hidden size={16} /> Заново</button>
-            </div>}
+            </div> : null}
           </div>
         </div>
       </div>

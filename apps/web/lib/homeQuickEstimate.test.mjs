@@ -4,6 +4,7 @@ import test from "node:test";
 
 const helper = readFileSync(new URL("./homeQuickEstimate.ts", import.meta.url), "utf8");
 const component = readFileSync(new URL("../components/HomeQuickEstimate.tsx", import.meta.url), "utf8");
+const compactScheme = readFileSync(new URL("../components/CompactChimneyScheme.tsx", import.meta.url), "utf8");
 
 test("quick estimate keeps the confirmed calculation defaults", () => {
   assert.match(helper, /QUICK_ESTIMATE_DEFAULT_DIAMETER_MM = 120/);
@@ -29,27 +30,36 @@ test("quick ceiling estimate subtracts the assumed heater and fixes the confirme
   assert.match(component, /if \(line\.thicknessProfile\)/);
 });
 
-test("quick estimate uses the existing catalog and transfers answers to measurements", () => {
+test("quick estimate uses the existing catalog and keeps the public result self-contained", () => {
   assert.match(component, /\/api\/v1\/products/);
   assert.match(component, /buildChimneyEstimate/);
-  assert.match(component, /saveConfiguratorDraft\(window\.sessionStorage, draft\)/);
-  assert.match(component, /MEASUREMENTS_INTAKE_STORAGE_KEY/);
-  assert.match(component, /window\.sessionStorage\.setItem\(MEASUREMENTS_INTAKE_STORAGE_KEY/);
-  assert.match(component, /router\.push\(`\/zamery\?/);
+  assert.doesNotMatch(component, /saveConfiguratorDraft/);
+  assert.doesNotMatch(component, /MEASUREMENTS_INTAKE_STORAGE_KEY/);
+  assert.doesNotMatch(component, /useRouter/);
+  assert.doesNotMatch(component, /\/zamery/);
 });
 
-test("price and BOM stay gated until the existing lead form saves the estimate", () => {
+test("price, compact scheme and full BOM appear before the optional manager handoff", () => {
+  assert.match(component, /<CompactChimneyScheme/);
+  assert.match(component, /estimate\.lines\.map/);
+  assert.match(component, /Цена по запросу/);
   assert.match(component, /!leadSubmitted/);
-  assert.match(component, /estimate && leadSubmitted/);
+  assert.doesNotMatch(component, /estimate && leadSubmitted/);
   assert.match(component, /<EstimateLeadDialog/);
+  assert.ok(
+    component.indexOf("estimate.lines.map") < component.indexOf("<EstimateLeadDialog"),
+    "BOM must be rendered before the contact form",
+  );
   assert.match(component, /source="chimney-quick-estimate"/);
+  assert.match(component, /METRIKA_GOALS\.quickEstimateContactSent/);
   assert.match(component, /onSubmitted=\{\(\) => setLeadSubmitted\(true\)\}/);
 });
 
-test("quick result states its accuracy and links to a prefilled full measurement", () => {
+test("quick result states its accuracy and remains explicitly preliminary", () => {
   assert.match(component, /отклонением ±30%/);
-  assert.match(component, /Уточнить размеры и получить точную смету/);
-  assert.match(component, /Тип отопителя, выход и диаметр уже перенесём/);
+  assert.match(component, /Не монтажный чертёж/);
+  assert.match(component, /Менеджер проверит размеры, совместимость/);
+  assert.doesNotMatch(component, /профессиональн/iu);
 });
 
 test("route choices use raster renders and existing measurement icons", () => {
@@ -57,4 +67,13 @@ test("route choices use raster renders and existing measurement icons", () => {
   assert.match(component, /route-along-facade\.webp/);
   assert.match(component, /object-bathhouse\.webp/);
   assert.doesNotMatch(component, /\.svg/);
+});
+
+test("compact result scheme covers every quick-estimate route", () => {
+  assert.match(compactScheme, /calculation\.routeKind === "ceiling"/);
+  assert.match(compactScheme, /calculation\.routeKind === "wall-rear"/);
+  assert.match(compactScheme, /variant\?\.pipes\.filter/);
+  assert.match(compactScheme, /role="img"/);
+  assert.match(compactScheme, /<title>/);
+  assert.match(compactScheme, /<desc>/);
 });
