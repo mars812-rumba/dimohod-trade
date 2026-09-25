@@ -4,7 +4,8 @@ import test from "node:test";
 
 const helper = readFileSync(new URL("./homeQuickEstimate.ts", import.meta.url), "utf8");
 const component = readFileSync(new URL("../components/HomeQuickEstimate.tsx", import.meta.url), "utf8");
-const compactScheme = readFileSync(new URL("../components/CompactChimneyScheme.tsx", import.meta.url), "utf8");
+const productPage = readFileSync(new URL("../app/product/[slug]/page.tsx", import.meta.url), "utf8");
+const productExperience = readFileSync(new URL("../components/ProductExperience.tsx", import.meta.url), "utf8");
 
 test("quick estimate keeps the confirmed calculation defaults", () => {
   assert.match(helper, /QUICK_ESTIMATE_DEFAULT_DIAMETER_MM = 120/);
@@ -39,10 +40,12 @@ test("quick estimate uses the existing catalog and keeps the public result self-
   assert.doesNotMatch(component, /\/zamery/);
 });
 
-test("price, compact scheme and full BOM appear before the optional manager handoff", () => {
-  assert.match(component, /<CompactChimneyScheme/);
+test("price and full product BOM appear before the optional manager handoff", () => {
   assert.match(component, /estimate\.lines\.map/);
   assert.match(component, /Цена по запросу/);
+  assert.match(component, /primary_image/);
+  assert.match(component, /quickEstimateProductHref/);
+  assert.match(component, /Открыть товар/);
   assert.match(component, /!leadSubmitted/);
   assert.doesNotMatch(component, /estimate && leadSubmitted/);
   assert.match(component, /<EstimateLeadDialog/);
@@ -57,9 +60,9 @@ test("price, compact scheme and full BOM appear before the optional manager hand
 
 test("quick result states its accuracy and remains explicitly preliminary", () => {
   assert.match(component, /отклонением ±30%/);
-  assert.match(component, /Не монтажный чертёж/);
   assert.match(component, /Менеджер проверит размеры, совместимость/);
   assert.doesNotMatch(component, /профессиональн/iu);
+  assert.doesNotMatch(component, /CompactChimneyScheme/);
 });
 
 test("route choices use raster renders and existing measurement icons", () => {
@@ -69,11 +72,15 @@ test("route choices use raster renders and existing measurement icons", () => {
   assert.doesNotMatch(component, /\.svg/);
 });
 
-test("compact result scheme covers every quick-estimate route", () => {
-  assert.match(compactScheme, /calculation\.routeKind === "ceiling"/);
-  assert.match(compactScheme, /calculation\.routeKind === "wall-rear"/);
-  assert.match(compactScheme, /variant\?\.pipes\.filter/);
-  assert.match(compactScheme, /role="img"/);
-  assert.match(compactScheme, /<title>/);
-  assert.match(compactScheme, /<desc>/);
+test("product navigation preserves and restores the current quick estimate", () => {
+  assert.match(component, /QUICK_ESTIMATE_RETURN_KEY/);
+  assert.match(component, /window\.sessionStorage\.setItem\(QUICK_ESTIMATE_RETURN_KEY/);
+  assert.match(component, /window\.sessionStorage\.getItem\(QUICK_ESTIMATE_RETURN_KEY/);
+  assert.match(component, /skipCatalogRefresh\.current = true/);
+  assert.match(component, /setMatches\(saved\.matches\)/);
+  assert.match(component, /setStep\(4\)/);
+  assert.match(component, /from=quick-estimate/);
+  assert.match(productPage, /returnToQuickEstimate=\{fromQuickEstimate\}/);
+  assert.match(productExperience, /Вернуться к расчёту/);
+  assert.match(productExperience, /\/bystryy-raschet#quick-estimate/);
 });

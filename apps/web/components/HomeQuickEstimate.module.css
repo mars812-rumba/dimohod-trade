@@ -161,12 +161,7 @@
 .next:disabled { opacity: .4; cursor: not-allowed; }
 .back:focus-visible, .choice:focus-visible, .field select:focus-visible, .next:focus-visible, .editButton:focus-visible, .restartButton:focus-visible { outline: 3px solid rgba(237, 91, 42, .35); outline-offset: 3px; }
 
-.resultOverview { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(280px, .92fr); gap: 20px; align-items: start; }
-.schemeCard { overflow: hidden; border: 1px solid #d8dfe0; border-radius: 14px; background: #f7f3ea; }
-.schemeHeading { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; padding: 15px 17px 0; color: #173d4c; }
-.schemeHeading span { color: #68797e; font-size: 11px; }
-.compactScheme { display: block; width: 100%; height: auto; }
-.schemeCard > p { margin: 0; padding: 0 17px 16px; color: #5a6c72; font-size: 12px; line-height: 1.5; }
+.resultOverview { display: block; }
 .priceCard { padding: 24px; color: #fff; border-radius: 14px; background: #173d4c; }
 .priceCard small { color: #bdd0d6; font-size: 12px; }
 .priceCard strong { display: block; margin-top: 10px; font-size: clamp(30px, 5vw, 48px); line-height: 1; }
@@ -175,10 +170,20 @@
 .bomDetails summary { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 16px 0; color: #173d4c; font-weight: 800; cursor: pointer; }
 .bomDetails summary small { color: #68797e; font-size: 11px; font-weight: 700; }
 .bom { margin: 0; padding: 0 0 10px; list-style: none; border-top: 1px solid #d8dfe0; }
-.bom li { display: grid; grid-template-columns: 1fr auto minmax(110px, auto); gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid #d8dfe0; color: #344950; font-size: 13px; }
+.bom li { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(110px, auto); gap: 16px; align-items: center; padding: 14px 0; border-bottom: 1px solid #d8dfe0; color: #344950; font-size: 13px; }
 .bom li:last-child { border-bottom: 0; }
 .bom strong { color: #102127; }
-.bom small { color: #52656c; font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+.bomProduct { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 13px; align-items: center; min-width: 0; }
+.bomThumb { display: grid; overflow: hidden; width: 68px; height: 68px; place-items: center; border: 1px solid #d8dfe0; border-radius: 10px; color: #697a7f; background: #f5f7f6; text-decoration: none; }
+.bomThumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.bomThumb > span { display: grid; gap: 3px; justify-items: center; padding: 5px; font-size: 9px; line-height: 1.1; text-align: center; }
+.bomCopy { display: grid; gap: 4px; min-width: 0; }
+.bomCopy small { color: #697a7f; font-size: 11px; line-height: 1.35; }
+.bomName { color: #173d4c; font-weight: 800; line-height: 1.35; text-decoration: none; }
+.bomProductLink { display: inline-flex; width: fit-content; min-height: 28px; gap: 4px; align-items: center; color: #bd3d16; font-size: 11px; font-weight: 800; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.bomName:hover, .bomProductLink:hover { color: #ed5b2a; }
+.bomName:focus-visible, .bomProductLink:focus-visible, .bomThumb:focus-visible { outline: 3px solid rgba(237, 91, 42, .35); outline-offset: 3px; }
+.bomPrice { color: #52656c; font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
 .assumptions { margin-top: 20px; padding: 16px 18px; border: 1px solid #f0c9ba; border-radius: 10px; background: #fff7f3; }
 .assumptions strong { display: block; margin-bottom: 8px; }
 .assumptions ul { display: grid; gap: 4px; margin: 0; padding-left: 18px; color: #5a676c; font-size: 12px; line-height: 1.45; }
@@ -249,9 +254,11 @@
   .choice img { width: 72px; height: 72px; }
   .routeChoice { min-height: 200px; }
   .routeChoice img { height: 145px; }
-  .fieldGrid, .resultOverview { grid-template-columns: 1fr; }
-  .bom li { grid-template-columns: 1fr auto; }
-  .bom li small { grid-column: 1 / -1; text-align: left; }
+  .fieldGrid { grid-template-columns: 1fr; }
+  .bom li { grid-template-columns: minmax(0, 1fr) auto; gap: 9px 14px; align-items: center; }
+  .bomProduct { grid-column: 1 / -1; }
+  .bom li > strong { justify-self: start; }
+  .bomPrice { justify-self: end; text-align: right; }
   .resultActions { align-items: stretch; flex-direction: column; }
   .heaterChoices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .heaterChoices .choice { min-height: 96px; }

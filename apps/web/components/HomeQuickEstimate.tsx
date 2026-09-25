@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   IconArrowRight as ArrowRight,
+  IconPhotoOff as PhotoOff,
   IconRefresh as Refresh,
 } from "@tabler/icons-react";
 import type { ProductListResponse } from "@/lib/api";
@@ -20,6 +22,7 @@ import {
 import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
 import type { EquipmentStatus } from "@/lib/configuratorDraft";
 import { METRIKA_GOALS } from "@/lib/metrika";
+import { productSelectionPath } from "@/lib/productUrls";
 import {
   applyQuickEstimateBomRules,
   quickEstimateAssumptions,
@@ -32,11 +35,30 @@ import {
   type QuickEstimateRoute,
 } from "@/lib/homeQuickEstimate";
 import styles from "./HomeQuickEstimate.module.css";
-import { CompactChimneyScheme } from "./CompactChimneyScheme";
 import { EstimateLeadDialog } from "./EstimateLeadDialog";
 
 type Step = 0 | 1 | 2 | 3 | 4;
 type MatchStatus = "idle" | "loading" | "ready" | "error";
+
+const QUICK_ESTIMATE_RETURN_KEY = "dimohod-trade:quick-estimate-return";
+
+type QuickEstimateReturnState = {
+  version: 1;
+  savedAt: number;
+  objectType: QuickEstimateObject;
+  equipmentStatus: EquipmentStatus;
+  equipmentType: QuickEstimateEquipment;
+  outlet: QuickEstimateOutlet;
+  diameter: string;
+  route: QuickEstimateRoute;
+  floors: number;
+  hasAttic: boolean;
+  outdoorHeight: string;
+  wallDistance: string;
+  matches: Record<string, CatalogEstimateMatch>;
+  matchStatus: "ready" | "error";
+  leadSubmitted: boolean;
+};
 
 const objectChoices = [
   { id: "banya" as const, label: "Баня", icon: "/images/measurements/icons/object-bathhouse.webp" },
@@ -71,6 +93,15 @@ const diameterOptions = [100, 110, 120, 130, 140, 150, 160, 180, 200, 250, 280, 
 
 function withBase(path: string, base: string) {
   return `${base}${path}`;
+}
+
+function publicMediaUrl(url: string, base: string) {
+  return url.startsWith("/media/") ? `${base}${url}` : url;
+}
+
+function quickEstimateProductHref(item: ProductListResponse["items"][number]) {
+  const href = productSelectionPath(item.slug, item, item.selected_sku);
+  return `${href}${href.includes("?") ? "&" : "?"}from=quick-estimate`;
 }
 
 async function matchBomLine({
@@ -160,6 +191,8 @@ async function matchBomLine({
 }
 
 export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: string }) {
+  const restoringQuickEstimate = useRef(false);
+  const skipCatalogRefresh = useRef(false);
   const [step, setStep] = useState<Step>(0);
   const [objectType, setObjectType] = useState<QuickEstimateObject | null>(null);
   const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatus | null>(null);
@@ -177,6 +210,44 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
   const availableHeaterChoices = objectType === "banya"
     ? heaterChoices.filter((choice) => choice.id === "bania")
     : heaterChoices;
+
+  useEffect(() => {
+    const raw = window.sessionStorage.getItem(QUICK_ESTIMATE_RETURN_KEY);
+    if (!raw) return;
+    window.sessionStorage.removeItem(QUICK_ESTIMATE_RETURN_KEY);
+    try {
+      const saved = JSON.parse(raw) as Partial<QuickEstimateReturnState>;
+      if (
+        saved.version !== 1 ||
+        typeof saved.savedAt !== "number" ||
+        Date.now() - saved.savedAt > 24 * 60 * 60 * 1000 ||
+        !saved.objectType ||
+        !saved.equipmentStatus ||
+        !saved.outlet ||
+        !saved.route
+      ) return;
+      restoringQuickEstimate.current = true;
+      setObjectType(saved.objectType);
+      setEquipmentStatus(saved.equipmentStatus);
+      setEquipmentType(saved.equipmentType ?? "");
+      setOutlet(saved.outlet);
+      setDiameter(saved.diameter ?? "unknown");
+      setRoute(saved.route);
+      setFloors(saved.floors ?? 1);
+      setHasAttic(saved.hasAttic ?? false);
+      setOutdoorHeight(saved.outdoorHeight ?? "");
+      setWallDistance(saved.wallDistance ?? "");
+      if (saved.matches && (saved.matchStatus === "ready" || saved.matchStatus === "error")) {
+        skipCatalogRefresh.current = true;
+        setMatches(saved.matches);
+        setMatchStatus(saved.matchStatus);
+      }
+      setLeadSubmitted(saved.leadSubmitted ?? false);
+      setStep(4);
+    } catch {
+      // Ignore an invalid or outdated return snapshot.
+    }
+  }, []);
 
   const answers = useMemo<QuickEstimateAnswers | null>(() => {
     if (!objectType || !equipmentStatus || !outlet || !route) return null;
@@ -211,6 +282,10 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
 
   useEffect(() => {
     if (step !== 4 || !answers || !bom.length) return;
+    if (skipCatalogRefresh.current) {
+      skipCatalogRefresh.current = false;
+      return;
+    }
     const controller = new AbortController();
     setMatchStatus("loading");
     const diameterMm = answers.diameterMm ?? 120;
@@ -232,6 +307,10 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
   }, [answers, assetBasePath, bom, step]);
 
   useEffect(() => {
+    if (restoringQuickEstimate.current) {
+      restoringQuickEstimate.current = false;
+      return;
+    }
     if (step !== 4) setLeadSubmitted(false);
   }, [step]);
 
@@ -261,6 +340,28 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
     setMatches({});
     setMatchStatus("idle");
     setLeadSubmitted(false);
+  }
+
+  function rememberQuickEstimate() {
+    if (!objectType || !equipmentStatus || !outlet || !route) return;
+    const snapshot: QuickEstimateReturnState = {
+      version: 1,
+      savedAt: Date.now(),
+      objectType,
+      equipmentStatus,
+      equipmentType,
+      outlet,
+      diameter,
+      route,
+      floors,
+      hasAttic,
+      outdoorHeight,
+      wallDistance,
+      matches,
+      matchStatus: matchStatus === "error" ? "error" : "ready",
+      leadSubmitted,
+    };
+    window.sessionStorage.setItem(QUICK_ESTIMATE_RETURN_KEY, JSON.stringify(snapshot));
   }
 
   return (
@@ -372,18 +473,6 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
               {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
               {estimate && calculation ? <>
                 <div aria-busy={matchStatus === "loading"} className={styles.resultOverview}>
-                  <div className={styles.schemeCard}>
-                    <div className={styles.schemeHeading}>
-                      <strong>Предварительная схема</strong>
-                      <span>Не монтажный чертёж</span>
-                    </div>
-                    <CompactChimneyScheme
-                      calculation={calculation}
-                      className={styles.compactScheme}
-                      variant={calculation.selectedVariant}
-                    />
-                    <p>Схема показывает выбранный маршрут и рассчитанную раскладку. Размеры и узлы проверит менеджер.</p>
-                  </div>
                   <div>
                     <div className={styles.priceCard}>
                       <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций · ±30%" : "Ориентировочная стоимость · ±30%"}</small>
@@ -400,11 +489,40 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
                     <small>{estimate.lines.length} позиций</small>
                   </summary>
                   <ul className={styles.bom} aria-label="Состав комплекта">
-                    {estimate.lines.map((line) => <li key={line.key}>
-                      <span>{line.skuName ?? line.label}</span>
-                      <strong>{line.quantity} шт.</strong>
-                      <small>{line.lineTotalRub === null ? "Цена по запросу" : formatRub(line.lineTotalRub)}</small>
-                    </li>)}
+                    {estimate.lines.map((line) => {
+                      const item = matches[line.key]?.item;
+                      const href = item ? quickEstimateProductHref(item) : null;
+                      const image = item?.primary_image;
+                      const productName = line.skuName ?? line.label;
+                      return <li key={line.key}>
+                        <div className={styles.bomProduct}>
+                          {href ? <Link
+                            aria-label={`Открыть товар «${productName}»`}
+                            className={styles.bomThumb}
+                            href={href}
+                            onClick={rememberQuickEstimate}
+                          >
+                            {image ? <img
+                              alt={image.alt ?? `${productName} — общий вид`}
+                              decoding="async"
+                              height={68}
+                              loading="lazy"
+                              src={publicMediaUrl(image.thumbnail_url ?? image.url, assetBasePath)}
+                              width={68}
+                            /> : <span><PhotoOff aria-hidden size={20} />Фото уточняется</span>}
+                          </Link> : <span className={styles.bomThumb}>
+                            <span><PhotoOff aria-hidden size={20} />Фото уточняется</span>
+                          </span>}
+                          <span className={styles.bomCopy}>
+                            {href ? <Link className={styles.bomName} href={href} onClick={rememberQuickEstimate}>{productName}</Link> : <span className={styles.bomName}>{productName}</span>}
+                            {line.characteristics.length ? <small>{line.characteristics.slice(0, 2).join(" · ")}</small> : null}
+                            {href ? <Link className={styles.bomProductLink} href={href} onClick={rememberQuickEstimate}>Открыть товар <ArrowRight aria-hidden size={14} /></Link> : <small>Точный товар подберёт менеджер</small>}
+                          </span>
+                        </div>
+                        <strong>{line.quantity} шт.</strong>
+                        <small className={styles.bomPrice}>{line.lineTotalRub === null ? "Цена по запросу" : formatRub(line.lineTotalRub)}</small>
+                      </li>;
+                    })}
                   </ul>
                 </details>
 
@@ -414,7 +532,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
                   <div className={styles.leadGate}>
                     <div>
                       <h4>Отправить расчёт менеджеру</h4>
-                      <p>Сохраним показанные схему, стоимость и BOM. Менеджер проверит комплект и свяжется с вами.</p>
+                      <p>Сохраним показанные стоимость и BOM. Менеджер проверит комплект и свяжется с вами.</p>
                     </div>
                     <EstimateLeadDialog
                       buttonLabel="Отправить на проверку"

@@ -988,7 +988,15 @@ function seoConfiguratorCta(product: Product): { text: string; href: string } | 
   };
 }
 
-export function ProductExperience({ product, initialSkuKey }: { product: Product; initialSkuKey?: string }) {
+export function ProductExperience({
+  product,
+  initialSkuKey,
+  returnToQuickEstimate = false,
+}: {
+  product: Product;
+  initialSkuKey?: string;
+  returnToQuickEstimate?: boolean;
+}) {
   const initialSkus = useMemo(() => productSkus(product), [product]);
   const initialSku =
     initialSkus.find((sku) => sku.id === initialSkuKey || sku.article === initialSkuKey || sku.slug === initialSkuKey) ??
@@ -1270,11 +1278,22 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
     setSelectedSkuId(selected.id);
     setSelectedImage(0);
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-    window.history.replaceState(null, "", `${basePath}${productPublicPath(product.slug, selected)}`);
+    const productPath = productPublicPath(product.slug, selected);
+    window.history.replaceState(
+      null,
+      "",
+      `${basePath}${productPath}${returnToQuickEstimate ? "?from=quick-estimate" : ""}`,
+    );
   }
 
   return (
     <main className="page product-page">
+      {returnToQuickEstimate ? (
+        <Link className="product-return-to-estimate" href="/bystryy-raschet#quick-estimate">
+          <ArrowLeft aria-hidden="true" size={17} />
+          Вернуться к расчёту
+        </Link>
+      ) : null}
       <nav className="breadcrumb" aria-label="Навигация">
         <Link href="/">Главная</Link>
         <span aria-hidden>/</span>
@@ -1588,8 +1607,11 @@ export function ProductExperience({ product, initialSkuKey }: { product: Product
             </div>
           </section>
 
-          <Link className="button secondary product-back-link" href="/catalog">
-            <ArrowLeft size={16} /> Назад в каталог
+          <Link
+            className="button secondary product-back-link"
+            href={returnToQuickEstimate ? "/bystryy-raschet#quick-estimate" : "/catalog"}
+          >
+            <ArrowLeft size={16} /> {returnToQuickEstimate ? "Вернуться к расчёту" : "Назад в каталог"}
           </Link>
         </div>
 

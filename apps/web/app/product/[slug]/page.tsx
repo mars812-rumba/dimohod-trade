@@ -16,6 +16,7 @@ import { productFaqItems } from "@/lib/productFaq";
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{
+    from?: string | string[];
     length?: string | string[];
     sku?: string | string[];
   }>;
@@ -392,6 +393,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   const route = parseProductRoute(slug);
   const initialSkuKey = requestedSkuKey(query.sku) ?? route.legacySku ?? undefined;
+  const fromQuickEstimate = requestedSkuKey(query.from) === "quick-estimate";
   const initialLengthMm = requestedLengthMm(query.length);
   const product = await getProductForPage(route.familySlug, initialSkuKey, route.diameter);
 
@@ -408,7 +410,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   const currentPath = `/product/${slug}`;
   if (currentPath !== canonicalPath || isUuidReference(initialSkuKey)) {
     const article = initialSkuKey && !isUuidReference(initialSkuKey) ? initialSku.article : null;
-    redirect(productSelectionPath(product.slug, initialSku, article));
+    const target = productSelectionPath(product.slug, initialSku, article);
+    redirect(fromQuickEstimate
+      ? `${target}${target.includes("?") ? "&" : "?"}from=quick-estimate`
+      : target);
   }
   const jsonLd = productJsonLd(product, initialSku);
 
@@ -418,7 +423,11 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         type="application/ld+json"
       />
-      <ProductExperience product={product} initialSkuKey={initialSku.id} />
+      <ProductExperience
+        product={product}
+        initialSkuKey={initialSku.id}
+        returnToQuickEstimate={fromQuickEstimate}
+      />
     </>
   );
 }
