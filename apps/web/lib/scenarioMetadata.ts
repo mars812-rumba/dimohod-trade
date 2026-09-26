@@ -4,7 +4,7 @@ import type { ScenarioPageContent } from "@/lib/scenarioPages";
 export function scenarioMetadata(content: ScenarioPageContent): Metadata {
   const canonical = `/solutions/${content.slug}`;
   const heroDimensions = content.slug === "dom"
-    ? { width: 720, height: 1280 }
+    ? { width: 960, height: 720 }
     : { width: 1254, height: 1254 };
 
   return {

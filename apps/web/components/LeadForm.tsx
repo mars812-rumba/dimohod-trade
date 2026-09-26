@@ -9,11 +9,24 @@ type LeadFormProps = {
   configuration?: string;
   compact?: boolean;
   title?: string;
+  commentPlaceholder?: string;
+  attachmentLabel?: string;
+  submitLabel?: string;
+  successMessage?: string;
 };
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
-export function LeadForm({ source, configuration = "", compact = false, title }: LeadFormProps) {
+export function LeadForm({
+  source,
+  configuration = "",
+  compact = false,
+  title,
+  commentPlaceholder = "Модель печи, размеры, удобное время для звонка",
+  attachmentLabel = "Фото или план",
+  submitLabel = "Отправить инженеру",
+  successMessage = "Специалист проверит материалы и свяжется с вами.",
+}: LeadFormProps) {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -24,7 +37,10 @@ export function LeadForm({ source, configuration = "", compact = false, title }:
     const form = event.currentTarget;
     const data = new FormData(form);
     data.set("source", source);
-    data.set("configuration", configuration);
+    data.set(
+      "configuration",
+      [configuration.trim(), `Страница заявки: ${window.location.href}`].filter(Boolean).join("\n\n"),
+    );
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/v1/leads`, { method: "POST", body: data });
@@ -41,17 +57,21 @@ export function LeadForm({ source, configuration = "", compact = false, title }:
   if (status === "success") {
     return (
       <div className="lead-form-success" role="status">
-        <CheckCircle2 size={24} />
+        <CheckCircle2 aria-hidden size={24} />
         <div>
           <strong>Заявка принята</strong>
-          <span>Специалист проверит материалы и свяжется с вами.</span>
+          <span>{successMessage}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <form className={`lead-form${compact ? " lead-form-compact" : ""}`} onSubmit={submit}>
+    <form
+      aria-busy={status === "sending"}
+      className={`lead-form${compact ? " lead-form-compact" : ""}`}
+      onSubmit={submit}
+    >
       {title ? <h3>{title}</h3> : null}
       <div className="lead-form-grid">
         <label>
@@ -65,16 +85,21 @@ export function LeadForm({ source, configuration = "", compact = false, title }:
       </div>
       <label>
         <span>Комментарий</span>
-        <textarea name="comment" rows={compact ? 3 : 4} maxLength={2000} placeholder="Модель печи, размеры, удобное время для звонка" />
+        <textarea
+          name="comment"
+          rows={compact ? 3 : 4}
+          maxLength={2000}
+          placeholder={commentPlaceholder}
+        />
       </label>
       <div className="lead-form-footer">
         <label className="lead-file">
-          <Paperclip size={16} />
-          <span>Фото или план</span>
+          <Paperclip aria-hidden size={16} />
+          <span>{attachmentLabel}</span>
           <input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" />
         </label>
         <button type="submit" disabled={status === "sending"}>
-          <Send size={16} /> {status === "sending" ? "Отправляем…" : "Отправить инженеру"}
+          <Send aria-hidden size={16} /> {status === "sending" ? "Отправляем…" : submitLabel}
         </button>
       </div>
       <small className="lead-form-note">PDF, JPG, PNG или WebP до 10 МБ.</small>

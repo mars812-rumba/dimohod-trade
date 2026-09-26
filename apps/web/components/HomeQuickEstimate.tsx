@@ -190,12 +190,27 @@ async function matchBomLine({
   }] as const : null;
 }
 
-export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: string }) {
+type HomeQuickEstimateProps = {
+  assetBasePath?: string;
+  fixedObjectType?: QuickEstimateObject;
+  introDescription?: string;
+  introEyebrow?: string;
+  introTitle?: string;
+};
+
+export function HomeQuickEstimate({
+  assetBasePath = "",
+  fixedObjectType,
+  introDescription = "Без замеров, около 2 минут. Покажем порядок бюджета с ориентировочной точностью ±30%.",
+  introEyebrow = "Прикинуть бюджет",
+  introTitle = "Не знаете размеры? Быстрый расчёт",
+}: HomeQuickEstimateProps) {
+  const firstStep: Step = fixedObjectType ? 1 : 0;
   const restoringQuickEstimate = useRef(false);
   const skipCatalogRefresh = useRef(false);
-  const [step, setStep] = useState<Step>(0);
-  const [objectType, setObjectType] = useState<QuickEstimateObject | null>(null);
-  const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatus | null>(null);
+  const [step, setStep] = useState<Step>(firstStep);
+  const [objectType, setObjectType] = useState<QuickEstimateObject | null>(fixedObjectType ?? null);
+  const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatus | null>("installed");
   const [equipmentType, setEquipmentType] = useState<QuickEstimateEquipment>("");
   const [outlet, setOutlet] = useState<QuickEstimateOutlet | null>(null);
   const [diameter, setDiameter] = useState<string>("unknown");
@@ -222,6 +237,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
         typeof saved.savedAt !== "number" ||
         Date.now() - saved.savedAt > 24 * 60 * 60 * 1000 ||
         !saved.objectType ||
+        (fixedObjectType && saved.objectType !== fixedObjectType) ||
         !saved.equipmentStatus ||
         !saved.outlet ||
         !saved.route
@@ -336,7 +352,8 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
         : route === "ceiling" || (Number(outdoorHeight) > 0 && Number(wallDistance) > 0);
 
   function restart() {
-    setStep(0);
+    setStep(firstStep);
+    setObjectType(fixedObjectType ?? null);
     setMatches({});
     setMatchStatus("idle");
     setLeadSubmitted(false);
@@ -369,18 +386,18 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
       <div className={styles.shell}>
         <div className={styles.intro}>
           <div>
-            <p className={styles.eyebrow}>Прикинуть бюджет</p>
-            <h2 id="quick-estimate-title">Не знаете размеры? Быстрый расчёт</h2>
+            <p className={styles.eyebrow}>{introEyebrow}</p>
+            <h2 id="quick-estimate-title">{introTitle}</h2>
           </div>
-          <p>Без замеров, около 2 минут. Покажем порядок бюджета с ориентировочной точностью ±30%.</p>
+          <p>{introDescription}</p>
         </div>
 
         <div className={styles.quiz}>
           <div className={styles.topbar}>
-            <button className={styles.back} disabled={step === 0} onClick={() => setStep((step - 1) as Step)} type="button">Назад</button>
-            <div className={styles.progress} aria-label={`Шаг ${step + 1} из 5`}>
-              <div className={styles.track}><i style={{ width: `${((step + 1) / 5) * 100}%` }} /></div>
-              <span>Шаг {step + 1} из 5</span>
+            <button className={styles.back} disabled={step === firstStep} onClick={() => setStep((step - 1) as Step)} type="button">Назад</button>
+            <div className={styles.progress} aria-label={`Шаг ${step - firstStep + 1} из ${5 - firstStep}`}>
+              <div className={styles.track}><i style={{ width: `${((step - firstStep + 1) / (5 - firstStep)) * 100}%` }} /></div>
+              <span>Шаг {step - firstStep + 1} из {5 - firstStep}</span>
             </div>
             <span className={styles.quickMark}>Быстро</span>
           </div>
@@ -400,7 +417,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
             </> : null}
 
             {step === 1 ? <>
-              <div className={styles.heading}><small>Отопитель</small><h3>Что уже известно?</h3><p>Если модель ещё не выбрана, оставьте тип пустым — точные параметры уточним позже.</p></div>
+              <div className={styles.heading}><small>Отопитель</small><h3>Что уже известно?</h3><p>Если модель ещё не выбрана, оставьте тип пустым. Точные параметры уточним позже.</p></div>
               <div className={styles.compactChoices}>
                 {statusChoices.map((choice) => <button className={`${styles.choice} ${equipmentStatus === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => setEquipmentStatus(choice.id)} type="button" aria-pressed={equipmentStatus === choice.id}>{choice.label}</button>)}
               </div>
@@ -421,7 +438,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
                 </div>
                 <label className={styles.field}>Диаметр патрубка
                   <select value={diameter} onChange={(event) => setDiameter(event.target.value)}>
-                    <option value="unknown">Не знаю — считаем Ø120 мм</option>
+                    <option value="unknown">Не знаю, считаем Ø120 мм</option>
                     {diameterOptions.map((value) => <option key={value} value={value}>Ø {value} мм</option>)}
                   </select>
                 </label>
@@ -503,7 +520,7 @@ export function HomeQuickEstimate({ assetBasePath = "" }: { assetBasePath?: stri
                             onClick={rememberQuickEstimate}
                           >
                             {image ? <img
-                              alt={image.alt ?? `${productName} — общий вид`}
+                              alt={image.alt ?? `${productName}, общий вид`}
                               decoding="async"
                               height={68}
                               loading="lazy"

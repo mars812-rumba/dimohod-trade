@@ -73,13 +73,17 @@ const workObjects: WorkObject[] = [
   },
 ];
 
-export function HomeWorksShowcase() {
+export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) {
+  const filteredObjects = objectIds?.length
+    ? workObjects.filter((workObject) => objectIds.includes(workObject.id))
+    : workObjects;
+  const visibleObjects = filteredObjects.length ? filteredObjects : workObjects;
   const [objectIndex, setObjectIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const touchStartX = useRef<number | null>(null);
-  const activeObject = workObjects[objectIndex];
+  const activeObject = visibleObjects[objectIndex] ?? visibleObjects[0];
   const activePhoto = activeObject.photos[photoIndex];
 
   const selectObject = (index: number) => {
@@ -104,9 +108,9 @@ export function HomeWorksShowcase() {
 
   return (
     <>
-      <div className={styles.showcase}>
-        <div className={styles.objectList} aria-label="Выбор объекта">
-          {workObjects.map((workObject, index) => (
+      <div className={`${styles.showcase} ${visibleObjects.length === 1 ? styles.singleObject : ""}`}>
+        {visibleObjects.length > 1 ? <div className={styles.objectList} aria-label="Выбор объекта">
+          {visibleObjects.map((workObject, index) => (
             <button
               aria-controls="home-work-stage"
               aria-pressed={index === objectIndex}
@@ -131,7 +135,7 @@ export function HomeWorksShowcase() {
               <ChevronRight aria-hidden size={18} />
             </button>
           ))}
-        </div>
+        </div> : null}
 
         <div className={styles.viewer} id="home-work-stage">
           <button

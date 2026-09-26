@@ -6,6 +6,10 @@
   background: #fff;
 }
 
+.singleObject {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .objectList {
   display: flex;
   flex-direction: column;
