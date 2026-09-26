@@ -1870,7 +1870,18 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         if (!response.ok) throw new Error("catalog request failed");
         return response.json() as Promise<ProductListResponse>;
       };
-      const payload = await fetchProducts(params);
+      let payload = await fetchProducts(params);
+      if (!payload.items[0] && line.productKind === "консоль" && line.catalogSearch) {
+        const consoleParams = new URLSearchParams({
+          limit: "24",
+          offset: "0",
+          q: line.catalogSearch,
+        });
+        if (rangeBySandwichOuterDiameter) {
+          consoleParams.set("preferred_diameter", `:${diameter + 100}`);
+        }
+        payload = await fetchProducts(consoleParams);
+      }
       if (payload.items[0]) {
         return [line.key, {
           item: payload.items[0],

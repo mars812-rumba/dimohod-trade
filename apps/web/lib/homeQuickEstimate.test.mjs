@@ -18,6 +18,7 @@ test("quick estimate keeps the confirmed calculation defaults", () => {
   assert.match(helper, /QUICK_ESTIMATE_BASE_SANDWICH_PIPE_QUANTITY = 3/);
   assert.match(helper, /QUICK_ESTIMATE_EXTRA_FLOOR_SANDWICH_PIPE_QUANTITY = 2/);
   assert.match(helper, /Кровельный комплект: УПК \+ мастер-флеш/);
+  assert.match(component, /useState<EquipmentStatus \| null>\("installed"\)/);
 });
 
 test("quick ceiling estimate subtracts the assumed heater and fixes the confirmed pipe kit", () => {
@@ -76,7 +77,9 @@ test("product navigation preserves and restores the current quick estimate", () 
   assert.match(component, /QUICK_ESTIMATE_RETURN_KEY/);
   assert.match(component, /window\.sessionStorage\.setItem\(QUICK_ESTIMATE_RETURN_KEY/);
   assert.match(component, /window\.sessionStorage\.getItem\(QUICK_ESTIMATE_RETURN_KEY/);
-  assert.match(component, /skipCatalogRefresh\.current = true/);
+  assert.doesNotMatch(component, /skipCatalogRefresh/);
+  assert.match(component, /line\.productKind === "консоль"/);
+  assert.match(component, /q: line\.catalogSearch/);
   assert.match(component, /setMatches\(saved\.matches\)/);
   assert.match(component, /setStep\(4\)/);
   assert.match(component, /from=quick-estimate/);

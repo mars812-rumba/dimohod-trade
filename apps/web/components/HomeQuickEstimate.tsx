@@ -164,7 +164,16 @@ async function matchBomLine({
     if (!response.ok) throw new Error("catalog request failed");
     return response.json() as Promise<ProductListResponse>;
   };
-  const payload = await fetchProducts(params);
+  let payload = await fetchProducts(params);
+  if (!payload.items[0] && line.productKind === "консоль" && line.catalogSearch) {
+    const consoleParams = new URLSearchParams({
+      limit: "24",
+      offset: "0",
+      q: line.catalogSearch,
+    });
+    if (rangeOuter) consoleParams.set("preferred_diameter", `:${diameter + 100}`);
+    payload = await fetchProducts(consoleParams);
+  }
   if (payload.items[0]) {
     return [line.key, {
       item: payload.items[0],
@@ -207,7 +216,6 @@ export function HomeQuickEstimate({
 }: HomeQuickEstimateProps) {
   const firstStep: Step = fixedObjectType ? 1 : 0;
   const restoringQuickEstimate = useRef(false);
-  const skipCatalogRefresh = useRef(false);
   const [step, setStep] = useState<Step>(firstStep);
   const [objectType, setObjectType] = useState<QuickEstimateObject | null>(fixedObjectType ?? null);
   const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatus | null>("installed");
@@ -254,7 +262,6 @@ export function HomeQuickEstimate({
       setOutdoorHeight(saved.outdoorHeight ?? "");
       setWallDistance(saved.wallDistance ?? "");
       if (saved.matches && (saved.matchStatus === "ready" || saved.matchStatus === "error")) {
-        skipCatalogRefresh.current = true;
         setMatches(saved.matches);
         setMatchStatus(saved.matchStatus);
       }
@@ -298,10 +305,6 @@ export function HomeQuickEstimate({
 
   useEffect(() => {
     if (step !== 4 || !answers || !bom.length) return;
-    if (skipCatalogRefresh.current) {
-      skipCatalogRefresh.current = false;
-      return;
-    }
     const controller = new AbortController();
     setMatchStatus("loading");
     const diameterMm = answers.diameterMm ?? 120;
