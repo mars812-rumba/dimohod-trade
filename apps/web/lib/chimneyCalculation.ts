@@ -673,19 +673,19 @@ function addRouteNodes(
     catalogDiameterMode: "sandwich-outer-exact",
     removable: true,
   }));
-  bom.push({
-    key: routeKind === "ceiling" ? "floor-clamp" : "wall-clamp",
-    productKind: "крепеж",
-    label: routeKind === "ceiling" ? "Хомут в перекрытие" : "Хомут в стеновой проход",
-    quantity: routeKind === "ceiling" ? passageQty + 1 : passageQty,
-    zone: "wall_or_ceiling_pass",
-    selectionReason: routeKind === "ceiling"
-      ? "По одному на каждый проход перекрытия и один на проход кровли; используется одно семейство с изменяемым углом."
-      : "По одному на проход; размер выбирается по наружному диаметру сэндвич-трубы.",
-    requiresSku: true,
-    catalogCategorySlug: routeKind === "ceiling" ? "uzly-prohoda-sten-i-perekrytiy" : undefined,
-    catalogSearch: routeKind === "ceiling" ? "Хомут в перекрытие" : undefined,
-  });
+  if (routeKind === "ceiling") {
+    bom.push({
+      key: "floor-clamp",
+      productKind: "крепеж",
+      label: "Хомут в перекрытие",
+      quantity: passageQty + 1,
+      zone: "wall_or_ceiling_pass",
+      selectionReason: "По одному на каждый проход перекрытия и один на проход кровли; используется одно семейство с изменяемым углом.",
+      requiresSku: true,
+      catalogCategorySlug: "uzly-prohoda-sten-i-perekrytiy",
+      catalogSearch: "Хомут в перекрытие",
+    });
+  }
   if (routeKind === "ceiling") {
     bom.push({ key: "roof-interior-flange", productKind: "фланец", label: "Фланец кровельного прохода со стороны помещения", quantity: 1, zone: "roof", selectionReason: "Добавлен со стороны помещения по правилу кровельного узла.", requiresSku: true });
     bom.push({

@@ -675,6 +675,18 @@ async def read_products(
                 base_size=None,
             )
         ]
+        if product.product_kind == "консоль" and preferred_outer_diameter_mm is not None:
+            fitting_console_skus = [
+                sku
+                for sku in active_skus
+                if isinstance(sku.attributes.get("diameter_max_mm"), int)
+                and sku.attributes["diameter_max_mm"] >= preferred_outer_diameter_mm
+            ]
+            if fitting_console_skus:
+                preferred_skus = sorted(
+                    fitting_console_skus,
+                    key=lambda sku: sku.attributes["diameter_max_mm"],
+                )
         representative_pool = preferred_skus or active_skus
         prices = [sku.price_rub for sku in representative_pool if sku.price_rub is not None]
         price_rub: Decimal | None = min(prices) if prices else None

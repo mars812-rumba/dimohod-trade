@@ -70,6 +70,8 @@ test("rear wall route starts with damper and support cap, then uses sandwich pip
   assert.equal(calculation.bom.some((line) => line.key === "support-cap"), true);
   assert.equal(calculation.bom.some((line) => line.key === "outside-support-platform"), true);
   assert.equal(calculation.bom.some((line) => line.key === "tee-support-console"), true);
+  assert.equal(calculation.bom.some((line) => line.key === "wall-clamp"), false);
+  assert.equal(calculation.bom.some((line) => line.label === "Одноконтурный хомут широкий"), false);
   const teeLowerPipe = calculation.bom.find((line) => line.key === "tee-lower-sandwich-pipe-250");
   assert.deepEqual(
     {

@@ -1,6 +1,5 @@
 import type { ProductListItem } from "./api";
 import type { ChimneyBomLine } from "./chimneyCalculation";
-import { allocatePassageKitPrice } from "./configuratorPricingRules";
 
 export type CatalogEstimateMatch = {
   item: ProductListItem;
@@ -99,21 +98,10 @@ export function buildChimneyEstimate({
   calculationErrors: string[];
   generatedAt?: Date;
 }): ChimneyEstimate {
-  const flangeMatch = matches["passage-flange"];
-  const flangeUnitPriceRub = flangeMatch ? positivePrice(flangeMatch.item.price_rub) : null;
-  const passageAllocation = allocatePassageKitPrice(flangeUnitPriceRub);
-  const hasPassageCup = selectedBom.some((line) => line.key === "ceiling-passage" || line.key === "wall-passage");
-  const passagePricingNeedsReview = hasPassageCup && passageAllocation.reviewItem !== null;
   const lines = selectedBom.map((bomLine): ChimneyEstimateLine => {
     const match = matches[bomLine.key];
     const catalogUnitPriceRub = match ? positivePrice(match.item.price_rub) : null;
-    const isPassageCup = bomLine.key === "ceiling-passage" || bomLine.key === "wall-passage";
-    const isPassageFlange = bomLine.key === "passage-flange";
-    const unitPriceRub = isPassageCup
-      ? match ? passageAllocation.cupUnitPriceRub : null
-      : isPassageFlange && passagePricingNeedsReview
-        ? null
-        : catalogUnitPriceRub;
+    const unitPriceRub = catalogUnitPriceRub;
     const lineTotalRub = unitPriceRub === null ? null : unitPriceRub * bomLine.quantity;
     const matchStatus = !match
       ? "missing"
@@ -135,10 +123,6 @@ export function buildChimneyEstimate({
       note: [
         bomLine.quantityNote,
         bomLine.selectionReason,
-        isPassageCup ? passageAllocation.explanation : null,
-        isPassageFlange && passagePricingNeedsReview
-          ? "Цена связанной группы временно исключена из итога до проверки стоимости комплекта."
-          : null,
       ].filter(Boolean).join(" · "),
       matchStatus,
     };
@@ -154,10 +138,7 @@ export function buildChimneyEstimate({
     unpricedLineCount: lines.filter((line) => line.lineTotalRub === null).length,
     totalUnits: lines.reduce((sum, line) => sum + line.quantity, 0),
     removedLabels,
-    reviewItems: [
-      ...reviewItems,
-      ...(hasPassageCup && passageAllocation.reviewItem ? [passageAllocation.reviewItem] : []),
-    ],
+    reviewItems,
     calculationErrors,
   };
 }
