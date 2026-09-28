@@ -15,6 +15,7 @@ import { homeScenario } from "@/lib/scenarioPages";
 import { HomeQuickEstimate } from "./HomeQuickEstimate";
 import { HomeWorksShowcase } from "./HomeWorksShowcase";
 import { LeadForm } from "./LeadForm";
+import { SolutionTrustSections } from "./SolutionTrustSections";
 import { YANDEX_MAPS_RATING } from "./YandexRatingBadge";
 import styles from "./HomeScenarioLanding.module.css";
 
@@ -132,7 +133,7 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
                 <a className={styles.primaryButton} href="#quick-estimate">
                   Рассчитать дымоход <ArrowRight aria-hidden size={18} />
                 </a>
-                <a className={styles.secondaryButton} href="#help-with-selection">Отправить материалы</a>
+                <a className={styles.secondaryButton} href="#help-with-selection">Оставить заявку</a>
               </div>
             </div>
             <div className={styles.heroMedia}>
@@ -184,7 +185,7 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
                 attachmentLabel="Добавить фото или план"
                 commentPlaceholder="Что уже известно: модель, диаметр, этажность или предполагаемый маршрут"
                 source="solution-dom-help"
-                submitLabel="Отправить материалы"
+                submitLabel="Оставить заявку"
                 successMessage="Менеджер посмотрит материалы и сообщит, что нужно уточнить для подбора."
               />
             </div>
@@ -218,6 +219,8 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
             <HomeWorksShowcase objectIds={[1]} />
           </div>
         </section>
+
+        <SolutionTrustSections assetBasePath={assetBasePath} />
 
         <section className={styles.reviewsSection} aria-labelledby="reviews-title">
           <div className={`${styles.shell} ${styles.reviewsLayout}`}>
@@ -296,11 +299,11 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           <div className={`${styles.shell} ${styles.finalPanel}`}>
             <div>
               <h2>Получите предварительный состав и стоимость</h2>
-              <p>Пройдите короткий расчёт или отправьте материалы менеджеру.</p>
+              <p>Пройдите короткий расчёт или оставьте заявку менеджеру.</p>
             </div>
             <div className={styles.finalActions}>
               <a className={styles.primaryButton} href="#quick-estimate">Рассчитать дымоход</a>
-              <a className={styles.secondaryButton} href="#help-with-selection">Отправить материалы</a>
+              <a className={styles.secondaryButton} href="#help-with-selection">Оставить заявку</a>
             </div>
           </div>
         </section>
