@@ -24,18 +24,24 @@ test("hero carousel references existing responsive image assets", async () => {
   await access(new URL("../public/videos/home/0826.mp4", import.meta.url));
 });
 
-test("mobile hero explains production and exposes a secondary catalog action", () => {
-  assert.match(componentSource, /Дымоходы высокого качества на точном оборудовании/u);
+test("hero keeps a stable offer and sends the primary action to the quick calculation", () => {
+  assert.match(componentSource, /Рассчитайте комплект дымохода за 2 минуты/u);
+  assert.match(componentSource, /Ответьте на 5 простых вопросов/u);
+  assert.match(componentSource, /предварительную смету и состав/u);
+  assert.match(componentSource, /className=\{styles\.cta\} href="\/bystryy-raschet"/);
+  assert.match(componentSource, /Рассчитать комплект/u);
+});
+
+test("hero preserves a secondary catalog action", () => {
   assert.match(componentSource, /className=\{styles\.catalogCta\} href="\/catalog"/);
   assert.match(componentSource, /Открыть каталог/u);
   assert.match(stylesSource, /background: rgba\(16, 33, 39, 0\.58\)/);
 });
 
-test("mobile hero reserves orange for the primary action and keeps the production cue borderless", () => {
+test("mobile hero reserves orange for the primary action and keeps the offer readable over media", () => {
   assert.match(stylesSource, /\.cta \{[\s\S]*?background: #ed5b2a;/u);
-  assert.match(stylesSource, /\.mobileCueSlot \{[\s\S]*?background: #2f7890;/u);
-  assert.match(stylesSource, /\.videoCueIcon \{[\s\S]*?background: transparent;/u);
-  assert.doesNotMatch(stylesSource.match(/\.videoCueIcon \{[\s\S]*?\}/u)?.[0] ?? "", /border:/u);
+  assert.match(stylesSource, /\.carouselFrame::after \{[\s\S]*?linear-gradient/u);
+  assert.match(stylesSource, /\.heroOffer \{[\s\S]*?color: #fff;/u);
   assert.match(globalStylesSource, /\.mobile-menu-trigger \{[\s\S]*?border: 0;[\s\S]*?background: transparent;/u);
   assert.match(globalStylesSource, /\.header-phone \{[\s\S]*?border: 0;[\s\S]*?background: transparent;/u);
 });

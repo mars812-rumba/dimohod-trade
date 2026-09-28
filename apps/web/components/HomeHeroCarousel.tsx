@@ -4,11 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   IconArrowRight,
-  IconAssembly,
-  IconBuildingFactory2,
   IconFileTypePdf,
-  IconSparkles,
-  IconTruckDelivery,
 } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import styles from "./HomeHeroCarousel.module.css";
@@ -26,37 +22,6 @@ const slides = [
   ["designer-fireplace.webp", "Подвесной камин и дымоход в интерьере"],
 ] as const;
 
-const mobileVideoCues = [
-  {
-    start: 0,
-    end: 8,
-    title: "Собственное производство",
-    description: "Дымоходы высокого качества на точном оборудовании",
-    Icon: IconBuildingFactory2,
-  },
-  {
-    start: 8,
-    end: 16,
-    title: "Лазерная сварка в стык",
-    description: "Ровный и аккуратный шов",
-    Icon: IconSparkles,
-  },
-  {
-    start: 16,
-    end: 20,
-    title: "Проверяем совместимость элементов",
-    description: "Чтобы комплект подошёл по месту",
-    Icon: IconAssembly,
-  },
-  {
-    start: 20,
-    end: 22.1,
-    title: "Доставка по всей России",
-    description: "Отгружаем готовые заказы",
-    Icon: IconTruckDelivery,
-  },
-] as const;
-
 type HomeHeroCarouselProps = {
   assetBasePath?: string;
 };
@@ -67,7 +32,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   const [isMobile, setIsMobile] = useState(false);
   const [mobileVideoFailed, setMobileVideoFailed] = useState(false);
   const [mobileVideoPlaying, setMobileVideoPlaying] = useState(false);
-  const [activeVideoCue, setActiveVideoCue] = useState<number | null>(null);
   const touchStartX = useRef<number | null>(null);
   const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -120,16 +84,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
   const mobileVideoPosterPath = `${assetBasePath}/images/home/hero-projects/0826-poster.webp`;
-  const videoCue = activeVideoCue === null ? null : mobileVideoCues[activeVideoCue];
-  const displayedVideoCue = videoCue ?? mobileVideoCues[0];
   const usesMobileVideo = isMobile && !reduceMotion && !mobileVideoFailed;
-
-  const syncVideoCue = (currentTime: number) => {
-    const cueIndex = mobileVideoCues.findIndex(
-      ({ start, end }) => currentTime >= start && currentTime < end,
-    );
-    setActiveVideoCue(cueIndex >= 0 ? cueIndex : null);
-  };
 
   return (
     <section
@@ -147,26 +102,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         touchStartX.current = null;
       }}
     >
-      {usesMobileVideo ? (
-        <div className={styles.mobileCueSlot} aria-live="off">
-          <div key={activeVideoCue ?? "initial"} className={styles.videoCue}>
-            <span className={styles.videoCueIcon} aria-hidden="true">
-              <displayedVideoCue.Icon size={25} strokeWidth={1.7} />
-            </span>
-            <span className={styles.videoCueCopy}>
-              <strong>{displayedVideoCue.title}</strong>
-              <span>{displayedVideoCue.description}</span>
-            </span>
-          </div>
-        </div>
-      ) : null}
-
-      {!usesMobileVideo ? (
-        <h1 className={styles.headline}>
-          Дымоход под ваш отопитель — со схемой и проверкой комплекта.
-        </h1>
-      ) : null}
-
       <div className={styles.carouselFrame}>
         <div className={styles.imageStage} aria-live="off">
           <Image
@@ -200,11 +135,9 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
               preload="metadata"
               poster={mobileVideoPosterPath}
               aria-hidden="true"
-              onPlaying={(event) => {
+              onPlaying={() => {
                 setMobileVideoPlaying(true);
-                syncVideoCue(event.currentTarget.currentTime);
               }}
-              onTimeUpdate={(event) => syncVideoCue(event.currentTarget.currentTime)}
               onPause={() => {
                 setMobileVideoPlaying(false);
               }}
@@ -214,7 +147,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
               onError={() => {
                 setMobileVideoPlaying(false);
                 setMobileVideoFailed(true);
-                setActiveVideoCue(null);
               }}
             >
               <source src={`${assetBasePath}/videos/home/0826.mp4`} type="video/mp4" />
@@ -226,21 +158,22 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
           <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
         ) : null}
 
+        <div className={styles.heroOffer}>
+          <h1 className={styles.heroOfferTitle}>
+            Рассчитайте комплект дымохода за 2 минуты
+          </h1>
+          <p className={styles.heroOfferText}>
+            Ответьте на 5 простых вопросов — получите предварительную смету и состав
+            комплекта с ценами.
+          </p>
+        </div>
+
         <div className={styles.heroActions}>
-          <Link className={styles.cta} href="/raschet">
+          <Link className={styles.cta} href="/bystryy-raschet">
             <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
             <div className={styles.ctaCopy}>
-              {usesMobileVideo ? (
-                <>
-                  <h1 className={styles.ctaHeroTitle}>Дымоход под ваш отопитель</h1>
-                  <strong>Начать замер</strong>
-                </>
-              ) : (
-                <>
-                  <strong>Начать замер</strong>
-                  <span>Быстрый расчёт или глубокий замер</span>
-                </>
-              )}
+              <strong>Рассчитать комплект</strong>
+              <span>Перейти к 5 простым вопросам</span>
             </div>
             <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
           </Link>
