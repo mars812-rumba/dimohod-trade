@@ -1107,6 +1107,7 @@ export default async function HomePage() {
               <Link href="/solutions">Решения</Link>
               <Link href="/guides">Статьи</Link>
               <Link href="/delivery">Доставка по России</Link>
+              <Link href="/about">О компании</Link>
               <Link href="/configurator">Конфигуратор</Link>
               <a href="tel:+79650756555">Контакты</a>
             </nav>

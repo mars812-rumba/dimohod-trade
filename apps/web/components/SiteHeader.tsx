@@ -157,6 +157,7 @@ export function SiteHeader() {
               <Link href="/solutions/kamin">Для камина</Link>
               <Link href="/solutions/tverdotoplivny-kotel">Для твердотопливного котла</Link>
               <Link href="/solutions/gazovyy-kotel">Для газового котла</Link>
+              <Link href="/promyshlennye-dymohody">Промышленные дымоходы</Link>
             </div>
           </details>
           <Link href="/guides">Статьи</Link>
@@ -167,6 +168,7 @@ export function SiteHeader() {
               <ChevronDown aria-hidden size={14} />
             </summary>
             <div className="desktop-nav-dropdown">
+              <Link href="/about">О компании</Link>
               <Link href="/configurator">Сохранённые расчёты</Link>
               <Link href="/#send-materials">Отправить фото или схему</Link>
               <span className="desktop-nav-label">Документы</span>
@@ -257,10 +259,14 @@ export function SiteHeader() {
                 <Link href="/solutions/gazovyy-kotel" onClick={closeMenu}>
                   Для газового котла
                 </Link>
+                <Link href="/promyshlennye-dymohody" onClick={closeMenu}>
+                  Промышленные дымоходы
+                </Link>
               </div>
             </details>
             <Link href="/guides" onClick={closeMenu}>Статьи и инструкции</Link>
             <Link href="/delivery" onClick={closeMenu}>Доставка по России</Link>
+            <Link href="/about" onClick={closeMenu}>О компании</Link>
             <Link className="mobile-menu-path mobile-menu-path-primary" href="/raschet" onClick={closeMenu}>
               <Ruler aria-hidden size={18} />
               <span><strong>Начать замер</strong><small>Выберите быстрый расчёт или глубокий замер</small></span>

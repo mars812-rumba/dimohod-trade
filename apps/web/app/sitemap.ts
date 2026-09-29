@@ -33,8 +33,10 @@ const lastModified = {
   solutions: new Date("2026-08-31T03:26:04Z"),
   guides: new Date("2026-08-31T03:11:04Z"),
   delivery: new Date("2026-08-30T22:58:53Z"),
+  about: new Date("2026-09-29T00:00:00Z"),
   configurator: new Date("2026-08-24T01:08:57Z"),
   stoves: new Date("2026-08-24T04:25:07Z"),
+  industrialChimneys: new Date("2026-09-07T00:00:00Z"),
 } as const;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -48,7 +50,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/solutions"), lastModified: lastModified.solutions },
     { url: absoluteUrl("/guides"), lastModified: lastModified.guides },
     { url: absoluteUrl("/delivery"), lastModified: lastModified.delivery },
+    { url: absoluteUrl("/about"), lastModified: lastModified.about },
     { url: absoluteUrl("/configurator"), lastModified: lastModified.configurator },
+    { url: absoluteUrl("/promyshlennye-dymohody"), lastModified: lastModified.industrialChimneys },
     ...Object.keys(scenarioPages).map((slug) => ({
       url: absoluteUrl(`/solutions/${slug}`),
       lastModified: lastModified.solutions,
