@@ -5,6 +5,7 @@ import test from "node:test";
 const component = readFileSync(new URL("../components/YandexMetrika.tsx", import.meta.url), "utf8");
 const metrika = readFileSync(new URL("metrika.ts", import.meta.url), "utf8");
 const estimateDialog = readFileSync(new URL("../components/EstimateLeadDialog.tsx", import.meta.url), "utf8");
+const leadForm = readFileSync(new URL("../components/LeadForm.tsx", import.meta.url), "utf8");
 const quickEstimate = readFileSync(new URL("../components/HomeQuickEstimate.tsx", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../components/YandexMetrika.module.css", import.meta.url), "utf8");
 const layout = readFileSync(new URL("../app/layout.tsx", import.meta.url), "utf8");
@@ -24,12 +25,16 @@ test("Yandex Metrika loads immediately unless analytics were previously declined
 });
 
 test("business goals use reachGoal at the confirmed conversion points", () => {
+  assert.match(metrika, /lead_submitted/);
   assert.match(metrika, /quick_estimate_contact_sent/);
   assert.match(metrika, /deep_measurement_form_sent/);
   assert.match(metrika, /phone_click/);
   assert.match(metrika, /"reachGoal"/);
   assert.match(estimateDialog, /if \(!response\.ok\) throw/);
+  assert.match(estimateDialog, /reachMetrikaGoal\(METRIKA_GOALS\.leadSubmitted/);
   assert.match(estimateDialog, /reachMetrikaGoal\(metrikaGoal/);
+  assert.match(leadForm, /if \(!response\.ok\) throw/);
+  assert.match(leadForm, /reachMetrikaGoal\(METRIKA_GOALS\.leadSubmitted/);
   assert.match(quickEstimate, /metrikaGoal=\{METRIKA_GOALS\.quickEstimateContactSent\}/);
   assert.match(component, /a\[href\^=\"tel:\"\]/);
 });

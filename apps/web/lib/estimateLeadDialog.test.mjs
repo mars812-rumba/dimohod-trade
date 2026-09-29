@@ -22,6 +22,9 @@ test("the estimate form sends the PDF and BOM to the existing lead endpoint", ()
   assert.match(componentSource, /window\.location\.href/);
   assert.match(componentSource, /\/api\/v1\/leads/);
   assert.match(componentSource, /predvaritelnaya-smeta-dymohoda\.pdf/);
+  assert.match(componentSource, /reachMetrikaGoal\(METRIKA_GOALS\.leadSubmitted/);
+  assert.match(componentSource, /reachMetrikaGoal\(metrikaGoal/);
+  assert.match(componentSource, /deepMeasurementFormSent/);
 });
 
 test("the form collects a contact method, consent and a spam honeypot", () => {

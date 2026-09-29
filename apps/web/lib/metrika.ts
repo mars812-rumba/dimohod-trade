@@ -2,6 +2,7 @@ export const YANDEX_METRIKA_COUNTER_ID = 112091795;
 export const ANALYTICS_CONSENT_STORAGE_KEY = "dimohod_analytics_consent_v1";
 
 export const METRIKA_GOALS = {
+  leadSubmitted: "lead_submitted",
   quickEstimateContactSent: "quick_estimate_contact_sent",
   deepMeasurementFormSent: "deep_measurement_form_sent",
   catalogCartSent: "catalog_cart_sent",

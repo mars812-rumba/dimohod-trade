@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { CheckCircle2, Paperclip, Send } from "lucide-react";
+import { METRIKA_GOALS, reachMetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
 
 type LeadFormProps = {
@@ -48,6 +49,10 @@ export function LeadForm({
       if (!response.ok) throw new Error(payload?.detail ?? "Не удалось отправить заявку");
       form.reset();
       setStatus("success");
+      reachMetrikaGoal(METRIKA_GOALS.leadSubmitted, {
+        source,
+        path: window.location.pathname,
+      });
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Не удалось отправить заявку");

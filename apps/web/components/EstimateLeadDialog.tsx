@@ -11,6 +11,7 @@ import {
 import type { ChimneyEstimate } from "@/lib/chimneyEstimate";
 import { chimneyEstimateText } from "@/lib/chimneyEstimate";
 import { createChimneyEstimatePdfBlob } from "@/lib/chimneyEstimatePdf";
+import { METRIKA_GOALS, reachMetrikaGoal, type MetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
 
 type ContactMethod = "phone" | "whatsapp" | "telegram" | "email";
@@ -21,6 +22,7 @@ type EstimateLeadDialogProps = {
   disabled?: boolean;
   estimate: ChimneyEstimate;
   heading?: string;
+  metrikaGoal?: MetrikaGoal;
   onSubmitted?: () => void;
   source?: string;
   submitLabel?: string;
@@ -74,6 +76,7 @@ export function EstimateLeadDialog({
   disabled = false,
   estimate,
   heading = "Отправить BOM менеджеру",
+  metrikaGoal = METRIKA_GOALS.deepMeasurementFormSent,
   onSubmitted,
   source = "chimney-estimate",
   submitLabel = "Отправить расчёт",
@@ -137,6 +140,9 @@ export function EstimateLeadDialog({
         ? payload.email_status
         : null;
       setStatus(emailStatus === "sent" ? "success" : "saved");
+      const goalParams = { source, path: window.location.pathname };
+      reachMetrikaGoal(METRIKA_GOALS.leadSubmitted, goalParams);
+      reachMetrikaGoal(metrikaGoal, goalParams);
       onSubmitted?.();
     } catch (error) {
       setStatus("error");
