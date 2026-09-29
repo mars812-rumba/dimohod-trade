@@ -164,13 +164,13 @@ export default function AboutPage() {
           <div className={styles.productionGallery}>
             <figure className={styles.galleryMain}>
               <Image
-                alt="Рабочий цех Дымоход Трейд с сотрудниками и элементами дымоходов"
-                height={1448}
+                alt="Готовые элементы дымоходных систем Дымоход Трейд"
+                height={960}
                 sizes="(max-width: 760px) 100vw, 62vw"
                 src={imagePath("active-workshop.webp")}
-                width={1086}
+                width={1280}
               />
-              <figcaption>Рабочий цех и текущие заказы</figcaption>
+              <figcaption>Готовые элементы дымоходных систем</figcaption>
             </figure>
             <div className={styles.gallerySide}>
               <figure>
@@ -202,11 +202,11 @@ export default function AboutPage() {
         <div className={`${styles.shell} ${styles.materialGrid}`}>
           <figure className={styles.materialMedia}>
             <Image
-              alt="Рулон изоляции ROCKWOOL WIRED MAT 105 на производственном участке"
-              height={1280}
+              alt="Упаковки изоляционного материала ROCKWOOL на производстве"
+              height={1170}
               sizes="(max-width: 760px) 100vw, 46vw"
               src={imagePath("rockwool-insulation.webp")}
-              width={960}
+              width={1280}
             />
           </figure>
           <div className={styles.materialCopy}>
@@ -244,11 +244,11 @@ export default function AboutPage() {
           </div>
           <figure className={styles.approachMedia}>
             <Image
-              alt="Готовые модульные трубы и комплектующие в цехе Дымоход Трейд"
-              height={1448}
+              alt="Склад готовых модульных труб и комплектующих Дымоход Трейд"
+              height={960}
               sizes="(max-width: 820px) 100vw, 44vw"
               src={imagePath("finished-chimney-components.webp")}
-              width={1086}
+              width={1280}
             />
             <figcaption>Готовые элементы перед комплектацией заказа</figcaption>
           </figure>
