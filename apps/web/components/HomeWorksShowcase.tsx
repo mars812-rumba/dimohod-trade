@@ -19,8 +19,10 @@ type WorkObject = {
     title: string;
     description: string;
     specifications: string[];
-    equipmentPrice: string;
-    installationPrice: string;
+    prices: Array<{
+      label: string;
+      value: string;
+    }>;
   };
 };
 
@@ -37,8 +39,10 @@ const workObjects: WorkObject[] = [
         "Нержавеющая сталь AISI 304",
         "Толщина стали 0,8 мм",
       ],
-      equipmentPrice: "97 500 ₽",
-      installationPrice: "35 000 ₽",
+      prices: [
+        { label: "Комплект дымохода", value: "97 500 ₽" },
+        { label: "Монтаж", value: "35 000 ₽" },
+      ],
     },
     photos: [
       { src: "/images/works/object-1/07.webp", alt: "Дымоход на зелёной кровле частного дома" },
@@ -63,6 +67,21 @@ const workObjects: WorkObject[] = [
   },
   {
     id: 3,
+    scenario: "Дымоход для твердотопливного котла",
+    details: {
+      location: "Медное озеро",
+      title: "Дымоход для твердотопливного котла",
+      description: "Монтаж дымохода для твердотопливного котла.",
+      specifications: [
+        "Диаметр 200/300 мм",
+        "Нержавеющая сталь AISI 321",
+        "Толщина стали 0,8 мм",
+      ],
+      prices: [
+        { label: "Комплект дымохода", value: "87 000 ₽" },
+        { label: "Монтаж дымохода", value: "60 000 ₽" },
+      ],
+    },
     photos: [
       { src: "/images/works/object-3/01.webp", alt: "Дом с выведенным над кровлей дымоходом" },
       { src: "/images/works/object-3/02.webp", alt: "Тёмный дымоход на кровле" },
@@ -85,10 +104,24 @@ const workObjects: WorkObject[] = [
   },
   {
     id: 5,
+    scenario: "Дымоход для деревянного дома",
+    details: {
+      location: "Остров Большой Берёзовый",
+      title: "Монтаж дымохода в одноэтажном деревянном доме",
+      description: "Дымоход с порошковой покраской в чёрный цвет.",
+      specifications: ["Печь Everest T6", "Порошковая покраска — чёрный цвет"],
+      prices: [
+        { label: "Комплект дымохода", value: "65 000 ₽" },
+        { label: "Печь Everest T6", value: "62 500 ₽" },
+        {
+          label: "Монтаж с доставкой и расходными материалами",
+          value: "42 000 ₽",
+        },
+      ],
+    },
     photos: [
-      { src: "/images/works/object-5/03.webp", alt: "Дымоход на кровле рядом с кирпичной трубой" },
-      { src: "/images/works/object-5/01.webp", alt: "Печь с дымоходом в готовом интерьере" },
-      { src: "/images/works/object-5/02.webp", alt: "Печь с огнём и вертикальным дымоходом" },
+      { src: "/images/works/object-5/03.webp", alt: "Печь Everest T6 с вертикальным дымоходом" },
+      { src: "/images/works/object-5/02.webp", alt: "Чёрный дымоход на кровле деревянного дома" },
       { src: "/images/works/object-5/04.webp", alt: "Печь и защитный экран на стене" },
       { src: "/images/works/object-5/05.webp", alt: "Установленная у стены печь с дымоходом" },
     ],
@@ -206,14 +239,12 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
                 </ul>
               </div>
               <dl className={styles.objectPrices}>
-                <div>
-                  <dt>Комплект дымохода</dt>
-                  <dd>{activeObject.details.equipmentPrice}</dd>
-                </div>
-                <div>
-                  <dt>Монтаж</dt>
-                  <dd>{activeObject.details.installationPrice}</dd>
-                </div>
+                {activeObject.details.prices.map((price) => (
+                  <div key={price.label}>
+                    <dt>{price.label}</dt>
+                    <dd>{price.value}</dd>
+                  </div>
+                ))}
               </dl>
             </section>
           ) : null}

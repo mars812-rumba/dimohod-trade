@@ -148,6 +148,100 @@
   font-variant-numeric: tabular-nums;
 }
 
+.objectDetails {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.46fr);
+  gap: 32px;
+  padding: 26px 28px;
+  border-top: 1px solid #415860;
+  color: #eef4f5;
+  background: #17313b;
+}
+
+.objectDescription h3 {
+  max-width: 760px;
+  margin: 4px 0 10px;
+  font-family: var(--font-heading);
+  font-size: clamp(22px, 2.6vw, 32px);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.objectDescription > p:last-of-type {
+  max-width: 720px;
+  margin: 0;
+  color: #bfd0d5;
+  font-size: 14px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.objectLocation {
+  margin: 0;
+  color: #ff8a61;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.objectDescription ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 18px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid #415860;
+  list-style: none;
+}
+
+.objectDescription li {
+  position: relative;
+  padding-left: 14px;
+  color: #dce7e9;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.objectDescription li::before {
+  position: absolute;
+  top: 0.58em;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ed5b2a;
+  content: "";
+}
+
+.objectPrices {
+  display: grid;
+  align-content: start;
+  margin: 0;
+  border-top: 1px solid #50656c;
+}
+
+.objectPrices div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 15px 0;
+  border-bottom: 1px solid #50656c;
+}
+
+.objectPrices dt {
+  color: #bfd0d5;
+  font-size: 12px;
+}
+
+.objectPrices dd {
+  margin: 0;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .openLabel {
   display: inline-flex;
   gap: 8px;
@@ -303,6 +397,10 @@
   .stage {
     min-height: 500px;
   }
+
+  .objectDetails {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.5fr);
+  }
 }
 
 @media (max-width: 620px) {
@@ -318,6 +416,16 @@
 
   .stageCaption strong {
     font-size: 19px;
+  }
+
+  .objectDetails {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 22px 18px;
+  }
+
+  .objectDescription ul {
+    display: grid;
   }
 
   .openLabel {

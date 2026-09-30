@@ -20,6 +20,24 @@ test("completed object 1 shows the confirmed project details and separate prices
   assert.doesNotMatch(source, /132 500 ₽/);
 });
 
+test("completed objects 3 and 5 show confirmed scenarios, specifications and prices", () => {
+  assert.match(source, /scenario: "Дымоход для твердотопливного котла"/);
+  assert.match(source, /Медное озеро/);
+  assert.match(source, /200\/300 мм/);
+  assert.match(source, /AISI 321/);
+  assert.match(source, /87 000 ₽/);
+  assert.match(source, /60 000 ₽/);
+
+  assert.match(source, /scenario: "Дымоход для деревянного дома"/);
+  assert.match(source, /Остров Большой Берёзовый/);
+  assert.match(source, /Everest T6/);
+  assert.match(source, /65 000 ₽/);
+  assert.match(source, /62 500 ₽/);
+  assert.match(source, /42 000 ₽/);
+  assert.doesNotMatch(source, /object-5\/01\.webp/);
+  assert.match(source, /object-5\/02\.webp/);
+});
+
 test("completed object details have a dedicated responsive layout", () => {
   assert.match(source, /styles\.objectDetails/);
   assert.match(styles, /\.objectDetails/);
