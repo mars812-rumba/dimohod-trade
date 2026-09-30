@@ -143,6 +143,31 @@ const workObjects: WorkObject[] = [
       { src: "/images/works/object-6/06.webp", alt: "Готовый камин в интерьере деревянного дома" },
     ],
   },
+  {
+    id: 7,
+    scenario: "Дымоход для бани",
+    coverPhoto: "/images/works/object-7/03.webp",
+    details: {
+      location: "Дивенская",
+      title: "Монтаж дымохода и противопожарной стены в бане",
+      description: "Дымоход для бани с баком собственного производства.",
+      specifications: [
+        "Бак: аустенитная нержавеющая сталь AISI 304, 1 мм",
+        "Противопожарная стена: фиброцементные плиты «Фаспан», 9 мм",
+      ],
+      prices: [
+        { label: "Комплект дымохода", value: "68 872 ₽" },
+        { label: "Монтаж дымохода", value: "33 000 ₽" },
+        { label: "Монтаж противопожарной стены", value: "8 000 ₽" },
+      ],
+    },
+    photos: [
+      { src: "/images/works/object-7/01.webp", alt: "Дымоход над кровлей бани в Дивенской" },
+      { src: "/images/works/object-7/02.webp", alt: "Наружный участок дымохода на кровле бани" },
+      { src: "/images/works/object-7/03.webp", alt: "Печь, бак и дымоход у противопожарной стены" },
+      { src: "/images/works/object-7/04.webp", alt: "Дымоход для бани с баком собственного производства" },
+    ],
+  },
 ];
 
 export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) {

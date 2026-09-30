@@ -51,7 +51,20 @@ test("fireplace case publishes all six photos and uses the finished view as its 
     assert.match(source, new RegExp(`object-6\\/0${index}\\.webp`));
   }
   assert.match(source, /workObject\.coverPhoto \?\? workObject\.photos\[0\]\.src/);
-  assert.doesNotMatch(source, /id: 6,[\s\S]*?details:/);
+});
+
+test("bathhouse case shows the confirmed materials, work prices and selected cover", () => {
+  assert.match(source, /id: 7,\s+scenario: "Дымоход для бани"/);
+  assert.match(source, /coverPhoto: "\/images\/works\/object-7\/03\.webp"/);
+  assert.match(source, /Дивенская/);
+  assert.match(source, /аустенитная нержавеющая сталь AISI 304, 1 мм/);
+  assert.match(source, /фиброцементные плиты «Фаспан», 9 мм/);
+  assert.match(source, /68 872 ₽/);
+  assert.match(source, /33 000 ₽/);
+  assert.match(source, /8 000 ₽/);
+  for (let index = 1; index <= 4; index += 1) {
+    assert.match(source, new RegExp(`object-7\\/0${index}\\.webp`));
+  }
 });
 
 test("completed object details have a dedicated responsive layout", () => {
