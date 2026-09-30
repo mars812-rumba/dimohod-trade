@@ -12,12 +12,34 @@ type WorkPhoto = {
 
 type WorkObject = {
   id: number;
+  scenario?: string;
   photos: WorkPhoto[];
+  details?: {
+    location: string;
+    title: string;
+    description: string;
+    specifications: string[];
+    equipmentPrice: string;
+    installationPrice: string;
+  };
 };
 
 const workObjects: WorkObject[] = [
   {
     id: 1,
+    scenario: "Дымоход для дома",
+    details: {
+      location: "СНТ «Дунай»",
+      title: "Монтаж дымохода с установкой печи Dacha 2",
+      description: "Установка в каркасном доме. Дымоход с порошковой покраской.",
+      specifications: [
+        "Диаметр 120/220 мм",
+        "Нержавеющая сталь AISI 304",
+        "Толщина стали 0,8 мм",
+      ],
+      equipmentPrice: "97 500 ₽",
+      installationPrice: "35 000 ₽",
+    },
     photos: [
       { src: "/images/works/object-1/07.webp", alt: "Дымоход на зелёной кровле частного дома" },
       { src: "/images/works/object-1/04.webp", alt: "Подключение металлической печи к дымоходу внутри дома" },
@@ -85,6 +107,7 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
   const touchStartX = useRef<number | null>(null);
   const activeObject = visibleObjects[objectIndex] ?? visibleObjects[0];
   const activePhoto = activeObject.photos[photoIndex];
+  const activeLabel = activeObject.scenario ?? `Объект ${activeObject.id}`;
 
   const selectObject = (index: number) => {
     setObjectIndex(index);
@@ -129,8 +152,12 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
                 />
               </span>
               <span className={styles.objectMeta}>
-                <strong>Объект {workObject.id}</strong>
-                <small>{workObject.photos.length} фотографий</small>
+                <strong>{workObject.scenario ?? `Объект ${workObject.id}`}</strong>
+                <small>
+                  {workObject.details
+                    ? `${workObject.details.location} · ${workObject.photos.length} фото`
+                    : `${workObject.photos.length} фотографий`}
+                </small>
               </span>
               <ChevronRight aria-hidden size={18} />
             </button>
@@ -139,7 +166,7 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
 
         <div className={styles.viewer} id="home-work-stage">
           <button
-            aria-label={`Открыть объект ${activeObject.id}, фотография ${photoIndex + 1}`}
+            aria-label={`Открыть ${activeLabel}, фотография ${photoIndex + 1}`}
             aria-haspopup="dialog"
             className={styles.stage}
             onClick={openDialog}
@@ -156,14 +183,42 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
             <span className={styles.stageShade} aria-hidden="true" />
             <span className={styles.stageCaption}>
               <span>
-                <strong>Объект {activeObject.id}</strong>
+                <strong>{activeLabel}</strong>
                 <small>{photoIndex + 1} из {activeObject.photos.length}</small>
               </span>
               <span className={styles.openLabel}><Maximize2 aria-hidden size={17} /> Смотреть</span>
             </span>
           </button>
 
-          <div className={styles.photoStrip} aria-label={`Фотографии объекта ${activeObject.id}`}>
+          {activeObject.details ? (
+            <section
+              aria-label={`Описание: ${activeLabel}`}
+              className={styles.objectDetails}
+            >
+              <div className={styles.objectDescription}>
+                <p className={styles.objectLocation}>{activeObject.details.location}</p>
+                <h3>{activeObject.details.title}</h3>
+                <p>{activeObject.details.description}</p>
+                <ul aria-label="Характеристики дымохода">
+                  {activeObject.details.specifications.map((specification) => (
+                    <li key={specification}>{specification}</li>
+                  ))}
+                </ul>
+              </div>
+              <dl className={styles.objectPrices}>
+                <div>
+                  <dt>Комплект дымохода</dt>
+                  <dd>{activeObject.details.equipmentPrice}</dd>
+                </div>
+                <div>
+                  <dt>Монтаж</dt>
+                  <dd>{activeObject.details.installationPrice}</dd>
+                </div>
+              </dl>
+            </section>
+          ) : null}
+
+          <div className={styles.photoStrip} aria-label={`Фотографии: ${activeLabel}`}>
             {activeObject.photos.map((photo, index) => (
               <button
                 aria-label={`Показать фотографию ${index + 1}`}
@@ -181,7 +236,7 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
       </div>
 
       <dialog
-        aria-label={`Фотографии объекта ${activeObject.id}`}
+        aria-label={`Фотографии: ${activeLabel}`}
         className={styles.dialog}
         onClick={(event) => {
           if (event.target === event.currentTarget) closeDialog();
@@ -242,7 +297,7 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
             <ChevronRight aria-hidden size={28} />
           </button>
           <span className={styles.dialogCounter} aria-live="polite">
-            Объект {activeObject.id} · {photoIndex + 1} / {activeObject.photos.length}
+            {activeLabel} · {photoIndex + 1} / {activeObject.photos.length}
           </span>
         </div>
       </dialog>
