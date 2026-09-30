@@ -12,6 +12,7 @@ type WorkPhoto = {
 
 type WorkObject = {
   id: number;
+  published?: boolean;
   scenario?: string;
   photos: WorkPhoto[];
   details?: {
@@ -56,6 +57,7 @@ const workObjects: WorkObject[] = [
   },
   {
     id: 2,
+    published: false,
     photos: [
       { src: "/images/works/object-2/05.webp", alt: "Печь и дымоход в деревянном помещении" },
       { src: "/images/works/object-2/01.webp", alt: "Печь в кирпичном портале" },
@@ -67,7 +69,7 @@ const workObjects: WorkObject[] = [
   },
   {
     id: 3,
-    scenario: "Дымоход для твердотопливного котла",
+    scenario: "Дымоход для ТТ-котла",
     details: {
       location: "Медное озеро",
       title: "Дымоход для твердотопливного котла",
@@ -94,6 +96,7 @@ const workObjects: WorkObject[] = [
   },
   {
     id: 4,
+    published: false,
     photos: [
       { src: "/images/works/object-4/05.webp", alt: "Печь с тёмным дымоходом у окна" },
       { src: "/images/works/object-4/01.webp", alt: "Отдельно стоящая печь с вертикальным дымоходом" },
@@ -129,10 +132,11 @@ const workObjects: WorkObject[] = [
 ];
 
 export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) {
+  const publishedObjects = workObjects.filter((workObject) => workObject.published !== false);
   const filteredObjects = objectIds?.length
-    ? workObjects.filter((workObject) => objectIds.includes(workObject.id))
-    : workObjects;
-  const visibleObjects = filteredObjects.length ? filteredObjects : workObjects;
+    ? publishedObjects.filter((workObject) => objectIds.includes(workObject.id))
+    : publishedObjects;
+  const visibleObjects = filteredObjects.length ? filteredObjects : publishedObjects;
   const [objectIndex, setObjectIndex] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
   const dialogRef = useRef<HTMLDialogElement>(null);

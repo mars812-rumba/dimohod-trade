@@ -21,7 +21,7 @@ test("completed object 1 shows the confirmed project details and separate prices
 });
 
 test("completed objects 3 and 5 show confirmed scenarios, specifications and prices", () => {
-  assert.match(source, /scenario: "Дымоход для твердотопливного котла"/);
+  assert.match(source, /scenario: "Дымоход для ТТ-котла"/);
   assert.match(source, /Медное озеро/);
   assert.match(source, /200\/300 мм/);
   assert.match(source, /AISI 321/);
@@ -36,6 +36,12 @@ test("completed objects 3 and 5 show confirmed scenarios, specifications and pri
   assert.match(source, /42 000 ₽/);
   assert.doesNotMatch(source, /object-5\/01\.webp/);
   assert.match(source, /object-5\/02\.webp/);
+});
+
+test("unfinished objects 2 and 4 stay in source but are hidden from publication", () => {
+  assert.match(source, /id: 2,\s+published: false/);
+  assert.match(source, /id: 4,\s+published: false/);
+  assert.match(source, /workObject\.published !== false/);
 });
 
 test("completed object details have a dedicated responsive layout", () => {
