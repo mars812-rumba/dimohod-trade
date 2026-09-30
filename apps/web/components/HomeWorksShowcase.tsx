@@ -14,6 +14,7 @@ type WorkObject = {
   id: number;
   published?: boolean;
   scenario?: string;
+  coverPhoto?: string;
   photos: WorkPhoto[];
   details?: {
     location: string;
@@ -129,6 +130,19 @@ const workObjects: WorkObject[] = [
       { src: "/images/works/object-5/05.webp", alt: "Установленная у стены печь с дымоходом" },
     ],
   },
+  {
+    id: 6,
+    scenario: "Камины",
+    coverPhoto: "/images/works/object-6/06.webp",
+    photos: [
+      { src: "/images/works/object-6/01.webp", alt: "Основание и металлический каркас будущего камина" },
+      { src: "/images/works/object-6/02.webp", alt: "Каминная топка на подготовленном основании" },
+      { src: "/images/works/object-6/03.webp", alt: "Подключение каминной топки к дымоходу" },
+      { src: "/images/works/object-6/04.webp", alt: "Облицовка камина в процессе монтажа" },
+      { src: "/images/works/object-6/05.webp", alt: "Проход окрашенного дымохода через потолок" },
+      { src: "/images/works/object-6/06.webp", alt: "Готовый камин в интерьере деревянного дома" },
+    ],
+  },
 ];
 
 export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) {
@@ -185,7 +199,7 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
                   aria-hidden
                   fill
                   sizes="72px"
-                  src={workObject.photos[0].src}
+                  src={workObject.coverPhoto ?? workObject.photos[0].src}
                 />
               </span>
               <span className={styles.objectMeta}>

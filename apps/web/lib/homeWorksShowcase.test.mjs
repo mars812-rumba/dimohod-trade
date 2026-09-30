@@ -44,6 +44,16 @@ test("unfinished objects 2 and 4 stay in source but are hidden from publication"
   assert.match(source, /workObject\.published !== false/);
 });
 
+test("fireplace case publishes all six photos and uses the finished view as its cover", () => {
+  assert.match(source, /id: 6,\s+scenario: "Камины"/);
+  assert.match(source, /coverPhoto: "\/images\/works\/object-6\/06\.webp"/);
+  for (let index = 1; index <= 6; index += 1) {
+    assert.match(source, new RegExp(`object-6\\/0${index}\\.webp`));
+  }
+  assert.match(source, /workObject\.coverPhoto \?\? workObject\.photos\[0\]\.src/);
+  assert.doesNotMatch(source, /id: 6,[\s\S]*?details:/);
+});
+
 test("completed object details have a dedicated responsive layout", () => {
   assert.match(source, /styles\.objectDetails/);
   assert.match(styles, /\.objectDetails/);
