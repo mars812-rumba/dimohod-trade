@@ -198,6 +198,19 @@ const workObjects: WorkObject[] = [
       { src: "/images/works/object-8/08.webp", alt: "Нижние узлы промышленных дымоходов" },
     ],
   },
+  {
+    id: 9,
+    scenario: "Дымоходы для мангальных зон",
+    coverPhoto: "/images/works/object-9/05.webp",
+    photos: [
+      { src: "/images/works/object-9/01.webp", alt: "Вытяжной зонт над круглой мангальной зоной" },
+      { src: "/images/works/object-9/02.webp", alt: "Вытяжной зонт над грилем в мангальной зоне" },
+      { src: "/images/works/object-9/03.webp", alt: "Электрооборудование мангальной зоны" },
+      { src: "/images/works/object-9/04.webp", alt: "Зонт и рабочая поверхность мангальной зоны" },
+      { src: "/images/works/object-9/05.webp", alt: "Готовая мангальная зона с двумя дымоходами" },
+      { src: "/images/works/object-9/06.webp", alt: "Дымоходы на кровле мангальной зоны" },
+    ],
+  },
 ];
 
 export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) {

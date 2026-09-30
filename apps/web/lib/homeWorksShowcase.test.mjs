@@ -82,6 +82,14 @@ test("industrial chimney case shows the confirmed project details and all eight 
   }
 });
 
+test("barbecue area case publishes all six photos and uses the finished exterior as its cover", () => {
+  assert.match(source, /id: 9,\s+scenario: "Дымоходы для мангальных зон"/);
+  assert.match(source, /coverPhoto: "\/images\/works\/object-9\/05\.webp"/);
+  for (let index = 1; index <= 6; index += 1) {
+    assert.match(source, new RegExp(`object-9\\/0${index}\\.webp`));
+  }
+});
+
 test("completed object details have a dedicated responsive layout", () => {
   assert.match(source, /styles\.objectDetails/);
   assert.match(styles, /\.objectDetails/);
