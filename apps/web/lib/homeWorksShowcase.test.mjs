@@ -67,6 +67,21 @@ test("bathhouse case shows the confirmed materials, work prices and selected cov
   }
 });
 
+test("industrial chimney case shows the confirmed project details and all eight photos", () => {
+  assert.match(source, /id: 8,\s+scenario: "Промышленные дымоходы"/);
+  assert.match(source, /coverPhoto: "\/images\/works\/object-8\/01\.webp"/);
+  assert.match(source, /Пожарная часть/);
+  assert.match(source, /Диаметр 250\/350 мм/);
+  assert.match(source, /Нержавеющая сталь AISI 304/);
+  assert.match(source, /Толщина стали 0,8 мм/);
+  assert.match(source, /488 200 ₽/);
+  assert.match(source, /640 000 ₽/);
+  assert.match(source, /365 000 ₽/);
+  for (let index = 1; index <= 8; index += 1) {
+    assert.match(source, new RegExp(`object-8\\/0${index}\\.webp`));
+  }
+});
+
 test("completed object details have a dedicated responsive layout", () => {
   assert.match(source, /styles\.objectDetails/);
   assert.match(styles, /\.objectDetails/);

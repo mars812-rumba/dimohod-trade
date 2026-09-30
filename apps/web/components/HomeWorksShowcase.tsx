@@ -168,6 +168,36 @@ const workObjects: WorkObject[] = [
       { src: "/images/works/object-7/04.webp", alt: "Дымоход для бани с баком собственного производства" },
     ],
   },
+  {
+    id: 8,
+    scenario: "Промышленные дымоходы",
+    coverPhoto: "/images/works/object-8/01.webp",
+    details: {
+      location: "Пожарная часть",
+      title: "Промышленный дымоход для пожарной части",
+      description: "Установка несущей опоры и монтаж дымохода.",
+      specifications: [
+        "Диаметр 250/350 мм",
+        "Нержавеющая сталь AISI 304",
+        "Толщина стали 0,8 мм",
+      ],
+      prices: [
+        { label: "Комплект дымохода", value: "488 200 ₽" },
+        { label: "Несущая ферма для дымохода", value: "640 000 ₽" },
+        { label: "Монтаж дымохода и фермы", value: "365 000 ₽" },
+      ],
+    },
+    photos: [
+      { src: "/images/works/object-8/01.webp", alt: "Готовый ряд промышленных дымоходов у здания котельной" },
+      { src: "/images/works/object-8/02.webp", alt: "Промышленные дымоходы на несущей металлоконструкции" },
+      { src: "/images/works/object-8/03.webp", alt: "Монтаж несущей конструкции для промышленных дымоходов" },
+      { src: "/images/works/object-8/04.webp", alt: "Установка металлоконструкции с помощью крана" },
+      { src: "/images/works/object-8/05.webp", alt: "Подключение дымоходов к оборудованию котельной" },
+      { src: "/images/works/object-8/06.webp", alt: "Оборудование и трубопроводы внутри котельной" },
+      { src: "/images/works/object-8/07.webp", alt: "Инженерные коммуникации промышленной котельной" },
+      { src: "/images/works/object-8/08.webp", alt: "Нижние узлы промышленных дымоходов" },
+    ],
+  },
 ];
 
 export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) {
