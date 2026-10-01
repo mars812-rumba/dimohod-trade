@@ -10,8 +10,8 @@ import {
   IconPhone as Phone,
   IconPlus as Plus,
   IconRulerMeasure as RulerMeasure,
-  IconTool as Tool,
 } from "@tabler/icons-react";
+import { HomeWorksShowcase } from "@/components/HomeWorksShowcase";
 import { IndustrialTagline } from "@/components/IndustrialTagline";
 import { LeadForm } from "@/components/LeadForm";
 import styles from "./page.module.css";
@@ -21,9 +21,9 @@ const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const assetBasePath = process.env.NEXT_BASE_PATH ?? "";
 const pagePath = "/promyshlennye-dymohody";
 
-const title = "Промышленные дымоходы до 1000 мм на заказ | Дымоход Трейд";
+const title = "Промышленные дымоходы: изготовление и монтаж | Дымоход Трейд";
 const description =
-  "Изготовление промышленных дымоходов и конструкций под параметры объекта. Трубы диаметром до 1000 мм и толщиной металла до 1,25 мм.";
+  "Промышленные дымоходы на заказ: трубы до 1000 мм, несущие конструкции и монтаж. Расчёт по чертежу, спецификации или фото объекта. Получить расчёт.";
 
 export const metadata: Metadata = {
   title,
@@ -32,11 +32,11 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    url: pagePath,
+    url: absoluteUrl(pagePath),
     title,
     description,
     images: [{
-      url: "/images/industrial-chimneys/twin-facade-system.webp",
+      url: absoluteUrl("/images/industrial-chimneys/twin-facade-system.webp"),
       width: 960,
       height: 1280,
       alt: "Два промышленных дымохода на фасаде производственного здания",
@@ -46,42 +46,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description,
-    images: ["/images/industrial-chimneys/twin-facade-system.webp"],
+    images: [absoluteUrl("/images/industrial-chimneys/twin-facade-system.webp")],
   },
 };
-
-const projectImages = [
-  {
-    src: "/images/industrial-chimneys/support-towers.webp",
-    alt: "Дымовые каналы на самостоятельных опорных конструкциях",
-    caption: "Каналы на самостоятельных опорных конструкциях",
-  },
-  {
-    src: "/images/industrial-chimneys/facade-connection-stage.webp",
-    alt: "Подключение двух промышленных дымоходов к зданию на этапе монтажа",
-    caption: "Узлы подключения на этапе монтажа",
-  },
-  {
-    src: "/images/industrial-chimneys/twin-outlets.webp",
-    alt: "Верхние участки двух промышленных дымоходов",
-    caption: "Верхние участки каналов",
-  },
-  {
-    src: "/images/industrial-chimneys/roof-level-detail.webp",
-    alt: "Промышленные дымоходы у уровня кровли",
-    caption: "Узлы у уровня кровли",
-  },
-  {
-    src: "/images/industrial-chimneys/facade-installation-lift.webp",
-    alt: "Монтаж двух вертикальных дымоходов с подъёмной платформы",
-    caption: "Монтаж вертикальных участков",
-  },
-  {
-    src: "/images/industrial-chimneys/connection-installation.webp",
-    alt: "Горизонтальный участок промышленного дымохода во время монтажа",
-    caption: "Формирование горизонтального участка",
-  },
-];
 
 const faq = [
   {
@@ -230,28 +197,50 @@ export default function IndustrialChimneysPage() {
           <div className={styles.shell}><IndustrialTagline /></div>
         </section>
 
+        <section className={styles.seoContent} aria-labelledby="industrial-scope-title">
+          <div className={`${styles.shell} ${styles.seoContentGrid}`}>
+            <div className={styles.seoIntro}>
+              <p className={styles.eyebrow}>Подбор решения</p>
+              <h2 id="industrial-scope-title">Изготовление и монтаж промышленных дымоходов</h2>
+              <p>
+                Промышленная дымовая труба рассчитывается под конкретное оборудование и место установки.
+                Поэтому предложение начинаем не с типового комплекта, а с исходных данных объекта.
+              </p>
+              <p>
+                На первом этапе достаточно прислать чертёж, спецификацию или фотографии. Специалист
+                проверит задачу и уточнит, какие размеры и сведения нужны для расчёта труб, узлов и
+                несущей конструкции.
+              </p>
+            </div>
+            <div className={styles.scopeList}>
+              <article>
+                <span>01</span>
+                <div><h3>Оборудование и канал</h3><p>Фиксируем тип оборудования, требуемый диаметр и известные параметры подключения.</p></div>
+              </article>
+              <article>
+                <span>02</span>
+                <div><h3>Маршрут дымохода</h3><p>Разбираем положение участков, точки подключения и условия размещения на объекте.</p></div>
+              </article>
+              <article>
+                <span>03</span>
+                <div><h3>Опора и крепления</h3><p>Несущую схему рассматриваем вместе с трассой и данными здания, а не как отдельную позицию.</p></div>
+              </article>
+              <article>
+                <span>04</span>
+                <div><h3>Состав и стоимость</h3><p>После проверки исходных данных формируем состав системы и предложение по работам.</p></div>
+              </article>
+            </div>
+          </div>
+        </section>
+
         <section className={styles.project} id="industrial-project">
           <div className={styles.shell}>
             <header className={styles.sectionHeading}>
-              <h2>Промышленные системы на реальных объектах</h2>
-              <p>Фотографии показывают разные узлы, варианты опоры и этапы наружного монтажа.</p>
+              <p className={styles.eyebrow}>Выполненная работа</p>
+              <h2>Промышленный дымоход для пожарной части</h2>
+              <p>Реальный объект с несущей фермой: фотографии монтажа, параметры и стоимость выполненных работ.</p>
             </header>
-            <div className={styles.projectGrid}>
-              {projectImages.map((image, index) => (
-                <figure className={index === 0 ? styles.projectLarge : undefined} key={image.src}>
-                  <div className={styles.projectPhoto}>
-                    <Image
-                      src={`${assetBasePath}${image.src}`}
-                      alt={image.alt}
-                      fill
-                      loading="lazy"
-                      sizes={index === 0 ? "(max-width: 760px) 100vw, 48vw" : "(max-width: 760px) 50vw, 24vw"}
-                    />
-                  </div>
-                  <figcaption>{image.caption}</figcaption>
-                </figure>
-              ))}
-            </div>
+            <HomeWorksShowcase objectIds={[8]} />
           </div>
         </section>
 
