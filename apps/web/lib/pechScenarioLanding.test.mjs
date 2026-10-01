@@ -20,6 +20,7 @@ test("stove landing includes the confirmed work and keeps one calculation path",
   assert.match(landing, /objectIds=\{\[5\]\}/);
   assert.match(landing, /source="solution-pech-help"/);
   assert.match(landing, /leadSource="solution-pech-quick-estimate"/);
+  assert.match(landing, /\/images\/home\/scenario-pech-form-stove\.webp/);
   assert.doesNotMatch(landing, /Стандарт №1|готовый комплект/iu);
 });
 

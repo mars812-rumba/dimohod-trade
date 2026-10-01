@@ -16,7 +16,6 @@ import { HomeQuickEstimate } from "./HomeQuickEstimate";
 import { HomeWorksShowcase } from "./HomeWorksShowcase";
 import { LeadForm } from "./LeadForm";
 import { SolutionTrustSections } from "./SolutionTrustSections";
-import { StandardPechKit } from "./StandardPechKit";
 import { YANDEX_MAPS_RATING } from "./YandexRatingBadge";
 import styles from "./HomeScenarioLanding.module.css";
 
@@ -159,16 +158,14 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           leadSource="solution-pech-quick-estimate"
         />
 
-        <StandardPechKit assetBasePath={assetBasePath} />
-
         <section className={styles.helpSection} id="help-with-selection" aria-labelledby="pech-help-title">
           <div className={`${styles.shell} ${styles.helpGrid}`}>
             <div className={styles.helpVisual}>
               <Image
-                alt="Печь Everest T6 с установленным дымоходом в деревянном доме"
+                alt="Отопительная печь с вертикальным дымоходом в жилом помещении"
                 fill
                 sizes="(max-width: 820px) 100vw, 43vw"
-                src={`${assetBasePath}/images/works/object-5/03.webp`}
+                src={`${assetBasePath}/images/home/scenario-pech-form-stove.webp`}
               />
             </div>
             <div className={styles.helpPanel}>
@@ -220,7 +217,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
             <div className={styles.sectionHeading}>
               <p className={styles.eyebrow}>Подбор комплекта</p>
               <h2 id="pech-selection-title">Как подбирают дымоход для отопительной печи</h2>
-              <p>Готовый комплект проверяют по конкретной модели печи, параметрам патрубка, маршруту и размерам дома.</p>
+              <p>Состав дымохода проверяют по конкретной модели печи, параметрам патрубка, маршруту и размерам дома.</p>
             </div>
             <div className={styles.seoGrid}>
               <article>
@@ -240,8 +237,8 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
                 <p>На состав влияют длина трассы, повороты, проходные элементы, опоры и крепления. Быстрый расчёт показывает ориентир, а итоговую смету подтверждаем после проверки данных.</p>
               </article>
               <article>
-                <h3>Готовый комплект или индивидуальный расчёт</h3>
-                <p>Комплект «Стандарт №1» показывает конкретный состав для Ø120 мм. Перед заказом его сверяют с выбранной печью и объектом; неподтверждённые позиции не заменяются автоматически.</p>
+                <h3>Проверка состава перед заказом</h3>
+                <p>Калькулятор формирует предварительный состав по введённым параметрам. Перед оформлением специалист сверяет печь, размеры объекта, найденные товары и позиции, которые требуют уточнения.</p>
               </article>
             </div>
             <div className={styles.measurementCallout}>
