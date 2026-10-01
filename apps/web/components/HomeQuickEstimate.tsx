@@ -68,6 +68,7 @@ const objectChoices = [
 const heaterChoices: Array<{ id: QuickEstimateEquipment; label: string; icon: string }> = [
   { id: "bania", label: "Банная печь", icon: "/images/measurements/icons/heater-sauna.webp" },
   { id: "pech", label: "Печь", icon: "/images/measurements/icons/heater-stove.webp" },
+  { id: "kamin", label: "Камин", icon: "/images/measurements/icons/heater-stove.webp" },
   { id: "tt-kotel", label: "ТТ-котёл", icon: "/images/measurements/icons/heater-solid-fuel.webp" },
   { id: "gaz", label: "Газовый котёл", icon: "/images/measurements/icons/heater-gas.webp" },
   { id: "diesel", label: "Дизельный котёл", icon: "/images/measurements/icons/heater-diesel.webp" },
@@ -90,6 +91,8 @@ const routeChoices = [
 ];
 
 const diameterOptions = [100, 110, 120, 130, 140, 150, 160, 180, 200, 250, 280, 300];
+
+const heaterLabels = new Map(heaterChoices.map((choice) => [choice.id, choice.label]));
 
 function withBase(path: string, base: string) {
   return `${base}${path}`;
@@ -347,7 +350,7 @@ export function HomeQuickEstimate({
     matches,
     measurements: [
       { label: "Объект", value: answers.objectType === "banya" ? "Баня" : "Дом" },
-      { label: "Отопитель", value: answers.equipmentType || "Тип не выбран" },
+      { label: "Отопитель", value: heaterLabels.get(answers.equipmentType) ?? "Тип не выбран" },
       { label: "Выход патрубка", value: answers.outlet === "top" ? "Сверху" : "Сзади" },
       { label: "Маршрут", value: answers.route === "ceiling" ? "Через перекрытия и кровлю" : "Через стену и по фасаду" },
       ...quickEstimateAssumptions(answers).map((value, index) => ({ label: `Допущение ${index + 1}`, value })),

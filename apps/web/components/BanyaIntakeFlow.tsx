@@ -65,6 +65,7 @@ function ChoiceIcon({ src }: { src: string }) {
 const intakeEquipmentChoices = [
   ["bania", "Банная печь", "/images/measurements/icons/heater-sauna.webp"],
   ["pech", "Печь", "/images/measurements/icons/heater-stove.webp"],
+  ["kamin", "Камин", "/images/measurements/icons/heater-stove.webp"],
   ["tt-kotel", "Твердотопливный котёл", "/images/measurements/icons/heater-solid-fuel.webp"],
   ["gaz", "Газовый котёл", "/images/measurements/icons/heater-gas.webp"],
   ["diesel", "Дизельный котёл", "/images/measurements/icons/heater-diesel.webp"],

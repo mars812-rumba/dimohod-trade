@@ -538,6 +538,11 @@ export const kaminScenario: ScenarioPageContent = {
   title: "Дымоход и монтаж каминной топки под ключ",
   summary:
     "Подготовим индивидуальный состав дымохода и перечень работ по модели топки, плану и фотографиям объекта.",
+  heroPrimaryLabel: "Рассчитать дымоход",
+  heroPrimaryHref: "#quick-estimate",
+  heroSecondaryLabel: "Посмотреть выполненную работу",
+  heroSecondaryHref: "#completed-fireplace",
+  finalCtaHref: "#project-request",
   heroImage: "/images/works/object-6/06.webp",
   heroImageAlt: "Готовый камин с топкой и декоративным коробом в интерьере деревянного дома",
   diameterGuide: {
