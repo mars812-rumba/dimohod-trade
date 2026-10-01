@@ -14,6 +14,7 @@ const scenarioOrder = [
   "banya",
   "pech",
   "kamin",
+  "mangalnaya-zona",
   "tverdotoplivny-kotel",
   "gazovyy-kotel",
 ];
@@ -36,7 +37,7 @@ const houseGalleryImages = [
 export const metadata: Metadata = {
   title: "Подбор дымохода по отопителю и объекту",
   description:
-    "Выберите баню, дом, печь, камин или котёл. Соберите исходные данные и перейдите к сценарию подбора дымохода для проверки специалистом.",
+    "Выберите баню, дом, мангальную зону, печь, камин или котёл. Соберите исходные данные и перейдите к подходящему сценарию расчёта.",
   alternates: {
     canonical: "/solutions",
   },
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
     url: "/solutions",
     title: "Подбор дымохода по отопителю и объекту",
     description:
-      "Сценарии подбора дымохода для бани, дома, печи, камина и котлов.",
+      "Сценарии расчёта для бани, дома, мангальной зоны, печи, камина и котлов.",
     images: [
       {
         url: "/images/home/hero-photo-720.webp",
@@ -78,7 +79,7 @@ export default function SolutionsPage() {
         url: canonicalUrl,
         name: "Подбор дымохода по отопителю и объекту",
         description:
-          "Сценарии подбора дымохода для бани, дома, печи, камина и котлов.",
+          "Сценарии расчёта для бани, дома, мангальной зоны, печи, камина и котлов.",
         inLanguage: "ru-RU",
         isPartOf: { "@id": `${origin}/#website` },
         breadcrumb: { "@id": breadcrumbId },

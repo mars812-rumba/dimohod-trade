@@ -155,6 +155,7 @@ export function SiteHeader() {
               <Link href="/solutions/dom">Для частного дома</Link>
               <Link href="/solutions/pech">Для отопительной печи</Link>
               <Link href="/solutions/kamin">Для камина</Link>
+              <Link href="/solutions/mangalnaya-zona">Для мангальной зоны</Link>
               <Link href="/solutions/tverdotoplivny-kotel">Для твердотопливного котла</Link>
               <Link href="/solutions/gazovyy-kotel">Для газового котла</Link>
               <Link href="/promyshlennye-dymohody">Промышленные дымоходы</Link>
@@ -253,6 +254,7 @@ export function SiteHeader() {
                 <Link href="/solutions/dom" onClick={closeMenu}>Для частного дома</Link>
                 <Link href="/solutions/pech" onClick={closeMenu}>Для отопительной печи</Link>
                 <Link href="/solutions/kamin" onClick={closeMenu}>Для камина</Link>
+                <Link href="/solutions/mangalnaya-zona" onClick={closeMenu}>Для мангальной зоны</Link>
                 <Link href="/solutions/tverdotoplivny-kotel" onClick={closeMenu}>
                   Для твердотопливного котла
                 </Link>

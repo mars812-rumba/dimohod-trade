@@ -66,7 +66,7 @@
   font-size: clamp(42px, 5vw, 66px);
   font-weight: 650;
   line-height: .98;
-  letter-spacing: -.046em;
+  letter-spacing: -.04em;
 }
 
 .heroText {
@@ -100,12 +100,32 @@
   transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
-.primaryButton { color: #fff; background: var(--landing-accent); }
-.primaryButton:hover { background: var(--landing-accent-dark); }
+.primaryButton { color: #fff; background: var(--landing-accent-dark); }
+.primaryButton:hover { background: #8f2d10; }
 .secondaryButton { color: var(--landing-deep); border: 1px solid var(--landing-line); background: var(--landing-surface); }
 .secondaryButton:hover { border-color: var(--landing-deep); }
 .primaryButton:active,
 .secondaryButton:active { transform: translateY(1px); }
+
+.heroTextLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 6px;
+  color: var(--landing-deep);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--landing-deep) 34%, transparent);
+  text-underline-offset: 5px;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.heroTextLink:hover {
+  color: var(--landing-accent-dark);
+  text-decoration-color: currentColor;
+}
 
 .heroMedia {
   position: relative;
@@ -127,6 +147,7 @@
 .helpSection,
 .inputsSection,
 .worksSection,
+.seoSection,
 .reviewsSection,
 .explainerSection,
 .faqSection,
@@ -134,6 +155,7 @@
 
 .helpSection,
 .worksSection,
+.seoSection,
 .explainerSection,
 .finalSection { border-bottom: 1px solid var(--landing-line); }
 
@@ -166,6 +188,20 @@
 .inputGrid p { max-width: 46ch; margin: 0; color: var(--landing-muted); line-height: 1.6; }
 
 .worksSection { background: var(--landing-surface); }
+
+.seoSection { background: var(--landing-paper); }
+.seoGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--landing-line); }
+.seoGrid article { padding: 30px 34px 34px 0; border-bottom: 1px solid var(--landing-line); }
+.seoGrid article:nth-child(odd) { padding-right: clamp(26px, 5vw, 64px); border-right: 1px solid var(--landing-line); }
+.seoGrid article:nth-child(even) { padding-left: clamp(26px, 5vw, 64px); }
+.seoGrid h3 { margin: 0; color: var(--landing-deep); font-size: 25px; line-height: 1.08; }
+.seoGrid p { max-width: 58ch; margin: 14px 0 0; color: var(--landing-muted); line-height: 1.7; }
+.inlineLinks { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 18px; }
+.inlineLinks a { display: inline-flex; gap: 6px; align-items: center; color: var(--landing-accent-dark); font-size: 14px; font-weight: 800; }
+.measurementCallout { display: flex; gap: 28px; align-items: center; justify-content: space-between; margin-top: 34px; padding: 28px 30px; border: 1px solid var(--landing-line); border-radius: 14px; background: var(--landing-surface); }
+.measurementCallout strong { color: var(--landing-deep); font-family: var(--font-heading); font-size: 22px; }
+.measurementCallout p { max-width: 68ch; margin: 8px 0 0; color: var(--landing-muted); line-height: 1.6; }
+.measurementCallout .secondaryButton { flex: 0 0 auto; }
 
 .reviewsSection { color: #eef4f5; background: var(--landing-deep); }
 .reviewsLayout { display: grid; grid-template-columns: minmax(260px, .55fr) minmax(0, 1.45fr); gap: clamp(34px, 6vw, 72px); align-items: center; }
@@ -204,6 +240,7 @@
 .breadcrumbs a:focus-visible,
 .primaryButton:focus-visible,
 .secondaryButton:focus-visible,
+.heroTextLink:focus-visible,
 .reviewsIntro > a:focus-visible,
 .faqList summary:focus-visible {
   outline: 3px solid rgba(237, 91, 42, .45);
@@ -234,6 +271,7 @@
   .heroActions { display: grid; margin-top: 24px; }
   .primaryButton,
   .secondaryButton { width: 100%; }
+  .heroTextLink { justify-content: center; min-height: 44px; }
   .heroMedia { min-height: 330px; }
   .resultStrip .shell { width: 100%; grid-template-columns: 1fr; }
   .resultStrip .shell > div { padding: 16px 20px; border-right: 0; border-bottom: 1px solid var(--landing-line); border-left: 0; }
@@ -241,6 +279,7 @@
   .helpSection,
   .inputsSection,
   .worksSection,
+  .seoSection,
   .reviewsSection,
   .explainerSection,
   .faqSection,
@@ -251,6 +290,12 @@
   .inputGrid article:nth-child(odd) { border-right: 0; }
   .inputGrid article:not(:last-child) { border-bottom: 1px solid var(--landing-line); }
   .inputGrid article { min-height: 0; }
+  .seoGrid { grid-template-columns: 1fr; }
+  .seoGrid article,
+  .seoGrid article:nth-child(odd),
+  .seoGrid article:nth-child(even) { padding: 26px 0; border-right: 0; }
+  .measurementCallout { display: grid; padding: 24px 20px; }
+  .measurementCallout .secondaryButton { width: 100%; }
   .reviewRail { grid-auto-columns: minmax(86%, 1fr); }
   .explainerColumns article { grid-template-columns: 36px minmax(0, 1fr); gap: 14px; }
   .explainerColumns article p { grid-column: 2; }

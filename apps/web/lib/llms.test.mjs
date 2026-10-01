@@ -49,6 +49,7 @@ test("llms.txt static, scenario and guide routes exist in project sources", () =
     "/pechi",
     "/guides",
     "/delivery",
+    "/promyshlennye-dymohody",
     "/solutions/banya/zamery",
   ]);
 

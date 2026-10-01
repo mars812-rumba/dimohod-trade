@@ -149,8 +149,16 @@ const scenarios = [
     slug: "kamin",
     title: "Камин",
     text: "Модель топки, место подключения, новая трасса или существующий канал.",
-    image: "/images/home/scenario-kamin-user.webp",
+    image: "/images/works/object-6/06.webp",
     href: "/solutions/kamin",
+  },
+  {
+    icon: FlameKindling,
+    slug: "mangalnaya-zona",
+    title: "Мангальная зона",
+    text: "Вытяжной зонт, дымоход и оборудование по фотографиям и размерам объекта.",
+    image: "/images/solutions/mangal/hero.webp",
+    href: "/solutions/mangalnaya-zona",
   },
   {
     icon: Zap,

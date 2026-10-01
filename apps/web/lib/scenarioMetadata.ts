@@ -5,7 +5,7 @@ export function scenarioMetadata(content: ScenarioPageContent): Metadata {
   const canonical = `/solutions/${content.slug}`;
   const heroDimensions = content.slug === "dom"
     ? { width: 960, height: 720 }
-    : content.slug === "banya"
+    : content.slug === "banya" || content.slug === "kamin" || content.slug === "mangalnaya-zona"
       ? { width: 960, height: 1280 }
       : { width: 1254, height: 1254 };
 

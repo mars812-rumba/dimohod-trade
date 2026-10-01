@@ -30,6 +30,7 @@ export function LeadForm({
 }: LeadFormProps) {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [attachmentName, setAttachmentName] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,6 +49,7 @@ export function LeadForm({
       const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
       if (!response.ok) throw new Error(payload?.detail ?? "Не удалось отправить заявку");
       form.reset();
+      setAttachmentName("");
       setStatus("success");
       reachMetrikaGoal(METRIKA_GOALS.leadSubmitted, {
         source,
@@ -100,8 +102,13 @@ export function LeadForm({
       <div className="lead-form-footer">
         <label className="lead-file">
           <Paperclip aria-hidden size={16} />
-          <span>{attachmentLabel}</span>
-          <input name="attachment" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" />
+          <span>{attachmentName || attachmentLabel}</span>
+          <input
+            name="attachment"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            onChange={(event) => setAttachmentName(event.currentTarget.files?.[0]?.name ?? "")}
+          />
         </label>
         <button type="submit" disabled={status === "sending"}>
           <Send aria-hidden size={16} /> {status === "sending" ? "Отправляем…" : submitLabel}
