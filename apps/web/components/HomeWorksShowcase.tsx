@@ -134,6 +134,18 @@ const workObjects: WorkObject[] = [
     id: 6,
     scenario: "Камины",
     coverPhoto: "/images/works/object-6/06.webp",
+    details: {
+      location: "КП «Дворянская усадьба»",
+      title: "Установка каминной топки под ключ",
+      description: "Выполнены монтаж дымохода, герметизация кровли и устройство каркаса декоративного короба.",
+      specifications: [
+        "Обшивка короба: теплоизоляционный материал из силиката кальция SILCA",
+      ],
+      prices: [
+        { label: "Комплект дымохода", value: "115 300 ₽" },
+        { label: "Работы под ключ", value: "300 000 ₽" },
+      ],
+    },
     photos: [
       { src: "/images/works/object-6/01.webp", alt: "Основание и металлический каркас будущего камина" },
       { src: "/images/works/object-6/02.webp", alt: "Каминная топка на подготовленном основании" },
@@ -162,10 +174,10 @@ const workObjects: WorkObject[] = [
       ],
     },
     photos: [
-      { src: "/images/works/object-7/01.webp", alt: "Дымоход над кровлей бани в Дивенской" },
-      { src: "/images/works/object-7/02.webp", alt: "Наружный участок дымохода на кровле бани" },
       { src: "/images/works/object-7/03.webp", alt: "Печь, бак и дымоход у противопожарной стены" },
       { src: "/images/works/object-7/04.webp", alt: "Дымоход для бани с баком собственного производства" },
+      { src: "/images/works/object-7/01.webp", alt: "Дымоход над кровлей бани в Дивенской" },
+      { src: "/images/works/object-7/02.webp", alt: "Наружный участок дымохода на кровле бани" },
     ],
   },
   {
