@@ -11,7 +11,7 @@ import {
   IconShieldCheck as ShieldCheck,
   IconStarFilled as Star,
 } from "@tabler/icons-react";
-import { pechScenario } from "@/lib/scenarioPages";
+import { banyaScenario } from "@/lib/scenarioPages";
 import { HomeQuickEstimate } from "./HomeQuickEstimate";
 import { HomeWorksShowcase } from "./HomeWorksShowcase";
 import { LeadForm } from "./LeadForm";
@@ -31,23 +31,23 @@ const reviews = [
 const inputGroups = [
   {
     icon: Flame,
-    title: "Модель печи и патрубок",
-    text: "Название печи, положение выхода и диаметр из паспорта или по замеру.",
+    title: "Банная печь и патрубок",
+    text: "Модель печи, положение выхода и диаметр из паспорта или по замеру.",
   },
   {
     icon: Route,
     title: "Маршрут дымохода",
-    text: "Через перекрытия и кровлю либо через стену с наружным подъёмом.",
+    text: "Через перекрытие и кровлю либо через стену с наружным подъёмом.",
   },
   {
     icon: Checklist,
-    title: "Размеры дома",
-    text: "Этажность, чердак, высоты и примерные расстояния по выбранной трассе.",
+    title: "Размеры бани",
+    text: "Высоты, уровни, чердак и примерные расстояния по выбранному маршруту.",
   },
   {
     icon: Photo,
     title: "Фото места установки",
-    text: "Общий вид печи, стен и будущих проходов помогает проверить исходные данные.",
+    text: "Общий вид печи и будущих проходов помогает проверить исходные данные.",
   },
 ];
 
@@ -55,8 +55,8 @@ function absoluteUrl(path: string) {
   return new URL(`${appBasePath}${path}`, appUrl).toString();
 }
 
-export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: string }) {
-  const canonicalUrl = absoluteUrl("/solutions/pech");
+export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: string }) {
+  const canonicalUrl = absoluteUrl("/solutions/banya");
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -64,15 +64,15 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
         "@type": "WebPage",
         "@id": `${canonicalUrl}#webpage`,
         url: canonicalUrl,
-        name: pechScenario.metadata.title,
-        description: pechScenario.metadata.description,
+        name: banyaScenario.metadata.title,
+        description: banyaScenario.metadata.description,
         inLanguage: "ru-RU",
         isPartOf: { "@id": `${new URL(appUrl).origin}/#website` },
         breadcrumb: { "@id": `${canonicalUrl}#breadcrumb` },
         primaryImageOfPage: {
           "@type": "ImageObject",
-          url: absoluteUrl(pechScenario.heroImage),
-          caption: pechScenario.heroImageAlt,
+          url: absoluteUrl(banyaScenario.heroImage),
+          caption: banyaScenario.heroImageAlt,
         },
       },
       {
@@ -81,13 +81,13 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Главная", item: absoluteUrl("/") },
           { "@type": "ListItem", position: 2, name: "Решения", item: absoluteUrl("/solutions") },
-          { "@type": "ListItem", position: 3, name: "Дымоход для отопительной печи", item: canonicalUrl },
+          { "@type": "ListItem", position: 3, name: "Дымоход для бани", item: canonicalUrl },
         ],
       },
       {
         "@type": "FAQPage",
         "@id": `${canonicalUrl}#faq`,
-        mainEntity: pechScenario.faq.map((item) => ({
+        mainEntity: banyaScenario.faq.map((item) => ({
           "@type": "Question",
           name: item.question,
           acceptedAnswer: { "@type": "Answer", text: item.answer },
@@ -107,34 +107,34 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
             <Link href="/">Главная</Link><span aria-hidden>/</span>
             <Link href="/solutions">Решения</Link><span aria-hidden>/</span>
-            <span aria-current="page">Для отопительной печи</span>
+            <span aria-current="page">Для бани</span>
           </nav>
         </div>
 
         <section className={styles.hero}>
           <div className={`${styles.shell} ${styles.heroGrid}`}>
             <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>Дымоход для отопительной печи</p>
-              <h1>Рассчитайте дымоход для печи в доме</h1>
+              <p className={styles.eyebrow}>Дымоход для банной печи</p>
+              <h1>Рассчитайте дымоход для бани</h1>
               <p className={styles.heroText}>
-                Укажите модель печи, расположение патрубка и маршрут. Покажем предварительный состав, реальные товары и ориентировочную стоимость.
+                Получите предварительный состав комплекта, реальные товары и ориентировочную стоимость до отправки контакта.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#quick-estimate">
-                  Рассчитать комплект <ArrowRight aria-hidden size={18} />
+                  Рассчитать дымоход <ArrowRight aria-hidden size={18} />
                 </a>
-                <a className={styles.secondaryButton} href="#help-with-selection">Отправить фото</a>
+                <a className={styles.secondaryButton} href="#help-with-selection">Оставить заявку</a>
               </div>
             </div>
             <div className={styles.heroMedia}>
               <Image
-                alt={pechScenario.heroImageAlt}
+                alt={banyaScenario.heroImageAlt}
                 fill
                 fetchPriority="high"
                 priority
                 quality={84}
                 sizes="(max-width: 820px) 100vw, 52vw"
-                src={`${assetBasePath}${pechScenario.heroImage}`}
+                src={`${assetBasePath}${banyaScenario.heroImage}`}
               />
             </div>
           </div>
@@ -150,33 +150,32 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
 
         <HomeQuickEstimate
           assetBasePath={assetBasePath}
-          fixedEquipmentType="pech"
-          fixedObjectType="house"
-          introDescription="Дом и отопительная печь уже выбраны. Укажите состояние печи, патрубок, маршрут и известные размеры, а допущения увидите вместе с результатом."
-          introEyebrow="Быстрый расчёт для печи"
-          introTitle="Начните с патрубка и маршрута"
-          leadSource="solution-pech-quick-estimate"
+          fixedObjectType="banya"
+          introDescription="Баня и банная печь уже выбраны. Укажите патрубок, маршрут и известные размеры, а допущения увидите вместе с результатом."
+          introEyebrow="Быстрый расчёт для бани"
+          introTitle="Начните с данных о печи и маршруте"
+          leadSource="solution-banya-quick-estimate"
         />
 
-        <section className={styles.helpSection} id="help-with-selection" aria-labelledby="pech-help-title">
+        <section className={styles.helpSection} id="help-with-selection" aria-labelledby="banya-help-title">
           <div className={`${styles.shell} ${styles.helpGrid}`}>
             <div className={styles.helpVisual}>
               <Image
-                alt="Отопительная печь с вертикальным дымоходом в жилом помещении"
+                alt="Установленная банная печь, бак и дымоход у защитной стены"
                 fill
                 sizes="(max-width: 820px) 100vw, 43vw"
-                src={`${assetBasePath}/images/home/scenario-pech-form-stove.webp`}
+                src={`${assetBasePath}/images/works/object-7/04.webp`}
               />
             </div>
             <div className={styles.helpPanel}>
               <div className={styles.sectionHeading}>
-                <h2 id="pech-help-title">Не знаете параметры? Пришлите фото</h2>
-                <p>Добавьте название или паспорт печи, общий вид места установки и предполагаемых проходов. Менеджер сообщит, какие размеры нужно уточнить.</p>
+                <h2 id="banya-help-title">Не знаете параметры? Пришлите фото</h2>
+                <p>Добавьте название печи, фото места установки или план бани. Менеджер подскажет, какие данные нужны для проверки.</p>
               </div>
               <LeadForm
-                attachmentLabel="Добавить фото или паспорт"
-                commentPlaceholder="Что уже известно: модель печи, диаметр, маршрут или размеры дома"
-                source="solution-pech-help"
+                attachmentLabel="Добавить фото или план"
+                commentPlaceholder="Что уже известно: модель печи, диаметр, маршрут или размеры бани"
+                source="solution-banya-help"
                 submitLabel="Оставить заявку"
                 successMessage="Менеджер посмотрит материалы и сообщит, что нужно уточнить для подбора."
               />
@@ -184,11 +183,11 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           </div>
         </section>
 
-        <section className={styles.inputsSection} aria-labelledby="pech-inputs-title">
+        <section className={styles.inputsSection} aria-labelledby="banya-inputs-title">
           <div className={styles.shell}>
             <div className={styles.sectionHeading}>
-              <h2 id="pech-inputs-title">Что нужно для расчёта дымохода для печи</h2>
-              <p>Не обязательно знать всё сразу. Сначала фиксируем модель печи и маршрут, затем уточняем размеры и условия объекта.</p>
+              <h2 id="banya-inputs-title">Что нужно для расчёта дымохода в бане</h2>
+              <p>Не обязательно знать всё сразу. Сначала фиксируем печь и маршрут, затем уточняем размеры и условия объекта.</p>
             </div>
             <div className={styles.inputGrid}>
               {inputGroups.map(({ icon: Icon, title, text }) => (
@@ -202,31 +201,31 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           </div>
         </section>
 
-        <section className={styles.worksSection} aria-labelledby="pech-works-title">
+        <section className={styles.worksSection} aria-labelledby="banya-works-title">
           <div className={styles.shell}>
             <div className={styles.sectionHeading}>
-              <h2 id="pech-works-title">Выполненная работа: печь и дымоход в доме</h2>
-              <p>Остров Большой Берёзовый: печь Everest T6, комплект дымохода и монтаж с доставкой и расходными материалами.</p>
+              <h2 id="banya-works-title">Выполненная работа: дымоход для бани</h2>
+              <p>Объект в Дивенской: комплект дымохода, монтаж и устройство противопожарной стены.</p>
             </div>
-            <HomeWorksShowcase objectIds={[5]} />
+            <HomeWorksShowcase objectIds={[7]} />
           </div>
         </section>
 
-        <section className={styles.seoSection} aria-labelledby="pech-selection-title">
+        <section className={styles.seoSection} aria-labelledby="banya-selection-title">
           <div className={styles.shell}>
             <div className={styles.sectionHeading}>
               <p className={styles.eyebrow}>Подбор комплекта</p>
-              <h2 id="pech-selection-title">Как подбирают дымоход для отопительной печи</h2>
-              <p>Состав дымохода проверяют по конкретной модели печи, параметрам патрубка, маршруту и размерам дома.</p>
+              <h2 id="banya-selection-title">Как выбирают дымоход для банной печи</h2>
+              <p>Готовый комплект зависит не только от диаметра трубы. Нужны данные печи, понятный маршрут и размеры всех участков.</p>
             </div>
             <div className={styles.seoGrid}>
               <article>
-                <h3>Начинаем с паспорта печи</h3>
-                <p>Название отопителя и параметры выходного патрубка помогают не переносить характеристики одной модели на другую. Если печь пока не выбрана, расчёт остаётся предварительным.</p>
+                <h3>Начинаем с модели печи</h3>
+                <p>Если печь уже выбрана, используем паспорт и параметры выходного патрубка. Если модели пока нет, можно сравнить маршруты, но соединительные размеры и финальный состав останутся на проверке.</p>
               </article>
               <article>
                 <h3>Через кровлю или через стену</h3>
-                <p>Маршрут через помещения и кровлю отличается от наружного подъёма по фасаду. Для каждого варианта калькулятор формирует свой предварительный состав.</p>
+                <p>Маршрут через перекрытие и кровлю отличается от наружного подъёма по фасаду. Для каждого варианта калькулятор задаёт свои вопросы и формирует отдельный предварительный состав.</p>
                 <div className={styles.inlineLinks}>
                   <Link href="/guides/dymohod-cherez-krovlyu">Маршрут через кровлю <ArrowRight aria-hidden size={15} /></Link>
                   <Link href="/guides/dymohod-cherez-stenu">Маршрут через стену <ArrowRight aria-hidden size={15} /></Link>
@@ -234,19 +233,19 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
               </article>
               <article>
                 <h3>Из чего складывается стоимость</h3>
-                <p>На состав влияют длина трассы, повороты, проходные элементы, опоры и крепления. Быстрый расчёт показывает ориентир, а итоговую смету подтверждаем после проверки данных.</p>
+                <p>Цена комплекта меняется вместе с длиной трассы, количеством проходов, поворотов, опор и креплений. Быстрый расчёт показывает ориентир, а итоговую смету подтверждаем после проверки исходных данных.</p>
               </article>
               <article>
-                <h3>Проверка состава перед заказом</h3>
-                <p>Калькулятор формирует предварительный состав по введённым параметрам. Перед оформлением специалист сверяет печь, размеры объекта, найденные товары и позиции, которые требуют уточнения.</p>
+                <h3>Расчёт и монтаж дымохода</h3>
+                <p>Вместе с заявкой можно передать предварительный состав и фотографии объекта. Специалист сверит оборудование, размеры, условия монтажа и позиции каталога перед оформлением заказа.</p>
               </article>
             </div>
             <div className={styles.measurementCallout}>
               <div>
                 <strong>Нужен более точный расчёт?</strong>
-                <p>Сохраните подробные замеры дома и вернитесь к ним после уточнения неизвестных параметров.</p>
+                <p>Сохраните подробные замеры бани и вернитесь к ним после уточнения неизвестных параметров.</p>
               </div>
-              <Link className={styles.secondaryButton} href="/zamery?edit=1&object=house">
+              <Link className={styles.secondaryButton} href="/zamery?edit=1&object=banya">
                 Перейти к замерам <ArrowRight aria-hidden size={17} />
               </Link>
             </div>
@@ -255,11 +254,11 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
 
         <SolutionTrustSections assetBasePath={assetBasePath} />
 
-        <section className={styles.reviewsSection} aria-labelledby="pech-reviews-title">
+        <section className={styles.reviewsSection} aria-labelledby="banya-reviews-title">
           <div className={`${styles.shell} ${styles.reviewsLayout}`}>
             <div className={styles.reviewsIntro}>
               <Image alt="" aria-hidden height={52} src={`${assetBasePath}/images/home/yandex-maps-icon-user-v6.png`} width={52} />
-              <h2 id="pech-reviews-title">Отзывы клиентов на Яндекс Картах</h2>
+              <h2 id="banya-reviews-title">Отзывы клиентов на Яндекс Картах</h2>
               <div className={styles.rating} aria-label={`Рейтинг ${YANDEX_MAPS_RATING} из 5`}>
                 <strong>{YANDEX_MAPS_RATING}</strong>
                 <span>{Array.from({ length: 5 }, (_, index) => <Star aria-hidden key={index} size={18} />)}</span>
@@ -280,11 +279,11 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           </div>
         </section>
 
-        <section className={styles.explainerSection} aria-labelledby="pech-explainer-title">
+        <section className={styles.explainerSection} aria-labelledby="banya-explainer-title">
           <div className={`${styles.shell} ${styles.explainerGrid}`}>
             <div>
-              <h2 id="pech-explainer-title">Что проверяем перед заказом</h2>
-              <p>Предварительный расчёт помогает увидеть состав и бюджет. Финальный вариант подтверждается после сверки печи и объекта.</p>
+              <h2 id="banya-explainer-title">Что проверяем перед заказом</h2>
+              <p>Предварительный расчёт помогает увидеть состав и бюджет. Финальный вариант подтверждается после сверки объекта.</p>
             </div>
             <div className={styles.explainerColumns}>
               <article>
@@ -300,19 +299,19 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
               <article>
                 <FileDescription aria-hidden size={25} />
                 <h3>Состав комплекта</h3>
-                <p>Сверяем найденные товары, количество, соединительные параметры и позиции без точного совпадения.</p>
+                <p>Сверяем найденные товары, количество, соединительные параметры и позиции без цены.</p>
               </article>
             </div>
           </div>
         </section>
 
-        <section className={styles.faqSection} aria-labelledby="pech-faq-title">
+        <section className={styles.faqSection} aria-labelledby="banya-faq-title">
           <div className={styles.shell}>
             <div className={styles.sectionHeading}>
-              <h2 id="pech-faq-title">Частые вопросы о дымоходе для печи</h2>
+              <h2 id="banya-faq-title">Частые вопросы о дымоходе для бани</h2>
             </div>
             <div className={styles.faqList}>
-              {pechScenario.faq.map((item) => (
+              {banyaScenario.faq.map((item) => (
                 <details key={item.question}>
                   <summary>{item.question}</summary>
                   <p>{item.answer}</p>
@@ -325,12 +324,12 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
         <section className={styles.finalSection}>
           <div className={`${styles.shell} ${styles.finalPanel}`}>
             <div>
-              <h2>Получите состав и стоимость дымохода для печи</h2>
-              <p>Пройдите быстрый расчёт или отправьте фотографии и данные печи менеджеру.</p>
+              <h2>Получите состав и стоимость дымохода для бани</h2>
+              <p>Пройдите быстрый расчёт или отправьте фотографии менеджеру.</p>
             </div>
             <div className={styles.finalActions}>
-              <a className={styles.primaryButton} href="#quick-estimate">Рассчитать комплект</a>
-              <a className={styles.secondaryButton} href="#help-with-selection">Отправить фото</a>
+              <a className={styles.primaryButton} href="#quick-estimate">Рассчитать дымоход</a>
+              <a className={styles.secondaryButton} href="#help-with-selection">Оставить заявку</a>
             </div>
           </div>
         </section>

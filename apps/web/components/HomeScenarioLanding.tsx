@@ -152,7 +152,7 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
 
         <section className={styles.resultStrip} aria-label="Результат быстрого расчёта">
           <div className={styles.shell}>
-            <div><strong>Ориентировочная стоимость</strong><span>до ввода контакта</span></div>
+            <div><strong>Стоимость и состав</strong><span>после отправки контактов</span></div>
             <div><strong>Товарный состав</strong><span>с количеством и ценами</span></div>
             <div><strong>Проверка менеджером</strong><span>перед оформлением заказа</span></div>
           </div>
