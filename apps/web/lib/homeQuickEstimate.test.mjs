@@ -58,10 +58,13 @@ test("price and full product BOM open only after the required contact handoff", 
   assert.match(component, /source=\{leadSource\}/);
   assert.match(component, /METRIKA_GOALS\.quickEstimateContactSent/);
   assert.match(component, /onSubmitted=\{\(\) => setLeadSubmitted\(true\)\}/);
+  assert.match(component, /Краткий итог расчёта/);
+  assert.match(component, /estimate\.lines\.length\} позиций · \{estimate\.totalUnits\} изделий/);
+  assert.match(component, /Предварительная стоимость и полный состав откроются после отправки контактов/);
 });
 
-test("quick result states its accuracy and remains explicitly preliminary", () => {
-  assert.match(component, /отклонением ±30%/);
+test("quick result remains explicitly preliminary without a fixed accuracy promise", () => {
+  assert.doesNotMatch(component, /±30%/);
   assert.match(component, /Менеджер проверит размеры, совместимость/);
   assert.doesNotMatch(component, /профессиональн/iu);
   assert.doesNotMatch(component, /CompactChimneyScheme/);

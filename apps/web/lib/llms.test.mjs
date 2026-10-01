@@ -85,7 +85,8 @@ test("llms.txt leads with task-based selection and describes real configurator o
   assert.match(llmsSource, /Быстрый предварительный расчёт/);
   assert.match(llmsSource, /Глубокий расчёт по полным замерам/);
   assert.match(llmsSource, /точная смета для заказа появляется после проверки менеджером/);
-  assert.match(llmsSource, /возможным отклонением ±30%/);
+  assert.doesNotMatch(llmsSource, /±30%/);
+  assert.match(llmsSource, /менеджер проверяет состав, совместимость и итоговую стоимость/);
   assert.match(llmsSource, /Bill of Materials \(BOM\)/);
   assert.match(llmsSource, /расчётная SVG-схема/);
   assert.match(llmsSource, /PDF-смет/);

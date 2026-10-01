@@ -216,7 +216,7 @@ export function HomeQuickEstimate({
   assetBasePath = "",
   fixedEquipmentType,
   fixedObjectType,
-  introDescription = "Без замеров, около 2 минут. Покажем порядок бюджета с ориентировочной точностью ±30%.",
+  introDescription = "Без замеров, около 2 минут. Покажем предварительный состав и ориентировочную стоимость.",
   introEyebrow = "Прикинуть бюджет",
   introTitle = "Не знаете размеры? Быстрый расчёт",
   leadSource = "chimney-quick-estimate",
@@ -511,7 +511,7 @@ export function HomeQuickEstimate({
                 <small>Предварительный результат</small>
                 <h3>{leadSubmitted ? "Ориентировочный состав комплекта" : "Расчёт готов"}</h3>
                 <p>{leadSubmitted
-                  ? "Быстрый расчёт показывает порядок бюджета с возможным отклонением ±30%. Это не финальная смета для заказа."
+                  ? "Стоимость и состав рассчитаны по указанным параметрам. Перед заказом менеджер проверит комплект."
                   : "Оставьте имя и телефон. Расчёт уйдёт менеджеру на проверку, а стоимость и состав комплекта сразу откроются на этой странице."}</p>
               </div>
               {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
@@ -519,6 +519,18 @@ export function HomeQuickEstimate({
               {estimate && calculation ? <>
                 {!leadSubmitted ? (
                   <div className={styles.leadGate}>
+                    {answers ? (
+                      <div className={styles.lockedSummary} aria-label="Краткий итог расчёта">
+                        <span>Предварительный комплект рассчитан</span>
+                        <strong>{estimate.lines.length} позиций · {estimate.totalUnits} изделий</strong>
+                        <p>
+                          {objectChoices.find((choice) => choice.id === answers.objectType)?.label}
+                          {answers.equipmentType ? ` · ${heaterLabels.get(answers.equipmentType) ?? "Отопитель"}` : ""}
+                          {` · ${routeChoices.find((choice) => choice.id === answers.route)?.label ?? "Маршрут выбран"}`}
+                        </p>
+                        <small>Предварительная стоимость и полный состав откроются после отправки контактов.</small>
+                      </div>
+                    ) : null}
                     <EstimateLeadDialog
                       description="Введите имя и телефон, чтобы увидеть предварительную стоимость и состав комплекта. Менеджер получит расчёт и проверит его перед заказом."
                       disabled={matchStatus !== "ready" && matchStatus !== "error"}
@@ -535,7 +547,7 @@ export function HomeQuickEstimate({
                 <div className={styles.resultOverview}>
                   <div>
                     <div className={styles.priceCard}>
-                      <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций · ±30%" : "Ориентировочная стоимость · ±30%"}</small>
+                      <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций" : "Ориентировочная стоимость"}</small>
                       <strong>{matchStatus === "loading" ? "…" : formatRub(estimate.knownSubtotalRub)}</strong>
                       <p>{estimate.lines.length} позиций · {estimate.totalUnits} изделий{estimate.unpricedLineCount ? ` · без цены: ${estimate.unpricedLineCount}` : ""}</p>
                     </div>

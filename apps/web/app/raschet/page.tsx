@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   IconArrowRight,
@@ -5,6 +6,13 @@ import {
   IconRulerMeasure,
 } from "@tabler/icons-react";
 import styles from "./page.module.css";
+
+export const metadata: Metadata = {
+  title: "Выбор формата расчёта — Дымоход Трейд",
+  description: "Выберите быстрый предварительный расчёт или подготовку полного замера для проверки менеджером.",
+  alternates: { canonical: "/raschet" },
+  robots: { index: false, follow: true },
+};
 
 export default function CalculationChoicePage() {
   return (
@@ -60,7 +68,7 @@ export default function CalculationChoicePage() {
               <h2>Быстрый расчёт</h2>
               <p className={styles.description}>
                 Ответьте на несколько простых вопросов и узнайте ориентировочную стоимость
-                без замеров. Возможное отклонение — ±30%.
+                без замеров. Перед заказом менеджер проверит состав и итоговую стоимость.
               </p>
             </div>
             <Link className={styles.secondaryAction} href="/bystryy-raschet">

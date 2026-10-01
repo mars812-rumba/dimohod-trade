@@ -43,12 +43,12 @@ test("positioning promise replaces the old comparison and leads into measurement
   assert.doesNotMatch(page, /Мы продаём не трубы/);
 });
 
-test("hero and navigation open the same format choice", () => {
-  assert.match(hero, /href="\/raschet"/);
-  assert.match(hero, /Получить расчёт/);
-  assert.match(hero, /Схема, полный состав дымохода и смета до заказа/);
+test("hero opens the quick estimate while navigation keeps the format choice", () => {
+  assert.match(hero, /href="\/bystryy-raschet"/);
+  assert.match(hero, /Рассчитать комплект/);
+  assert.match(hero, /Перейти к 5 простым вопросам/);
   assert.match(header, /header-configurator" href="\/raschet"/);
-  assert.match(header, /Выберите быстрый расчёт или глубокий замер/);
+  assert.match(header, /Начать <span className="header-configurator-extra">замер<\/span>/);
 });
 
 const choicePage = readFileSync(new URL("../app/raschet/page.tsx", import.meta.url), "utf8");
@@ -57,7 +57,8 @@ const quickPage = readFileSync(new URL("../app/bystryy-raschet/page.tsx", import
 test("format choice routes to standalone quick and deep flows", () => {
   assert.match(choicePage, /href="\/bystryy-raschet"/);
   assert.match(choicePage, /href="\/zamery\?edit=1"/);
-  assert.match(choicePage, /Возможное отклонение — ±30%/);
+  assert.doesNotMatch(choicePage, /±30%/);
+  assert.match(choicePage, /Перед заказом менеджер проверит состав и итоговую стоимость/);
   assert.match(quickPage, /<HomeQuickEstimate/);
   assert.match(quickPage, /href="\/raschet"/);
 });

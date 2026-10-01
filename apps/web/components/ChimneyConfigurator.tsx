@@ -2429,7 +2429,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           {!estimateUnlocked ? (
             <div className="configurator-estimate-lock">
               <EstimateLeadDialog
-                description="Введите имя и телефон, чтобы увидеть предварительную стоимость, позиции BOM и скачать PDF. Расчёт одновременно уйдёт менеджеру на проверку."
+                description={`Расчёт готов: ${selectedBom.length} позиций. Введите имя и телефон, чтобы увидеть предварительную стоимость, позиции BOM и скачать PDF. Расчёт одновременно уйдёт менеджеру на проверку.`}
                 disabled={!selectedBom.length || catalogMatchStatus === "loading"}
                 estimate={estimate}
                 heading="Откройте предварительную смету"
