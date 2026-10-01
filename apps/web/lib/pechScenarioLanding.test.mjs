@@ -3,11 +3,12 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const page = readFileSync(new URL("../app/solutions/pech/page.tsx", import.meta.url), "utf8");
+const home = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
 const landing = readFileSync(new URL("../components/PechScenarioLanding.tsx", import.meta.url), "utf8");
-const kit = readFileSync(new URL("../components/StandardPechKit.tsx", import.meta.url), "utf8");
 const estimate = readFileSync(new URL("../components/HomeQuickEstimate.tsx", import.meta.url), "utf8");
+const scenarios = readFileSync(new URL("./scenarioPages.ts", import.meta.url), "utf8");
 
-test("stove solution uses its dedicated commercial landing and preset", () => {
+test("stove solution uses its dedicated commercial landing and calculator defaults", () => {
   assert.match(page, /PechScenarioLanding/);
   assert.doesNotMatch(page, /ScenarioPageTemplate/);
   assert.match(landing, /fixedObjectType="house"/);
@@ -15,20 +16,14 @@ test("stove solution uses its dedicated commercial landing and preset", () => {
   assert.match(estimate, /fixedEquipmentType\?: QuickEstimateEquipment/);
 });
 
-test("stove landing includes the confirmed work, standard kit and lead paths", () => {
-  assert.match(landing, /<StandardPechKit/);
+test("stove landing includes the confirmed work and keeps one calculation path", () => {
   assert.match(landing, /objectIds=\{\[5\]\}/);
   assert.match(landing, /source="solution-pech-help"/);
   assert.match(landing, /leadSource="solution-pech-quick-estimate"/);
+  assert.doesNotMatch(landing, /Стандарт №1|готовый комплект/iu);
 });
 
-test("standard kit keeps the supplied BOM and flags catalog mismatches", () => {
-  assert.match(kit, /KIT_PRICE_RUB = 28_540/);
-  assert.equal((kit.match(/key: "/g) ?? []).length, 9);
-  assert.match(kit, /quantity: 2/);
-  assert.match(kit, /DT-GOLYE-09-00-D120/);
-  assert.match(kit, /DT-SW50-19-00-D120-220/);
-  assert.match(kit, /Точного размера 600×700/);
-  assert.match(kit, /без автоматической замены/);
-  assert.match(kit, /\/api\/v1\/products/);
+test("stove solution and its home card use the supplied installed-stove photo", () => {
+  assert.match(scenarios, /heroImage: "\/images\/home\/scenario-pech-installed-stove\.webp"/);
+  assert.match(home, /image: "\/images\/home\/scenario-pech-installed-stove\.webp"/);
 });
