@@ -54,7 +54,8 @@ test("price and full product BOM appear before the optional manager handoff", ()
     component.indexOf("estimate.lines.map") < component.indexOf("<EstimateLeadDialog"),
     "BOM must be rendered before the contact form",
   );
-  assert.match(component, /source="chimney-quick-estimate"/);
+  assert.match(component, /leadSource = "chimney-quick-estimate"/);
+  assert.match(component, /source=\{leadSource\}/);
   assert.match(component, /METRIKA_GOALS\.quickEstimateContactSent/);
   assert.match(component, /onSubmitted=\{\(\) => setLeadSubmitted\(true\)\}/);
 });

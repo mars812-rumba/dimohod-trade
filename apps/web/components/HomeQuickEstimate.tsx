@@ -201,25 +201,31 @@ async function matchBomLine({
 
 type HomeQuickEstimateProps = {
   assetBasePath?: string;
+  fixedEquipmentType?: QuickEstimateEquipment;
   fixedObjectType?: QuickEstimateObject;
   introDescription?: string;
   introEyebrow?: string;
   introTitle?: string;
+  leadSource?: string;
 };
 
 export function HomeQuickEstimate({
   assetBasePath = "",
+  fixedEquipmentType,
   fixedObjectType,
   introDescription = "Без замеров, около 2 минут. Покажем порядок бюджета с ориентировочной точностью ±30%.",
   introEyebrow = "Прикинуть бюджет",
   introTitle = "Не знаете размеры? Быстрый расчёт",
+  leadSource = "chimney-quick-estimate",
 }: HomeQuickEstimateProps) {
   const firstStep: Step = fixedObjectType ? 1 : 0;
   const restoringQuickEstimate = useRef(false);
   const [step, setStep] = useState<Step>(firstStep);
   const [objectType, setObjectType] = useState<QuickEstimateObject | null>(fixedObjectType ?? null);
   const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatus | null>("installed");
-  const [equipmentType, setEquipmentType] = useState<QuickEstimateEquipment>("");
+  const [equipmentType, setEquipmentType] = useState<QuickEstimateEquipment>(
+    fixedEquipmentType ?? (fixedObjectType === "banya" ? "bania" : ""),
+  );
   const [outlet, setOutlet] = useState<QuickEstimateOutlet | null>(null);
   const [diameter, setDiameter] = useState<string>("unknown");
   const [route, setRoute] = useState<QuickEstimateRoute | null>(null);
@@ -230,9 +236,11 @@ export function HomeQuickEstimate({
   const [matches, setMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [matchStatus, setMatchStatus] = useState<MatchStatus>("idle");
   const [leadSubmitted, setLeadSubmitted] = useState(false);
-  const availableHeaterChoices = objectType === "banya"
-    ? heaterChoices.filter((choice) => choice.id === "bania")
-    : heaterChoices;
+  const availableHeaterChoices = fixedEquipmentType
+    ? heaterChoices.filter((choice) => choice.id === fixedEquipmentType)
+    : objectType === "banya"
+      ? heaterChoices.filter((choice) => choice.id === "bania")
+      : heaterChoices;
 
   useEffect(() => {
     const raw = window.sessionStorage.getItem(QUICK_ESTIMATE_RETURN_KEY);
@@ -246,6 +254,7 @@ export function HomeQuickEstimate({
         Date.now() - saved.savedAt > 24 * 60 * 60 * 1000 ||
         !saved.objectType ||
         (fixedObjectType && saved.objectType !== fixedObjectType) ||
+        (fixedEquipmentType && saved.equipmentType !== fixedEquipmentType) ||
         !saved.equipmentStatus ||
         !saved.outlet ||
         !saved.route
@@ -253,7 +262,7 @@ export function HomeQuickEstimate({
       restoringQuickEstimate.current = true;
       setObjectType(saved.objectType);
       setEquipmentStatus(saved.equipmentStatus);
-      setEquipmentType(saved.equipmentType ?? "");
+      setEquipmentType(fixedEquipmentType ?? saved.equipmentType ?? "");
       setOutlet(saved.outlet);
       setDiameter(saved.diameter ?? "unknown");
       setRoute(saved.route);
@@ -270,7 +279,7 @@ export function HomeQuickEstimate({
     } catch {
       // Ignore an invalid or outdated return snapshot.
     }
-  }, []);
+  }, [fixedEquipmentType, fixedObjectType]);
 
   const answers = useMemo<QuickEstimateAnswers | null>(() => {
     if (!objectType || !equipmentStatus || !outlet || !route) return null;
@@ -357,6 +366,7 @@ export function HomeQuickEstimate({
   function restart() {
     setStep(firstStep);
     setObjectType(fixedObjectType ?? null);
+    setEquipmentType(fixedEquipmentType ?? (fixedObjectType === "banya" ? "bania" : ""));
     setMatches({});
     setMatchStatus("idle");
     setLeadSubmitted(false);
@@ -426,7 +436,9 @@ export function HomeQuickEstimate({
               </div>
               <p className={styles.subheading}>Тип отопителя</p>
               <div className={`${styles.choices} ${styles.heaterChoices}`}>
-                {availableHeaterChoices.map((choice) => <button className={`${styles.choice} ${equipmentType === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => setEquipmentType(equipmentType === choice.id ? "" : choice.id)} type="button" aria-pressed={equipmentType === choice.id}>
+                {availableHeaterChoices.map((choice) => <button className={`${styles.choice} ${equipmentType === choice.id ? styles.selected : ""}`} disabled={Boolean(fixedEquipmentType)} key={choice.id} onClick={() => {
+                  if (!fixedEquipmentType) setEquipmentType(equipmentType === choice.id ? "" : choice.id);
+                }} type="button" aria-pressed={equipmentType === choice.id}>
                   <Image alt="" aria-hidden height={64} src={withBase(choice.icon, assetBasePath)} unoptimized width={64} />{choice.label}
                 </button>)}
               </div>
@@ -458,7 +470,11 @@ export function HomeQuickEstimate({
             </> : null}
 
             {step === 3 && route === "ceiling" ? <>
-              <div className={styles.heading}><small>Размеры трассы</small><h3>Сколько этажей?</h3><p>Для быстрого расчёта принимаем 2,5 м на этаж и 1,5 м наружного участка.</p></div>
+              <div className={styles.heading}>
+                <small>Размеры трассы</small>
+                <h3>{objectType === "banya" ? "Сколько уровней проходит трасса?" : "Сколько этажей?"}</h3>
+                <p>Для предварительного расчёта используем типовые допущения. Точные высоты и проходы проверим по замерам.</p>
+              </div>
               <div className={`${styles.choices} ${styles.choicesThree}`}>
                 {[1, 2, 3].map((value) => <button className={`${styles.choice} ${floors === value ? styles.selected : ""}`} key={value} onClick={() => setFloors(value)} type="button" aria-pressed={floors === value}>{value}<small>{value === 1 ? "этаж" : "этажа"}</small></button>)}
               </div>
@@ -562,7 +578,7 @@ export function HomeQuickEstimate({
                       heading="Отправить расчёт менеджеру"
                       metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
                       onSubmitted={() => setLeadSubmitted(true)}
-                      source="chimney-quick-estimate"
+                      source={leadSource}
                       submitLabel="Отправить расчёт"
                       triggerClassName={styles.gateButton}
                     />
