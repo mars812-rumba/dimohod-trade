@@ -505,6 +505,15 @@ ul {
   position: relative;
 }
 
+.desktop-nav-menu[open]::after {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: 10px;
+  content: "";
+}
+
 .desktop-nav-menu > summary {
   display: inline-flex;
   gap: 5px;
@@ -710,10 +719,10 @@ ul {
   justify-content: center;
   min-height: 38px;
   padding: 0 15px;
-  border: 1px solid rgba(255, 255, 255, 0.82);
+  border: 1px solid #ed5b2a;
   border-radius: 3px;
   color: #fff;
-  background: transparent;
+  background: #ed5b2a;
   font-size: 13px;
   font-weight: 650;
   transition:
@@ -722,8 +731,8 @@ ul {
 }
 
 .header-configurator:hover {
-  border-color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  border-color: #cf471d;
+  background: #cf471d;
 }
 
 .mobile-menu-trigger:focus-visible,
@@ -738,6 +747,35 @@ ul {
 .header-configurator:focus-visible {
   outline: 3px solid rgba(255, 255, 255, 0.88);
   outline-offset: 2px;
+}
+
+@media (min-width: 1025px) and (max-width: 1320px) {
+  .site-header {
+    gap: 14px;
+    padding-inline: 20px;
+  }
+
+  .top-nav {
+    margin-left: 8px;
+  }
+
+  .top-nav a {
+    padding-inline: 9px;
+  }
+
+  .header-install {
+    display: none;
+  }
+
+  .header-phone {
+    justify-content: center;
+    width: 38px;
+    padding: 0;
+  }
+
+  .header-phone span {
+    display: none;
+  }
 }
 
 .header-cart:focus-visible,
@@ -906,14 +944,15 @@ body.mobile-menu-open {
 }
 
 .mobile-menu-path-primary {
-  border-color: rgba(237, 91, 42, 0.72) !important;
-  background: rgba(237, 91, 42, 0.12);
+  border-color: #ed5b2a !important;
+  background: #ed5b2a;
 }
 
 .mobile-menu-path > svg { color: var(--accent); }
+.mobile-menu-path-primary > svg { color: #fff; }
 .mobile-menu-path > span { display: grid; gap: 3px; min-width: 0; }
 .mobile-menu-path strong { color: #fff; font-size: 13px; font-weight: 600; line-height: 1.25; }
-.mobile-menu-path small { color: rgba(255, 255, 255, 0.62); font-size: 10px; line-height: 1.3; }
+.mobile-menu-path small { color: rgba(255, 255, 255, 0.78); font-size: 10px; line-height: 1.3; }
 
 .mobile-menu-catalog > summary,
 .mobile-menu-categories summary {
@@ -6016,7 +6055,16 @@ body.mobile-menu-open {
     width: 92px;
   }
 
-  .header-configurator-extra {
+  .header-phone {
+    display: none;
+  }
+
+  .header-configurator {
+    gap: 0;
+    padding-inline: 9px;
+  }
+
+  .header-configurator > svg {
     display: none;
   }
 }

@@ -48,7 +48,7 @@ test("hero opens the quick estimate while navigation keeps the format choice", (
   assert.match(hero, /Рассчитать комплект/);
   assert.match(hero, /Перейти к 5 простым вопросам/);
   assert.match(header, /header-configurator" href="\/raschet"/);
-  assert.match(header, /Начать <span className="header-configurator-extra">замер<\/span>/);
+  assert.match(header, /<span>Калькулятор<\/span>/);
 });
 
 const choicePage = readFileSync(new URL("../app/raschet/page.tsx", import.meta.url), "utf8");

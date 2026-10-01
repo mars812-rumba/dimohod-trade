@@ -12,7 +12,14 @@ import {
 } from "@tabler/icons-react";
 import { Construction } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FocusEvent as ReactFocusEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import type { CategoryNode, CatalogTreeResponse } from "@/lib/api";
 import { InstallAppButton } from "./InstallAppButton";
 import { CartHeaderLink } from "./CartHeaderLink";
@@ -67,6 +74,33 @@ function DesktopCategoryLinks({ categories }: { categories: CategoryNode[] }) {
       ))}
     </ul>
   );
+}
+
+function closeDesktopMenu(details: HTMLDetailsElement | null) {
+  if (details) details.open = false;
+}
+
+function handleDesktopMenuBlur(event: ReactFocusEvent<HTMLDetailsElement>) {
+  const nextTarget = event.relatedTarget;
+  if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+    closeDesktopMenu(event.currentTarget);
+  }
+}
+
+function handleDesktopMenuKeyDown(event: ReactKeyboardEvent<HTMLDetailsElement>) {
+  if (event.key !== "Escape" || !event.currentTarget.open) return;
+  event.preventDefault();
+  closeDesktopMenu(event.currentTarget);
+  event.currentTarget.querySelector("summary")?.focus();
+}
+
+function handleDesktopMenuMouseLeave(event: ReactMouseEvent<HTMLDetailsElement>) {
+  closeDesktopMenu(event.currentTarget);
+}
+
+function handleDesktopDropdownClick(event: ReactMouseEvent<HTMLDivElement>) {
+  if (!(event.target instanceof Element) || !event.target.closest("a")) return;
+  closeDesktopMenu(event.currentTarget.closest("details"));
 }
 
 export function SiteHeader() {
@@ -133,23 +167,32 @@ export function SiteHeader() {
         </div>
 
         <nav className="top-nav" aria-label="Основная навигация">
-          <details className="desktop-nav-menu">
+          <details
+            className="desktop-nav-menu"
+            onBlur={handleDesktopMenuBlur}
+            onKeyDown={handleDesktopMenuKeyDown}
+            onMouseLeave={handleDesktopMenuMouseLeave}
+          >
             <summary>
               <span>Каталог</span>
               <ChevronDown aria-hidden size={14} />
             </summary>
-            <div className="desktop-nav-dropdown desktop-nav-dropdown-catalog">
+            <div className="desktop-nav-dropdown desktop-nav-dropdown-catalog" onClick={handleDesktopDropdownClick}>
               <Link className="desktop-nav-all" href="/catalog">Все категории</Link>
               {categories.length ? <DesktopCategoryLinks categories={categories} /> : null}
             </div>
           </details>
-          <Link href="/pechi">Печи</Link>
-          <details className="desktop-nav-menu">
+          <details
+            className="desktop-nav-menu"
+            onBlur={handleDesktopMenuBlur}
+            onKeyDown={handleDesktopMenuKeyDown}
+            onMouseLeave={handleDesktopMenuMouseLeave}
+          >
             <summary>
               <span>Решения</span>
               <ChevronDown aria-hidden size={14} />
             </summary>
-            <div className="desktop-nav-dropdown">
+            <div className="desktop-nav-dropdown" onClick={handleDesktopDropdownClick}>
               <Link className="desktop-nav-all" href="/solutions">Все сценарии</Link>
               <Link href="/solutions/banya">Для бани и сауны</Link>
               <Link href="/solutions/dom">Для частного дома</Link>
@@ -161,15 +204,22 @@ export function SiteHeader() {
               <Link href="/promyshlennye-dymohody">Промышленные дымоходы</Link>
             </div>
           </details>
-          <Link href="/guides">Статьи</Link>
+          <Link href="/about">О компании</Link>
           <Link href="/delivery">Доставка</Link>
-          <details className="desktop-nav-menu desktop-nav-menu-end">
+          <Link href="/warranty">Гарантия</Link>
+          <Link href="/guides">Статьи</Link>
+          <details
+            className="desktop-nav-menu desktop-nav-menu-end"
+            onBlur={handleDesktopMenuBlur}
+            onKeyDown={handleDesktopMenuKeyDown}
+            onMouseLeave={handleDesktopMenuMouseLeave}
+          >
             <summary>
               <span>Ещё</span>
               <ChevronDown aria-hidden size={14} />
             </summary>
-            <div className="desktop-nav-dropdown">
-              <Link href="/about">О компании</Link>
+            <div className="desktop-nav-dropdown" onClick={handleDesktopDropdownClick}>
+              <Link href="/pechi">Печи</Link>
               <Link href="/configurator">Сохранённые расчёты</Link>
               <Link href="/#send-materials">Отправить фото или схему</Link>
               <span className="desktop-nav-label">Документы</span>
@@ -196,7 +246,7 @@ export function SiteHeader() {
           </a>
           <Link className="header-configurator" href="/raschet">
             <SlidersHorizontal aria-hidden size={17} />
-            <span>Начать <span className="header-configurator-extra">замер</span></span>
+            <span>Калькулятор</span>
           </Link>
         </div>
       </header>
@@ -241,8 +291,6 @@ export function SiteHeader() {
                 ) : null}
               </div>
             </details>
-            <CartHeaderLink mobile onClick={closeMenu} />
-            <Link href="/pechi" onClick={closeMenu}>Печи</Link>
             <details className="mobile-menu-catalog">
               <summary>
                 <span>Решения</span>
@@ -266,23 +314,34 @@ export function SiteHeader() {
                 </Link>
               </div>
             </details>
-            <Link href="/guides" onClick={closeMenu}>Статьи и инструкции</Link>
-            <Link href="/delivery" onClick={closeMenu}>Доставка по России</Link>
             <Link href="/about" onClick={closeMenu}>О компании</Link>
+            <Link href="/delivery" onClick={closeMenu}>Доставка</Link>
+            <Link href="/warranty" onClick={closeMenu}>Гарантия</Link>
+            <Link href="/guides" onClick={closeMenu}>Статьи</Link>
+            <details className="mobile-menu-catalog">
+              <summary>
+                <span>Ещё</span>
+                <ChevronDown aria-hidden size={17} />
+              </summary>
+              <div className="mobile-menu-catalog-body">
+                <Link href="/pechi" onClick={closeMenu}>Печи</Link>
+                <Link className="mobile-menu-feature-link" href="/configurator" onClick={closeMenu}>
+                  <span><Construction aria-hidden size={17} /> Сохранённые расчёты</span>
+                </Link>
+                <Link href="/#send-materials" onClick={closeMenu}>Отправить фото или схему</Link>
+                <div className="mobile-menu-legal" aria-label="Правовые документы">
+                  <p className="mobile-menu-legal-title">Документы</p>
+                  <Link href={privacyPolicyPath} onClick={closeMenu}>Политика персональных данных</Link>
+                  <Link href={personalDataConsentPath} onClick={closeMenu}>Согласие на обработку данных</Link>
+                  <Link href={userAgreementPath} onClick={closeMenu}>Пользовательское соглашение</Link>
+                </div>
+              </div>
+            </details>
+            <CartHeaderLink mobile onClick={closeMenu} />
             <Link className="mobile-menu-path mobile-menu-path-primary" href="/raschet" onClick={closeMenu}>
               <Ruler aria-hidden size={18} />
-              <span><strong>Начать замер</strong><small>Выберите быстрый расчёт или глубокий замер</small></span>
+              <span><strong>Калькулятор</strong><small>Быстрый расчёт или подробный замер</small></span>
             </Link>
-            <Link className="mobile-menu-feature-link" href="/configurator" onClick={closeMenu}>
-              <span><Construction aria-hidden size={17} /> Сохранённые расчёты</span>
-            </Link>
-            <Link href="/#send-materials" onClick={closeMenu}>Отправить фото или схему</Link>
-            <div className="mobile-menu-legal" aria-label="Правовые документы">
-              <p className="mobile-menu-legal-title">Документы</p>
-              <Link href={privacyPolicyPath} onClick={closeMenu}>Политика персональных данных</Link>
-              <Link href={personalDataConsentPath} onClick={closeMenu}>Согласие на обработку данных</Link>
-              <Link href={userAgreementPath} onClick={closeMenu}>Пользовательское соглашение</Link>
-            </div>
           </nav>
 
           <div className="mobile-menu-footer">
