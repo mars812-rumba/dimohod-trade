@@ -92,6 +92,16 @@ test("industrial chimney case shows the confirmed project details and all eight 
 test("barbecue area case publishes all six photos and uses the finished exterior as its cover", () => {
   assert.match(source, /id: 9,\s+scenario: "Дымоходы для мангальных зон"/);
   assert.match(source, /coverPhoto: "\/images\/works\/object-9\/05\.webp"/);
+  assert.match(source, /д\. Красноозерье/);
+  assert.match(source, /Монтаж системы дымоудаления в барбекю-зоне/);
+  assert.match(source, /1900×900 мм/);
+  assert.match(source, /Ø1000 мм/);
+  assert.match(source, /плавной регулировкой частоты вращения/);
+  assert.match(source, /84 000 ₽/);
+  assert.match(source, /76 300 ₽/);
+  assert.match(source, /63 500 ₽/);
+  assert.match(source, /54 000 ₽/);
+  assert.match(source, /42 000 ₽/);
   for (let index = 1; index <= 6; index += 1) {
     assert.match(source, new RegExp(`object-9\\/0${index}\\.webp`));
   }
