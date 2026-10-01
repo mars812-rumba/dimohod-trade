@@ -35,9 +35,21 @@ test("the form collects a contact method, consent and a spam honeypot", () => {
   assert.match(componentSource, /name="website"/);
 });
 
-test("both estimate action areas expose the manager button", () => {
+test("inline gate collects name and phone before revealing an estimate", () => {
+  assert.match(componentSource, /if \(inline\)/);
+  assert.match(componentSource, /name="contact"/);
+  assert.match(componentSource, /name="contact_method" type="hidden" value="phone"/);
+  assert.match(componentSource, /Показать стоимость и состав|предварительную стоимость и состав/);
+});
+
+test("the detailed configurator gates its estimate before price, BOM and PDF", () => {
   assert.equal(
     Array.from(configuratorSource.matchAll(/<EstimateLeadDialog/g)).length,
-    2,
+    1,
+  );
+  assert.match(configuratorSource, /!estimateUnlocked[\s\S]*inline[\s\S]*setEstimateUnlocked\(true\)/);
+  assert.ok(
+    configuratorSource.indexOf("<EstimateLeadDialog") < configuratorSource.indexOf("selectedBom.map"),
+    "contact gate must be rendered before the protected detailed BOM",
   );
 });

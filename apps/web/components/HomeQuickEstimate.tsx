@@ -507,11 +507,32 @@ export function HomeQuickEstimate({
             </> : null}
 
             {step === 4 ? <>
-              <div className={styles.heading}><small>Предварительный результат</small><h3>Ориентировочный состав комплекта</h3><p>Быстрый расчёт показывает порядок бюджета с возможным отклонением ±30%. Это не финальная смета для заказа.</p></div>
+              <div className={styles.heading}>
+                <small>Предварительный результат</small>
+                <h3>{leadSubmitted ? "Ориентировочный состав комплекта" : "Расчёт готов"}</h3>
+                <p>{leadSubmitted
+                  ? "Быстрый расчёт показывает порядок бюджета с возможным отклонением ±30%. Это не финальная смета для заказа."
+                  : "Оставьте имя и телефон. Расчёт уйдёт менеджеру на проверку, а стоимость и состав комплекта сразу откроются на этой странице."}</p>
+              </div>
               {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
               {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
               {estimate && calculation ? <>
-                <div aria-busy={matchStatus === "loading"} className={styles.resultOverview}>
+                {!leadSubmitted ? (
+                  <div className={styles.leadGate}>
+                    <EstimateLeadDialog
+                      description="Введите имя и телефон, чтобы увидеть предварительную стоимость и состав комплекта. Менеджер получит расчёт и проверит его перед заказом."
+                      disabled={matchStatus !== "ready" && matchStatus !== "error"}
+                      estimate={estimate}
+                      heading="Откройте предварительную смету"
+                      inline
+                      metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
+                      onSubmitted={() => setLeadSubmitted(true)}
+                      source={leadSource}
+                      submitLabel="Показать стоимость и состав"
+                    />
+                  </div>
+                ) : <>
+                <div className={styles.resultOverview}>
                   <div>
                     <div className={styles.priceCard}>
                       <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций · ±30%" : "Ориентировочная стоимость · ±30%"}</small>
@@ -566,30 +587,8 @@ export function HomeQuickEstimate({
                 </details>
 
                 <p className={styles.precisionNotice}><strong>Это предварительный расчёт.</strong> Менеджер проверит размеры, совместимость и позиции без цены перед заказом.</p>
-
-                {!leadSubmitted ? (
-                  <div className={styles.leadGate}>
-                    <div>
-                      <h4>Отправить расчёт менеджеру</h4>
-                      <p>Сохраним показанные стоимость и BOM. Менеджер проверит комплект и свяжется с вами.</p>
-                    </div>
-                    <EstimateLeadDialog
-                      buttonLabel="Отправить на проверку"
-                      description="Укажите удобный способ связи. Вместе с заявкой менеджер получит показанный вам предварительный BOM и исходные данные расчёта."
-                      disabled={matchStatus !== "ready" && matchStatus !== "error"}
-                      estimate={estimate}
-                      heading="Отправить расчёт менеджеру"
-                      metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
-                      onSubmitted={() => setLeadSubmitted(true)}
-                      source={leadSource}
-                      submitLabel="Отправить расчёт"
-                      triggerClassName={styles.gateButton}
-                    />
-                    <small>Контакт нужен только для проверки расчёта и обратной связи.</small>
-                  </div>
-                ) : (
-                  <p className={styles.sentNotice} role="status">Расчёт передан менеджеру. Можно изменить ответы или выполнить новый расчёт.</p>
-                )}
+                <p className={styles.sentNotice} role="status">Расчёт передан менеджеру. Предварительная стоимость и состав открыты ниже.</p>
+                </>}
 
                 <div className={styles.resultActions}>
                   <button className={styles.editButton} onClick={() => setStep(3)} type="button">Изменить ответы</button>

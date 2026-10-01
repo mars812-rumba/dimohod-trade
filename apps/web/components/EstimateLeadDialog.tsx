@@ -22,6 +22,7 @@ type EstimateLeadDialogProps = {
   disabled?: boolean;
   estimate: ChimneyEstimate;
   heading?: string;
+  inline?: boolean;
   metrikaGoal?: MetrikaGoal;
   onSubmitted?: () => void;
   source?: string;
@@ -76,6 +77,7 @@ export function EstimateLeadDialog({
   disabled = false,
   estimate,
   heading = "Отправить BOM менеджеру",
+  inline = false,
   metrikaGoal = METRIKA_GOALS.deepMeasurementFormSent,
   onSubmitted,
   source = "chimney-estimate",
@@ -151,6 +153,66 @@ export function EstimateLeadDialog({
   }
 
   const contactDetail = contactDetails[contactMethod];
+
+  if (inline) {
+    if (status === "success" || status === "saved") {
+      return (
+        <div className="estimate-lead-inline-success" data-delivery={status} role="status">
+          <Check aria-hidden size={22} />
+          <p>Контакты отправлены. Открываем предварительную стоимость и состав комплекта.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="estimate-lead-inline" aria-labelledby={titleId}>
+        <div className="estimate-lead-dialog-heading">
+          <h4 id={titleId}>{heading}</h4>
+          <p id={descriptionId}>{description}</p>
+        </div>
+        <form
+          aria-busy={status === "sending"}
+          aria-describedby={status === "error" ? errorId : descriptionId}
+          className="estimate-lead-form estimate-lead-form-inline"
+          onSubmit={submit}
+        >
+          <div className="estimate-lead-inline-fields">
+            <label>
+              <span>Имя</span>
+              <input autoComplete="name" maxLength={100} minLength={2} name="name" ref={nameRef} required />
+            </label>
+            <label>
+              <span>Телефон</span>
+              <input
+                autoComplete="tel"
+                maxLength={40}
+                name="contact"
+                placeholder="+7 999 000-00-00"
+                required
+                type="tel"
+              />
+            </label>
+          </div>
+          <input name="contact_method" type="hidden" value="phone" />
+          <label aria-hidden="true" className="estimate-lead-honeypot">
+            <span>Сайт</span>
+            <input autoComplete="off" name="website" tabIndex={-1} />
+          </label>
+          <PersonalDataConsent />
+          {status === "error" ? (
+            <p className="estimate-lead-error" id={errorId} role="alert">{message}</p>
+          ) : null}
+          <div className="estimate-lead-actions estimate-lead-inline-actions">
+            <button disabled={disabled || status === "sending"} type="submit">
+              <Send aria-hidden size={17} />
+              {status === "sending" ? "Отправляем расчёт…" : submitLabel}
+            </button>
+            <small>После отправки сразу покажем предварительную стоимость и состав. Менеджер получит расчёт для проверки.</small>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <>

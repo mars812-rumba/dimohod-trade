@@ -41,18 +41,18 @@ test("quick estimate uses the existing catalog and keeps the public result self-
   assert.doesNotMatch(component, /\/zamery/);
 });
 
-test("price and full product BOM appear before the optional manager handoff", () => {
+test("price and full product BOM open only after the required contact handoff", () => {
   assert.match(component, /estimate\.lines\.map/);
   assert.match(component, /Цена по запросу/);
   assert.match(component, /primary_image/);
   assert.match(component, /quickEstimateProductHref/);
   assert.match(component, /Открыть товар/);
   assert.match(component, /!leadSubmitted/);
-  assert.doesNotMatch(component, /estimate && leadSubmitted/);
+  assert.match(component, /!leadSubmitted[\s\S]*inline[\s\S]*Показать стоимость и состав/);
   assert.match(component, /<EstimateLeadDialog/);
   assert.ok(
-    component.indexOf("estimate.lines.map") < component.indexOf("<EstimateLeadDialog"),
-    "BOM must be rendered before the contact form",
+    component.indexOf("<EstimateLeadDialog") < component.indexOf("estimate.lines.map"),
+    "contact form must be rendered before the protected BOM",
   );
   assert.match(component, /leadSource = "chimney-quick-estimate"/);
   assert.match(component, /source=\{leadSource\}/);

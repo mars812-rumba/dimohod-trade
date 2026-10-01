@@ -1616,6 +1616,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const [catalogMatches, setCatalogMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [catalogMatchStatus, setCatalogMatchStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [pdfStatus, setPdfStatus] = useState<"idle" | "generating" | "error">("idle");
+  const [estimateUnlocked, setEstimateUnlocked] = useState(false);
 
   useEffect(() => {
     try {
@@ -2425,6 +2426,19 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         </div>
 
         <div className="configurator-spec">
+          {!estimateUnlocked ? (
+            <div className="configurator-estimate-lock">
+              <EstimateLeadDialog
+                description="Введите имя и телефон, чтобы увидеть предварительную стоимость, позиции BOM и скачать PDF. Расчёт одновременно уйдёт менеджеру на проверку."
+                disabled={!selectedBom.length || catalogMatchStatus === "loading"}
+                estimate={estimate}
+                heading="Откройте предварительную смету"
+                inline
+                onSubmitted={() => setEstimateUnlocked(true)}
+                submitLabel="Показать стоимость и BOM"
+              />
+            </div>
+          ) : <>
           <div className="configurator-spec-head">
             <span>Спецификация</span>
             <strong>
@@ -2547,10 +2561,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                 <Download aria-hidden size={17} />
                 {pdfStatus === "generating" ? "Формируем PDF…" : "Скачать PDF-смету"}
               </button>
-              <EstimateLeadDialog
-                disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"}
-                estimate={estimate}
-              />
             </div>
             {pdfStatus === "error" ? (
               <p role="alert">Не удалось сформировать PDF. Попробуйте ещё раз.</p>
@@ -2575,9 +2585,10 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               <p key={item}>{item}</p>
             ))}
           </div>
+          </>}
         </div>
       </div>
-      <div className="configurator-result-actions">
+      {estimateUnlocked ? <div className="configurator-result-actions">
         <div>
           <strong>Комплект рассчитан по замерам</strong>
           <span>{estimate.unpricedLineCount ? `Предварительный итог ${formatRub(estimate.knownSubtotalRub)} · ${estimate.unpricedLineCount} поз. без цены.` : `Итого ${formatRub(estimate.knownSubtotalRub)}.`}</span>
@@ -2586,12 +2597,8 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           <button disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"} type="button" onClick={savePdf}>
             <Download aria-hidden size={16} /> {pdfStatus === "generating" ? "Формируем…" : "Сохранить PDF"}
           </button>
-          <EstimateLeadDialog
-            disabled={!selectedBom.length || catalogMatchStatus === "loading" || pdfStatus === "generating"}
-            estimate={estimate}
-          />
         </div>
-      </div>
+      </div> : null}
       </>
       )}
     </div>
