@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { SiteHeader } from "../components/SiteHeader";
+import { SiteFooter } from "../components/SiteFooter";
 import { YandexMetrika } from "../components/YandexMetrika";
 import "./globals.css";
 
@@ -51,6 +52,7 @@ export default function RootLayout({
       <body>
         <SiteHeader />
         {children}
+        <SiteFooter />
         <YandexMetrika />
       </body>
     </html>

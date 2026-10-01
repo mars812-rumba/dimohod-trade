@@ -15,7 +15,6 @@ import {
   IconGauge as Gauge,
   IconHome as Home,
   IconStack3 as Layers3,
-  IconBrandTelegram as BrandTelegram,
   IconLink as Link2,
   IconMail as Mail,
   IconMapPin as MapPin,
@@ -46,12 +45,6 @@ import {
   type CompatibleProduct,
 } from "@/lib/api";
 import { homeDocuments } from "@/lib/homeDocuments";
-import {
-  cookiePolicyPath,
-  personalDataConsentPath,
-  privacyPolicyPath,
-  userAgreementPath,
-} from "@/lib/privacy";
 import { productSelectionPath } from "@/lib/productUrls";
 import { steelSelectionBadges } from "@/lib/steelSelection";
 import styles from "./page.module.css";
@@ -132,7 +125,7 @@ const scenarios = [
     slug: "banya",
     title: "Баня и сауна",
     text: "Модель банной печи, параметры патрубка и маршрут через конструкции объекта.",
-    image: "/images/home/scenario-banya-winter-user.webp",
+    image: "/images/solutions/banya/bathhouse-interior.webp",
     href: "/solutions/banya",
   },
   {
@@ -1087,64 +1080,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <footer className={styles.footer}>
-        <div className={styles.shell}>
-          <div className={styles.footerGrid}>
-            <div className={styles.footerBrand}>
-              <Link href="/" aria-label="Дымоход Трейд — главная">
-                <img
-                  alt="Дымоход Трейд"
-                  height="82"
-                  src={assetUrl("/brand/logo-original.jpg")}
-                  width="180"
-                />
-              </Link>
-              <p>Подбор, комплектация и поставка дымоходных систем.</p>
-            </div>
-            <nav className={styles.footerLinks} aria-label="Разделы сайта">
-              <strong>Разделы сайта</strong>
-              <Link href="/catalog">Каталог</Link>
-              <Link href="/solutions">Решения</Link>
-              <Link href="/guides">Статьи</Link>
-              <Link href="/delivery">Доставка по России</Link>
-              <Link href="/about">О компании</Link>
-              <Link href="/configurator">Конфигуратор</Link>
-              <a href="tel:+79650756555">Контакты</a>
-            </nav>
-            <nav className={styles.footerLinks} aria-label="Правовые документы">
-              <strong>Документы</strong>
-              <Link href={privacyPolicyPath}>Политика персональных данных</Link>
-              <Link href={personalDataConsentPath}>Согласие на обработку данных</Link>
-              <Link href={cookiePolicyPath}>Cookie и локальные технологии</Link>
-              <Link href={userAgreementPath}>Пользовательское соглашение</Link>
-            </nav>
-            <div className={styles.footerContacts}>
-              <strong>Контакты</strong>
-              <div className={styles.address}>
-                <MapPin aria-hidden size={15} />
-                <span>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2</span>
-              </div>
-              <div className={styles.legal}>
-                <FileCheck2 aria-hidden size={15} />
-                <span>ООО «Дымоходы-трейд плюс» · ИНН 7811635572 · ОГРН 1177847018216</span>
-              </div>
-            </div>
-          </div>
-          <div className={styles.footerBottom}>
-            <span>© 2026 Дымоход Трейд</span>
-            <a
-              className={styles.developerLink}
-              href="https://t.me/marseloid"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Сайт разработан @marseloid — открыть Telegram"
-            >
-              <BrandTelegram aria-hidden size={15} />
-              <span>Сайт разработан: @marseloid</span>
-            </a>
-          </div>
-        </div>
-      </footer>
       </main>
     </>
   );

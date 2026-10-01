@@ -2376,115 +2376,6 @@
   background: #e8edef;
 }
 
-.footer {
-  color: #adbdc2;
-  background: #0c191e;
-}
-
-.footerGrid {
-  display: grid;
-  grid-template-columns: 1.25fr 0.72fr 1.15fr 1.15fr;
-  gap: clamp(28px, 4vw, 58px);
-  align-items: start;
-  padding: 46px 0 38px;
-}
-
-.footerGrid strong {
-  color: #fff;
-}
-
-.footerBrand img {
-  display: block;
-  width: 180px;
-  height: 82px;
-  object-fit: contain;
-  object-position: left center;
-  mix-blend-mode: screen;
-}
-
-.footerGrid p {
-  max-width: 260px;
-  margin: 14px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.footerLinks {
-  display: grid;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.footerLinks strong,
-.footerContacts > strong {
-  margin-bottom: 7px;
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-.footerLinks a {
-  width: fit-content;
-  line-height: 1.45;
-}
-
-.footerLinks a:hover {
-  color: #fff;
-}
-
-.footerLinks a:focus-visible,
-.footerBrand a:focus-visible {
-  outline: 3px solid rgba(237, 91, 42, 0.55);
-  outline-offset: 4px;
-}
-
-.footerContacts {
-  display: grid;
-  gap: 14px;
-}
-
-.address,
-.legal {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 9px;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.footerBottom {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px 24px;
-  padding: 18px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 11px;
-}
-
-.developerLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: fit-content;
-  color: inherit;
-  line-height: 1.4;
-}
-
-.developerLink:hover {
-  color: #fff;
-}
-
-.developerLink:focus-visible {
-  border-radius: 4px;
-  outline: 3px solid rgba(237, 91, 42, 0.55);
-  outline-offset: 4px;
-}
-
-.developerLink svg {
-  flex: 0 0 auto;
-}
-
 @media (max-width: 1020px) {
   .benefitsIntro h2 {
     max-width: 14ch;
@@ -2539,9 +2430,6 @@
     align-items: flex-start;
   }
 
-  .footerGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 720px) {
@@ -3066,15 +2954,6 @@
     font-size: 19px;
   }
 
-  .footerGrid {
-    grid-template-columns: 1fr;
-    gap: 30px;
-  }
-
-  .footerBrand img {
-    width: 164px;
-    height: 75px;
-  }
 }
 
 @media (max-width: 460px) {
