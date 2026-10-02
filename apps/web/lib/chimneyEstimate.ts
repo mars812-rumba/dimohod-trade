@@ -27,14 +27,16 @@ export type ChimneyEstimateLine = {
   matchStatus: "exact" | "candidate" | "nearest" | "missing" | "manual";
 };
 
+export type ChimneyEstimateCustomer = {
+  name: string;
+  contactMethod: "phone" | "whatsapp" | "telegram" | "email";
+  contact: string;
+};
+
 export type ChimneyEstimate = {
   reference?: string;
   revision?: number;
-  customer?: {
-    name: string;
-    contactMethod: "phone" | "whatsapp" | "telegram" | "email";
-    contact: string;
-  };
+  customer?: ChimneyEstimateCustomer;
   profileName: string;
   generatedAt: Date;
   measurements: EstimateMeasurement[];

@@ -13,6 +13,16 @@ const configuratorSource = fs.readFileSync(
   path.join(here, "../components/ChimneyConfigurator.tsx"),
   "utf8",
 );
+const pdfSource = fs.readFileSync(path.join(here, "chimneyEstimatePdf.ts"), "utf8");
+
+test("estimate PDF receives submitted customer contacts and the project logo", () => {
+  assert.match(componentSource, /const customer: ChimneyEstimateCustomer/);
+  assert.match(componentSource, /currentEstimate = \{ \.\.\.estimate, customer, generatedAt: new Date\(\) \}/);
+  assert.match(componentSource, /onSubmitted\?\.\(customer\)/);
+  assert.match(pdfSource, /brand\/logo-original\.jpg/);
+  assert.match(pdfSource, /estimate\.customer\.name/);
+  assert.match(pdfSource, /estimate\.customer\.contact/);
+});
 
 test("the estimate form sends the PDF and BOM to the existing lead endpoint", () => {
   assert.match(componentSource, /createChimneyEstimatePdfBlob/);

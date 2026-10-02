@@ -8,7 +8,7 @@ import {
   IconSend as Send,
   IconX as X,
 } from "@tabler/icons-react";
-import type { ChimneyEstimate } from "@/lib/chimneyEstimate";
+import type { ChimneyEstimate, ChimneyEstimateCustomer } from "@/lib/chimneyEstimate";
 import { chimneyEstimateText } from "@/lib/chimneyEstimate";
 import { createChimneyEstimatePdfBlob } from "@/lib/chimneyEstimatePdf";
 import { METRIKA_GOALS, reachMetrikaGoal, type MetrikaGoal } from "@/lib/metrika";
@@ -24,7 +24,7 @@ type EstimateLeadDialogProps = {
   heading?: string;
   inline?: boolean;
   metrikaGoal?: MetrikaGoal;
-  onSubmitted?: () => void;
+  onSubmitted?: (customer: ChimneyEstimateCustomer) => void;
   source?: string;
   submitLabel?: string;
   triggerClassName?: string;
@@ -111,9 +111,14 @@ export function EstimateLeadDialog({
     const form = event.currentTarget;
 
     try {
-      const currentEstimate = { ...estimate, generatedAt: new Date() };
-      const pdf = await createChimneyEstimatePdfBlob(currentEstimate);
       const data = new FormData(form);
+      const customer: ChimneyEstimateCustomer = {
+        name: String(data.get("name") ?? "").trim(),
+        contactMethod,
+        contact: String(data.get("contact") ?? "").trim(),
+      };
+      const currentEstimate = { ...estimate, customer, generatedAt: new Date() };
+      const pdf = await createChimneyEstimatePdfBlob(currentEstimate);
       data.set("source", source);
       data.set(
         "configuration",
@@ -145,7 +150,7 @@ export function EstimateLeadDialog({
       const goalParams = { source, path: window.location.pathname };
       reachMetrikaGoal(METRIKA_GOALS.leadSubmitted, goalParams);
       reachMetrikaGoal(metrikaGoal, goalParams);
-      onSubmitted?.();
+      onSubmitted?.(customer);
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Не удалось отправить расчёт.");

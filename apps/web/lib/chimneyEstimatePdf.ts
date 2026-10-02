@@ -10,6 +10,24 @@ const MATCH_LABELS = {
   manual: "ручная позиция менеджера",
 } as const;
 
+const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+async function loadBrandLogo(): Promise<string | null> {
+  try {
+    const response = await fetch(`${appBasePath}/brand/logo-original.jpg`);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 function filenameDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
@@ -22,9 +40,10 @@ function pdfDate(date: Date): string {
 }
 
 async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
-  const [pdfMakeModule, fontsModule] = await Promise.all([
+  const [pdfMakeModule, fontsModule, brandLogo] = await Promise.all([
     import("pdfmake/build/pdfmake"),
     import("pdfmake/build/vfs_fonts"),
+    loadBrandLogo(),
   ]);
   const pdfMake = pdfMakeModule.default;
   pdfMake.vfs = fontsModule.default as unknown as Record<string, string>;
@@ -48,7 +67,9 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
 
   const warnings = [...estimate.calculationErrors, ...estimate.reviewItems];
   const content: Content[] = [
-    { text: "ДЫМОХОД ТРЕЙД", style: "brand" },
+    brandLogo
+      ? { image: brandLogo, width: 111, height: 51, margin: [0, 0, 0, 10] }
+      : { text: "ДЫМОХОД ТРЕЙД", style: "brand" },
     { text: "Предварительная смета дымохода", style: "title" },
     {
       columns: [

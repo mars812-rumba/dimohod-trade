@@ -19,6 +19,7 @@ import {
   buildChimneyEstimate,
   formatRub,
   type CatalogEstimateMatch,
+  type ChimneyEstimateCustomer,
 } from "@/lib/chimneyEstimate";
 import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
 import type { EquipmentStatus } from "@/lib/configuratorDraft";
@@ -251,6 +252,7 @@ export function HomeQuickEstimate({
   const [matches, setMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [matchStatus, setMatchStatus] = useState<MatchStatus>("idle");
   const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const [leadCustomer, setLeadCustomer] = useState<ChimneyEstimateCustomer | null>(null);
   const [pdfStatus, setPdfStatus] = useState<"idle" | "generating" | "error">("idle");
   const availableHeaterChoices = fixedEquipmentType
     ? heaterChoices.filter((choice) => choice.id === fixedEquipmentType)
@@ -345,7 +347,11 @@ export function HomeQuickEstimate({
     if (!estimate || pdfStatus === "generating") return;
     setPdfStatus("generating");
     try {
-      await downloadChimneyEstimatePdf({ ...estimate, generatedAt: new Date() });
+      await downloadChimneyEstimatePdf({
+        ...estimate,
+        customer: leadCustomer ?? undefined,
+        generatedAt: new Date(),
+      });
       setPdfStatus("idle");
     } catch {
       setPdfStatus("error");
@@ -410,6 +416,7 @@ export function HomeQuickEstimate({
     setMatches({});
     setMatchStatus("idle");
     setLeadSubmitted(false);
+    setLeadCustomer(null);
     setPdfStatus("idle");
   }
 
@@ -574,7 +581,10 @@ export function HomeQuickEstimate({
                       heading="Откройте схему и состав"
                       inline
                       metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
-                      onSubmitted={() => setLeadSubmitted(true)}
+                      onSubmitted={(customer) => {
+                        setLeadCustomer(customer);
+                        setLeadSubmitted(true);
+                      }}
                       source={leadSource}
                       submitLabel="Показать схему и состав"
                     />

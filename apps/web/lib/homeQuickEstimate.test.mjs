@@ -69,7 +69,8 @@ test("price stays visible while the detailed BOM opens only after contact handof
   assert.match(component, /leadSource = "chimney-quick-estimate"/);
   assert.match(component, /source=\{leadSource\}/);
   assert.match(component, /METRIKA_GOALS\.quickEstimateContactSent/);
-  assert.match(component, /onSubmitted=\{\(\) => setLeadSubmitted\(true\)\}/);
+  assert.match(component, /onSubmitted=\{\(customer\) => \{/);
+  assert.match(component, /setLeadCustomer\(customer\)/);
   assert.match(component, /estimate\.lines\.length\} позиций · \{estimate\.totalUnits\} изделий/);
   assert.ok(
     component.indexOf("styles.resultOverview") < component.indexOf("!leadSubmitted"),
@@ -80,6 +81,7 @@ test("price stays visible while the detailed BOM opens only after contact handof
   assert.match(component, /Офис работает по будням с 9:00 до 17:00/);
   assert.match(component, /href=\{operator\.phoneHref\}/);
   assert.match(component, /downloadChimneyEstimatePdf/);
+  assert.match(component, /customer: leadCustomer \?\? undefined/);
   assert.match(component, /Скачать смету PDF/);
 });
 
