@@ -675,7 +675,24 @@ async def read_products(
                 base_size=None,
             )
         ]
-        if product.product_kind == "консоль" and preferred_outer_diameter_mm is not None:
+        if product.product_kind == "проходной_узел" and preferred_outer_diameter_mm is not None:
+            fitting_range_skus = [
+                sku
+                for sku in active_skus
+                if isinstance(sku.attributes.get("diameter_min_mm"), int)
+                and isinstance(sku.attributes.get("diameter_max_mm"), int)
+                and sku.attributes["diameter_min_mm"] <= preferred_outer_diameter_mm
+                and preferred_outer_diameter_mm <= sku.attributes["diameter_max_mm"]
+            ]
+            if fitting_range_skus:
+                preferred_skus = sorted(
+                    fitting_range_skus,
+                    key=lambda sku: (
+                        sku.attributes["diameter_max_mm"] - sku.attributes["diameter_min_mm"],
+                        sku.attributes["diameter_min_mm"],
+                    ),
+                )
+        elif product.product_kind == "консоль" and preferred_outer_diameter_mm is not None:
             fitting_console_skus = [
                 sku
                 for sku in active_skus

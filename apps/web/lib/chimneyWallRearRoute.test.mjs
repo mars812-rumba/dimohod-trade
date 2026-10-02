@@ -196,7 +196,46 @@ test("vertical route keeps the confirmed pipe, damper and support-cap effective 
   );
   assert.equal(calculation.fixedParts.some((part) => part.id === "elbow_90"), false);
   assert.equal(calculation.bom.find((line) => line.key === "ceiling-passage").fixedUnitPriceRub, 600);
+  assert.deepEqual(calculation.bom.slice(0, 3).map((line) => line.key), [
+    "single-pipe-1000",
+    "rotary-damper",
+    "support-cap",
+  ]);
   assert.ok(calculation.selectedVariant.pipes.every((pipe) => pipe.nominalMm === 1000));
+});
+
+test("rear outlet through a ceiling keeps the confirmed warm transition order", () => {
+  const calculation = calculateChimney({
+    route: "ceiling",
+    outlet: "horizontal",
+    floors: 1,
+    heightM: 4,
+    distanceM: 0,
+    roofType: "flat",
+    draft: {
+      levels: "1",
+      diameter: "120",
+      connectionHeight: "0",
+      ceilingHeight: "2400",
+      floorThickness: "200",
+      roofThickness: "200",
+      ridgeHeight: "3600",
+    },
+  });
+  const keys = calculation.bom.map((line) => line.key);
+  const firstSandwichIndex = keys.findIndex((key) => key.startsWith("sandwich-pipe-"));
+
+  assert.deepEqual(keys.slice(0, 4), [
+    "rotary-damper",
+    "ceiling-rear-elbow-90",
+    "single-pipe-1000",
+    "support-cap",
+  ]);
+  assert.ok(keys.indexOf("support-cap") < firstSandwichIndex);
+  assert.equal(calculation.bom.find((line) => line.key === "ceiling-rear-elbow-90").thicknessProfile, "first-floor-0.8");
+  assert.equal(calculation.bom.find((line) => line.key === "single-pipe-1000").catalogLengthMode, "exact");
+  assert.equal(calculation.bom.find((line) => line.key === "roof-passage").preferredSteelGrade, "AISI 430");
+  assert.equal(calculation.bom.find((line) => line.key === "roof-master-flash").priceOnRequest, true);
 });
 
 test("BOM separates first sandwich 0.8 mm from upper and outdoor 0.5 mm pipes", () => {

@@ -90,6 +90,7 @@ export type ChimneyBomLine = {
   removable?: boolean;
   quantityNote?: string;
   fixedUnitPriceRub?: number;
+  priceOnRequest?: boolean;
 };
 
 export type ChimneyCalculation = {
@@ -524,6 +525,7 @@ function summarizePipeBom(variants: PipeLayoutVariant[], routeKind: ChimneyRoute
 function addRouteNodes(
   bom: ChimneyBomLine[],
   routeKind: ChimneyRouteKind,
+  ceilingRearOutlet: boolean,
   passageQty: number,
   singleWallWarmupPipeLengthMm: number,
   rotaryDamperHeightMm: number,
@@ -547,8 +549,38 @@ function addRouteNodes(
     preferredOuterSteelGrade: CHIMNEY_ENGINEERING_RULES.wallRoute.teeLowerSandwichPipe.outerSteelGrade,
   });
   if (routeKind === "ceiling") {
+    const damperLine: ChimneyBomLine = {
+      key: "rotary-damper",
+      productKind: "шибер",
+      label: "Одноконтурный шибер поворотный",
+      quantity: 1,
+      contour: "одностенный",
+      zone: "transition",
+      selectionReason: ceilingRearOutlet
+        ? "Установлен на заднем патрубке отопителя перед отводом и трубой-разгоном."
+        : `Установлен между трубой-разгоном и опорной заглушкой; полезная длина ${rotaryDamperHeightMm} мм уже учитывает вставленный 50-мм порт.`,
+      requiresSku: true,
+      catalogSearch: "Одноконтурный шибер поворотный",
+      thicknessProfile: "first-floor-0.8",
+    };
+    const transitionLines: ChimneyBomLine[] = ceilingRearOutlet ? [damperLine] : [];
+    if (ceilingRearOutlet) {
+      transitionLines.push({
+        key: "ceiling-rear-elbow-90",
+        productKind: "отвод",
+        label: "Одноконтурный отвод 90°",
+        quantity: 1,
+        contour: "одностенный",
+        zone: "indoor_warm",
+        selectionReason: "Переводит заднее подключение отопителя в вертикальный разгонный участок.",
+        requiresSku: true,
+        catalogCategorySlug: "odnokonturnye-otvody",
+        catalogSearch: "Одноконтурный отвод 90°",
+        thicknessProfile: "first-floor-0.8",
+      });
+    }
     if (singleWallWarmupPipeLengthMm > 0) {
-      bom.unshift({
+      transitionLines.push({
         key: `single-pipe-${singleWallWarmupPipeLengthMm}`,
         productKind: "труба",
         label: `Одностенная труба-разгон ${singleWallWarmupPipeLengthMm} мм`,
@@ -556,24 +588,14 @@ function addRouteNodes(
         nominalLengthMm: singleWallWarmupPipeLengthMm,
         contour: "одностенный",
         zone: "indoor_warm",
-        selectionReason: "Из общей высоты разгона вычтена высота поворотного шибера.",
+        selectionReason: "Разгонный участок перед переходом на сэндвич-контур.",
         requiresSku: true,
-        catalogLengthMode: "nearest",
+        catalogLengthMode: "exact",
         thicknessProfile: "first-floor-0.8",
       });
     }
-    bom.splice(singleWallWarmupPipeLengthMm > 0 ? 1 : 0, 0, {
-      key: "rotary-damper",
-      productKind: "шибер",
-      label: "Одноконтурный шибер поворотный",
-      quantity: 1,
-      contour: "одностенный",
-      zone: "transition",
-      selectionReason: `Установлен между трубой-разгоном и опорной заглушкой; полезная длина ${rotaryDamperHeightMm} мм уже учитывает вставленный 50-мм порт.`,
-      requiresSku: true,
-      catalogSearch: "Одноконтурный шибер поворотный",
-    });
-    bom.splice(singleWallWarmupPipeLengthMm > 0 ? 2 : 1, 0, {
+    if (!ceilingRearOutlet) transitionLines.push(damperLine);
+    transitionLines.push({
       key: "support-cap",
       productKind: "заглушка",
       label: "Сэндвич-заглушка опорная",
@@ -584,6 +606,7 @@ function addRouteNodes(
       selectionReason: "Опорный переход перед сэндвич-участком задан схемой.",
       requiresSku: true,
     });
+    bom.unshift(...transitionLines);
   } else if (routeKind === "wall-rear") {
     const firstSandwichPipeIndex = bom.findIndex((line) => line.key.startsWith("sandwich-pipe-"));
     bom.splice(firstSandwichPipeIndex >= 0 ? firstSandwichPipeIndex : bom.length, 0,
@@ -707,7 +730,7 @@ function addRouteNodes(
       requiresSku: true,
       catalogCategorySlug: "uzly-prohoda-krovli",
       catalogSearch: "Мастер-флеш",
-      removable: true,
+      priceOnRequest: true,
     });
     bom.push({
       key: "roof-passage",
@@ -720,7 +743,7 @@ function addRouteNodes(
       catalogCategorySlug: "uzly-prohoda-krovli",
       catalogSearch: "Проходной узел кровли (УПК) до 45°",
       catalogDiameterMode: "sandwich-outer-range",
-      removable: true,
+      preferredSteelGrade: "AISI 430",
     });
   } else if (routeKind === "wall-rear") {
     bom.push({
@@ -1206,6 +1229,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   addRouteNodes(
     bom,
     routeKind,
+    input.outlet === "horizontal",
     routeKind === "ceiling" ? floors : 1,
     singleWallWarmupPipeLengthMm,
     rotaryDamperHeightMm,

@@ -174,6 +174,9 @@ export function quickEstimateAssumptions(answers: QuickEstimateAnswers): string[
     items.push(`Высота отопителя принята ${QUICK_ESTIMATE_HEATER_HEIGHT_MM} мм`);
     items.push(`Одностенная труба-разгон ${QUICK_ESTIMATE_WARMUP_PIPE_LENGTH_MM} мм, сталь 0,8 мм`);
     items.push("Одноконтурный поворотный шибер, сталь 0,8 мм");
+    if (answers.outlet === "rear") {
+      items.push("Заднее подключение: одноконтурный отвод 90°, сталь 0,8 мм");
+    }
     items.push(`${QUICK_ESTIMATE_FLOOR_HEIGHT_MM / 1000} м на этаж`);
     if (answers.hasAttic) items.push(`${QUICK_ESTIMATE_ATTIC_HEIGHT_MM / 1000} м на чердак`);
     items.push(`${QUICK_ESTIMATE_ROOF_OUTLET_HEIGHT_MM / 1000} м наружного участка`);
@@ -182,7 +185,7 @@ export function quickEstimateAssumptions(answers: QuickEstimateAnswers): string[
         `${quickEstimateSandwichPipeQuantity(answers)} сэндвич-трубы по ${QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM} мм: первая 0,8 мм, остальные 0,5 мм`,
       );
     }
-    items.push("Кровельный комплект: УПК + мастер-флеш");
+    items.push("Кровельный комплект: УПК AISI 430 по наружному диаметру + мастер-флеш по запросу");
   }
   return items;
 }

@@ -21,8 +21,16 @@ const buildChimneyEstimate = await executableFunction(
 );
 
 const bom = [
-  { key: "ceiling-passage", label: "Стакан", quantity: 1, selectionReason: "Комплект", requiresSku: true },
+  {
+    key: "ceiling-passage",
+    label: "Стакан",
+    quantity: 1,
+    selectionReason: "Комплект",
+    requiresSku: true,
+    fixedUnitPriceRub: 600,
+  },
   { key: "passage-flange", label: "Фланец", quantity: 2, selectionReason: "Два фланца", requiresSku: true },
+  { key: "roof-master-flash", label: "Мастер-флеш", quantity: 1, selectionReason: "Кровельный проход", requiresSku: true, priceOnRequest: true },
 ];
 
 function match(key, price) {
@@ -50,6 +58,7 @@ function estimate(flangePrice) {
     matches: {
       "ceiling-passage": match("cup", 1760),
       "passage-flange": match("flange", flangePrice),
+      "roof-master-flash": match("master-flash", 2300),
     },
     measurements: [],
     profileName: "Тест",
@@ -59,15 +68,16 @@ function estimate(flangePrice) {
   });
 }
 
-test("passage cup and decorative flange use their own catalog prices", () => {
+test("ceiling passage cup uses the confirmed fixed price and flange keeps its catalog price", () => {
   const result = estimate(500);
-  assert.deepEqual(result.lines.map((line) => line.unitPriceRub), [1760, 500]);
-  assert.equal(result.knownSubtotalRub, 2760);
+  assert.deepEqual(result.lines.map((line) => line.unitPriceRub), [600, 500, null]);
+  assert.equal(result.knownSubtotalRub, 1600);
+  assert.equal(result.unpricedLineCount, 1);
 });
 
 test("a decorative flange stays priced when its catalog price exceeds the old kit total", () => {
   const result = estimate(1672);
-  assert.deepEqual(result.lines.map((line) => line.unitPriceRub), [1760, 1672]);
-  assert.equal(result.knownSubtotalRub, 5104);
+  assert.deepEqual(result.lines.map((line) => line.unitPriceRub), [600, 1672, null]);
+  assert.equal(result.knownSubtotalRub, 3944);
   assert.deepEqual(result.reviewItems, []);
 });

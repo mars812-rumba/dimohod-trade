@@ -68,6 +68,17 @@ def test_upk_prices_and_dimensions_are_transcribed_from_json_table() -> None:
     assert largest.attributes["base_size"] == "1000×1000 мм"
 
 
+def test_upk_aisi_430_range_contains_common_220_mm_sandwich_outer_diameter() -> None:
+    matching = [
+        item
+        for item in product("prohodnoy-uzel-krovli-upk-do-45").skus
+        if item.steel_grade == "AISI 430"
+        and item.attributes["diameter_min_mm"] <= 220 <= item.attributes["diameter_max_mm"]
+    ]
+
+    assert [item.article for item in matching] == ["DT-UPK-430-D215-245"]
+
+
 def test_flange_straight_and_angled_prices_remain_separate_variants() -> None:
     straight = sku("flanets-dekorativnyy", "DT-FLANGE-430-STRAIGHT-700X700")
     angled = sku("flanets-dekorativnyy", "DT-FLANGE-430-ANGLE-700X700")

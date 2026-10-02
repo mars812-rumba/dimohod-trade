@@ -101,7 +101,9 @@ export function buildChimneyEstimate({
   const lines = selectedBom.map((bomLine): ChimneyEstimateLine => {
     const match = matches[bomLine.key];
     const catalogUnitPriceRub = match ? positivePrice(match.item.price_rub) : null;
-    const unitPriceRub = catalogUnitPriceRub;
+    const unitPriceRub = bomLine.priceOnRequest
+      ? null
+      : bomLine.fixedUnitPriceRub ?? catalogUnitPriceRub;
     const lineTotalRub = unitPriceRub === null ? null : unitPriceRub * bomLine.quantity;
     const matchStatus = !match
       ? "missing"

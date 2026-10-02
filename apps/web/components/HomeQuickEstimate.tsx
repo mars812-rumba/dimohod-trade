@@ -134,7 +134,7 @@ async function matchBomLine({
     params.set("diameter", exactOuter ? `${diameter + 100}:` : `${diameter}:${outerDiameter ?? ""}`);
   }
   if (rangeOuter) params.set("preferred_diameter", `:${diameter + 100}`);
-  if (line.preferredSteelGrade || line.materialPreference === "stainless-standard") {
+  if (line.preferredSteelGrade || line.materialPreference === "stainless-standard" || line.thicknessProfile) {
     const combustionSteel = CHIMNEY_ENGINEERING_RULES.combustionMaterials.applianceTypes.includes(
       equipmentType as "gaz" | "diesel",
     );
@@ -168,6 +168,13 @@ async function matchBomLine({
     return response.json() as Promise<ProductListResponse>;
   };
   let payload = await fetchProducts(params);
+  if (!payload.items[0] && line.key === "roof-master-flash") {
+    payload = await fetchProducts(new URLSearchParams({
+      limit: "24",
+      offset: "0",
+      q: "Мастер-флеш",
+    }));
+  }
   if (!payload.items[0] && line.productKind === "консоль" && line.catalogSearch) {
     const consoleParams = new URLSearchParams({
       limit: "24",
@@ -421,7 +428,7 @@ export function HomeQuickEstimate({
           <div className={styles.body} aria-live="polite">
             {step === 0 ? <>
               <div className={styles.heading}><small>Объект</small><h3>Где нужен дымоход?</h3></div>
-              <div className={styles.choices}>
+              <div className={`${styles.choices} ${styles.objectChoices}`}>
                 {objectChoices.map((choice) => <button className={`${styles.choice} ${objectType === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => {
                   setObjectType(choice.id);
                   if (choice.id === "banya") setEquipmentType("bania");
@@ -512,38 +519,11 @@ export function HomeQuickEstimate({
                 <h3>{leadSubmitted ? "Ориентировочный состав комплекта" : "Расчёт готов"}</h3>
                 <p>{leadSubmitted
                   ? "Стоимость и состав рассчитаны по указанным параметрам. Перед заказом менеджер проверит комплект."
-                  : "Оставьте имя и телефон. Расчёт уйдёт менеджеру на проверку, а стоимость и состав комплекта сразу откроются на этой странице."}</p>
+                  : "Предварительная стоимость уже рассчитана. Оставьте имя и телефон, чтобы открыть подробный состав комплекта."}</p>
               </div>
               {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
               {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
               {estimate && calculation ? <>
-                {!leadSubmitted ? (
-                  <div className={styles.leadGate}>
-                    {answers ? (
-                      <div className={styles.lockedSummary} aria-label="Краткий итог расчёта">
-                        <span>Предварительный комплект рассчитан</span>
-                        <strong>{estimate.lines.length} позиций · {estimate.totalUnits} изделий</strong>
-                        <p>
-                          {objectChoices.find((choice) => choice.id === answers.objectType)?.label}
-                          {answers.equipmentType ? ` · ${heaterLabels.get(answers.equipmentType) ?? "Отопитель"}` : ""}
-                          {` · ${routeChoices.find((choice) => choice.id === answers.route)?.label ?? "Маршрут выбран"}`}
-                        </p>
-                        <small>Предварительная стоимость и полный состав откроются после отправки контактов.</small>
-                      </div>
-                    ) : null}
-                    <EstimateLeadDialog
-                      description="Введите имя и телефон, чтобы увидеть предварительную стоимость и состав комплекта. Менеджер получит расчёт и проверит его перед заказом."
-                      disabled={matchStatus !== "ready" && matchStatus !== "error"}
-                      estimate={estimate}
-                      heading="Откройте предварительную смету"
-                      inline
-                      metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
-                      onSubmitted={() => setLeadSubmitted(true)}
-                      source={leadSource}
-                      submitLabel="Показать стоимость и состав"
-                    />
-                  </div>
-                ) : <>
                 <div className={styles.resultOverview}>
                   <div>
                     <div className={styles.priceCard}>
@@ -554,7 +534,21 @@ export function HomeQuickEstimate({
                     {answers ? <div className={styles.assumptions}><strong>Что приняли в расчёте</strong><ul>{quickEstimateAssumptions(answers).map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
                   </div>
                 </div>
-
+                {!leadSubmitted ? (
+                  <div className={styles.leadGate}>
+                    <EstimateLeadDialog
+                      description="Введите имя и телефон, чтобы открыть подробный состав. Менеджер получит полный расчёт и проверит его перед заказом."
+                      disabled={matchStatus !== "ready" && matchStatus !== "error"}
+                      estimate={estimate}
+                      heading="Откройте состав комплекта"
+                      inline
+                      metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
+                      onSubmitted={() => setLeadSubmitted(true)}
+                      source={leadSource}
+                      submitLabel="Показать состав комплекта"
+                    />
+                  </div>
+                ) : <>
                 <details className={styles.bomDetails} open>
                   <summary>
                     <span>Состав комплекта</span>

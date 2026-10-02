@@ -17,7 +17,7 @@ test("quick estimate keeps the confirmed calculation defaults", () => {
   assert.match(helper, /QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM = 1000/);
   assert.match(helper, /QUICK_ESTIMATE_BASE_SANDWICH_PIPE_QUANTITY = 3/);
   assert.match(helper, /QUICK_ESTIMATE_EXTRA_FLOOR_SANDWICH_PIPE_QUANTITY = 2/);
-  assert.match(helper, /Кровельный комплект: УПК \+ мастер-флеш/);
+  assert.match(helper, /Кровельный комплект: УПК AISI 430 по наружному диаметру \+ мастер-флеш по запросу/);
   assert.match(component, /useState<EquipmentStatus \| null>\("installed"\)/);
 });
 
@@ -33,6 +33,7 @@ test("quick ceiling estimate subtracts the assumed heater and fixes the confirme
   assert.match(helper, /answers\.route !== "ceiling" \|\| !answers\.hasAttic/);
   assert.match(component, /applyQuickEstimateBomRules\(bomForVariant/);
   assert.match(component, /if \(line\.thicknessProfile\)/);
+  assert.match(component, /line\.materialPreference === "stainless-standard" \|\| line\.thicknessProfile/);
   assert.match(component, /line\.characteristics\.join\(" · "\)/);
   assert.doesNotMatch(component, /characteristics\.slice\(0, 2\)/);
 });
@@ -46,14 +47,14 @@ test("quick estimate uses the existing catalog and keeps the public result self-
   assert.doesNotMatch(component, /\/zamery/);
 });
 
-test("price and full product BOM open only after the required contact handoff", () => {
+test("price stays visible while the detailed BOM opens only after contact handoff", () => {
   assert.match(component, /estimate\.lines\.map/);
   assert.match(component, /Цена по запросу/);
   assert.match(component, /primary_image/);
   assert.match(component, /quickEstimateProductHref/);
   assert.match(component, /Открыть товар/);
   assert.match(component, /!leadSubmitted/);
-  assert.match(component, /!leadSubmitted[\s\S]*inline[\s\S]*Показать стоимость и состав/);
+  assert.match(component, /!leadSubmitted[\s\S]*inline[\s\S]*Показать состав комплекта/);
   assert.match(component, /<EstimateLeadDialog/);
   assert.ok(
     component.indexOf("<EstimateLeadDialog") < component.indexOf("estimate.lines.map"),
@@ -63,9 +64,18 @@ test("price and full product BOM open only after the required contact handoff", 
   assert.match(component, /source=\{leadSource\}/);
   assert.match(component, /METRIKA_GOALS\.quickEstimateContactSent/);
   assert.match(component, /onSubmitted=\{\(\) => setLeadSubmitted\(true\)\}/);
-  assert.match(component, /Краткий итог расчёта/);
   assert.match(component, /estimate\.lines\.length\} позиций · \{estimate\.totalUnits\} изделий/);
-  assert.match(component, /Предварительная стоимость и полный состав откроются после отправки контактов/);
+  assert.ok(
+    component.indexOf("styles.resultOverview") < component.indexOf("!leadSubmitted"),
+    "price summary must be rendered before the contact gate",
+  );
+  assert.match(component, /Предварительная стоимость уже рассчитана/);
+});
+
+test("mobile object choices use two full-width rows", () => {
+  const styles = readFileSync(new URL("../components/HomeQuickEstimate.module.css", import.meta.url), "utf8");
+  assert.match(component, /styles\.objectChoices/);
+  assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.objectChoices \{ grid-template-columns: 1fr; \}/);
 });
 
 test("quick result remains explicitly preliminary without a fixed accuracy promise", () => {
@@ -89,6 +99,10 @@ test("product navigation preserves and restores the current quick estimate", () 
   assert.doesNotMatch(component, /skipCatalogRefresh/);
   assert.match(component, /line\.productKind === "консоль"/);
   assert.match(component, /q: line\.catalogSearch/);
+  assert.match(component, /line\.key === "roof-master-flash"/);
+  assert.match(component, /q: "Мастер-флеш"/);
+  assert.match(component, /params\.set\("preferred_diameter", `:\$\{diameter \+ 100\}`\)/);
+  assert.match(component, /line\.preferredSteelGrade/);
   assert.match(component, /setMatches\(saved\.matches\)/);
   assert.match(component, /setStep\(4\)/);
   assert.match(component, /from=quick-estimate/);
