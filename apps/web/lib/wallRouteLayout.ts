@@ -14,7 +14,7 @@ export function wallRearRoutePipePlan(outdoorHeightMm: number): WallRearRoutePip
   return {
     connectionPipeNominalMm: WALL_REAR_CONNECTION_PIPE_NOMINAL_MM,
     outdoorPipeNominalMm: WALL_OUTDOOR_PIPE_NOMINAL_MM,
-    outdoorPipeQuantity: Math.max(0, Math.ceil(normalizedHeightMm / 1000) - 1),
+    outdoorPipeQuantity: Math.max(0, Math.ceil(normalizedHeightMm / 1000)),
   };
 }
 

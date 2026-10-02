@@ -10,19 +10,19 @@ import {
   wallTopRouteFacadeConsoleQuantity,
 } from "./wallRouteLayout.ts";
 
-test("uses four one-metre sandwich pipes for a five-metre outdoor route", () => {
+test("uses five one-metre sandwich pipes for a five-metre outdoor route", () => {
   assert.deepEqual(wallRearRoutePipePlan(5000), {
     connectionPipeNominalMm: 1000,
     outdoorPipeNominalMm: 1000,
-    outdoorPipeQuantity: 4,
+    outdoorPipeQuantity: 5,
   });
 });
 
-test("uses five one-metre sandwich pipes for a six-metre outdoor route", () => {
+test("uses six one-metre sandwich pipes for a six-metre outdoor route", () => {
   assert.deepEqual(wallRearRoutePipePlan(6000), {
     connectionPipeNominalMm: 1000,
     outdoorPipeNominalMm: 1000,
-    outdoorPipeQuantity: 5,
+    outdoorPipeQuantity: 6,
   });
 });
 

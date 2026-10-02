@@ -273,6 +273,37 @@ export function solvePipeLayouts({
     .slice(0, maxVariants);
 }
 
+function solveOutdoorNominalPipeLayout(outdoorHeightMm: number): PipeLayoutVariant | null {
+  const pipe = PIPE_LENGTHS[0];
+  const quantity = Math.ceil(Math.max(0, outdoorHeightMm) / pipe.nominalMm);
+  if (!quantity) return null;
+
+  let cursor = 0;
+  const pipes = Array.from({ length: quantity }, (_, index): PlacedPipe => {
+    const startMm = cursor;
+    cursor += pipe.effectiveMm;
+    return {
+      id: `outdoor-pipe-${index + 1}`,
+      axis: "vertical",
+      nominalMm: pipe.nominalMm,
+      effectiveMm: pipe.effectiveMm,
+      startMm,
+      endMm: cursor,
+      zone: "outdoor",
+      contour: "сэндвич",
+    };
+  });
+
+  return {
+    id: Array.from({ length: quantity }, () => pipe.nominalMm).join("-"),
+    label: Array.from({ length: quantity }, () => pipe.nominalMm).join(" + "),
+    pipes,
+    coveredEndMm: cursor,
+    reserveMm: quantity * pipe.nominalMm - outdoorHeightMm,
+    jointPositionsMm: pipes.map((item) => item.endMm),
+  };
+}
+
 function solveWallSandwichLayout({
   startMm,
   targetMm,
@@ -1039,21 +1070,10 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
           fallbackZone: "wall_or_ceiling_pass",
         })
         : null;
-      const outdoorLayout = solvePipeLayouts({
-        axis: "vertical",
-        startMm: 0,
-        targetMm: outdoorHeightMm,
-        forbiddenZones: [],
-        fallbackZone: "outdoor",
-        contour: "сэндвич",
-        maxVariants: 1,
-      })[0];
-      const outdoorPipes: PlacedPipe[] = outdoorLayout?.pipes.map((pipe, index) => ({
-        ...pipe,
-        id: `outdoor-pipe-${index + 1}`,
-      })) ?? [];
-      const installedOutdoorHeightMm = outdoorPipes.at(-1)?.endMm ?? 0;
-      facadeConsolePositionsMm = wallRouteFacadeConsolePositions(installedOutdoorHeightMm);
+      const outdoorLayout = solveOutdoorNominalPipeLayout(outdoorHeightMm);
+      const outdoorPipes = outdoorLayout?.pipes ?? [];
+      const outdoorNominalLengthMm = outdoorPipes.reduce((sum, pipe) => sum + pipe.nominalMm, 0);
+      facadeConsolePositionsMm = wallRouteFacadeConsolePositions(outdoorNominalLengthMm);
       wallConsoleQuantity = 1 + facadeConsolePositionsMm.length;
       if (rearSupportCapEffectiveMm <= 0) {
         errors.push(`Номинальная длина опорной заглушки должна быть больше зоны соединения ${PIPE_SOCKET_OVERLAP_MM} мм.`);
@@ -1119,7 +1139,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
         })
         : null;
       const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
-      const outdoor = solvePipeLayouts({ axis: "vertical", startMm: 0, targetMm: outdoorHeightMm, forbiddenZones: [], fallbackZone: "outdoor", maxVariants: 1 })[0];
+      const outdoor = solveOutdoorNominalPipeLayout(outdoorHeightMm);
       if (topSupportCapEffectiveMm <= 0) {
         errors.push(`Номинальная длина опорной заглушки должна быть больше зоны соединения ${PIPE_SOCKET_OVERLAP_MM} мм.`);
       } else if (supportCapEndMm > wallStartMm) {

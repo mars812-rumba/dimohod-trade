@@ -236,22 +236,30 @@ test("rear and top wall routes keep only their first sandwich pipe at 0.8 mm", (
       outlet,
       floors: 1,
       heightM: 5,
-      distanceM: 1.2,
+      distanceM: 0.5,
       roofType: "flat",
       draft: {
         levels: "1",
         diameter: "115",
-        wallDistance: "1200",
+        wallDistance: "500",
         wallThickness: "200",
         roofOverhang: "0",
         outdoorHeight: "5",
       },
     });
     const sandwich = calculation.selectedVariant.pipes.filter((pipe) => pipe.contour === "сэндвич");
+    const outdoorSandwich = sandwich.filter((pipe) => pipe.axis === "vertical" && pipe.zone === "outdoor");
+    const horizontalSandwich = sandwich.filter((pipe) => pipe.axis === "horizontal");
 
     assert.equal(calculation.errors.length, 0);
+    assert.equal(horizontalSandwich.length, 1);
+    assert.equal(outdoorSandwich.length, 5);
     assert.equal(sandwich.filter((pipe) => pipe.thicknessProfile === "first-floor-0.8").length, 1);
-    assert.ok(sandwich.slice(1).every((pipe) => pipe.thicknessProfile === "upper-outdoor-0.5"));
+    assert.ok(outdoorSandwich.every((pipe) => pipe.thicknessProfile === "upper-outdoor-0.5"));
+    assert.equal(
+      calculation.bom.find((line) => line.key === "sandwich-pipe-1000-upper-outdoor").quantity,
+      5,
+    );
   }
 });
 
