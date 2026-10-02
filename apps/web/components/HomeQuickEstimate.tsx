@@ -36,6 +36,7 @@ import {
 } from "@/lib/homeQuickEstimate";
 import styles from "./HomeQuickEstimate.module.css";
 import { EstimateLeadDialog } from "./EstimateLeadDialog";
+import { QuickEstimateScheme } from "./QuickEstimateScheme";
 
 type Step = 0 | 1 | 2 | 3 | 4;
 type MatchStatus = "idle" | "loading" | "ready" | "error";
@@ -519,7 +520,7 @@ export function HomeQuickEstimate({
                 <h3>{leadSubmitted ? "Ориентировочный состав комплекта" : "Расчёт готов"}</h3>
                 <p>{leadSubmitted
                   ? "Стоимость и состав рассчитаны по указанным параметрам. Перед заказом менеджер проверит комплект."
-                  : "Предварительная стоимость уже рассчитана. Оставьте имя и телефон, чтобы открыть подробный состав комплекта."}</p>
+                  : "Предварительная стоимость уже рассчитана. Оставьте имя и телефон, чтобы открыть схему и подробный состав комплекта."}</p>
               </div>
               {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
               {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
@@ -537,18 +538,19 @@ export function HomeQuickEstimate({
                 {!leadSubmitted ? (
                   <div className={styles.leadGate}>
                     <EstimateLeadDialog
-                      description="Введите имя и телефон, чтобы открыть подробный состав. Менеджер получит полный расчёт и проверит его перед заказом."
+                      description="Введите имя и телефон, чтобы открыть предварительную SVG-схему и подробный состав. Менеджер получит полный расчёт и проверит его перед заказом."
                       disabled={matchStatus !== "ready" && matchStatus !== "error"}
                       estimate={estimate}
-                      heading="Откройте состав комплекта"
+                      heading="Откройте схему и состав"
                       inline
                       metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
                       onSubmitted={() => setLeadSubmitted(true)}
                       source={leadSource}
-                      submitLabel="Показать состав комплекта"
+                      submitLabel="Показать схему и состав"
                     />
                   </div>
                 ) : <>
+                {answers ? <QuickEstimateScheme answers={answers} bom={bom} /> : null}
                 <details className={styles.bomDetails} open>
                   <summary>
                     <span>Состав комплекта</span>

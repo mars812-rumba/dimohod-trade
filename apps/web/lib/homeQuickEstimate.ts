@@ -7,6 +7,7 @@ import type { ChimneyBomLine } from "./chimneyCalculation";
 
 export const QUICK_ESTIMATE_DEFAULT_DIAMETER_MM = 120;
 export const QUICK_ESTIMATE_FLOOR_HEIGHT_MM = 2500;
+export const QUICK_ESTIMATE_FLOOR_THICKNESS_MM = 200;
 export const QUICK_ESTIMATE_ATTIC_HEIGHT_MM = 1500;
 export const QUICK_ESTIMATE_ROOF_OUTLET_HEIGHT_MM = 1500;
 export const QUICK_ESTIMATE_HEATER_HEIGHT_MM = 800;
@@ -55,9 +56,10 @@ export function quickEstimateDraft(answers: QuickEstimateAnswers): ScenarioConfi
     hasAttic: answers.route === "ceiling" && answers.hasAttic,
     ceilingHeight: levelHeight,
     secondCeilingHeight: answers.floors >= 2 ? levelHeight : "",
-    secondFloorThickness: answers.floors >= 2 ? draft.floorThickness : "",
+    floorThickness: String(QUICK_ESTIMATE_FLOOR_THICKNESS_MM),
+    secondFloorThickness: answers.floors >= 2 ? String(QUICK_ESTIMATE_FLOOR_THICKNESS_MM) : "",
     thirdCeilingHeight: answers.floors >= 3 ? levelHeight : "",
-    thirdFloorThickness: answers.floors >= 3 ? draft.floorThickness : "",
+    thirdFloorThickness: answers.floors >= 3 ? String(QUICK_ESTIMATE_FLOOR_THICKNESS_MM) : "",
     atticHeight: answers.route === "ceiling" && answers.hasAttic
       ? String(QUICK_ESTIMATE_ATTIC_HEIGHT_MM)
       : "",
@@ -178,6 +180,7 @@ export function quickEstimateAssumptions(answers: QuickEstimateAnswers): string[
       items.push("Заднее подключение: одноконтурный отвод 90°, сталь 0,8 мм");
     }
     items.push(`${QUICK_ESTIMATE_FLOOR_HEIGHT_MM / 1000} м на этаж`);
+    items.push(`Перекрытие ${QUICK_ESTIMATE_FLOOR_THICKNESS_MM} мм`);
     if (answers.hasAttic) items.push(`${QUICK_ESTIMATE_ATTIC_HEIGHT_MM / 1000} м на чердак`);
     items.push(`${QUICK_ESTIMATE_ROOF_OUTLET_HEIGHT_MM / 1000} м наружного участка`);
     if (answers.hasAttic) {

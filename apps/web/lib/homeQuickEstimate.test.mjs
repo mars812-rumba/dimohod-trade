@@ -4,12 +4,14 @@ import test from "node:test";
 
 const helper = readFileSync(new URL("./homeQuickEstimate.ts", import.meta.url), "utf8");
 const component = readFileSync(new URL("../components/HomeQuickEstimate.tsx", import.meta.url), "utf8");
+const quickScheme = readFileSync(new URL("../components/QuickEstimateScheme.tsx", import.meta.url), "utf8");
 const productPage = readFileSync(new URL("../app/product/[slug]/page.tsx", import.meta.url), "utf8");
 const productExperience = readFileSync(new URL("../components/ProductExperience.tsx", import.meta.url), "utf8");
 
 test("quick estimate keeps the confirmed calculation defaults", () => {
   assert.match(helper, /QUICK_ESTIMATE_DEFAULT_DIAMETER_MM = 120/);
   assert.match(helper, /QUICK_ESTIMATE_FLOOR_HEIGHT_MM = 2500/);
+  assert.match(helper, /QUICK_ESTIMATE_FLOOR_THICKNESS_MM = 200/);
   assert.match(helper, /QUICK_ESTIMATE_ATTIC_HEIGHT_MM = 1500/);
   assert.match(helper, /QUICK_ESTIMATE_ROOF_OUTLET_HEIGHT_MM = 1500/);
   assert.match(helper, /QUICK_ESTIMATE_HEATER_HEIGHT_MM = 800/);
@@ -54,7 +56,7 @@ test("price stays visible while the detailed BOM opens only after contact handof
   assert.match(component, /quickEstimateProductHref/);
   assert.match(component, /Открыть товар/);
   assert.match(component, /!leadSubmitted/);
-  assert.match(component, /!leadSubmitted[\s\S]*inline[\s\S]*Показать состав комплекта/);
+  assert.match(component, /!leadSubmitted[\s\S]*inline[\s\S]*Показать схему и состав/);
   assert.match(component, /<EstimateLeadDialog/);
   assert.ok(
     component.indexOf("<EstimateLeadDialog") < component.indexOf("estimate.lines.map"),
@@ -70,6 +72,20 @@ test("price stays visible while the detailed BOM opens only after contact handof
     "price summary must be rendered before the contact gate",
   );
   assert.match(component, /Предварительная стоимость уже рассчитана/);
+});
+
+test("public SVG scheme opens only after contact handoff and stays independent from professional rendering", () => {
+  assert.match(component, /leadSubmitted[\s\S]*<QuickEstimateScheme answers=\{answers\} bom=\{bom\}/);
+  assert.ok(
+    component.indexOf("<EstimateLeadDialog") < component.indexOf("<QuickEstimateScheme"),
+    "contact form must precede the public SVG scheme",
+  );
+  assert.match(quickScheme, /Предварительная схема дымохода/);
+  assert.match(quickScheme, /Это не монтажный проект/);
+  assert.match(quickScheme, /QUICK_ESTIMATE_FLOOR_THICKNESS_MM/);
+  assert.match(quickScheme, /answers\.outlet === "rear"/);
+  assert.match(quickScheme, /answers\.route === "ceiling"/);
+  assert.doesNotMatch(quickScheme, /GeneratedChimneyScheme|ChimneyConfigurator/);
 });
 
 test("mobile object choices use two full-width rows", () => {
