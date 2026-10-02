@@ -19,3 +19,10 @@ test("delivery page has stable metadata and discovery links", () => {
   assert.match(sitemap, /absoluteUrl\("\/delivery"\)/);
   assert.match(header, /href="\/delivery"[^>]*>Доставка/);
 });
+
+test("delivery page shows optimized shipment photos with responsive image markup", () => {
+  assert.match(page, /\/images\/delivery\/order-loaded\.webp/);
+  assert.match(page, /\/images\/delivery\/sandwich-pipes-shipment\.webp/);
+  assert.equal(page.match(/loading="lazy"/g)?.length, 2);
+  assert.match(page, /sizes="\(max-width: 760px\)/);
+});

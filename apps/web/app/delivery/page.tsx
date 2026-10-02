@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import {
   IconArrowRight as ArrowRight,
@@ -68,6 +69,45 @@ export default function DeliveryPage() {
             <span className={styles.factIcon}><Payment aria-hidden size={23} /></span>
             <div><strong>Оплата заказа</strong><span>100% предоплата</span></div>
           </article>
+        </section>
+
+        <section className={styles.deliveryGallery} aria-labelledby="delivery-gallery-title">
+          <header className={styles.galleryIntro}>
+            <h2 id="delivery-gallery-title">Как заказ выглядит перед отправкой</h2>
+            <p>
+              На фотографиях — трубы и комплектующие, размещённые в кузове для перевозки.
+            </p>
+          </header>
+
+          <div className={styles.galleryGrid}>
+            <figure className={styles.galleryPhoto}>
+              <span className={`${styles.galleryFrame} ${styles.galleryFramePortrait}`}>
+                <Image
+                  alt="Трубы и комплектующие из нержавеющей стали в кузове грузового автомобиля"
+                  fill
+                  loading="lazy"
+                  quality={80}
+                  sizes="(max-width: 760px) calc(100vw - 28px), 38vw"
+                  src="/images/delivery/order-loaded.webp"
+                />
+              </span>
+              <figcaption>Комплект труб и опорных элементов</figcaption>
+            </figure>
+
+            <figure className={styles.galleryPhoto}>
+              <span className={`${styles.galleryFrame} ${styles.galleryFrameLandscape}`}>
+                <Image
+                  alt="Партия сэндвич-труб из нержавеющей стали в кузове грузового автомобиля"
+                  fill
+                  loading="lazy"
+                  quality={80}
+                  sizes="(max-width: 760px) calc(100vw - 28px), 62vw"
+                  src="/images/delivery/sandwich-pipes-shipment.webp"
+                />
+              </span>
+              <figcaption>Партия сэндвич-труб</figcaption>
+            </figure>
+          </div>
         </section>
 
         <section className={styles.process} aria-labelledby="delivery-process-title">

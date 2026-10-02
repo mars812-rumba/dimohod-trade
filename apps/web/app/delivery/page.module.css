@@ -120,6 +120,72 @@
 .fact strong { margin-bottom: 5px; font-size: 15px; }
 .fact div > span { color: #637277; font-size: 14px; }
 
+.deliveryGallery {
+  padding-top: 88px;
+}
+
+.galleryIntro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
+  gap: clamp(36px, 7vw, 84px);
+  align-items: end;
+  margin-bottom: 32px;
+}
+
+.galleryIntro h2 {
+  max-width: 720px;
+  margin: 0;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.06;
+  text-wrap: balance;
+}
+
+.galleryIntro p {
+  max-width: 48ch;
+  margin: 0;
+  color: #637277;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.galleryGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  gap: 20px;
+  align-items: end;
+}
+
+.galleryPhoto {
+  min-width: 0;
+  margin: 0;
+}
+
+.galleryFrame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: #d8dcda;
+}
+
+.galleryFramePortrait {
+  aspect-ratio: 3 / 4;
+}
+
+.galleryFrameLandscape {
+  aspect-ratio: 4 / 3;
+}
+
+.galleryFrame img {
+  object-fit: cover;
+}
+
+.galleryPhoto figcaption {
+  padding-top: 13px;
+  color: #52666d;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .process {
   display: grid;
   grid-template-columns: minmax(260px, 0.72fr) minmax(420px, 1.28fr);
@@ -194,6 +260,9 @@
   .hero { padding: 58px 0 64px; }
   .facts { grid-template-columns: 1fr; margin-top: -20px; }
   .fact { min-height: 92px; padding: 19px; }
+  .deliveryGallery { padding-top: 68px; }
+  .galleryIntro { grid-template-columns: 1fr; gap: 18px; margin-bottom: 24px; }
+  .galleryGrid { grid-template-columns: 1fr; gap: 32px; }
   .process { grid-template-columns: 1fr; gap: 36px; padding: 70px 0; }
   .cta { grid-template-columns: auto 1fr; margin-bottom: 56px; padding: 23px; }
   .cta a { grid-column: 1 / -1; text-align: center; }
