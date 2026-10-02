@@ -9,7 +9,7 @@ import {
   IconX as X,
 } from "@tabler/icons-react";
 import type { ChimneyEstimate, ChimneyEstimateCustomer } from "@/lib/chimneyEstimate";
-import { chimneyEstimateText } from "@/lib/chimneyEstimate";
+import { chimneyEstimateLeadPayload, chimneyEstimateText } from "@/lib/chimneyEstimate";
 import { createChimneyEstimatePdfBlob } from "@/lib/chimneyEstimatePdf";
 import { METRIKA_GOALS, reachMetrikaGoal, type MetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
@@ -140,12 +140,7 @@ export function EstimateLeadDialog({
       );
       data.set(
         "estimate_json",
-        JSON.stringify({
-          schemaVersion: 1,
-          ...currentEstimate,
-          generatedAt: currentEstimate.generatedAt.toISOString(),
-          sourceUrl: window.location.href,
-        }),
+        JSON.stringify(chimneyEstimateLeadPayload(currentEstimate, window.location.href)),
       );
       const pdf = await createOptionalPdfAttachment(currentEstimate);
       if (pdf) data.set("attachment", pdf, "predvaritelnaya-smeta-dymohoda.pdf");

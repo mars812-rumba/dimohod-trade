@@ -28,7 +28,7 @@ test("the estimate form sends the PDF and BOM to the existing lead endpoint", ()
   assert.match(componentSource, /createChimneyEstimatePdfBlob/);
   assert.match(componentSource, /chimneyEstimateText/);
   assert.match(componentSource, /"estimate_json"/);
-  assert.match(componentSource, /schemaVersion: 1/);
+  assert.match(componentSource, /chimneyEstimateLeadPayload\(currentEstimate, window\.location\.href\)/);
   assert.match(componentSource, /window\.location\.href/);
   assert.match(componentSource, /\/api\/v1\/leads/);
   assert.match(componentSource, /predvaritelnaya-smeta-dymohoda\.pdf/);

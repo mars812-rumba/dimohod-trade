@@ -50,6 +50,43 @@ export type ChimneyEstimate = {
   calculationErrors: string[];
 };
 
+export type ChimneyEstimateLeadPayload = {
+  schemaVersion: 1;
+  profileName: string;
+  generatedAt: string;
+  sourceUrl: string;
+  measurements: EstimateMeasurement[];
+  lines: ChimneyEstimateLine[];
+  knownSubtotalRub: number;
+  pricedLineCount: number;
+  unpricedLineCount: number;
+  totalUnits: number;
+  removedLabels: string[];
+  reviewItems: string[];
+  calculationErrors: string[];
+};
+
+export function chimneyEstimateLeadPayload(
+  estimate: ChimneyEstimate,
+  sourceUrl: string,
+): ChimneyEstimateLeadPayload {
+  return {
+    schemaVersion: 1,
+    profileName: estimate.profileName,
+    generatedAt: estimate.generatedAt.toISOString(),
+    sourceUrl,
+    measurements: estimate.measurements,
+    lines: estimate.lines,
+    knownSubtotalRub: estimate.knownSubtotalRub,
+    pricedLineCount: estimate.pricedLineCount,
+    unpricedLineCount: estimate.unpricedLineCount,
+    totalUnits: estimate.totalUnits,
+    removedLabels: estimate.removedLabels,
+    reviewItems: estimate.reviewItems,
+    calculationErrors: estimate.calculationErrors,
+  };
+}
+
 function positivePrice(value: string | null): number | null {
   if (value === null) return null;
   const parsed = Number(value);
