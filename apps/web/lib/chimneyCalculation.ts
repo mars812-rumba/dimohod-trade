@@ -698,11 +698,14 @@ function addRouteNodes(
   decorativeSkirts.filter((skirt) => skirt.quantity > 0).forEach((skirt) => bom.push({
     ...skirt,
     productKind: "декоративная_юбка",
+    label: `${skirt.label}, AISI 430`,
     zone: "wall_or_ceiling_pass",
     requiresSku: true,
     catalogCategorySlug: "uzly-prohoda-sten-i-perekrytiy",
     catalogSearch: "Декоративная юбка",
     catalogDiameterMode: "sandwich-outer-exact",
+    materialPreference: "catalog-default",
+    preferredSteelGrade: "AISI 430",
     removable: true,
   }));
   if (routeKind === "ceiling") {
@@ -719,7 +722,17 @@ function addRouteNodes(
     });
   }
   if (routeKind === "ceiling") {
-    bom.push({ key: "roof-interior-flange", productKind: "фланец", label: "Фланец кровельного прохода со стороны помещения", quantity: 1, zone: "roof", selectionReason: "Добавлен со стороны помещения по правилу кровельного узла.", requiresSku: true });
+    bom.push({
+      key: "roof-interior-flange",
+      productKind: "фланец",
+      label: "Фланец кровельного прохода со стороны помещения, AISI 430",
+      quantity: 1,
+      zone: "roof",
+      selectionReason: "Добавлен со стороны помещения по правилу кровельного узла; исполнение из стали AISI 430.",
+      requiresSku: true,
+      materialPreference: "catalog-default",
+      preferredSteelGrade: "AISI 430",
+    });
     bom.push({
       key: "roof-master-flash",
       productKind: "проходной_узел",

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   IconArrowRight as ArrowRight,
+  IconDownload as Download,
   IconPhotoOff as PhotoOff,
   IconRefresh as Refresh,
 } from "@tabler/icons-react";
@@ -21,7 +22,9 @@ import {
 } from "@/lib/chimneyEstimate";
 import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
 import type { EquipmentStatus } from "@/lib/configuratorDraft";
+import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
 import { METRIKA_GOALS } from "@/lib/metrika";
+import { operator } from "@/lib/privacy";
 import { productSelectionPath } from "@/lib/productUrls";
 import {
   applyQuickEstimateBomRules,
@@ -248,6 +251,7 @@ export function HomeQuickEstimate({
   const [matches, setMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [matchStatus, setMatchStatus] = useState<MatchStatus>("idle");
   const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const [pdfStatus, setPdfStatus] = useState<"idle" | "generating" | "error">("idle");
   const availableHeaterChoices = fixedEquipmentType
     ? heaterChoices.filter((choice) => choice.id === fixedEquipmentType)
     : objectType === "banya"
@@ -337,6 +341,17 @@ export function HomeQuickEstimate({
     ? applyQuickEstimateBomRules(bomForVariant(calculation, calculation.selectedVariant), answers)
     : [], [answers, calculation]);
 
+  async function downloadEstimatePdf() {
+    if (!estimate || pdfStatus === "generating") return;
+    setPdfStatus("generating");
+    try {
+      await downloadChimneyEstimatePdf({ ...estimate, generatedAt: new Date() });
+      setPdfStatus("idle");
+    } catch {
+      setPdfStatus("error");
+    }
+  }
+
   useEffect(() => {
     if (step !== 4 || !answers || !bom.length) return;
     const controller = new AbortController();
@@ -395,6 +410,7 @@ export function HomeQuickEstimate({
     setMatches({});
     setMatchStatus("idle");
     setLeadSubmitted(false);
+    setPdfStatus("idle");
   }
 
   function rememberQuickEstimate() {
@@ -611,7 +627,26 @@ export function HomeQuickEstimate({
                 </details>
 
                 <p className={styles.precisionNotice}><strong>Это предварительный расчёт.</strong> Менеджер проверит размеры, совместимость и позиции без цены перед заказом.</p>
-                <p className={styles.sentNotice} role="status">Расчёт передан менеджеру. Предварительная стоимость и состав открыты ниже.</p>
+                <section className={styles.received} aria-labelledby="quick-estimate-received-title">
+                  <div>
+                    <h4 id="quick-estimate-received-title">Заявка получена</h4>
+                    <p>
+                      Офис работает по будням с 9:00 до 17:00. Мы свяжемся с вами как можно быстрее. Также вы можете позвонить нам в рабочее время:{" "}
+                      <a className={styles.mobilePhone} href={operator.phoneHref}>{operator.phone}</a>
+                      <span className={styles.desktopPhone}>{operator.phone}</span>.
+                    </p>
+                  </div>
+                  <button
+                    className={styles.pdfButton}
+                    disabled={pdfStatus === "generating"}
+                    onClick={downloadEstimatePdf}
+                    type="button"
+                  >
+                    <Download aria-hidden size={18} />
+                    {pdfStatus === "generating" ? "Формируем PDF…" : "Скачать смету PDF"}
+                  </button>
+                  {pdfStatus === "error" ? <p className={styles.pdfError} role="alert">Не удалось сформировать PDF. Попробуйте ещё раз.</p> : null}
+                </section>
                 </>}
 
                 <div className={styles.resultActions}>

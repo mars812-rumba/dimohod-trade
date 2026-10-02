@@ -235,6 +235,7 @@ test("rear outlet through a ceiling keeps the confirmed warm transition order", 
   assert.equal(calculation.bom.find((line) => line.key === "ceiling-rear-elbow-90").thicknessProfile, "first-floor-0.8");
   assert.equal(calculation.bom.find((line) => line.key === "single-pipe-1000").catalogLengthMode, "exact");
   assert.equal(calculation.bom.find((line) => line.key === "roof-passage").preferredSteelGrade, "AISI 430");
+  assert.ok(calculation.bom.filter((line) => line.productKind === "фланец").every((line) => line.preferredSteelGrade === "AISI 430"));
   assert.equal(calculation.bom.find((line) => line.key === "roof-master-flash").priceOnRequest, true);
 });
 
@@ -326,6 +327,8 @@ test("passage consumables and decorative skirts follow the confirmed quantities"
     },
   });
   const skirts = calculation.bom.filter((line) => line.productKind === "декоративная_юбка");
+  assert.ok(skirts.every((line) => line.preferredSteelGrade === "AISI 430"));
+  assert.ok(skirts.every((line) => line.label.includes("AISI 430")));
 
   assert.equal(calculation.bom.find((line) => line.key === "passage-insulation").quantity, 2);
   assert.equal(calculation.bom.find((line) => line.key === "floor-clamp").quantity, 1);
@@ -338,6 +341,7 @@ test("wall passage gets one wool kit and only the interior decorative skirt", ()
 
   assert.equal(calculation.bom.find((line) => line.key === "passage-insulation").quantity, 1);
   assert.equal(calculation.bom.find((line) => line.key === "wall-decorative-skirt-interior").quantity, 1);
+  assert.equal(calculation.bom.find((line) => line.key === "wall-decorative-skirt-interior").preferredSteelGrade, "AISI 430");
   assert.equal(calculation.bom.some((line) => line.key === "wall-decorative-skirt-exterior"), false);
 });
 

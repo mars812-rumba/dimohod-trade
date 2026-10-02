@@ -76,6 +76,11 @@ test("price stays visible while the detailed BOM opens only after contact handof
     "price summary must be rendered before the contact gate",
   );
   assert.match(component, /Предварительная стоимость уже рассчитана/);
+  assert.match(component, /Заявка получена/);
+  assert.match(component, /Офис работает по будням с 9:00 до 17:00/);
+  assert.match(component, /href=\{operator\.phoneHref\}/);
+  assert.match(component, /downloadChimneyEstimatePdf/);
+  assert.match(component, /Скачать смету PDF/);
 });
 
 test("public SVG scheme opens after contact handoff and reuses the professional renderer with isolated defaults", () => {
