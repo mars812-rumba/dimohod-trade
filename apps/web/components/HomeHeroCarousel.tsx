@@ -166,22 +166,21 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             Ответьте на 5 простых вопросов — получите предварительную смету и состав
             комплекта с ценами.
           </p>
-        </div>
+          <div className={styles.heroActions}>
+            <Link className={styles.cta} href="/bystryy-raschet">
+              <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
+              <div className={styles.ctaCopy}>
+                <strong>Рассчитать комплект</strong>
+                <span>Перейти к 5 простым вопросам</span>
+              </div>
+              <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
+            </Link>
 
-        <div className={styles.heroActions}>
-          <Link className={styles.cta} href="/bystryy-raschet">
-            <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
-            <div className={styles.ctaCopy}>
-              <strong>Рассчитать комплект</strong>
-              <span>Перейти к 5 простым вопросам</span>
-            </div>
-            <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
-          </Link>
-
-          <Link className={styles.catalogCta} href="/catalog">
-            <span>Открыть каталог</span>
-            <IconArrowRight size={17} strokeWidth={1.8} aria-hidden />
-          </Link>
+            <Link className={styles.catalogCta} href="/catalog">
+              <span>Открыть каталог</span>
+              <IconArrowRight size={17} strokeWidth={1.8} aria-hidden />
+            </Link>
+          </div>
         </div>
 
         <div className={styles.progress} aria-hidden="true">

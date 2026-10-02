@@ -38,6 +38,17 @@ test("hero preserves a secondary catalog action", () => {
   assert.match(stylesSource, /background: rgba\(16, 33, 39, 0\.58\)/);
 });
 
+test("desktop hero keeps both actions in one larger row below the offer copy", () => {
+  assert.match(
+    componentSource,
+    /<div className=\{styles\.heroOffer\}>[\s\S]*?<p className=\{styles\.heroOfferText\}>[\s\S]*?<div className=\{styles\.heroActions\}>/u,
+  );
+  assert.match(stylesSource, /\.heroActions \{[\s\S]*?display: flex;[\s\S]*?gap: 12px;[\s\S]*?margin-top: 30px;/u);
+  assert.match(stylesSource, /\.cta \{[\s\S]*?min-width: 260px;[\s\S]*?min-height: 58px;/u);
+  assert.match(stylesSource, /\.catalogCta \{[\s\S]*?min-width: 220px;[\s\S]*?min-height: 58px;/u);
+  assert.match(stylesSource, /@media \(max-width: 720px\) \{[\s\S]*?\.heroActions \{[\s\S]*?position: absolute;[\s\S]*?display: grid;/u);
+});
+
 test("mobile hero reserves orange for the primary action and keeps the offer readable over media", () => {
   assert.match(stylesSource, /\.cta \{[\s\S]*?background: #ed5b2a;/u);
   assert.match(stylesSource, /\.carouselFrame::after \{[\s\S]*?linear-gradient/u);
