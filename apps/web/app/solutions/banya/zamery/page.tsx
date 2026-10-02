@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/solutions/banya/zamery",
   },
+  robots: { index: false, follow: true },
   openGraph: {
     type: "website",
     url: "/solutions/banya/zamery",

@@ -51,8 +51,11 @@ test("server view renders breadcrumb and item-list JSON-LD from real results", (
 test("category pages render crawlable links to existing diameter pages", () => {
   assert.match(viewSource, /getProductSeoPages\(\)/u);
   assert.match(viewSource, /productPublicPath\(pageItem\.product_slug, pageItem\)/u);
-  assert.match(viewSource, /<strong>Выберите диаметр<\/strong>/u);
-  assert.match(viewSource, /<Link href=\{item\.href\}/u);
+  assert.match(viewSource, /diameterPagesByProduct\.get\(product\.slug\)/u);
+  assert.doesNotMatch(viewSource, /<strong>Выберите диаметр<\/strong>/u);
+  assert.match(cardSource, /<details className="catalog-product-diameter-more">/u);
+  assert.match(cardSource, /href=\{item\.href\}/u);
+  assert.match(cardSource, /diameterLinks\.slice\(VISIBLE_DIAMETER_COUNT\)/u);
   assert.match(cardSource, /executionCountLabel\(product\.sku_count\)/u);
   assert.doesNotMatch(cardSource, /\{product\.sku_count\} SKU/u);
 });

@@ -1,0 +1,21 @@
+{
+  "id": "2c5c383b54c74841a5315dc3b54085fa",
+  "created_at": "2026-08-31T17:05:05.215678+00:00",
+  "name": "Локальная проверка SMTP",
+  "phone": "+78129524565",
+  "contact_method": "phone",
+  "contact": "+78129524565",
+  "comment": "",
+  "source": "local-smtp-check",
+  "configuration": "Локальная контрольная заявка",
+  "estimate": null,
+  "manager_access": null,
+  "attachment": null,
+  "personal_data_consent": true,
+  "consent_version": "2026-08-11",
+  "consented_at": "2026-08-31T17:05:05.215759+00:00",
+  "email_error": "SMTPAuthenticationError",
+  "email_recipient": "office@dimohod-trade.pro",
+  "email_status": "failed",
+  "customer_email_status": "not_requested"
+}

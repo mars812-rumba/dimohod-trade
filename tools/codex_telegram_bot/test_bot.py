@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from tools.codex_telegram_bot.bot import (
     CODEX_MODELS,
+    IRMA_PROJECT_INSTRUCTIONS,
     OpenAIQuotaError,
     PROJECT_INSTRUCTIONS,
     SUNNY_PROJECT_INSTRUCTIONS,
@@ -48,6 +49,23 @@ from tools.codex_telegram_bot.bot import (
 
 
 class BotUtilitiesTest(unittest.TestCase):
+    def test_irma_project_configuration(self) -> None:
+        config = build_project_configs(Path("/tmp/dimohod-test"))["irma"]
+        self.assertEqual(config.root, Path("/home/irma"))
+        self.assertEqual(config.branch, "feat/initial-mvp")
+        self.assertEqual(
+            config.test_commands,
+            (("npm", "run", "typecheck"), ("npm", "run", "build")),
+        )
+        self.assertIn("IRMA_PROJECT_ROADMAP.md", IRMA_PROJECT_INSTRUCTIONS)
+
+    def test_dimohod_deploy_uses_disk_preflight_script(self) -> None:
+        config = build_project_configs(Path("/tmp/dimohod-test"))["dimohod"]
+        self.assertEqual(
+            config.deploy_commands,
+            (("bash", "deploy/local-deploy.sh"),),
+        )
+
     def test_discovers_numbered_openai_keys_in_order(self) -> None:
         keys = discover_openai_keys(
             {

@@ -43,8 +43,8 @@
 
 .header h1 {
   margin: 0;
-  font-family: "Arial Narrow", "Aptos Narrow", "Roboto Condensed", sans-serif;
-  font-size: clamp(48px, 7vw, 82px);
+  font-family: var(--font-heading);
+  font-size: var(--type-page-title);
   font-stretch: condensed;
   line-height: .95;
   letter-spacing: -.05em;
@@ -137,7 +137,7 @@
 
 .cardBody h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--type-card-title);
   font-weight: 680;
   line-height: 1.32;
   text-wrap: pretty;

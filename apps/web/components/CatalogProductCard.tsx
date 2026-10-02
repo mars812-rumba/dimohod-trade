@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ImageOff, Sparkles } from "lucide-react";
+import { ArrowRight, ChevronDown, ImageOff, Sparkles } from "lucide-react";
 import type { ProductListItem } from "@/lib/api";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
 import { productSelectionPath } from "@/lib/productUrls";
@@ -8,6 +8,12 @@ import { YandexRatingBadge } from "@/components/YandexRatingBadge";
 import { CartAddButton } from "@/components/CartAddButton";
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const VISIBLE_DIAMETER_COUNT = 6;
+
+export type CatalogDiameterLink = {
+  href: string;
+  label: string;
+};
 
 function publicMediaUrl(url: string) {
   return url.startsWith("/media/") ? `${appBasePath}${url}` : url;
@@ -100,7 +106,13 @@ function catalogSpecs(product: ProductListItem) {
     .slice(0, 5);
 }
 
-export function CatalogProductCard({ product }: { product: ProductListItem }) {
+export function CatalogProductCard({
+  product,
+  diameterLinks = [],
+}: {
+  product: ProductListItem;
+  diameterLinks?: CatalogDiameterLink[];
+}) {
   const specs = catalogSpecs(product);
   const steelBadges = steelSelectionBadges(product);
   const hasLaserWeldedSeam = isLaserWeldedPipe(product);
@@ -113,7 +125,7 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
 
   return (
     <article className="catalog-product-card">
-      <Link className="catalog-product-card-link" href={href}>
+      <Link className="catalog-product-media-link" href={href}>
         <div className="catalog-product-media">
         <YandexRatingBadge />
         {product.primary_image ? (
@@ -154,9 +166,47 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
           </div>
         ) : null}
         </div>
-        <div className="catalog-product-body">
+      </Link>
+      <div className="catalog-product-body">
         <p className="meta">{product.category.name}</p>
-        <h3>{product.name}</h3>
+        <h3><Link href={href}>{product.name}</Link></h3>
+        {diameterLinks.length ? (
+          <nav
+            aria-label={`Диаметры для ${product.name}`}
+            className="catalog-product-diameters"
+          >
+            <div className="catalog-product-diameter-row">
+              {diameterLinks.slice(0, VISIBLE_DIAMETER_COUNT).map((item) => (
+                <Link
+                  aria-label={`${product.name}, диаметр ${item.label} мм`}
+                  href={item.href}
+                  key={item.href}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+            {diameterLinks.length > VISIBLE_DIAMETER_COUNT ? (
+              <details className="catalog-product-diameter-more">
+                <summary>
+                  Все диаметры
+                  <ChevronDown aria-hidden="true" size={14} strokeWidth={1.8} />
+                </summary>
+                <div className="catalog-product-diameter-row">
+                  {diameterLinks.slice(VISIBLE_DIAMETER_COUNT).map((item) => (
+                    <Link
+                      aria-label={`${product.name}, диаметр ${item.label} мм`}
+                      href={item.href}
+                      key={item.href}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </details>
+            ) : null}
+          </nav>
+        ) : null}
         <div className="catalog-product-specs">
           {specs.map((spec) => (
             <span className="chip" key={spec}>
@@ -166,12 +216,11 @@ export function CatalogProductCard({ product }: { product: ProductListItem }) {
         </div>
           <div className="catalog-product-footer">
           <strong>{formatPrice(product.price_rub)}</strong>
-          <span>
+          <Link href={href}>
             {executionCountLabel(product.sku_count)} <ArrowRight size={14} />
-          </span>
+          </Link>
           </div>
-        </div>
-      </Link>
+      </div>
       {product.selected_sku_id && product.selected_sku ? (
         <CartAddButton
           className="catalog-cart-add"

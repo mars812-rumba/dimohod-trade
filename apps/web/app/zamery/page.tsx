@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Мои замеры для расчёта дымохода — Дымоход Трейд",
   description: "Создавайте, редактируйте и сохраняйте на этом устройстве замеры объекта для дальнейшей загрузки в конфигуратор дымохода.",
   alternates: { canonical: "/zamery" },
+  robots: { index: false, follow: true },
   openGraph: {
     type: "website",
     url: "/zamery",

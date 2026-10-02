@@ -5,6 +5,7 @@ import { unstable_cache } from "next/cache";
 import {
   IconArrowRight as ArrowRight,
   IconBoxMultiple as Boxes,
+  IconBuildingFactory2 as Factory,
   IconCheck as Check,
   IconChevronRight as ChevronRight,
   IconCircleDot as CircleDot,
@@ -175,6 +176,14 @@ const scenarios = [
     text: "Документация модели и разрешённая производителем конфигурация системы.",
     image: "/images/home/scenario-gaz-user.webp",
     href: "/solutions/gazovyy-kotel",
+  },
+  {
+    icon: Factory,
+    slug: "promyshlennye-dymohody",
+    title: "Промышленные дымоходы",
+    text: "Трубы, узлы и несущие конструкции по чертежу, спецификации или фото объекта.",
+    image: "/images/home/hero-projects/industrial-facade.webp",
+    href: "/promyshlennye-dymohody",
   },
 ];
 

@@ -3,13 +3,17 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.db.price_section_attributes import outer_pipe_attributes
 from app.modules.catalog.models import Category
 from app.modules.catalog.schemas import CatalogMediaItem, CategoryTreeNode
 from app.modules.catalog.visibility import visible_category_ids
-from app.modules.products.models import Product, SKU
-from app.modules.products.publication import public_sku_ready
+from app.modules.products.models import SKU, Product
+from app.modules.products.publication import (
+    ProductPublicationPolicy,
+    prepare_publication_policy,
+)
 
 
 def category_cover(extra_attributes: dict[str, object] | None) -> CatalogMediaItem | None:
@@ -36,18 +40,35 @@ async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
     )
     categories = list(result.scalars())
     sku_result = await session.execute(
-        select(Product, SKU)
-        .join(SKU, SKU.product_id == Product.id)
+        select(SKU)
+        .join(Product, SKU.product_id == Product.id)
         .where(Product.is_active.is_(True), SKU.is_active.is_(True))
+        .options(selectinload(SKU.product))
     )
-    ready_rows = [
-        (product, sku)
-        for product, sku in sku_result.all()
-        if public_sku_ready(product, sku)
-    ]
+    publication_policies: dict[UUID, ProductPublicationPolicy] = {}
+    ready_rows: list[tuple[Product, SKU]] = []
+    for sku in sku_result.scalars():
+        product = sku.product
+        policy = publication_policies.get(product.id)
+        if policy is None:
+            policy = prepare_publication_policy(product)
+            publication_policies[product.id] = policy
+        if policy.sku_ready(sku):
+            ready_rows.append((product, sku))
     active_product_category_ids = {product.category_id for product, _sku in ready_rows}
     visible_ids = visible_category_ids(categories, active_product_category_ids)
     categories = [category for category in categories if category.id in visible_ids]
+
+    updated_at = {category.id: category.updated_at for category in categories}
+    category_by_id = {category.id: category for category in categories}
+    for product, sku in ready_rows:
+        if product.category_id not in visible_ids:
+            continue
+        latest = max(product.updated_at, sku.updated_at)
+        category_id: UUID | None = product.category_id
+        while category_id is not None and category_id in category_by_id:
+            updated_at[category_id] = max(updated_at[category_id], latest)
+            category_id = category_by_id[category_id].parent_id
 
     product_names: dict[UUID, set[str]] = defaultdict(set)
     for product, _sku in ready_rows:
@@ -82,6 +103,7 @@ async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
             slug=category.slug,
             description=category.description,
             sort_order=category.sort_order,
+            updated_at=updated_at[category.id],
             cover=category_cover(category.extra_attributes),
             product_names=sorted(product_names[category.id], key=str.casefold),
             standard_lengths_mm=sorted(standard_lengths[category.id]),

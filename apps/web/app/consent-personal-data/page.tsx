@@ -10,6 +10,7 @@ import {
 export const metadata: Metadata = {
   title: "Согласие на обработку персональных данных — Дымоход Трейд",
   description: "Условия согласия на обработку данных, передаваемых через формы сайта.",
+  robots: { index: false, follow: true },
 };
 
 export default function PersonalDataConsentPage() {

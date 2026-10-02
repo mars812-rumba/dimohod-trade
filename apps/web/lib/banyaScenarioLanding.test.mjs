@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const pageSource = readFileSync(new URL("../app/solutions/banya/page.tsx", import.meta.url), "utf8");
+const homePageSource = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
 const landingSource = readFileSync(new URL("../components/BanyaScenarioLanding.tsx", import.meta.url), "utf8");
 const quickEstimateSource = readFileSync(new URL("../components/HomeQuickEstimate.tsx", import.meta.url), "utf8");
 const scenarioSource = readFileSync(new URL("./scenarioPages.ts", import.meta.url), "utf8");
@@ -31,5 +32,6 @@ test("quick estimate preselects the bath heater and accepts a page-specific sour
 
 test("bath landing uses the supplied bathhouse interior as its hero", () => {
   assert.match(scenarioSource, /heroImage: "\/images\/solutions\/banya\/bathhouse-interior\.webp"/);
+  assert.match(homePageSource, /image: "\/images\/solutions\/banya\/bathhouse-interior\.webp"/);
   assert.match(scenarioSource, /Парная с банной печью и вертикальным металлическим дымоходом/);
 });

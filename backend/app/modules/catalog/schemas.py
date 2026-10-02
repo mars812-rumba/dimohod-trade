@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -19,6 +20,7 @@ class CategoryTreeNode(BaseModel):
     slug: str
     description: str | None = None
     sort_order: int = 0
+    updated_at: datetime | None = None
     cover: CatalogMediaItem | None = None
     product_names: list[str] = Field(default_factory=list)
     standard_lengths_mm: list[int] = Field(default_factory=list)

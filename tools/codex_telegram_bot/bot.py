@@ -78,6 +78,23 @@ Git commit/push и production deploy выполняются отдельными
 Запрос пользователя из Telegram:
 """
 
+IRMA_PROJECT_INSTRUCTIONS = """Работай только над проектом IRMA в текущем каталоге.
+Перед изменениями прочитай README.md и IRMA_PROJECT_ROADMAP.md.
+В репозитории могут быть пользовательские незакоммиченные изменения: сохраняй их и не
+перезаписывай. Не изменяй .env, .env.local, credentials, логи, .next и данные PostgreSQL,
+если задача явно этого не требует. Не выдумывай цены, контакты, юридические данные, программы,
+кейсы и утверждения об услугах: используй только подтверждённые сведения из проекта.
+Выполни запрос, проверь результат подходящими тестами и кратко сообщи итог.
+Финальный ответ оформляй Telegram-совместимым Markdown: *жирный текст*, списки, `inline code`
+и блоки кода. Не используй Markdown-таблицы и HTML.
+Если пользователь просит прислать файл из проекта, в финальном ответе добавь отдельной строкой
+[[send_file:relative/path/to/file]] — бот отправит этот файл в Telegram.
+Git commit/push и production deploy выполняются отдельными командами Telegram-бота:
+/commit, /push, /deploy или /ship. Не пытайся обходить sandbox ради записи в .git или сети.
+
+Запрос пользователя из Telegram:
+"""
+
 DEPLOY_BRANCH = "ui/replit-port"
 PENDING_ACTION_TTL_SECONDS = 300
 PROTECTED_COMMIT_PATHS = (
@@ -144,8 +161,7 @@ def build_project_configs(dimohod_root: Path) -> dict[str, ProjectConfig]:
                 ("npm", "run", "build:web"),
             ),
             deploy_commands=(
-                ("docker", "compose", "up", "-d", "--build", "backend", "web"),
-                ("docker", "compose", "ps", "backend", "web"),
+                ("bash", "deploy/local-deploy.sh"),
             ),
             sandbox_mode="danger-full-access",
             approval_policy="on-request",
@@ -186,6 +202,28 @@ def build_project_configs(dimohod_root: Path) -> dict[str, ProjectConfig]:
                 ("npm", "run", "build"),
                 ("systemctl", "restart", "sunny-api.service", "sunny-backend.service"),
                 ("systemctl", "is-active", "sunny-api.service", "sunny-backend.service"),
+            ),
+        ),
+        "irma": ProjectConfig(
+            key="irma",
+            label="🏔 IRMA",
+            root=Path("/home/irma"),
+            branch="feat/initial-mvp",
+            instructions=IRMA_PROJECT_INSTRUCTIONS,
+            protected_paths=(
+                ".env",
+                ".env.local",
+                ".codex-telegram/",
+                ".next/",
+                "node_modules/",
+            ),
+            test_commands=(
+                ("npm", "run", "typecheck"),
+                ("npm", "run", "build"),
+            ),
+            deploy_commands=(
+                ("docker", "compose", "up", "-d", "--build", "app"),
+                ("docker", "compose", "ps", "app"),
             ),
         ),
     }

@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.modules.products.models import SKU, Product
-from app.modules.products.publication import public_sku_ready
+from app.modules.products.publication import prepare_publication_policy
 
 TAG_RE = re.compile(r"<[^>]+>")
 SPACE_RE = re.compile(r"\s+")
@@ -161,8 +161,9 @@ def build_yandex_feed(
         category = product.category
         if not category or not category.is_active:
             continue
+        publication_policy = prepare_publication_policy(product)
         for sku in product.skus:
-            if not public_sku_ready(product, sku) or not _positive_price(sku.price_rub):
+            if not publication_policy.sku_ready(sku) or not _positive_price(sku.price_rub):
                 continue
             image = _offer_image(product, sku)
             if not image:

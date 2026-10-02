@@ -1,6 +1,7 @@
 type DiameterVariant = {
   diameter_mm: number | null;
   outer_diameter_mm: number | null;
+  length_mm?: number | null;
 };
 
 export type ProductRoute = {
@@ -37,7 +38,15 @@ export function productSelectionPath(
   skuReference?: string | null,
 ) {
   const path = productPublicPath(productSlug, variant);
-  return skuReference ? `${path}?sku=${encodeURIComponent(skuReference)}` : path;
+  const params = new URLSearchParams();
+  if (skuReference) {
+    params.set("sku", skuReference);
+  }
+  if (variant.length_mm !== null && variant.length_mm !== undefined) {
+    params.set("length", String(variant.length_mm));
+  }
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
 }
 
 export function parseProductRoute(segment: string): ProductRoute {

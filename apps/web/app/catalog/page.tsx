@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Boxes, Layers3, Ruler, type LucideIcon } from "lucide-react";
 import { getCatalogTree, type CategoryNode } from "@/lib/api";
@@ -8,6 +9,28 @@ import { getCatalogTree, type CategoryNode } from "@/lib/api";
 export const dynamic = "force-dynamic";
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+const title = "Каталог элементов дымохода — Дымоход Трейд";
+const description =
+  "Каталог элементов дымохода по категориям: трубы, сэндвич-система, проходные узлы, крепления и другие комплектующие.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: { canonical: "/catalog" },
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    url: "/catalog",
+    title,
+    description,
+  },
+  twitter: {
+    card: "summary",
+    title,
+    description,
+  },
+};
 
 function publicMediaUrl(url: string) {
   return url.startsWith("/media/") ? `${appBasePath}${url}` : url;

@@ -5,12 +5,12 @@
   background:
     radial-gradient(circle at 82% 8%, rgba(50, 98, 118, .13), transparent 28rem),
     #f4f6f5;
-  font-family: "Segoe UI", Inter, system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 
 .main h1,
 .main h2 {
-  font-family: "Arial Narrow", "Aptos Narrow", "Roboto Condensed", sans-serif;
+  font-family: var(--font-heading);
   font-stretch: condensed;
   text-wrap: balance;
 }
@@ -50,7 +50,7 @@
 .intro h1 {
   max-width: 690px;
   margin: 0;
-  font-size: clamp(48px, 7vw, 84px);
+  font-size: var(--type-page-title);
   font-weight: 680;
   line-height: .88;
   letter-spacing: -.04em;
@@ -140,7 +140,7 @@
 
 .choiceCopy h2 {
   margin: 0;
-  font-size: clamp(36px, 4.6vw, 58px);
+  font-size: var(--type-section-title);
   font-weight: 680;
   line-height: .94;
   letter-spacing: -.035em;
@@ -237,7 +237,7 @@
     padding: 38px 0 30px;
   }
 
-  .intro h1 { font-size: clamp(44px, 14vw, 64px); }
+  .intro h1 { font-size: var(--type-page-title); }
   .choiceLayout { grid-template-columns: 1fr; }
   .exactChoice { min-height: 470px; }
   .quickChoice { min-height: 390px; }

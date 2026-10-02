@@ -5,6 +5,7 @@ const basePath = process.env.NEXT_BASE_PATH ?? "";
 export const metadata: Metadata = {
   title: "Дымоход Трейд — Админка",
   description: "Управление каталогом Дымоход Трейд.",
+  robots: { index: false, follow: false },
   manifest: `${basePath}/admin/manifest.webmanifest`,
   icons: {
     icon: [

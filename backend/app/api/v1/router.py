@@ -9,6 +9,7 @@ from app.modules.compatibility.router import router as compatibility_router
 from app.modules.leads.customer_router import router as customers_router
 from app.modules.leads.router import router as leads_router
 from app.modules.products.router import router as products_router
+from app.modules.seo.router import router as yandex_seo_router
 
 api_router = APIRouter()
 
@@ -23,6 +24,12 @@ api_router.include_router(
     admin_router,
     prefix="/admin",
     tags=["admin"],
+    dependencies=[Depends(require_bom_admin)],
+)
+api_router.include_router(
+    yandex_seo_router,
+    prefix="/admin/seo/yandex",
+    tags=["admin-seo"],
     dependencies=[Depends(require_bom_admin)],
 )
 api_router.include_router(boms_router, prefix="/admin/boms", tags=["admin-boms"])

@@ -11,6 +11,7 @@ import {
 export const metadata: Metadata = {
   title: "Пользовательское соглашение — Дымоход Трейд",
   description: "Условия использования сайта и отправки заявок на dimohod-trade.pro.",
+  robots: { index: false, follow: true },
 };
 
 export default function UserAgreementPage() {

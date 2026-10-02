@@ -7,7 +7,10 @@ import {
   IconChevronDown as ChevronDown,
   IconX as X,
 } from "@tabler/icons-react";
-import { CatalogProductCard } from "@/components/CatalogProductCard";
+import {
+  CatalogProductCard,
+  type CatalogDiameterLink,
+} from "@/components/CatalogProductCard";
 import { CatalogVariantFilters } from "@/components/CatalogVariantFilters";
 import {
   catalogCategoryPath,
@@ -74,10 +77,10 @@ function isPipeCategory(category: CategoryNode) {
 
 function diameterPageLabel(page: ProductSeoPage) {
   if (page.diameter_mm !== null && page.outer_diameter_mm !== null) {
-    return `${page.diameter_mm}/${page.outer_diameter_mm} мм`;
+    return `${page.diameter_mm}/${page.outer_diameter_mm}`;
   }
   const diameter = page.diameter_mm ?? page.outer_diameter_mm;
-  return diameter === null ? null : `${diameter} мм`;
+  return diameter === null ? null : String(diameter);
 }
 
 export async function CatalogCategoryView({
@@ -228,23 +231,25 @@ export async function CatalogCategoryView({
     ],
   };
   const relatedSeoPages = catalogSeoPagesForCategory(category.slug);
-  const productNamesBySlug = new Map(
-    productResponse.items.map((product) => [product.slug, product.name]),
-  );
-  const diameterPages = productSeoPages
-    .flatMap((pageItem) => {
-      const productName = productNamesBySlug.get(pageItem.product_slug);
+  const visibleProductSlugs = new Set(productResponse.items.map((product) => product.slug));
+  const diameterPagesByProduct = new Map<string, CatalogDiameterLink[]>();
+  productSeoPages
+    .filter((pageItem) => visibleProductSlugs.has(pageItem.product_slug))
+    .sort((left, right) => (
+      (left.diameter_mm ?? left.outer_diameter_mm ?? 0)
+      - (right.diameter_mm ?? right.outer_diameter_mm ?? 0)
+      || (left.outer_diameter_mm ?? 0) - (right.outer_diameter_mm ?? 0)
+    ))
+    .forEach((pageItem) => {
       const label = diameterPageLabel(pageItem);
-      if (!productName || !label) return [];
-      return [{
-        href: productPublicPath(pageItem.product_slug, pageItem),
-        label: productResponse.items.length > 1 ? `${productName} — ${label}` : label,
-        diameter: pageItem.diameter_mm ?? pageItem.outer_diameter_mm ?? 0,
-        outerDiameter: pageItem.outer_diameter_mm ?? 0,
-      }];
-    })
-    .filter((item, index, items) => items.findIndex((candidate) => candidate.href === item.href) === index)
-    .sort((left, right) => left.diameter - right.diameter || left.outerDiameter - right.outerDiameter);
+      if (!label) return;
+      const href = productPublicPath(pageItem.product_slug, pageItem);
+      const links = diameterPagesByProduct.get(pageItem.product_slug) ?? [];
+      if (!links.some((item) => item.href === href)) {
+        links.push({ href, label });
+        diameterPagesByProduct.set(pageItem.product_slug, links);
+      }
+    });
   const categoryHeading = catalogFilteredHeading(category.name, {
     diameter: appliedDiameter,
     inner_pipe: appliedInnerPipe,
@@ -282,17 +287,6 @@ export async function CatalogCategoryView({
           </div>
           {seoPage?.intro || category.description ? (
             <p className="lead catalog-category-description">{seoPage?.intro ?? category.description}</p>
-          ) : null}
-
-          {diameterPages.length ? (
-            <nav className="catalog-diameter-links" aria-label="Страницы товаров по диаметру">
-              <strong>Выберите диаметр</strong>
-              <div>
-                {diameterPages.map((item) => (
-                  <Link href={item.href} key={item.href}>{item.label}</Link>
-                ))}
-              </div>
-            </nav>
           ) : null}
 
           {relatedSeoPages.length ? (
@@ -342,7 +336,11 @@ export async function CatalogCategoryView({
           {productResponse.items.length ? (
             <div className="catalog-products-grid">
               {productResponse.items.map((product) => (
-                <CatalogProductCard key={product.id} product={product} />
+                <CatalogProductCard
+                  diameterLinks={diameterPagesByProduct.get(product.slug)}
+                  key={product.id}
+                  product={product}
+                />
               ))}
             </div>
           ) : <div className="state-empty">По выбранным параметрам ничего не найдено.</div>}

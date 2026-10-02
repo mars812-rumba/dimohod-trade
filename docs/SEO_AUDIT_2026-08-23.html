@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEO-аудит dimohod-trade.pro</title>
+<style>
+  :root {
+    --bg: #e2e9f3;
+    --ink: #122650;
+    --muted: #4f5f79;
+    --rule: #c2cddd;
+    --rule-strong: #122650;
+  }
+  html { background: var(--bg); color-scheme: light; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: Charter, Georgia, "Times New Roman", serif;
+    line-height: 1.55; margin: 0; padding: 3.5rem 1.5rem 5rem;
+  }
+  .page { max-width: 860px; margin: 0 auto; }
+  .mono {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  }
+  h1 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700; font-size: 1.6rem; letter-spacing: -0.01em;
+    margin: 0.75rem 0 0.25rem; text-wrap: balance;
+  }
+  .subtitle { color: var(--muted); margin: 0 0 2.5rem; font-size: 1.02rem; max-width: 46rem; }
+  .dateline { color: var(--muted); font-size: 0.92rem; margin: 0 0 1.1rem; }
+  h2 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700; font-size: 1.25rem; margin: 3rem 0 0.75rem;
+  }
+  .lede { font-size: 1.05rem; max-width: 46rem; }
+  section > p { max-width: 46rem; }
+  hr.heavy { border: 0; border-top: 2px solid var(--rule-strong); margin: 3rem 0 0; }
+  section .cols:first-of-type { border-top: 1px solid var(--rule); }
+  .cols {
+    display: grid; grid-template-columns: minmax(180px, 5fr) 8fr;
+    gap: 1.25rem; padding: 0.6rem 0; border-bottom: 1px solid var(--rule);
+  }
+  .row-title { font-size: 1.12rem; margin: 0; }
+  .row-title .tag { display: block; margin-top: 0.35rem; }
+  .cols > div p { margin: 0 0 0.6rem; color: var(--muted); font-size: 0.95rem; }
+  .cols > div p:last-child { margin-bottom: 0; }
+  .cols > div p.fix { color: var(--ink); }
+  .fix b { font-weight: 600; }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.85em; word-break: break-word;
+  }
+  ol { padding-left: 1.3rem; max-width: 44rem; }
+  ol li { margin-bottom: 0.5rem; }
+  ul.plain { list-style: none; padding: 0; max-width: 46rem; }
+  ul.plain li { padding: 0.5rem 0; border-bottom: 1px solid var(--rule); font-size: 0.98rem; }
+  ul.plain li:first-child { border-top: 1px solid var(--rule); }
+  ul.plain .why { color: var(--muted); }
+  footer { margin-top: 4rem; color: var(--muted); font-size: 0.88rem; max-width: 46rem; }
+  @media (max-width: 620px) {
+    .cols { grid-template-columns: 1fr; gap: 0.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>dimohod-trade.pro</h1>
+    <p class="dateline">23 августа 2026 года</p>
+    <p class="subtitle">Сайт доступен поисковым роботам, основные страницы имеют canonical и входят в sitemap. Главный ограничитель сейчас — нестабильное время ответа каталога и карточек, поэтому на этой неделе важнее стабилизировать серверную выдачу, а затем запускать поток новых материалов. Ниже собраны подтверждённые проблемы, приоритетная тема и то, что уже работает.</p>
+  </header>
+
+  <section>
+    <h2>Состояние сайта</h2>
+    <p class="lede">Техническая основа в целом рабочая: главная, категории, статьи, robots.txt и sitemap.xml открываются; проверенная категория имеет разрешение на индексацию и canonical на собственный URL. Сценарные страницы и руководства уже содержат заметно больше полезного текста, чем категории.</p>
+    <p class="lede">Во время обхода 23 из 50 URL отвечали дольше четырёх секунд, а семь страниц товаров не уложились в 15 секунд. При ручной повторной проверке одна из таких страниц вернула HTTP 200 за 2,72 секунды. Это указывает на нестабильную задержку под последовательной нагрузкой, которую желательно убрать до регулярной публикации новых страниц.</p>
+  </section>
+
+  <hr class="heavy">
+
+  <section>
+    <h2>Если сделать только одно</h2>
+    <p class="lede">Стабилизировать серверный ответ категорий и карточек товара, затем повторить обход тех же 50 URL.</p>
+    <p>Поисковому роботу и покупателю нужен предсказуемый ответ страницы. Новые статьи не исправят ситуацию, если каталог периодически отвечает 5–15 секунд.</p>
+    <ol>
+      <li>Проверить время backend-запросов и количество обращений к базе для <code>/catalog/*</code> и <code>/product/*</code>.</li>
+      <li>Передать Codex задачу: <i>«Найди причину ответов 5–15 секунд у категорий и товарных карточек, добавь безопасное серверное кэширование или предварительную выборку, не меняя UX и данные каталога»</i>.</li>
+      <li>После публикации трижды проверить проблемные URL и повторить OpenSEO-аудит. Цель проверки — отсутствие 15-секундных тайм-аутов и стабильный ответ основных страниц примерно за одну секунду или быстрее.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Небольшие исправления по порядку</h2>
+    <div class="cols">
+      <div><p class="row-title">Нестабильный ответ каталога <span class="mono tag">главное</span></p></div>
+      <div>
+        <p>23 страницы отвечали дольше 4 секунд; семь товарных URL завершились 15-секундным тайм-аутом. Категория <code>/catalog/sendvich-truby</code> заняла 5,58 секунды в обходе.</p>
+        <p class="fix"><b>Исправление:</b> измерить backend-запросы, устранить повторные выборки и кэшировать безопасные публичные данные категорий и семейств.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">Слабые тексты категорий <span class="mono tag">среднее</span></p></div>
+      <div>
+        <p>Сканер отметил 13 категорий с 51–146 словами. На странице сэндвич-труб найдено 130 слов.</p>
+        <p class="fix"><b>Исправление:</b> сначала дополнить 3–5 главных категорий: назначение, доступные варианты, принцип подбора и переход к расчёту. Использовать только подтверждённые каталожные данные.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">Описание категории слишком короткое <span class="mono tag">низкое</span></p></div>
+      <div>
+        <p>Meta description страницы сэндвич-труб содержит 57 символов: <code>Утепленные модульные трубы для прохода по холодным зонам.</code></p>
+        <p class="fix"><b>Исправление:</b> добавить конкретику о выборе диаметра, длины и переходе к расчёту, не перечисляя неподтверждённые свойства.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">Шаблон карточки дублирует единицы <span class="mono tag">низкое</span></p></div>
+      <div>
+        <p>У декоративных юбок meta description достигает 229 символов и содержит формулировку <code>Диаметр 160 мм мм</code>.</p>
+        <p class="fix"><b>Исправление:</b> убрать повторное <code>мм</code>, сократить описание и не вставлять полный набор выбранных параметров в сниппет.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">Заголовок меню идёт перед H1 <span class="mono tag">низкое</span></p></div>
+      <div>
+        <p>На категориях исходный HTML начинается с <code>&lt;h2 id="mobile-menu-title"&gt;</code>, после чего появляется основной H1. Из-за этого 13 страниц получили предупреждение о порядке заголовков.</p>
+        <p class="fix"><b>Исправление:</b> сохранить доступное имя мобильного меню, но не использовать для него заголовок, который появляется раньше главного H1 страницы.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">Title статей длиннее обычного сниппета <span class="mono tag">низкое</span></p></div>
+      <div>
+        <p>Пять руководств имеют title длиной 76–93 символа. Например, title статьи о комплекте для печи содержит 93 символа.</p>
+        <p class="fix"><b>Исправление:</b> сократить хвосты заголовков, сохранив основной запрос и название бренда только там, где оно помещается.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">Мало внешних упоминаний <span class="mono tag">после скорости</span></p></div>
+      <div>
+        <p>OpenSEO зарегистрировал 3 обратные ссылки с 2 доменов; собственных данных об органическом трафике пока нет.</p>
+        <p class="fix"><b>Исправление:</b> после стабилизации сайта получить первые тематические ссылки от партнёров, монтажников, поставщиков печей и региональных каталогов.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>На чём сосредоточиться сначала</h2>
+    <p>Лучшее стартовое направление — банные дымоходы и маршрут через стену. Для него уже существуют сильные страницы <code>/solutions/banya</code> и <code>/guides/dymohod-cherez-stenu</code>, поэтому сначала следует расширять их, а не создавать дубли.</p>
+    <div class="cols">
+      <div><p class="row-title">дымоход для бани <span class="mono tag">50 запросов/мес.</span></p></div>
+      <div>
+        <p>Основной транзакционный запрос направления.</p>
+        <p class="fix"><b>Сделать:</b> усилить <code>/solutions/banya</code> подтверждёнными вариантами маршрута, входными данными для расчёта и понятным CTA.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">дымоход для бани купить <span class="mono tag">10 запросов/мес.</span></p></div>
+      <div>
+        <p>Пользователь уже рассматривает покупку комплекта.</p>
+        <p class="fix"><b>Сделать:</b> раскрыть на той же странице процесс подбора и получения расчёта, не создавая отдельный URL.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">сэндвич дымоход для бани <span class="mono tag">10 запросов/мес.</span></p></div>
+      <div>
+        <p>Узкий товарный запрос; доступная оценка сложности — 40 из 100.</p>
+        <p class="fix"><b>Сделать:</b> связать банную страницу с подходящей категорией сэндвич-элементов и объяснить, какие параметры нужны для выбора конкретного SKU.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">дымоход в бане через стену <span class="mono tag">10 запросов/мес.</span></p></div>
+      <div>
+        <p>Информационный запрос, близкий к конфигуратору и заявке.</p>
+        <p class="fix"><b>Сделать:</b> расширить существующее руководство о маршруте через стену реальным составом узлов и ссылкой на сценарий бани.</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="row-title">дымоход через стену или крышу <span class="mono tag">10 запросов/мес.</span></p></div>
+      <div>
+        <p>Пользователь сравнивает два сценария маршрута.</p>
+        <p class="fix"><b>Сделать:</b> добавить в руководство короткое сравнение исходных данных и состава расчёта без неподтверждённых монтажных утверждений.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Что уже работает</h2>
+    <ul class="plain">
+      <li>robots.txt разрешает обход сайта и закрывает <code>/admin</code>. <span class="why">Поисковый робот видит публичные страницы и sitemap.</span></li>
+      <li>Проверенная категория имеет <code>index, follow</code> и self-canonical. <span class="why">Основной URL категории задан однозначно.</span></li>
+      <li>Руководства содержат около 500 слов, сценарные страницы — 433–704 слова. <span class="why">На сайте уже есть основа для полезного тематического контента.</span></li>
+      <li>Публичные страницы связаны внутренними ссылками: у проверенных руководств найдено по 17 ссылок. <span class="why">Пользователю и поисковому роботу проще переходить между материалами.</span></li>
+      <li>Проблемная товарная страница при ручной повторной проверке вернула HTTP 200. <span class="why">Товар существует; требуется стабилизировать скорость, а не удалять URL.</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Проверено 23 августа 2026 года. Использованы обход 50 URL, данные обратных ссылок и ключевых запросов OpenSEO; robots.txt, sitemap.xml и выборочные страницы дополнительно проверены прямыми HTTP-запросами. Lighthouse и Core Web Vitals в этот аудит не входили.</p>
+  </footer>
+</div>
+</body>
+</html>
