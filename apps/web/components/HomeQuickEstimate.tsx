@@ -28,6 +28,7 @@ import {
   quickEstimateAssumptions,
   quickEstimateDraft,
   quickEstimateHeightM,
+  quickEstimateSchemeDraft,
   type QuickEstimateAnswers,
   type QuickEstimateEquipment,
   type QuickEstimateObject,
@@ -319,6 +320,19 @@ export function HomeQuickEstimate({
     roofType: "pitched",
     draft,
   }) : null, [answers, draft]);
+  const schemeCalculation = useMemo(() => {
+    if (!answers) return null;
+    const schemeDraft = quickEstimateSchemeDraft(answers);
+    return calculateChimney({
+      route: answers.route,
+      outlet: answers.outlet === "top" ? "vertical" : "horizontal",
+      floors: answers.floors,
+      heightM: quickEstimateHeightM(answers),
+      distanceM: answers.route === "wall" ? (answers.wallDistanceM ?? 1.5) : 0,
+      roofType: "pitched",
+      draft: schemeDraft,
+    });
+  }, [answers]);
   const bom = useMemo(() => calculation && answers
     ? applyQuickEstimateBomRules(bomForVariant(calculation, calculation.selectedVariant), answers)
     : [], [answers, calculation]);
@@ -550,7 +564,9 @@ export function HomeQuickEstimate({
                     />
                   </div>
                 ) : <>
-                {answers ? <QuickEstimateScheme answers={answers} bom={bom} /> : null}
+                {answers && schemeCalculation ? (
+                  <QuickEstimateScheme answers={answers} calculation={schemeCalculation} />
+                ) : null}
                 <details className={styles.bomDetails} open>
                   <summary>
                     <span>Состав комплекта</span>

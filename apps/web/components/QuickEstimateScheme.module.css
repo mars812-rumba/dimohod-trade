@@ -1,67 +1,105 @@
 .panel {
   margin-top: 24px;
-  padding: clamp(18px, 3vw, 28px);
+  padding: clamp(16px, 3vw, 28px);
   border: 1px solid #cbd4d6;
   border-radius: 14px;
   background: #f7f9f8;
 }
 
-.header h4 { margin: 0; color: #173d4c; font-family: var(--font-heading); font-size: var(--type-card-title); line-height: 1.08; letter-spacing: -.025em; }
-.header p { max-width: 60ch; margin: 8px 0 0; color: #52656c; font-size: 13px; line-height: 1.5; }
-.routeTitle { margin: 24px 0 12px; color: #173d4c; font-family: var(--font-heading); font-size: 16px; line-height: 1.25; }
-.schemeLayout { display: grid; gap: 18px; }
-.drawing { min-width: 0; overflow: hidden; border-radius: 12px; background: #fff; }
-.svg { display: block; width: 100%; height: auto; }
-.paper { fill: #fff; }
-.room { fill: #f5f7f6; stroke: #cbd4d6; stroke-width: 1; }
-.attic { fill: #f5f0e8; }
-.roof, .roofInner { fill: none; stroke: #173d4c; stroke-linecap: round; stroke-linejoin: round; stroke-width: 7; }
-.roofInner { stroke: #87979c; stroke-width: 2; }
-.wall, .floorLine, .ground { stroke: #173d4c; stroke-width: 3; }
-.slab, .wallMass { fill: #e5ddd0; }
-.slabEdge { stroke: #a4947c; stroke-width: 1; }
-.zoneLabel { fill: #697a7f; font-size: 12px; font-weight: 800; letter-spacing: .06em; }
-.heater { fill: #e9dfd2; stroke: #173d4c; stroke-width: 2; }
-.heaterDoor { fill: #173d4c; }
-.heaterLabel { fill: #52656c; font-size: 12px; font-weight: 800; }
-.singlePipe, .sandwichHorizontal { fill: none; stroke: #8e999c; stroke-linecap: square; stroke-width: 18; }
-.sandwichHorizontal { stroke: #d5dfe0; stroke-width: 34; }
-.singleElbow { fill: none; stroke: #8e999c; stroke-linecap: round; stroke-width: 18; }
-.damper { fill: #ed5b2a; stroke: #9f3515; stroke-width: 2; }
-.transition { fill: #d5dfe0; stroke: #173d4c; stroke-width: 2; }
-.sandwich, .sandwichFirst { fill: #e4ebea; stroke: #173d4c; stroke-width: 2; }
-.sandwichFirst { fill: #f2ddd4; }
-.joint { stroke: #ed5b2a; stroke-width: 3; }
-.termination { fill: #173d4c; }
-.wallPassage { fill: #f2ddd4; stroke: #bd3d16; stroke-width: 2; }
-.tee { fill: #d5dfe0; stroke: #173d4c; stroke-width: 2; }
-.console, .consoleBrace { stroke: #173d4c; stroke-width: 4; }
-.defaultDimension, .tick { stroke: #ed5b2a; stroke-dasharray: 5 4; stroke-width: 1.5; }
-.userDimension, .userTick { stroke: #1f6f74; stroke-width: 1.5; }
-.dimensionText { fill: #a23c1d; font-size: 12px; font-weight: 800; }
-.userDimensionText { fill: #155b60; font-size: 12px; font-weight: 800; }
-.marker circle { fill: #173d4c; stroke: #fff; stroke-width: 3; }
-.marker text { fill: #fff; font-size: 13px; font-weight: 800; }
-.details { margin: 0; padding: 0; list-style: none; border-top: 1px solid #d7dfe1; }
-.details li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 3px 10px; padding: 14px 0; border-bottom: 1px solid #d7dfe1; }
-.detailMarker { display: grid; width: 28px; height: 28px; grid-row: 1 / span 2; place-items: center; border-radius: 50%; background: #173d4c; color: #fff; font-size: 12px; font-weight: 800; }
-.detailCopy { display: grid; gap: 4px; min-width: 0; }
-.detailCopy strong { color: #173d4c; font-size: 14px; line-height: 1.25; }
-.detailCopy > span { color: #52656c; font-size: 12px; line-height: 1.45; }
-.detailStatus { grid-column: 2; width: fit-content; padding: 4px 7px; border-radius: 999px; font-size: 10px; font-weight: 800; line-height: 1.2; }
-.user { color: #155b60; background: #dff1ef; }
-.assumed { color: #8a351d; background: #fae9e2; }
-.review { color: #52656c; background: #e8edef; }
-.assumptions { margin: 16px 0 0; color: #52656c; font-size: 12px; line-height: 1.55; }
-.assumptions strong { color: #173d4c; }
-
-@media (min-width: 760px) {
-  .schemeLayout { grid-template-columns: minmax(0, 1.35fr) minmax(250px, .65fr); align-items: start; gap: 24px; }
-  .details { border-top: 0; }
-  .details li:first-child { padding-top: 2px; }
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
-@media (max-width: 420px) {
-  .panel { padding: 16px 12px; }
-  .routeTitle { margin-top: 20px; }
+.header h4 {
+  margin: 0;
+  color: #173d4c;
+  font-family: var(--font-heading);
+  font-size: var(--type-card-title);
+  line-height: 1.08;
+  letter-spacing: -.025em;
+}
+
+.header p {
+  margin: 7px 0 0;
+  color: #52656c;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.header > span {
+  flex: none;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #e5eceb;
+  color: #3f575f;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.professionalScheme {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.professionalScheme :global(.configurator-generated-svg) {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Public preview: use professional geometry without exposing assumed values. */
+.professionalScheme :global(.scheme-ridge-datum),
+.professionalScheme :global(.scheme-ridge-label),
+.professionalScheme :global(.scheme-ridge-distance),
+.professionalScheme :global(.scheme-ten-degree-clearance),
+.professionalScheme :global(.scheme-dimension),
+.professionalScheme :global(.scheme-dimension-label),
+.professionalScheme :global(.scheme-callouts),
+.professionalScheme :global(.scheme-legend) {
+  display: none;
+}
+
+/* The attic is a label and boundary, not a filled layer over the route. */
+.ceiling :global(.scheme-attic) {
+  fill: transparent;
+}
+
+.note {
+  max-width: 68ch;
+  margin: 14px 0 0;
+  color: #52656c;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (min-width: 760px) {
+  .professionalScheme {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .wall {
+    max-width: 560px;
+  }
+}
+
+@media (max-width: 520px) {
+  .panel {
+    padding: 16px 12px;
+  }
+
+  .header {
+    display: grid;
+  }
+
+  .header > span {
+    justify-self: start;
+  }
 }

@@ -15,6 +15,10 @@ export const QUICK_ESTIMATE_WARMUP_PIPE_LENGTH_MM = 1000;
 export const QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM = 1000;
 export const QUICK_ESTIMATE_BASE_SANDWICH_PIPE_QUANTITY = 3;
 export const QUICK_ESTIMATE_EXTRA_FLOOR_SANDWICH_PIPE_QUANTITY = 2;
+export const QUICK_ESTIMATE_SCHEME_ROOF_ANGLE_DEG = 30;
+export const QUICK_ESTIMATE_SCHEME_ROOF_OVERHANG_MM = 200;
+export const QUICK_ESTIMATE_SCHEME_WALL_THICKNESS_MM = 400;
+export const QUICK_ESTIMATE_SCHEME_RIDGE_DISTANCE_MM = 1500;
 
 export type QuickEstimateObject = "banya" | "house";
 export type QuickEstimateRoute = "ceiling" | "wall";
@@ -74,6 +78,35 @@ export function quickEstimateDraft(answers: QuickEstimateAnswers): ScenarioConfi
       : String(Math.round(answers.outdoorHeightM * 1000)),
     routeNotes: "Предварительный быстрый расчёт. Размеры и состав комплекта нужно подтвердить по замерам.",
     deferredFields: ["manufacturer", "model", "roofAngle", "roofThickness", "ridgeHeight", "ridgeHorizontalDistance", "wallThickness"],
+  };
+}
+
+export function quickEstimateSchemeRidgeHeightMm(answers: QuickEstimateAnswers): number {
+  return 3500 + Math.max(0, answers.floors - 1) * 3000 + (answers.hasAttic ? 1500 : 0);
+}
+
+/**
+ * Adds display-only geometry for the public SVG. These defaults must never be
+ * used by the BOM: the estimate keeps using quickEstimateDraft above.
+ */
+export function quickEstimateSchemeDraft(answers: QuickEstimateAnswers): ScenarioConfiguratorDraft {
+  const draft = quickEstimateDraft(answers);
+  const resolvedForScheme = new Set([
+    "roofAngle",
+    "ridgeHeight",
+    "ridgeHorizontalDistance",
+    "roofOverhang",
+    "wallThickness",
+  ]);
+
+  return {
+    ...draft,
+    roofAngle: String(QUICK_ESTIMATE_SCHEME_ROOF_ANGLE_DEG),
+    ridgeHeight: String(quickEstimateSchemeRidgeHeightMm(answers)),
+    ridgeHorizontalDistance: String(QUICK_ESTIMATE_SCHEME_RIDGE_DISTANCE_MM),
+    roofOverhang: String(QUICK_ESTIMATE_SCHEME_ROOF_OVERHANG_MM),
+    wallThickness: String(QUICK_ESTIMATE_SCHEME_WALL_THICKNESS_MM),
+    deferredFields: draft.deferredFields.filter((field) => !resolvedForScheme.has(field)),
   };
 }
 

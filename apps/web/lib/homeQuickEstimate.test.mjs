@@ -19,6 +19,10 @@ test("quick estimate keeps the confirmed calculation defaults", () => {
   assert.match(helper, /QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM = 1000/);
   assert.match(helper, /QUICK_ESTIMATE_BASE_SANDWICH_PIPE_QUANTITY = 3/);
   assert.match(helper, /QUICK_ESTIMATE_EXTRA_FLOOR_SANDWICH_PIPE_QUANTITY = 2/);
+  assert.match(helper, /QUICK_ESTIMATE_SCHEME_ROOF_ANGLE_DEG = 30/);
+  assert.match(helper, /QUICK_ESTIMATE_SCHEME_ROOF_OVERHANG_MM = 200/);
+  assert.match(helper, /QUICK_ESTIMATE_SCHEME_WALL_THICKNESS_MM = 400/);
+  assert.match(helper, /QUICK_ESTIMATE_SCHEME_RIDGE_DISTANCE_MM = 1500/);
   assert.match(helper, /Кровельный комплект: УПК AISI 430 по наружному диаметру \+ мастер-флеш по запросу/);
   assert.match(component, /useState<EquipmentStatus \| null>\("installed"\)/);
 });
@@ -74,23 +78,20 @@ test("price stays visible while the detailed BOM opens only after contact handof
   assert.match(component, /Предварительная стоимость уже рассчитана/);
 });
 
-test("public SVG scheme opens only after contact handoff and stays independent from professional rendering", () => {
-  assert.match(component, /leadSubmitted[\s\S]*<QuickEstimateScheme answers=\{answers\} bom=\{bom\}/);
+test("public SVG scheme opens after contact handoff and reuses the professional renderer with isolated defaults", () => {
+  assert.match(component, /leadSubmitted[\s\S]*<QuickEstimateScheme[\s\S]*calculation=\{schemeCalculation\}/);
   assert.ok(
     component.indexOf("<EstimateLeadDialog") < component.indexOf("<QuickEstimateScheme"),
     "contact form must precede the public SVG scheme",
   );
   assert.match(quickScheme, /Предварительная схема дымохода/);
-  assert.match(quickScheme, /Это не монтажный проект/);
-  assert.match(quickScheme, /QUICK_ESTIMATE_FLOOR_THICKNESS_MM/);
-  assert.match(quickScheme, /answers\.outlet === "rear"/);
-  assert.match(quickScheme, /answers\.route === "ceiling"/);
-  assert.match(quickScheme, /Math\.ceil\(answers\.outdoorHeightM\)/);
-  assert.match(quickScheme, /Стартовый сэндвич/);
-  assert.match(quickScheme, /Фасадный сэндвич/);
-  assert.match(quickScheme, /<DetailList items=\{details\}/);
-  assert.doesNotMatch(quickScheme, /className=\{styles\.callouts\}/);
-  assert.doesNotMatch(quickScheme, /GeneratedChimneyScheme|ChimneyConfigurator/);
+  assert.match(quickScheme, /GeneratedChimneyScheme/);
+  assert.match(quickScheme, /variant=\{calculation\.selectedVariant\}/);
+  assert.match(helper, /quickEstimateSchemeRidgeHeightMm/);
+  assert.match(helper, /3500 \+ Math\.max\(0, answers\.floors - 1\) \* 3000 \+ \(answers\.hasAttic \? 1500 : 0\)/);
+  assert.match(component, /const schemeCalculation = useMemo/);
+  assert.match(component, /const schemeDraft = quickEstimateSchemeDraft\(answers\)/);
+  assert.match(component, /applyQuickEstimateBomRules\(bomForVariant\(calculation/);
 });
 
 test("mobile object choices use two full-width rows", () => {
