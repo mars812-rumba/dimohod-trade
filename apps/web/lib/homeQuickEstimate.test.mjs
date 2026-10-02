@@ -85,6 +85,11 @@ test("public SVG scheme opens only after contact handoff and stays independent f
   assert.match(quickScheme, /QUICK_ESTIMATE_FLOOR_THICKNESS_MM/);
   assert.match(quickScheme, /answers\.outlet === "rear"/);
   assert.match(quickScheme, /answers\.route === "ceiling"/);
+  assert.match(quickScheme, /Math\.ceil\(answers\.outdoorHeightM\)/);
+  assert.match(quickScheme, /Стартовый сэндвич/);
+  assert.match(quickScheme, /Фасадный сэндвич/);
+  assert.match(quickScheme, /<DetailList items=\{details\}/);
+  assert.doesNotMatch(quickScheme, /className=\{styles\.callouts\}/);
   assert.doesNotMatch(quickScheme, /GeneratedChimneyScheme|ChimneyConfigurator/);
 });
 
