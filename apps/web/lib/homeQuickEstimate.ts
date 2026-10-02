@@ -130,26 +130,36 @@ export function applyQuickEstimateBomRules(
   ));
   const passageIndex = withoutCalculatedPipes.findIndex((line) => line.key === "ceiling-passage");
   const insertionIndex = passageIndex >= 0 ? passageIndex : withoutCalculatedPipes.length;
-  const sandwichPipe: ChimneyBomLine = {
-    key: `sandwich-pipe-${QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM}-quick`,
+  const sandwichQuantity = quickEstimateSandwichPipeQuantity(answers);
+  const firstSandwichPipe: ChimneyBomLine = {
+    key: `sandwich-pipe-${QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM}-quick-first`,
     productKind: "труба",
-    label: `Сэндвич-труба ${QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM} мм`,
-    quantity: quickEstimateSandwichPipeQuantity(answers),
+    label: `Первая сэндвич-труба ${QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM} мм`,
+    quantity: 1,
     nominalLengthMm: QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM,
     contour: "сэндвич",
     insulationMm: 50,
     zone: "quick-ceiling-route",
-    selectionReason: "Количество задано упрощённым правилом быстрого расчёта по этажности дома с чердаком.",
+    selectionReason: "Первая сэндвич-труба после опорной заглушки выполняется с внутренней стенкой 0,8 мм.",
     requiresSku: true,
     catalogLengthMode: "exact",
     materialPreference: "stainless-standard",
+    thicknessProfile: "first-floor-0.8",
+  };
+  const remainingSandwichPipes: ChimneyBomLine = {
+    ...firstSandwichPipe,
+    key: `sandwich-pipe-${QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM}-quick-remaining`,
+    label: `Сэндвич-труба ${QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM} мм`,
+    quantity: Math.max(0, sandwichQuantity - 1),
+    selectionReason: "Остальные сэндвич-трубы выполняются с внутренней стенкой 0,5 мм.",
     thicknessProfile: "upper-outdoor-0.5",
-    quantityNote: "3 трубы для одного этажа с чердаком; по 2 трубы за каждый дополнительный этаж.",
+    quantityNote: "Всего 3 трубы для одного этажа с чердаком; по 2 трубы за каждый дополнительный этаж.",
   };
 
   return [
     ...withoutCalculatedPipes.slice(0, insertionIndex),
-    sandwichPipe,
+    firstSandwichPipe,
+    ...(remainingSandwichPipes.quantity > 0 ? [remainingSandwichPipes] : []),
     ...withoutCalculatedPipes.slice(insertionIndex),
   ];
 }
@@ -169,7 +179,7 @@ export function quickEstimateAssumptions(answers: QuickEstimateAnswers): string[
     items.push(`${QUICK_ESTIMATE_ROOF_OUTLET_HEIGHT_MM / 1000} м наружного участка`);
     if (answers.hasAttic) {
       items.push(
-        `${quickEstimateSandwichPipeQuantity(answers)} сэндвич-трубы по ${QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM} мм, внутренняя сталь 0,5 мм`,
+        `${quickEstimateSandwichPipeQuantity(answers)} сэндвич-трубы по ${QUICK_ESTIMATE_SANDWICH_PIPE_LENGTH_MM} мм: первая 0,8 мм, остальные 0,5 мм`,
       );
     }
     items.push("Кровельный комплект: УПК + мастер-флеш");

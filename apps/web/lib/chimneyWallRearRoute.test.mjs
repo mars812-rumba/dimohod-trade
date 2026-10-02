@@ -221,8 +221,96 @@ test("BOM separates first sandwich 0.8 mm from upper and outdoor 0.5 mm pipes", 
   });
   const bom = bomForVariant(calculation, calculation.selectedVariant);
   const sandwich = bom.filter((line) => line.key.startsWith("sandwich-pipe-"));
+  const placedSandwich = calculation.selectedVariant.pipes.filter((pipe) => pipe.contour === "сэндвич");
 
-  assert.ok(sandwich.some((line) => line.thicknessProfile === "first-floor-0.8"));
+  assert.equal(placedSandwich.filter((pipe) => pipe.thicknessProfile === "first-floor-0.8").length, 1);
+  assert.ok(placedSandwich.slice(1).every((pipe) => pipe.thicknessProfile === "upper-outdoor-0.5"));
+  assert.equal(sandwich.find((line) => line.thicknessProfile === "first-floor-0.8").quantity, 1);
   assert.ok(sandwich.some((line) => line.thicknessProfile === "upper-outdoor-0.5"));
-  assert.equal(calculation.selectedVariant.pipes.find((pipe) => pipe.contour === "сэндвич").thicknessProfile, "first-floor-0.8");
+});
+
+test("rear and top wall routes keep only their first sandwich pipe at 0.8 mm", () => {
+  for (const outlet of ["horizontal", "vertical"]) {
+    const calculation = calculateChimney({
+      route: "wall",
+      outlet,
+      floors: 1,
+      heightM: 5,
+      distanceM: 1.2,
+      roofType: "flat",
+      draft: {
+        levels: "1",
+        diameter: "115",
+        wallDistance: "1200",
+        wallThickness: "200",
+        roofOverhang: "0",
+        outdoorHeight: "5",
+      },
+    });
+    const sandwich = calculation.selectedVariant.pipes.filter((pipe) => pipe.contour === "сэндвич");
+
+    assert.equal(calculation.errors.length, 0);
+    assert.equal(sandwich.filter((pipe) => pipe.thicknessProfile === "first-floor-0.8").length, 1);
+    assert.ok(sandwich.slice(1).every((pipe) => pipe.thicknessProfile === "upper-outdoor-0.5"));
+  }
+});
+
+test("passage consumables and decorative skirts follow the confirmed quantities", () => {
+  const calculation = calculateChimney({
+    route: "ceiling",
+    outlet: "vertical",
+    floors: 2,
+    heightM: 7,
+    distanceM: 0,
+    roofType: "flat",
+    draft: {
+      levels: "2",
+      hasAttic: true,
+      diameter: "115",
+      connectionHeight: "0",
+      ceilingHeight: "2400",
+      floorThickness: "200",
+      secondCeilingHeight: "2400",
+      secondFloorThickness: "200",
+      atticHeight: "1500",
+      roofThickness: "200",
+      ridgeHeight: "6500",
+      passageWoolKits: "17",
+    },
+  });
+  const skirts = calculation.bom.filter((line) => line.productKind === "декоративная_юбка");
+
+  assert.equal(calculation.bom.find((line) => line.key === "passage-insulation").quantity, 2);
+  assert.equal(calculation.bom.find((line) => line.key === "floor-clamp").quantity, 1);
+  assert.equal(skirts.reduce((sum, line) => sum + line.quantity, 0), 3);
+  assert.equal(calculation.passageWoolKits, 2);
+});
+
+test("wall passage gets one wool kit and only the interior decorative skirt", () => {
+  const calculation = wallRearCalculation();
+
+  assert.equal(calculation.bom.find((line) => line.key === "passage-insulation").quantity, 1);
+  assert.equal(calculation.bom.find((line) => line.key === "wall-decorative-skirt-interior").quantity, 1);
+  assert.equal(calculation.bom.some((line) => line.key === "wall-decorative-skirt-exterior"), false);
+});
+
+test("top wall route marks the single-wall elbow as 0.8 mm", () => {
+  const calculation = calculateChimney({
+    route: "wall",
+    outlet: "vertical",
+    floors: 1,
+    heightM: 5,
+    distanceM: 1.2,
+    roofType: "flat",
+    draft: {
+      levels: "1",
+      diameter: "115",
+      wallDistance: "1200",
+      wallThickness: "200",
+      roofOverhang: "0",
+      outdoorHeight: "5",
+    },
+  });
+
+  assert.equal(calculation.bom.find((line) => line.key === "top-outlet-elbow").thicknessProfile, "first-floor-0.8");
 });

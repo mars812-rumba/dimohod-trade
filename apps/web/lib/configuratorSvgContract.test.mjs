@@ -6,6 +6,10 @@ const configuratorSource = await readFile(
   new URL("../components/ChimneyConfigurator.tsx", import.meta.url),
   "utf8",
 );
+const engineeringRulesSource = await readFile(
+  new URL("./configuratorEngineeringRules.ts", import.meta.url),
+  "utf8",
+);
 function componentSource(name, nextName) {
   const start = configuratorSource.indexOf(`function ${name}`);
   const end = configuratorSource.indexOf(`function ${nextName}`, start + 1);
@@ -80,8 +84,23 @@ test("changing only pipe quantity does not refetch every catalog match", () => {
 });
 
 test("gas and diesel drafts request the confirmed 316/430 steel pair", () => {
-  assert.match(configuratorSource, /stove === "gaz" \|\| stove === "diesel"/);
-  assert.match(configuratorSource, /combustionSteel \? "AISI 316" : "AISI 304"/);
-  assert.match(configuratorSource, /preferred_outer_steel_grade", "AISI 430"/);
+  assert.match(engineeringRulesSource, /applianceTypes: \["gaz", "diesel"\]/);
+  assert.match(engineeringRulesSource, /innerSteelGrade: "AISI 316"/);
+  assert.match(engineeringRulesSource, /outerSteelGrade: "AISI 430"/);
+  assert.match(configuratorSource, /CHIMNEY_ENGINEERING_RULES\.combustionMaterials/);
   assert.match(configuratorSource, /parseScenarioDraft\(requestedDraft\)/);
+  assert.match(configuratorSource, /if \(line\.thicknessProfile\)/);
+});
+
+test("BOM visibly includes steel thickness and calculates passage wool automatically", () => {
+  assert.match(configuratorSource, /item\.wall_thickness_mm \? `\$\{item\.wall_thickness_mm\} мм`/);
+  assert.match(configuratorSource, /outer_wall_thickness_mm/);
+  assert.match(configuratorSource, /по числу проходов/);
+  assert.doesNotMatch(configuratorSource, /Комплекты ваты на проходы, вручную/);
+  assert.doesNotMatch(configuratorSource, /setPassageWoolKits/);
+});
+
+test("passage flange lookup carries the exact 600 by 600 base size", () => {
+  assert.match(configuratorSource, /params\.set\("base_size", line\.catalogBaseSize\)/);
+  assert.match(engineeringRulesSource, /flangeBaseSize: "600×600 мм"/u);
 });

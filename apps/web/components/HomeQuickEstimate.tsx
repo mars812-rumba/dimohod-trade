@@ -587,7 +587,7 @@ export function HomeQuickEstimate({
                           </span>}
                           <span className={styles.bomCopy}>
                             {href ? <Link className={styles.bomName} href={href} onClick={rememberQuickEstimate}>{productName}</Link> : <span className={styles.bomName}>{productName}</span>}
-                            {line.characteristics.length ? <small>{line.characteristics.slice(0, 2).join(" · ")}</small> : null}
+                            {line.characteristics.length ? <small>{line.characteristics.join(" · ")}</small> : null}
                             {href ? <Link className={styles.bomProductLink} href={href} onClick={rememberQuickEstimate}>Открыть товар <ArrowRight aria-hidden size={14} /></Link> : <small>Точный товар подберёт менеджер</small>}
                           </span>
                         </div>

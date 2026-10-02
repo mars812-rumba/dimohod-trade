@@ -156,12 +156,7 @@ function effectiveComponentHeight(nominalLengthMm: number): number {
   return Math.max(0, nominalLengthMm - PIPE_SOCKET_OVERLAP_MM);
 }
 
-function applyThicknessProfiles(
-  variant: PipeLayoutVariant,
-  routeKind: ChimneyRouteKind,
-  forbiddenZones: ForbiddenJointZone[],
-): PipeLayoutVariant {
-  const firstFloorEndMm = forbiddenZones.find((zone) => zone.kind === "floor")?.endMm ?? Number.POSITIVE_INFINITY;
+function applyThicknessProfiles(variant: PipeLayoutVariant): PipeLayoutVariant {
   let firstSandwichAssigned = false;
   return {
     ...variant,
@@ -172,14 +167,8 @@ function applyThicknessProfiles(
       } else if (!firstSandwichAssigned) {
         thicknessProfile = "first-floor-0.8";
         firstSandwichAssigned = true;
-      } else if (routeKind === "ceiling") {
-        thicknessProfile = pipe.startMm < firstFloorEndMm
-          ? "first-floor-0.8"
-          : "upper-outdoor-0.5";
       } else {
-        thicknessProfile = pipe.axis === "horizontal" && pipe.zone !== "outdoor"
-          ? "first-floor-0.8"
-          : "upper-outdoor-0.5";
+        thicknessProfile = "upper-outdoor-0.5";
       }
       return { ...pipe, thicknessProfile };
     }),
@@ -505,10 +494,8 @@ function addRouteNodes(
   bom: ChimneyBomLine[],
   routeKind: ChimneyRouteKind,
   passageQty: number,
-  hasAttic: boolean,
   singleWallWarmupPipeLengthMm: number,
   rotaryDamperHeightMm: number,
-  passageWoolKits: number,
   wallConsoleQuantity: number,
 ) {
   const addTeeLowerSandwichPipe = () => bom.push({
@@ -610,13 +597,13 @@ function addRouteNodes(
     key: "passage-insulation",
     productKind: "изоляция",
     label: "Комплект ваты для проходных узлов",
-    quantity: routeKind === "ceiling" ? passageWoolKits : passageQty,
+    quantity: passageQty,
     zone: "wall_or_ceiling_pass",
-    selectionReason: "Общее количество для проходов перекрытий и кровли задаётся вручную и проверяется менеджером.",
+    selectionReason: "По одному комплекту на каждый проход трубы через перекрытие или стену; кровельный проход не учитывается.",
     requiresSku: true,
     catalogCategorySlug: "uzly-prohoda-sten-i-perekrytiy",
     catalogSearch: "Комплект ваты для проходного стакана",
-    quantityNote: routeKind === "ceiling" ? "Количество указано вручную." : undefined,
+    quantityNote: "Количество рассчитано автоматически по числу проходов через строительные конструкции.",
   });
   bom.push({
     key: "passage-flange",
@@ -632,7 +619,7 @@ function addRouteNodes(
     materialPreference: "catalog-default",
     preferredSteelGrade: CHIMNEY_ENGINEERING_RULES.passageKit.flangeSteelGrade,
   });
-  const upperFloorSkirtQty = Math.max(0, passageQty - (hasAttic ? 1 : 0));
+  const upperFloorSkirtQty = Math.max(0, passageQty - 1);
   const decorativeSkirts = routeKind === "ceiling"
     ? [
       {
@@ -648,20 +635,12 @@ function addRouteNodes(
         selectionReason: "Закрывает нижний фланец прямого прохода перекрытия.",
       },
     ]
-    : [
-      {
-        key: "wall-decorative-skirt-interior",
-        label: "Декоративная юбка — со стороны помещения",
-        quantity: passageQty,
-        selectionReason: "Закрывает фланец прямого прохода с внутренней стороны стены.",
-      },
-      {
-        key: "wall-decorative-skirt-exterior",
-        label: "Декоративная юбка — с наружной стороны стены",
-        quantity: passageQty,
-        selectionReason: "Закрывает фланец прямого прохода с наружной стороны стены.",
-      },
-    ];
+    : [{
+      key: "wall-decorative-skirt-interior",
+      label: "Декоративная юбка — со стороны помещения",
+      quantity: passageQty,
+      selectionReason: "Закрывает фланец прямого прохода только с внутренней стороны жилого помещения.",
+    }];
   decorativeSkirts.filter((skirt) => skirt.quantity > 0).forEach((skirt) => bom.push({
     ...skirt,
     productKind: "декоративная_юбка",
@@ -677,9 +656,9 @@ function addRouteNodes(
       key: "floor-clamp",
       productKind: "крепеж",
       label: "Хомут в перекрытие",
-      quantity: passageQty + 1,
+      quantity: 1,
       zone: "wall_or_ceiling_pass",
-      selectionReason: "По одному на каждый проход перекрытия и один на проход кровли; используется одно семейство с изменяемым углом.",
+      selectionReason: "По производственному правилу в комплект закладывается один хомут в перекрытие на заказ.",
       requiresSku: true,
       catalogCategorySlug: "uzly-prohoda-sten-i-perekrytiy",
       catalogSearch: "Хомут в перекрытие",
@@ -793,6 +772,7 @@ function addRouteNodes(
       requiresSku: true,
       catalogCategorySlug: "odnokonturnye-otvody",
       catalogSearch: "Одноконтурный отвод 90°",
+      thicknessProfile: "first-floor-0.8",
     });
     bom.push({
       key: "top-outlet-rotary-damper",
@@ -804,6 +784,7 @@ function addRouteNodes(
       selectionReason: "Установлен в горизонтальном подключении сразу после одноконтурного отвода 90° и перед опорной сэндвич-заглушкой.",
       requiresSku: true,
       catalogSearch: "Одноконтурный шибер поворотный",
+      thicknessProfile: "first-floor-0.8",
     });
     bom.push({
       key: "support-cap",
@@ -991,7 +972,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   const floorThicknessesMm = forbiddenZones
     .filter((zone) => zone.kind === "floor")
     .map((zone) => zone.endMm - zone.startMm);
-  const passageWoolKits = Math.max(1, Math.min(30, Math.round(positiveNumber(input.draft?.passageWoolKits) ?? 3)));
+  const passageWoolKits = routeKind === "ceiling" ? floors : 1;
   if (routeKind === "ceiling" && floors > 1) {
     const missingSecond = !positiveNumber(input.draft?.secondCeilingHeight) || !positiveNumber(input.draft?.secondFloorThickness);
     const missingThird = floors > 2 && (!positiveNumber(input.draft?.thirdCeilingHeight) || !positiveNumber(input.draft?.thirdFloorThickness));
@@ -1199,17 +1180,15 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   }
   if (!variants.length && !errors.length) errors.push("Не найдена раскладка труб без стыков внутри проходных зон.");
 
-  variants = variants.map((variant) => applyThicknessProfiles(variant, routeKind, forbiddenZones));
+  variants = variants.map((variant) => applyThicknessProfiles(variant));
 
   const bom = summarizePipeBom(variants, routeKind);
   addRouteNodes(
     bom,
     routeKind,
     routeKind === "ceiling" ? floors : 1,
-    hasAttic,
     singleWallWarmupPipeLengthMm,
     rotaryDamperHeightMm,
-    passageWoolKits,
     wallConsoleQuantity,
   );
   if (diameter.diameterStatus === "missing") reviewItems.unshift("Указать наружный диаметр патрубка для подбора SKU.");

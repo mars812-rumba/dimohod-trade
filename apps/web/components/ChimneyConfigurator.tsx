@@ -81,12 +81,15 @@ function shortMaterialLabel(value: unknown): string | null {
 
 function catalogMaterialLabel(item: ProductListItem): string | null {
   const innerMaterial = shortMaterialLabel(item.material);
-  const inner = [innerMaterial, item.steel_grade].filter(Boolean).join(" ");
+  const inner = [innerMaterial, item.steel_grade, item.wall_thickness_mm ? `${item.wall_thickness_mm} мм` : null].filter(Boolean).join(" ");
   const outerMaterial = shortMaterialLabel(item.attributes.outer_material);
   const outerSteel = typeof item.attributes.outer_steel_grade === "string"
     ? item.attributes.outer_steel_grade
     : null;
-  const outer = [outerMaterial, outerSteel].filter(Boolean).join(" ");
+  const outerThickness = typeof item.attributes.outer_wall_thickness_mm === "string"
+    ? item.attributes.outer_wall_thickness_mm
+    : null;
+  const outer = [outerMaterial, outerSteel, outerThickness ? `${outerThickness} мм` : null].filter(Boolean).join(" ");
   if (inner && outer) return `${inner} · наруж. ${outer}`;
   return inner || outer || null;
 }
@@ -875,7 +878,6 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
     draft.route === "ceiling" && draft.ridgeHeight ? `Высота дома в коньке: ${draft.ridgeHeight} мм` : "",
     draft.route === "ceiling" && draft.ridgeHorizontalDistance ? `От оси дымохода до конька: ${draft.ridgeHorizontalDistance} мм` : "",
     draft.route === "ceiling" && draft.roofAngle ? `Угол кровли: ${draft.roofAngle}°` : "",
-    draft.route === "ceiling" && draft.passageWoolKits ? `Комплекты ваты: ${draft.passageWoolKits} шт. (вручную)` : "",
     draft.route !== "ceiling" && draft.wallThickness ? `Толщина стены: ${draft.wallThickness} мм` : "",
     draft.route !== "ceiling" && draft.wallMaterial ? `Материал стены: ${draft.wallMaterial}` : "",
     draft.route !== "ceiling" && draft.roofOverhang ? `Вынос кровли: ${draft.roofOverhang} мм` : "",
@@ -1498,7 +1500,7 @@ function VerticalPassageDetails({
             Перекрытие: {calculation.floorThicknessesMm.length ? `${calculation.floorThicknessesMm.join(" / ")} мм` : "нужен замер"}
           </text>
           <text x="160" y="235" textAnchor="middle" className="scheme-node-note">
-            Вата в BOM: {calculation.passageWoolKits} компл. · вручную
+            Вата в BOM: {calculation.passageWoolKits} компл. · по числу проходов
           </text>
         </svg>
       </article>
@@ -1609,7 +1611,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const [warmupLengthMm, setWarmupLengthMm] = useState(1000);
   const rotaryDamperHeightMm = ROTARY_DAMPER_EFFECTIVE_LENGTH_MM;
   const [supportCapLengthMm, setSupportCapLengthMm] = useState(70);
-  const [passageWoolKits, setPassageWoolKits] = useState(3);
   const [selectedVariantId, setSelectedVariantId] = useState("");
   const [removedBomKeys, setRemovedBomKeys] = useState<string[]>([]);
   const [stoveModel, setStoveModel] = useState(searchParams.get("stoveModel") ?? "");
@@ -1676,11 +1677,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     if (Number.isFinite(draftWarmup) && draftWarmup >= 0) setWarmupLengthMm(draftWarmup);
     const draftSupportCap = Number(transferredDraft.supportCapHeight);
     if (Number.isFinite(draftSupportCap) && draftSupportCap >= 0) setSupportCapLengthMm(draftSupportCap);
-    const draftPassageWoolKits = Number(transferredDraft.passageWoolKits);
-    if (Number.isFinite(draftPassageWoolKits) && draftPassageWoolKits >= 1 && draftPassageWoolKits <= 30) {
-      setPassageWoolKits(Math.round(draftPassageWoolKits));
-    }
-
     if (transferredDraft.route !== "ceiling") {
       const draftHeight = Number(transferredDraft.outdoorHeight);
       if (Number.isFinite(draftHeight) && draftHeight >= 1 && draftHeight <= 20) setHeightM(draftHeight);
@@ -1714,12 +1710,11 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       warmupLength: String(warmupLengthMm),
       rotaryDamperHeight: String(rotaryDamperHeightMm),
       supportCapHeight: String(supportCapLengthMm),
-      passageWoolKits: String(passageWoolKits),
       routeHeight: transferredDraft.routeHeight,
       outdoorHeight: route === "wall" ? String(heightM) : transferredDraft.outdoorHeight,
       wallDistance: route === "wall" ? String(Math.round(distanceM * 1000)) : transferredDraft.wallDistance,
     };
-  }, [distanceM, floors, hasAttic, heightM, outlet, passageWoolKits, rotaryDamperHeightMm, route, supportCapLengthMm, transferredDraft, warmupLengthMm]);
+  }, [distanceM, floors, hasAttic, heightM, outlet, rotaryDamperHeightMm, route, supportCapLengthMm, transferredDraft, warmupLengthMm]);
   const availableStoveOptions = transferredDraft?.objectType === "banya"
     ? STOVE_OPTIONS.filter((option) => option.id === "bania")
     : STOVE_OPTIONS;
@@ -1851,7 +1846,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               ? CHIMNEY_ENGINEERING_RULES.combustionMaterials.outerSteelGrade
               : CHIMNEY_ENGINEERING_RULES.standardMaterials.outerSteelGrade));
         }
-        if ((!combustionSteel || Boolean(line.preferredSteelGrade)) && line.thicknessProfile) {
+        if (line.thicknessProfile) {
           params.set("wall_thickness_mm", String(
             line.thicknessProfile === "first-floor-0.8"
               ? CHIMNEY_ENGINEERING_RULES.standardMaterials.firstFloorInnerThicknessMm
@@ -2235,21 +2230,6 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                     type="number"
                     value={supportCapLengthMm}
                   />
-                </label>
-              </div>
-
-              <div className="configurator-field">
-                <label className="configurator-text-field">
-                  <span className="configurator-label">Комплекты ваты на проходы, вручную</span>
-                  <input
-                    inputMode="numeric"
-                    min="1"
-                    max="30"
-                    onChange={(event) => setPassageWoolKits(Math.max(1, Math.min(30, Math.round(Number(event.target.value) || 1))))}
-                    type="number"
-                    value={passageWoolKits}
-                  />
-                  <small>Обычно ставят 3–6 комплектов; окончательное количество определяет менеджер по узлам прохода.</small>
                 </label>
               </div>
 

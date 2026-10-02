@@ -27,9 +27,14 @@ test("quick ceiling estimate subtracts the assumed heater and fixes the confirme
   assert.match(helper, /line\.key === "rotary-damper"/);
   assert.match(helper, /thicknessProfile: "first-floor-0\.8"/);
   assert.match(helper, /thicknessProfile: "upper-outdoor-0\.5"/);
+  assert.match(helper, /quick-first/);
+  assert.match(helper, /quick-remaining/);
+  assert.match(helper, /quantity: Math\.max\(0, sandwichQuantity - 1\)/);
   assert.match(helper, /answers\.route !== "ceiling" \|\| !answers\.hasAttic/);
   assert.match(component, /applyQuickEstimateBomRules\(bomForVariant/);
   assert.match(component, /if \(line\.thicknessProfile\)/);
+  assert.match(component, /line\.characteristics\.join\(" · "\)/);
+  assert.doesNotMatch(component, /characteristics\.slice\(0, 2\)/);
 });
 
 test("quick estimate uses the existing catalog and keeps the public result self-contained", () => {
