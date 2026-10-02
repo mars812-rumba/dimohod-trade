@@ -49,6 +49,7 @@ export const CHIMNEY_ENGINEERING_RULES = {
   },
   passageKit: {
     sourceUnitPriceRub: 1760,
+    cupUnitPriceRub: 600,
     flangeQuantityPerPassage: 2,
     flangeBaseSize: "600×600 мм",
     flangeSteelGrade: "AISI 430",

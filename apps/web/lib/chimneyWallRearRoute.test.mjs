@@ -73,6 +73,7 @@ test("rear wall route starts with damper and support cap, then uses sandwich pip
   assert.equal(calculation.bom.some((line) => line.key === "wall-clamp"), false);
   assert.equal(calculation.bom.some((line) => line.label === "Одноконтурный хомут широкий"), false);
   const teeLowerPipe = calculation.bom.find((line) => line.key === "tee-lower-sandwich-pipe-250");
+  assert.equal(calculation.bom.find((line) => line.key === "wall-passage").fixedUnitPriceRub, 600);
   assert.deepEqual(
     {
       nominalLengthMm: teeLowerPipe.nominalLengthMm,
@@ -121,8 +122,13 @@ test("variant BOM keeps transition order and contains no single-wall pipe", () =
   const bom = bomForVariant(calculation, calculation.selectedVariant);
   const keys = bom.map((line) => line.key);
   const firstSandwichPipeIndex = keys.findIndex((key) => key.startsWith("sandwich-pipe-"));
+  const routePipes = bom.filter((line) => (
+    line.key.startsWith("sandwich-pipe-") || line.key.startsWith("single-layout-pipe-")
+  ));
 
   assert.equal(keys.some((key) => key.startsWith("single-layout-pipe-")), false);
+  assert.ok(routePipes.every((line) => line.nominalLengthMm === 1000));
+  assert.equal(bom.find((line) => line.key === "tee-lower-sandwich-pipe-250").nominalLengthMm, 250);
   assert.ok(keys.indexOf("rear-connection-rotary-damper") < keys.indexOf("support-cap"));
   assert.ok(keys.indexOf("support-cap") < firstSandwichPipeIndex);
 });
@@ -189,6 +195,8 @@ test("vertical route keeps the confirmed pipe, damper and support-cap effective 
     [["warmup", 950], ["rotary_damper", 150], ["support_cap", 40]],
   );
   assert.equal(calculation.fixedParts.some((part) => part.id === "elbow_90"), false);
+  assert.equal(calculation.bom.find((line) => line.key === "ceiling-passage").fixedUnitPriceRub, 600);
+  assert.ok(calculation.selectedVariant.pipes.every((pipe) => pipe.nominalMm === 1000));
 });
 
 test("BOM separates first sandwich 0.8 mm from upper and outdoor 0.5 mm pipes", () => {

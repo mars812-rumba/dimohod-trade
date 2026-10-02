@@ -22,9 +22,6 @@ export const SUPPORT_CAP_OVERALL_LENGTH_MM = CHIMNEY_ENGINEERING_RULES.supportCa
 export const SINGLE_WALL_ELBOW_90_EFFECTIVE_LENGTH_MM = CHIMNEY_ENGINEERING_RULES.singleWallElbow90.effectiveMm;
 export const PIPE_LENGTHS = [
   { nominalMm: 1000, effectiveMm: 950 },
-  { nominalMm: 500, effectiveMm: 450 },
-  { nominalMm: 350, effectiveMm: 300 },
-  { nominalMm: 250, effectiveMm: 200 },
 ] as const;
 
 export type ChimneyRouteKind = "ceiling" | "wall-top" | "wall-rear";
@@ -92,6 +89,7 @@ export type ChimneyBomLine = {
   catalogBaseSize?: string;
   removable?: boolean;
   quantityNote?: string;
+  fixedUnitPriceRub?: number;
 };
 
 export type ChimneyCalculation = {
@@ -604,6 +602,7 @@ function addRouteNodes(
     zone: "wall_or_ceiling_pass",
     selectionReason: "По одному стакану для каждой рассчитанной проходной зоны.",
     requiresSku: true,
+    fixedUnitPriceRub: CHIMNEY_ENGINEERING_RULES.passageKit.cupUnitPriceRub,
     catalogCategorySlug: "uzly-prohoda-sten-i-perekrytiy",
     catalogSearch: routeKind === "ceiling" ? "Проходной стакан" : undefined,
   });
@@ -927,7 +926,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     notes.push("После опорной заглушки первой заложена сэндвич-труба 1000 мм.");
   }
   const reviewItems = [
-    "Подтвердить полезную длину соединения для труб 500, 350 и 250 мм.",
+    "Подтвердить места подрезки метровых труб по фактическим отметкам проходных зон.",
     "Подобрать конкретные исполнения проходных узлов и фланцев по конструкции и наружному диаметру.",
     "Тип и количество креплений подтвердить после проверки основания.",
   ];
