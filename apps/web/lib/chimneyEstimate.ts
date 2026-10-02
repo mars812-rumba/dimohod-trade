@@ -66,24 +66,72 @@ export type ChimneyEstimateLeadPayload = {
   calculationErrors: string[];
 };
 
+const LEAD_MATCH_STATUSES = new Set(["exact", "candidate", "nearest", "missing"]);
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
+function leadText(value: unknown, maxLength: number): string {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+function leadOptionalText(value: unknown, maxLength: number): string | null {
+  const normalized = leadText(value, maxLength);
+  return normalized || null;
+}
+
+function leadMoney(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
 export function chimneyEstimateLeadPayload(
   estimate: ChimneyEstimate,
   sourceUrl: string,
 ): ChimneyEstimateLeadPayload {
+  // The lead endpoint deliberately has a strict Pydantic contract. Catalog
+  // values are external data, so normalize them at this boundary instead of
+  // allowing one stale/oversized SKU field to block the whole public result.
+  const lines = estimate.lines
+    .filter((line) => Number.isFinite(line.quantity) && line.quantity >= 1)
+    .slice(0, 300)
+    .map((line): ChimneyEstimateLine => ({
+      key: leadText(line.key, 180),
+      skuId: typeof line.skuId === "string" && UUID_PATTERN.test(line.skuId) ? line.skuId : null,
+      label: leadText(line.label, 240),
+      article: leadOptionalText(line.article, 120),
+      skuName: leadOptionalText(line.skuName, 220),
+      quantity: Math.min(10_000, Math.max(1, Math.trunc(line.quantity))),
+      unitPriceRub: leadMoney(line.unitPriceRub),
+      lineTotalRub: leadMoney(line.lineTotalRub),
+      characteristics: line.characteristics
+        .filter((value): value is string => typeof value === "string")
+        .slice(0, 30),
+      note: leadText(line.note, 4000),
+      matchStatus: LEAD_MATCH_STATUSES.has(line.matchStatus) ? line.matchStatus : "missing",
+    }))
+    .filter((line) => line.key.length > 0 && line.label.length > 0);
+  const knownSubtotalRub = lines.reduce((sum, line) => sum + (line.lineTotalRub ?? 0), 0);
+
   return {
     schemaVersion: 1,
-    profileName: estimate.profileName,
-    generatedAt: estimate.generatedAt.toISOString(),
-    sourceUrl,
-    measurements: estimate.measurements,
-    lines: estimate.lines,
-    knownSubtotalRub: estimate.knownSubtotalRub,
-    pricedLineCount: estimate.pricedLineCount,
-    unpricedLineCount: estimate.unpricedLineCount,
-    totalUnits: estimate.totalUnits,
-    removedLabels: estimate.removedLabels,
-    reviewItems: estimate.reviewItems,
-    calculationErrors: estimate.calculationErrors,
+    profileName: leadText(estimate.profileName, 180),
+    generatedAt: Number.isNaN(estimate.generatedAt.getTime())
+      ? new Date().toISOString()
+      : estimate.generatedAt.toISOString(),
+    sourceUrl: leadText(sourceUrl, 1000) || "/",
+    measurements: estimate.measurements
+      .map((measurement) => ({
+        label: leadText(measurement.label, 180),
+        value: leadText(measurement.value, 240),
+      }))
+      .filter((measurement) => measurement.label.length > 0 && measurement.value.length > 0)
+      .slice(0, 100),
+    lines,
+    knownSubtotalRub,
+    pricedLineCount: lines.filter((line) => line.lineTotalRub !== null).length,
+    unpricedLineCount: lines.filter((line) => line.lineTotalRub === null).length,
+    totalUnits: lines.reduce((sum, line) => sum + line.quantity, 0),
+    removedLabels: estimate.removedLabels.filter((value): value is string => typeof value === "string").slice(0, 300),
+    reviewItems: estimate.reviewItems.filter((value): value is string => typeof value === "string").slice(0, 100),
+    calculationErrors: estimate.calculationErrors.filter((value): value is string => typeof value === "string").slice(0, 100),
   };
 }
 

@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 import secrets
 import shutil
@@ -42,6 +43,9 @@ from app.modules.leads.schemas import (
 )
 from app.modules.products.models import SKU, Product
 from app.modules.products.router import primary_product_image, primary_visual_sku_image
+
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -657,6 +661,7 @@ async def create_lead(
         try:
             estimate = LeadEstimate.model_validate_json(estimate_json)
         except ValidationError as error:
+            logger.warning("Rejected structured lead estimate: %s", error.errors(include_input=False))
             raise HTTPException(status_code=422, detail="Некорректная структура BOM") from error
 
     lead_id = uuid.uuid4().hex
