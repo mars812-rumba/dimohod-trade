@@ -27,6 +27,7 @@ export function QuickEstimateScheme({ answers, calculation }: QuickEstimateSchem
         variant={calculation.selectedVariant}
         roofType="pitched"
         roofThicknessMm={calculation.roofThicknessMm}
+        presentation="public"
       />
     </div>
     <p className={styles.note}>

@@ -889,16 +889,99 @@ function scenarioDraftSummary(draft: ScenarioConfiguratorDraft | null): string[]
   return values;
 }
 
+function PublicFacadeChimneyScheme({
+  calculation,
+  variant,
+}: {
+  calculation: ChimneyCalculation;
+  variant: PipeLayoutVariant | null;
+}) {
+  const pipes = variant?.pipes ?? [];
+  const outdoorPipes = pipes.filter((pipe) => pipe.axis === "vertical" && pipe.contour === "сэндвич");
+  const segmentCount = Math.max(1, Math.min(8, outdoorPipes.length));
+  const topRoute = calculation.routeKind === "wall-top";
+  const connectionY = topRoute ? 445 : 530;
+  const stackX = 268;
+  const stackTop = 82;
+  const stackBottom = connectionY - 22;
+  const segmentHeight = (stackBottom - stackTop) / segmentCount;
+
+  return (
+    <svg className="configurator-generated-svg public-facade-scheme" viewBox="0 0 360 620" role="img" aria-label="Предварительная схема дымохода через стену и по фасаду">
+      <rect width="360" height="620" fill="#f7f1e8" />
+      <rect x="20" y="68" width="148" height="520" fill="#f3e5d3" />
+      <rect x="168" y="68" width="28" height="520" fill="#e2c99f" />
+      <line x1="20" y1="588" x2="334" y2="588" stroke="#8b6c4e" strokeWidth="3" />
+      <text x="40" y="48">ПОМЕЩЕНИЕ</text>
+      <text x="230" y="48">ФАСАД</text>
+
+      <rect x="42" y="500" width="70" height="80" rx="4" fill="#d9cbb7" stroke="#173d4c" strokeWidth="2" />
+      <rect x="58" y="530" width="38" height="28" rx="2" fill="#31464d" />
+      <text x="77" y="607" textAnchor="middle">ОТОПИТЕЛЬ</text>
+
+      {topRoute ? (
+        <>
+          <path d={`M77 500 L77 ${connectionY + 18} Q77 ${connectionY} 95 ${connectionY} L158 ${connectionY}`} fill="none" stroke="#173d4c" strokeWidth="20" strokeLinecap="square" strokeLinejoin="round" />
+          <circle cx="77" cy="476" r="4" fill="#b13f20" />
+        </>
+      ) : (
+        <>
+          <line x1="112" y1={connectionY} x2="158" y2={connectionY} stroke="#173d4c" strokeWidth="20" />
+          <circle cx="128" cy={connectionY} r="4" fill="#b13f20" />
+        </>
+      )}
+
+      <rect x="154" y={connectionY - 27} width="56" height="54" rx="2" fill="#c8ced0" stroke="#59666b" strokeWidth="1.5" />
+      <rect x="163" y={connectionY - 18} width="38" height="36" fill="#bad0c8" stroke="#173d4c" strokeWidth="1.5" />
+      <line x1="196" y1={connectionY} x2={stackX - 17} y2={connectionY} stroke="#173d4c" strokeWidth="30" />
+      <line x1="196" y1={connectionY} x2={stackX - 17} y2={connectionY} stroke="#e8eeec" strokeWidth="26" />
+
+      <rect x={stackX - 17} y={connectionY - 23} width="34" height="54" rx="2" fill="#dce7e4" stroke="#173d4c" strokeWidth="2" />
+      <rect x={stackX - 14} y={connectionY + 31} width="28" height="12" rx="2" fill="#aeb7ba" stroke="#46555b" strokeWidth="1.5" />
+
+      {Array.from({ length: segmentCount }, (_, index) => {
+        const y = stackBottom - segmentHeight * (index + 1);
+        return (
+          <g key={`public-facade-segment-${index}`}>
+            <rect x={stackX - 17} y={y} width="34" height={segmentHeight} fill="#e8eeec" stroke="#173d4c" strokeWidth="2" />
+            {index < segmentCount - 1 ? <circle cx={stackX} cy={y} r="4" fill="#b13f20" /> : null}
+          </g>
+        );
+      })}
+
+      <g aria-hidden="true">
+        <line x1="196" y1={connectionY + 46} x2={stackX - 17} y2={connectionY + 46} stroke="#46555b" strokeWidth="5" />
+        <line x1="196" y1={connectionY + 46} x2={stackX - 17} y2={connectionY + 18} stroke="#46555b" strokeWidth="4" />
+        <line x1="196" y1="318" x2={stackX - 18} y2="318" stroke="#59666b" strokeWidth="4" />
+        <line x1="196" y1="318" x2={stackX - 18} y2="298" stroke="#59666b" strokeWidth="3" />
+      </g>
+
+      <g aria-hidden="true">
+        <rect x={stackX - 19} y={stackTop - 8} width="38" height="8" rx="1" fill="#aeb7ba" stroke="#46555b" strokeWidth="1" />
+        <path d={`M${stackX - 20} ${stackTop - 8} L${stackX} ${stackTop - 29} L${stackX + 20} ${stackTop - 8} Z`} fill="#b13f20" />
+      </g>
+
+      <text x="210" y={connectionY - 42}>ПРОХОД ЧЕРЕЗ СТЕНУ</text>
+      <text x="216" y="292">КРЕПЛЕНИЕ К ФАСАДУ</text>
+      <text x="316" y={(stackTop + stackBottom) / 2} transform={`rotate(-90 316 ${(stackTop + stackBottom) / 2})`} textAnchor="middle">
+        СЭНДВИЧ · {outdoorPipes.length || 1} ШТ.
+      </text>
+    </svg>
+  );
+}
+
 export function GeneratedChimneyScheme({
   calculation,
   variant,
   roofType,
   roofThicknessMm,
+  presentation = "professional",
 }: {
   calculation: ChimneyCalculation;
   variant: PipeLayoutVariant | null;
   roofType: RoofType;
   roofThicknessMm: number | null;
+  presentation?: "professional" | "public";
 }) {
   const ceiling = calculation.routeKind === "ceiling";
   const pipes = variant?.pipes ?? [];
@@ -913,6 +996,10 @@ export function GeneratedChimneyScheme({
   );
   const floorY = 700;
   const topY = 56;
+
+  if (!ceiling && presentation === "public") {
+    return <PublicFacadeChimneyScheme calculation={calculation} variant={variant} />;
+  }
 
   if (!ceiling) {
     const horizontalPipes = pipes.filter((pipe) => pipe.axis === "horizontal");
