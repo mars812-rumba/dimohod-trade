@@ -37,6 +37,18 @@ test("the estimate form sends the PDF and BOM to the existing lead endpoint", ()
   assert.match(componentSource, /deepMeasurementFormSent/);
 });
 
+test("a stalled PDF never blocks the contact lead or protected result", () => {
+  assert.match(componentSource, /PDF_ATTACHMENT_TIMEOUT_MS = 4000/);
+  assert.match(componentSource, /createOptionalPdfAttachment/);
+  assert.match(componentSource, /createChimneyEstimatePdfBlob\(estimate\)\.catch\(\(\) => null\)/);
+  assert.match(componentSource, /if \(pdf\) data\.set\("attachment"/);
+  assert.ok(
+    componentSource.indexOf("createOptionalPdfAttachment(currentEstimate)")
+      < componentSource.indexOf("fetch(`${apiBaseUrl}/api/v1/leads`"),
+  );
+  assert.match(componentSource, /onSubmitted\?\.\(customer\)/);
+});
+
 test("the form collects a contact method, consent and a spam honeypot", () => {
   for (const method of ["phone", "whatsapp", "telegram", "email"]) {
     assert.match(componentSource, new RegExp(`value="${method}"`));

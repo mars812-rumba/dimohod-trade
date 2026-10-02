@@ -31,6 +31,7 @@ type EstimateLeadDialogProps = {
 };
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const PDF_ATTACHMENT_TIMEOUT_MS = 4000;
 
 const contactDetails: Record<
   ContactMethod,
@@ -69,6 +70,20 @@ function responseError(payload: unknown): string {
   const detail = payload.detail;
   if (typeof detail === "string") return detail;
   return "Проверьте заполненные поля и попробуйте ещё раз.";
+}
+
+async function createOptionalPdfAttachment(estimate: ChimneyEstimate): Promise<Blob | null> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      createChimneyEstimatePdfBlob(estimate).catch(() => null),
+      new Promise<null>((resolve) => {
+        timeoutId = setTimeout(() => resolve(null), PDF_ATTACHMENT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 }
 
 export function EstimateLeadDialog({
@@ -118,7 +133,6 @@ export function EstimateLeadDialog({
         contact: String(data.get("contact") ?? "").trim(),
       };
       const currentEstimate = { ...estimate, customer, generatedAt: new Date() };
-      const pdf = await createChimneyEstimatePdfBlob(currentEstimate);
       data.set("source", source);
       data.set(
         "configuration",
@@ -133,7 +147,8 @@ export function EstimateLeadDialog({
           sourceUrl: window.location.href,
         }),
       );
-      data.set("attachment", pdf, "predvaritelnaya-smeta-dymohoda.pdf");
+      const pdf = await createOptionalPdfAttachment(currentEstimate);
+      if (pdf) data.set("attachment", pdf, "predvaritelnaya-smeta-dymohoda.pdf");
 
       const response = await fetch(`${apiBaseUrl}/api/v1/leads`, {
         method: "POST",

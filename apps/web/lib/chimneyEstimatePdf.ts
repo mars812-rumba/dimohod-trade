@@ -11,10 +11,15 @@ const MATCH_LABELS = {
 } as const;
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const BRAND_LOGO_TIMEOUT_MS = 2500;
 
 async function loadBrandLogo(): Promise<string | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), BRAND_LOGO_TIMEOUT_MS);
   try {
-    const response = await fetch(`${appBasePath}/brand/logo-original.jpg`);
+    const response = await fetch(`${appBasePath}/brand/logo-original.jpg`, {
+      signal: controller.signal,
+    });
     if (!response.ok) return null;
     const blob = await response.blob();
     return await new Promise<string>((resolve, reject) => {
@@ -25,6 +30,8 @@ async function loadBrandLogo(): Promise<string | null> {
     });
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
