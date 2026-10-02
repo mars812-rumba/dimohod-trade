@@ -956,16 +956,16 @@ function PublicFacadeChimneyScheme({
         <line x1="196" y1="318" x2={stackX - 18} y2="298" stroke="#59666b" strokeWidth="3" />
       </g>
 
+      <g aria-hidden="true" data-public-console="upper-roof">
+        <line x1="196" y1="166" x2={stackX - 18} y2="166" stroke="#59666b" strokeWidth="4" />
+        <line x1="196" y1="166" x2={stackX - 18} y2="146" stroke="#59666b" strokeWidth="3" />
+      </g>
+
       <g aria-hidden="true">
         <rect x={stackX - 19} y={stackTop - 8} width="38" height="8" rx="1" fill="#aeb7ba" stroke="#46555b" strokeWidth="1" />
         <path d={`M${stackX - 20} ${stackTop - 8} L${stackX} ${stackTop - 29} L${stackX + 20} ${stackTop - 8} Z`} fill="#b13f20" />
       </g>
 
-      <text x="210" y={connectionY - 42}>ПРОХОД ЧЕРЕЗ СТЕНУ</text>
-      <text x="216" y="292">КРЕПЛЕНИЕ К ФАСАДУ</text>
-      <text x="316" y={(stackTop + stackBottom) / 2} transform={`rotate(-90 316 ${(stackTop + stackBottom) / 2})`} textAnchor="middle">
-        СЭНДВИЧ · {outdoorPipes.length || 1} ШТ.
-      </text>
     </svg>
   );
 }

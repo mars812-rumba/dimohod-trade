@@ -89,6 +89,7 @@ test("public SVG scheme opens after contact handoff and reuses the professional 
   assert.match(quickScheme, /variant=\{calculation\.selectedVariant\}/);
   assert.match(quickScheme, /presentation="public"/);
   assert.match(readFileSync(new URL("../components/ChimneyConfigurator.tsx", import.meta.url), "utf8"), /PublicFacadeChimneyScheme/);
+  assert.match(readFileSync(new URL("../components/ChimneyConfigurator.tsx", import.meta.url), "utf8"), /data-public-console="upper-roof"/);
   assert.match(helper, /quickEstimateSchemeRidgeHeightMm/);
   assert.match(helper, /3500 \+ Math\.max\(0, answers\.floors - 1\) \* 3000 \+ \(answers\.hasAttic \? 1500 : 0\)/);
   assert.match(component, /const schemeCalculation = useMemo/);
