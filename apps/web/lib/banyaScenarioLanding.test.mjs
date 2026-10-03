@@ -11,7 +11,7 @@ const scenarioSource = readFileSync(new URL("./scenarioPages.ts", import.meta.ur
 test("bath scenario uses a dedicated commercial landing", () => {
   assert.match(pageSource, /BanyaScenarioLanding/);
   assert.doesNotMatch(pageSource, /ScenarioPageTemplate/);
-  assert.match(landingSource, /<h1>Рассчитайте дымоход для бани<\/h1>/);
+  assert.match(landingSource, /<h1>Дымоход для банной печи: подбор комплекта<\/h1>/);
   assert.match(landingSource, /fixedObjectType="banya"/);
   assert.match(landingSource, /leadSource="solution-banya-quick-estimate"/);
 });

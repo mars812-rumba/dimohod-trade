@@ -36,6 +36,24 @@ export type GuideArticle = {
   sections: GuideSection[];
   sources: GuideSource[];
   relatedSlugs: string[];
+  estimateExample?: GuideEstimateExample;
+};
+
+// A reviewed, dated snapshot. Never infer compatibility or publish a sample as a real order.
+export type GuideEstimateExample = {
+  title: string;
+  calculatedAt: string;
+  context: string[];
+  scope: string;
+  source: GuideSource;
+  lines: Array<{
+    skuId: string;
+    name: string;
+    href: string;
+    material: string;
+    quantity: number;
+    unitPriceRub: number | null;
+  }>;
 };
 
 const spSource: GuideSource = {

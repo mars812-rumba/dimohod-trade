@@ -7436,6 +7436,15 @@ body.mobile-menu-open {
   margin-bottom: 28px;
 }
 
+.catalog-selection-help { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--line); }
+.catalog-selection-help h2 { margin-bottom: 18px; font-size: 28px; line-height: 1.2; text-wrap: balance; }
+.catalog-selection-help p { max-width: 72ch; font-size: 16px; line-height: 1.65; }
+.catalog-selection-help dl { display: grid; gap: 16px; margin: 24px 0; }
+.catalog-selection-help dt { font-weight: 700; }
+.catalog-selection-help dd { margin: 5px 0 0; font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
+.catalog-selection-help nav { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 24px; }
+.catalog-selection-help a { color: var(--text); font-size: 15px; text-decoration: underline; text-underline-offset: 4px; }
+
 .catalog-mobile-filter {
   margin-bottom: 26px;
   border: 1px solid var(--line);

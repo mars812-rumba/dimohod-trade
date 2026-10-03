@@ -16,6 +16,7 @@ import { HomeQuickEstimate } from "./HomeQuickEstimate";
 import { HomeWorksShowcase } from "./HomeWorksShowcase";
 import { LeadForm } from "./LeadForm";
 import { SolutionTrustSections } from "./SolutionTrustSections";
+import { CommercialSelectionLinks } from "./CommercialSelectionLinks";
 import { YANDEX_MAPS_RATING } from "./YandexRatingBadge";
 import styles from "./HomeScenarioLanding.module.css";
 
@@ -115,9 +116,9 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
           <div className={`${styles.shell} ${styles.heroGrid}`}>
             <div className={styles.heroCopy}>
               <p className={styles.eyebrow}>Дымоход для банной печи</p>
-              <h1>Рассчитайте дымоход для бани</h1>
+              <h1>Дымоход для банной печи: подбор комплекта</h1>
               <p className={styles.heroText}>
-                Получите предварительный состав комплекта, реальные товары и ориентировочную стоимость до отправки контакта.
+                Укажите данные печи и маршрут. После отправки контактов покажем предварительный состав комплекта, реальные товары и ориентировочную стоимость.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#quick-estimate">
@@ -253,6 +254,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
         </section>
 
         <SolutionTrustSections assetBasePath={assetBasePath} />
+        <CommercialSelectionLinks scenario="banya" />
 
         <section className={styles.reviewsSection} aria-labelledby="banya-reviews-title">
           <div className={`${styles.shell} ${styles.reviewsLayout}`}>

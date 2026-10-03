@@ -14,6 +14,8 @@ import {
   type GuideArticle,
 } from "@/lib/guideArticles";
 import styles from "./GuideArticlePage.module.css";
+import { guideDate } from "@/lib/guidePresentation";
+import { GuideEstimateExample } from "./GuideEstimateExample";
 
 type GuideArticlePageProps = {
   article: GuideArticle;
@@ -46,7 +48,7 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
               <p className={styles.lead}>{article.summary}</p>
               <div className={styles.meta}>
                 <span><Clock size={17} aria-hidden /> {article.readingTime}</span>
-                <span>Обновлено 22 августа 2026</span>
+                <span>Обновлено <time dateTime={article.modifiedAt}>{guideDate(article.modifiedAt)}</time></span>
               </div>
               <Link className={styles.primaryButton} href={guideConfiguratorHref}>
                 Рассчитать свой комплект <ArrowRight size={18} aria-hidden />
@@ -114,6 +116,8 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                 ) : null}
               </section>
             ))}
+
+            {article.estimateExample ? <GuideEstimateExample example={article.estimateExample} /> : null}
 
             <aside className={styles.safetyNote}>
               <AlertTriangle size={24} strokeWidth={1.8} aria-hidden />

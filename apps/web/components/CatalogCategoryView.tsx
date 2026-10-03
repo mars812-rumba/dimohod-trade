@@ -32,6 +32,7 @@ import {
 } from "@/lib/api";
 import { productPublicPath } from "@/lib/productUrls";
 import { filterVariantItems } from "@/lib/variantSelection";
+import { sandwichCategoryContent } from "@/lib/commercialContent";
 
 const PAGE_SIZE = 48;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro";
@@ -256,6 +257,8 @@ export async function CatalogCategoryView({
     inner_thickness: innerThickness,
     outer_pipe: appliedOuterPipe,
   });
+  const showSandwichContent = category.slug === "sendvich-truby" && !hasQuery && !seoPage;
+  const intro = seoPage?.intro ?? (showSandwichContent ? sandwichCategoryContent.intro : category.description);
 
   return (
     <>
@@ -285,8 +288,8 @@ export async function CatalogCategoryView({
               <strong>{productResponse.total}</strong><span>семейств найдено</span>
             </div>
           </div>
-          {seoPage?.intro || category.description ? (
-            <p className="lead catalog-category-description">{seoPage?.intro ?? category.description}</p>
+          {intro ? (
+            <p className="lead catalog-category-description">{intro}</p>
           ) : null}
 
           {relatedSeoPages.length ? (
@@ -370,6 +373,26 @@ export async function CatalogCategoryView({
               </Link>
             ) : <span />}
           </nav>
+          {showSandwichContent ? (
+            <section className="catalog-selection-help" aria-labelledby="sandwich-selection-title">
+              <h2 id="sandwich-selection-title">Что проверить перед покупкой сэндвич-трубы</h2>
+              <p>Обозначение d/D показывает внутренний и наружный диаметры. Сверьте параметры подключения с паспортом отопителя; затем выберите длину и исполнение трубы.</p>
+              <dl>
+                <div><dt>Диаметры d/D в каталоге</dt><dd>{availableFilters.diameters.map((item) => item.label).join(", ") || "Уточняются"}</dd></div>
+                <div><dt>Длины</dt><dd>{availableFilters.lengths.map((item) => item.label).join(", ") || "Уточняются"}</dd></div>
+                <div><dt>Толщина внутренней трубы</dt><dd>{availableFilters.wall_thicknesses.map((item) => item.label).join(", ") || "Уточняется"}</dd></div>
+              </dl>
+              <p>Для полного комплекта нужны параметры отопителя, маршрут и размеры объекта. Подберите совместимые элементы и рассчитайте полный комплект дымохода в конфигураторе.</p>
+              <nav aria-label="Маршрут и расчёт дымохода">
+                <Link href="/configurator">Рассчитать полный комплект</Link>
+                <Link href="/guides/dymohod-cherez-stenu">Маршрут через стену</Link>
+                <Link href="/guides/dymohod-cherez-krovlyu">Маршрут через кровлю</Link>
+                <Link href="/solutions/banya">Комплект для бани</Link>
+                <Link href="/solutions/dom">Комплект для дома</Link>
+                <Link href="/solutions/pech">Комплект для печи</Link>
+              </nav>
+            </section>
+          ) : null}
         </section>
       </main>
     </>

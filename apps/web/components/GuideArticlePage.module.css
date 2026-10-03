@@ -139,6 +139,13 @@
 }
 
 .content { min-width: 0; }
+.estimateTableWrap { max-width: 100%; overflow-x: auto; margin: 24px 0; }
+.estimateTableWrap:focus-visible { outline: 3px solid var(--guide-accent); outline-offset: 3px; }
+.estimateTable { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 15px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.estimateTable caption { text-align: left; margin-bottom: 12px; font-weight: 700; }
+.estimateTable th, .estimateTable td { padding: 12px; border-bottom: 1px solid var(--guide-line); text-align: left; vertical-align: top; }
+.estimateTable th { color: var(--guide-ink); }
+.estimateTable a { color: #173f48; text-decoration: underline; text-underline-offset: 3px; }
 .section { margin-top: 56px; }
 .section h2,
 .quickAnswer h2,

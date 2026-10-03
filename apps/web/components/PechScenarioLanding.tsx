@@ -16,6 +16,7 @@ import { HomeQuickEstimate } from "./HomeQuickEstimate";
 import { HomeWorksShowcase } from "./HomeWorksShowcase";
 import { LeadForm } from "./LeadForm";
 import { SolutionTrustSections } from "./SolutionTrustSections";
+import { CommercialSelectionLinks } from "./CommercialSelectionLinks";
 import { YANDEX_MAPS_RATING } from "./YandexRatingBadge";
 import styles from "./HomeScenarioLanding.module.css";
 
@@ -115,7 +116,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           <div className={`${styles.shell} ${styles.heroGrid}`}>
             <div className={styles.heroCopy}>
               <p className={styles.eyebrow}>Дымоход для отопительной печи</p>
-              <h1>Рассчитайте дымоход для печи в доме</h1>
+              <h1>Дымоход для печи: подбор и расчёт комплекта</h1>
               <p className={styles.heroText}>
                 Укажите модель печи, расположение патрубка и маршрут. Покажем предварительный состав, реальные товары и ориентировочную стоимость.
               </p>
@@ -254,6 +255,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
         </section>
 
         <SolutionTrustSections assetBasePath={assetBasePath} />
+        <CommercialSelectionLinks scenario="pech" />
 
         <section className={styles.reviewsSection} aria-labelledby="pech-reviews-title">
           <div className={`${styles.shell} ${styles.reviewsLayout}`}>

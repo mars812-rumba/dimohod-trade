@@ -1,0 +1,12 @@
+.section { padding: 48px 0; background: #f6f5f1; color: #14252a; }
+.shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+.shell h2 { max-width: 28ch; margin: 0 0 20px; font-family: var(--font-heading); font-size: var(--type-section-title); line-height: 1.12; text-wrap: balance; }
+.shell p, .shell ol { max-width: 72ch; font-size: 16px; line-height: 1.65; }
+.shell ol { padding-left: 24px; }
+.shell li { margin: 12px 0; }
+.links { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 24px 0; }
+.links a { color: #173d4c; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; overflow-wrap: anywhere; }
+.action { display: inline-flex; justify-content: center; align-items: center; min-height: 48px; padding: 12px 20px; border-radius: 8px; color: #fff; background: #bd3d16; font-size: 15px; font-weight: 700; }
+.action:hover { background: #9c3010; }
+.shell a:focus-visible { outline: 3px solid #bd3d16; outline-offset: 4px; }
+@media (max-width: 560px) { .shell { width: calc(100% - 28px); } .action { width: 100%; text-align: center; } }
