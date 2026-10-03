@@ -7,7 +7,7 @@ export type DiameterSource = "passport" | "measured" | "unknown";
 
 export const FACADE_PIPE_CLEARANCE_MM = 100;
 export const CONFIGURATOR_DIAMETERS_MM = [
-  100, 110, 120, 130, 140, 150, 160, 180, 200, 250, 280, 300,
+  100, 110, 115, 120, 130, 140, 150, 160, 180, 200, 250, 280, 300,
 ] as const;
 
 export function facadeOffsetFromRoofOverhang(roofOverhang: string): string {

@@ -22,7 +22,10 @@ import {
   type ChimneyEstimateCustomer,
 } from "@/lib/chimneyEstimate";
 import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
-import type { EquipmentStatus } from "@/lib/configuratorDraft";
+import {
+  CONFIGURATOR_DIAMETERS_MM,
+  type EquipmentStatus,
+} from "@/lib/configuratorDraft";
 import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
 import { METRIKA_GOALS } from "@/lib/metrika";
 import { operator } from "@/lib/privacy";
@@ -96,7 +99,7 @@ const routeChoices = [
   { id: "wall" as const, label: "Через стену и вверх по фасаду", image: "/images/home/quick-estimate/route-along-facade.webp" },
 ];
 
-const diameterOptions = [100, 110, 120, 130, 140, 150, 160, 180, 200, 250, 280, 300];
+const diameterOptions = CONFIGURATOR_DIAMETERS_MM;
 
 const heaterLabels = new Map(heaterChoices.map((choice) => [choice.id, choice.label]));
 
