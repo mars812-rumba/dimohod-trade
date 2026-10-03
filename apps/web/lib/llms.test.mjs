@@ -83,7 +83,7 @@ test("llms.txt leads with task-based selection and describes real configurator o
   assert.match(llmsSource, /начать со своей задачи/);
   assert.match(llmsSource, /## Two calculation paths/);
   assert.match(llmsSource, /Быстрый предварительный расчёт/);
-  assert.match(llmsSource, /Глубокий расчёт по полным замерам/);
+  assert.match(llmsSource, /Расчёт по замерам/);
   assert.match(llmsSource, /точная смета для заказа появляется после проверки менеджером/);
   assert.doesNotMatch(llmsSource, /±30%/);
   assert.match(llmsSource, /менеджер проверяет состав, совместимость и итоговую стоимость/);

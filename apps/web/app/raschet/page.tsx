@@ -9,7 +9,7 @@ import styles from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "Выбор формата расчёта — Дымоход Трейд",
-  description: "Выберите быстрый предварительный расчёт или подготовку полного замера для проверки менеджером.",
+  description: "Выберите быстрый предварительный расчёт или расчёт по замерам для проверки менеджером.",
   alternates: { canonical: "/raschet" },
   robots: { index: false, follow: true },
 };
@@ -28,7 +28,7 @@ export default function CalculationChoicePage() {
           <h1>Что вам нужно сейчас?</h1>
           <p>
             Выберите путь по своей ситуации. Быстрый расчёт покажет порядок бюджета,
-            а глубокий замер подготовит данные для реального заказа.
+            а расчёт по замерам подготовит данные для реального заказа.
           </p>
         </header>
 
@@ -39,7 +39,7 @@ export default function CalculationChoicePage() {
             </div>
             <div className={styles.choiceCopy}>
               <p>Готовите реальный заказ?</p>
-              <h2>Глубокий замер</h2>
+              <h2>Расчёт по замерам</h2>
               <p className={styles.description}>
                 Укажите размеры отопителя и трассы. Получите точную смету по вашим данным
                 после проверки менеджером.
@@ -51,7 +51,7 @@ export default function CalculationChoicePage() {
               </ul>
             </div>
             <Link className={styles.primaryAction} href="/zamery?edit=1">
-              Начать глубокий замер
+              Начать расчёт по замерам
               <IconArrowRight aria-hidden size={19} strokeWidth={1.8} />
             </Link>
           </article>
@@ -79,7 +79,7 @@ export default function CalculationChoicePage() {
         </section>
 
         <p className={styles.footerNote}>
-          После быстрого расчёта можно перейти в глубокий замер — известные данные перенесём автоматически.
+          После быстрого расчёта можно перейти к расчёту по замерам — известные данные перенесём автоматически.
         </p>
       </div>
     </main>
