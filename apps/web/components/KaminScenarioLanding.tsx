@@ -118,7 +118,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               <p className={styles.eyebrow}>Камин в доме</p>
               <h1>Дымоход и монтаж каминной топки под ключ</h1>
               <p className={styles.heroText}>
-                Пришлите модель топки, план или фотографии объекта. Подготовим индивидуальный состав дымохода и перечень работ без универсального готового комплекта.
+                Пришлите модель топки, план или фотографии объекта. Быстрый расчёт покажет предварительную стоимость комплектующих дымохода, а монтаж топки, короб и другие работы рассчитаем отдельно по вашему объекту.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#quick-estimate">
@@ -172,7 +172,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
             <div className={styles.helpPanel}>
               <div className={styles.sectionHeading}>
                 <p className={styles.eyebrow}>Индивидуальный расчёт</p>
-                <h2 id="kamin-request-title">Отправьте топку, план или фотографии</h2>
+                <h2 id="kamin-request-title">Пришлите модель топки, план или фотографии</h2>
                 <p>Не обязательно собирать все размеры заранее. Начните с того, что уже есть, — менеджер посмотрит материалы и перечислит недостающие данные.</p>
               </div>
               <LeadForm
@@ -191,7 +191,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
           <div className={styles.shell}>
             <div className={styles.sectionHeading}>
               <h2 id="kamin-inputs-title">Что понадобится для расчёта камина</h2>
-              <p>Собираем данные по топке, дому и внешнему виду проекта. Неизвестные параметры оставляем на уточнение, а не заменяем предположениями.</p>
+              <p>Для предварительной оценки можно начать с известных данных. В быстром расчёте используются типовые размеры, а перед заказом менеджер уточняет параметры топки и объекта.</p>
             </div>
             <div className={styles.inputGrid}>
               {inputGroups.map(({ icon: Icon, title, text }) => (
@@ -221,7 +221,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
             <div className={styles.sectionHeading}>
               <p className={styles.eyebrow}>Состав проекта</p>
               <h2 id="kamin-scope-title">Дымоход и монтаж каминной топки</h2>
-              <p>Состав материалов и работ определяем по конкретной топке и объекту. На странице нет типового комплекта, который выдаётся за готовое решение для любого дома.</p>
+              <p>Состав материалов и работ определяем по модели топки, маршруту дымохода и особенностям объекта.</p>
             </div>
             <div className={styles.seoGrid}>
               <article>
@@ -260,6 +260,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
             <div className={styles.reviewsIntro}>
               <Image alt="" aria-hidden height={52} src={`${assetBasePath}/images/home/yandex-maps-icon-user-v6.png`} width={52} />
               <h2 id="kamin-reviews-title">Отзывы клиентов на Яндекс Картах</h2>
+              <p className={styles.reviewsNote}>Краткое содержание отзывов. Оригиналы смотрите на Яндекс Картах.</p>
               <div className={styles.rating} aria-label={`Рейтинг ${YANDEX_MAPS_RATING} из 5`}>
                 <strong>{YANDEX_MAPS_RATING}</strong>
                 <span>{Array.from({ length: 5 }, (_, index) => <Star aria-hidden key={index} size={18} />)}</span>

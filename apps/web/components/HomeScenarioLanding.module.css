@@ -206,6 +206,7 @@
 .reviewsSection { color: #eef4f5; background: var(--landing-deep); }
 .reviewsLayout { display: grid; grid-template-columns: minmax(260px, .55fr) minmax(0, 1.45fr); gap: clamp(34px, 6vw, 72px); align-items: center; }
 .reviewsIntro h2 { max-width: 420px; margin: 22px 0 0; color: #fff; font-size: var(--type-section-title); line-height: 1; letter-spacing: -.04em; }
+.reviewsNote { max-width: 420px; margin: 14px 0 0; color: #c6d6da; font-size: 13px; line-height: 1.5; }
 .rating { display: flex; gap: 14px; align-items: center; margin-top: 26px; }
 .rating strong { font-size: 38px; line-height: 1; }
 .rating span,

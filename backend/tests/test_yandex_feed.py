@@ -66,7 +66,7 @@ def test_feed_contains_public_priced_sku_with_absolute_urls() -> None:
     root = parse_feed(family)
     offer = root.find("./shop/offers/offer")
 
-    assert root.attrib["date"] == "2026-08-31 12:30"
+    assert root.attrib["date"] == "2026-08-31T12:30:00+00:00"
     assert offer is not None
     assert offer.attrib["id"] == variant.article
     assert offer.findtext("price") == "1234.50"

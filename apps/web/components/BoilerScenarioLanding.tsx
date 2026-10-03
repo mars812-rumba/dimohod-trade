@@ -388,6 +388,7 @@ export function BoilerScenarioLanding({
             <div className={styles.reviewsIntro}>
               <Image alt="" aria-hidden height={52} src={`${assetBasePath}/images/home/yandex-maps-icon-user-v6.png`} width={52} />
               <h2 id="boiler-reviews-title">Отзывы клиентов на Яндекс Картах</h2>
+              <p className={styles.reviewsNote}>Краткое содержание отзывов. Оригиналы смотрите на Яндекс Картах.</p>
               <div className={styles.rating} aria-label={`Рейтинг ${YANDEX_MAPS_RATING} из 5`}>
                 <strong>{YANDEX_MAPS_RATING}</strong>
                 <span>{Array.from({ length: 5 }, (_, index) => <Star aria-hidden key={index} size={18} />)}</span>

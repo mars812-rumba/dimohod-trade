@@ -146,7 +146,9 @@ def build_yandex_feed(
     generated_at: datetime | None = None,
 ) -> bytes:
     now = generated_at or datetime.now(UTC)
-    root = ET.Element("yml_catalog", {"date": now.strftime("%Y-%m-%d %H:%M")})
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=UTC)
+    root = ET.Element("yml_catalog", {"date": now.isoformat(timespec="seconds")})
     shop = ET.SubElement(root, "shop")
     ET.SubElement(shop, "name").text = "Дымоход Трейд"
     ET.SubElement(shop, "company").text = "Дымоход Трейд"
