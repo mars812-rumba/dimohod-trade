@@ -1,0 +1,34 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const css = fs.readFileSync(path.join(here, "../app/globals.css"), "utf8");
+const productMobileStart = css.indexOf(
+  "@media (max-width: 768px) {",
+  css.indexOf(".product-page .product-back-link"),
+);
+const productMobileEnd = css.indexOf("\n.catalog-result-count", productMobileStart);
+const productMobileCss = css.slice(productMobileStart, productMobileEnd);
+const catalogMobileStart = css.lastIndexOf("@media (max-width: 768px) {");
+const catalogMobileCss = css.slice(catalogMobileStart);
+
+test("mobile product UI keeps text readable and lets long labels wrap", () => {
+  assert.match(productMobileCss, /\.product-page \.yandex-rating-badge \{[\s\S]*?font-size: 12px;/);
+  assert.match(productMobileCss, /\.product-page \.product-image-badge \{[\s\S]*?font-size: 12px;[\s\S]*?overflow-wrap: anywhere;[\s\S]*?white-space: normal;/);
+  assert.match(productMobileCss, /\.product-page \.variant-group legend \{[\s\S]*?font-size: 12px;[\s\S]*?white-space: normal;/);
+  assert.match(productMobileCss, /\.product-page \.delivery-row \{[\s\S]*?font-size: 13px;[\s\S]*?overflow-wrap: anywhere;/);
+});
+
+test("mobile empty product media does not consume most of the first screen", () => {
+  assert.match(productMobileCss, /\.product-page \.product-image-placeholder \{[\s\S]*?height: 168px;[\s\S]*?font-size: 14px;/);
+});
+
+test("mobile catalog cards use readable facts and wrapping badges", () => {
+  assert.match(catalogMobileCss, /\.catalog-page \.catalog-category-facts dt \{[\s\S]*?font-size: 12px;/);
+  assert.match(catalogMobileCss, /\.catalog-page \.catalog-category-facts dd \{[\s\S]*?font-size: 13px;[\s\S]*?overflow-wrap: anywhere;/);
+  assert.match(catalogMobileCss, /\.catalog-page \.catalog-product-image-badges \{[\s\S]*?flex-wrap: wrap;/);
+  assert.match(catalogMobileCss, /\.catalog-page \.catalog-product-image-badges \.product-image-badge \{[\s\S]*?font-size: 12px;[\s\S]*?white-space: normal;/);
+});

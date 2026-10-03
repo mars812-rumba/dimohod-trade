@@ -7189,47 +7189,58 @@ body.mobile-menu-open {
     aspect-ratio: 4 / 3;
   }
 
+  .product-page .product-image-placeholder {
+    height: 168px;
+    padding: 20px;
+    font-size: 14px;
+    text-align: center;
+  }
+
   .product-page .yandex-rating-badge {
     top: 8px;
     left: 8px;
-    gap: 3px;
-    min-height: 20px;
-    padding: 2px 5px 2px 2px;
-    font-size: 7.5px;
+    gap: 5px;
+    min-height: 28px;
+    padding: 3px 7px 3px 3px;
+    font-size: 12px;
   }
 
   .product-page .yandex-rating-badge strong {
-    font-size: 9px;
+    font-size: 14px;
   }
 
   .product-page .yandex-rating-badge .yandex-rating-badge-icon {
-    width: 12px;
-    height: 12px;
+    width: 18px;
+    height: 18px;
   }
 
   .product-page .product-image-badges {
     right: 8px;
     bottom: 8px;
     left: 8px;
-    flex-wrap: nowrap;
-    gap: 3px;
+    flex-wrap: wrap;
+    gap: 5px;
     max-width: none;
   }
 
   .product-page .product-image-badge {
+    max-width: 100%;
     min-height: 22px;
     padding: 4px 6px;
-    font-size: clamp(7px, 2vw, 8px);
+    font-size: 12px;
     letter-spacing: 0.015em;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .product-page .product-image-technology-badge {
     top: 8px;
     right: 8px;
-    min-height: 23px;
-    padding: 4px 6px;
-    font-size: 7.5px;
+    max-width: calc(100% - 16px);
+    min-height: 28px;
+    padding: 5px 7px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
   }
 
   .product-page .sku-panel {
@@ -7244,6 +7255,7 @@ body.mobile-menu-open {
   }
 
   .product-page .variant-picker-head {
+    min-width: 0;
     align-items: center;
     margin: 0;
     padding: 11px 12px;
@@ -7253,12 +7265,16 @@ body.mobile-menu-open {
   }
 
   .product-page .variant-picker-head span {
+    min-width: 0;
     font-size: 15px;
+    overflow-wrap: anywhere;
   }
 
   .product-page .variant-picker-head strong {
     color: #66777c;
-    font-size: 9px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    text-align: right;
   }
 
   .product-page .variant-group {
@@ -7267,9 +7283,10 @@ body.mobile-menu-open {
 
   .product-page .variant-group legend {
     margin-bottom: 5px;
-    font-size: clamp(9px, 2.2vw, 11px);
+    font-size: 12px;
     letter-spacing: 0;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .product-page .variant-select-wrap select {
@@ -7285,7 +7302,8 @@ body.mobile-menu-open {
   .product-page .variant-toggle-options .variant-option {
     min-height: 40px;
     padding: 6px 5px;
-    font-size: clamp(11px, 2.5vw, 13px);
+    font-size: clamp(12px, 2.8vw, 13px);
+    overflow-wrap: anywhere;
   }
 
   .product-page .sku-price-block-selection {
@@ -7294,7 +7312,7 @@ body.mobile-menu-open {
   }
 
   .product-page .sku-price-note {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .product-page .sku-cta {
@@ -7323,7 +7341,9 @@ body.mobile-menu-open {
 
   .product-page .delivery-row {
     align-items: flex-start;
-    font-size: 11px;
+    min-width: 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
   }
 
   .product-page .panel-contact-block {
@@ -7341,7 +7361,8 @@ body.mobile-menu-open {
   .product-page .panel-phone,
   .product-page .panel-email {
     min-width: 0;
-    font-size: 11px;
+    font-size: 13px;
+    overflow-wrap: anywhere;
   }
 
   .product-page .product-title {
@@ -8619,15 +8640,17 @@ body.mobile-menu-open {
 
   .catalog-page .catalog-category-facts dt {
     margin-bottom: 1px;
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .catalog-page .catalog-category-facts dd {
-    font-size: 10.5px;
+    font-size: 13px;
+    overflow-wrap: anywhere;
   }
 
   .catalog-page .catalog-category-link {
     padding-top: 14px;
+    font-size: 12px;
   }
 
   .catalog-page .catalog-mobile-filter summary {
@@ -8648,8 +8671,10 @@ body.mobile-menu-open {
 
   .catalog-page .catalog-filter-field > span,
   .catalog-page .catalog-material-filter > span {
-    font-size: clamp(9px, 2.2vw, 11px);
+    font-size: 12px;
     letter-spacing: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .catalog-page .catalog-products-grid {
@@ -8662,5 +8687,23 @@ body.mobile-menu-open {
 
   .catalog-page .catalog-product-media > .catalog-product-photo {
     height: 220px;
+  }
+
+  .catalog-page .catalog-product-image-badges {
+    flex-wrap: wrap;
+  }
+
+  .catalog-page .catalog-product-image-badges .product-image-badge {
+    flex: 1 1 auto;
+    max-width: 100%;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .catalog-page .catalog-product-technology-badge {
+    max-width: calc(100% - 24px);
+    font-size: 12px;
+    overflow-wrap: anywhere;
   }
 }
