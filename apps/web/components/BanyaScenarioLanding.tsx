@@ -118,7 +118,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               <p className={styles.eyebrow}>Дымоход для банной печи</p>
               <h1>Дымоход для банной печи: подбор комплекта</h1>
               <p className={styles.heroText}>
-                Укажите данные печи и маршрут. После отправки контактов покажем предварительный состав комплекта, реальные товары и ориентировочную стоимость.
+                Укажите данные печи и маршрут. Сразу покажем предварительную схему, состав комплекта, реальные товары и ориентировочную стоимость — без отправки контактов.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#quick-estimate">
@@ -143,7 +143,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
 
         <section className={styles.resultStrip} aria-label="Результат быстрого расчёта">
           <div className={styles.shell}>
-            <div><strong>Стоимость и состав</strong><span>после отправки контактов</span></div>
+            <div><strong>Стоимость, состав и схема</strong><span>без отправки контактов</span></div>
             <div><strong>Товарный состав</strong><span>с количеством и ценами</span></div>
             <div><strong>Проверка менеджером</strong><span>перед оформлением заказа</span></div>
           </div>
@@ -170,15 +170,15 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
             </div>
             <div className={styles.helpPanel}>
               <div className={styles.sectionHeading}>
-                <h2 id="banya-help-title">Не знаете параметры? Пришлите фото</h2>
-                <p>Добавьте название печи, фото места установки или план бани. Менеджер подскажет, какие данные нужны для проверки.</p>
+                <h2 id="banya-help-title">Не знаете параметры? Поможем разобраться</h2>
+                <p>Оставьте контакты — менеджер перезвонит и уточнит данные для подбора. Фото печи, паспорта или план бани можно прикрепить по желанию.</p>
               </div>
               <LeadForm
                 attachmentLabel="Добавить фото или план"
                 commentPlaceholder="Что уже известно: модель печи, диаметр, маршрут или размеры бани"
                 source="solution-banya-help"
                 submitLabel="Оставить заявку"
-                successMessage="Менеджер посмотрит материалы и сообщит, что нужно уточнить для подбора."
+                successMessage="Менеджер перезвонит и уточнит данные для подбора комплекта."
               />
             </div>
           </div>

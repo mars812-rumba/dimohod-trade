@@ -58,5 +58,5 @@ test("mobile navigation keeps the same order and moves secondary links into more
     assert.ok(next > position, `${label} must follow the previous mobile navigation item`);
     position = next;
   }
-  assert.match(mobileNav, /<span>Ещё<\/span>[\s\S]*href="\/pechi"[\s\S]*Сохранённые расчёты[\s\S]*Отправить фото или схему/u);
+  assert.match(mobileNav, /<span>Ещё<\/span>[\s\S]*href="\/pechi"[\s\S]*Сохранённые расчёты[\s\S]*Оставить заявку/u);
 });

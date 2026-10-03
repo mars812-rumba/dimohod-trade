@@ -221,7 +221,7 @@ export function SiteHeader() {
             <div className="desktop-nav-dropdown" onClick={handleDesktopDropdownClick}>
               <Link href="/pechi">Печи</Link>
               <Link href="/configurator">Сохранённые расчёты</Link>
-              <Link href="/#send-materials">Отправить фото или схему</Link>
+              <Link href="/#send-materials">Оставить заявку</Link>
               <span className="desktop-nav-label">Документы</span>
               <Link href={privacyPolicyPath}>Политика персональных данных</Link>
               <Link href={personalDataConsentPath}>Согласие на обработку данных</Link>
@@ -328,7 +328,7 @@ export function SiteHeader() {
                 <Link className="mobile-menu-feature-link" href="/configurator" onClick={closeMenu}>
                   <span><Construction aria-hidden size={17} /> Сохранённые расчёты</span>
                 </Link>
-                <Link href="/#send-materials" onClick={closeMenu}>Отправить фото или схему</Link>
+                <Link href="/#send-materials" onClick={closeMenu}>Оставить заявку</Link>
                 <div className="mobile-menu-legal" aria-label="Правовые документы">
                   <p className="mobile-menu-legal-title">Документы</p>
                   <Link href={privacyPolicyPath} onClick={closeMenu}>Политика персональных данных</Link>

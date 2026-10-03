@@ -163,7 +163,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             Рассчитайте комплект дымохода за 2 минуты
           </h1>
           <p className={styles.heroOfferText}>
-            Ответьте на 5 простых вопросов — получите предварительную смету и состав
+            Укажите отопитель и маршрут — получите предварительную смету и состав
             комплекта с ценами.
           </p>
           <div className={styles.heroActions}>
@@ -171,7 +171,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
               <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
               <div className={styles.ctaCopy}>
                 <strong>Рассчитать комплект</strong>
-                <span>Перейти к 5 простым вопросам</span>
+                <span>Перейти к быстрому расчёту</span>
               </div>
               <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
             </Link>

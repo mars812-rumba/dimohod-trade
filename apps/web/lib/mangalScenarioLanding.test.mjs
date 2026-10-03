@@ -39,5 +39,5 @@ test("barbecue solution is discoverable and has complete metadata", () => {
 test("barbecue page keeps one primary conversion and a quieter proof link", () => {
   assert.match(landing, /className=\{styles\.primaryButton\} href="#project-request"/);
   assert.match(landing, /className=\{styles\.heroTextLink\} href="#completed-mangal"/);
-  assert.match(landing, /Отправить на расчёт/);
+  assert.match(landing, /submitLabel="Оставить заявку"/);
 });

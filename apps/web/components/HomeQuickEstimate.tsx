@@ -36,6 +36,7 @@ import {
   quickEstimateDraft,
   quickEstimateHeightM,
   quickEstimateSchemeDraft,
+  QUICK_ESTIMATE_WALL_DISTANCE_M,
   type QuickEstimateAnswers,
   type QuickEstimateEquipment,
   type QuickEstimateObject,
@@ -46,13 +47,13 @@ import styles from "./HomeQuickEstimate.module.css";
 import { EstimateLeadDialog } from "./EstimateLeadDialog";
 import { QuickEstimateScheme } from "./QuickEstimateScheme";
 
-type Step = 0 | 1 | 2 | 3 | 4;
+type Step = 0 | 1 | 2 | 4;
 type MatchStatus = "idle" | "loading" | "ready" | "error";
 
 const QUICK_ESTIMATE_RETURN_KEY = "dimohod-trade:quick-estimate-return";
 
 type QuickEstimateReturnState = {
-  version: 1;
+  version: 2;
   savedAt: number;
   objectType: QuickEstimateObject;
   equipmentStatus: EquipmentStatus;
@@ -63,7 +64,6 @@ type QuickEstimateReturnState = {
   floors: number;
   hasAttic: boolean;
   outdoorHeight: string;
-  wallDistance: string;
   matches: Record<string, CatalogEstimateMatch>;
   matchStatus: "ready" | "error";
   leadSubmitted: boolean;
@@ -251,7 +251,6 @@ export function HomeQuickEstimate({
   const [floors, setFloors] = useState(1);
   const [hasAttic, setHasAttic] = useState(false);
   const [outdoorHeight, setOutdoorHeight] = useState("");
-  const [wallDistance, setWallDistance] = useState("");
   const [matches, setMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [matchStatus, setMatchStatus] = useState<MatchStatus>("idle");
   const [leadSubmitted, setLeadSubmitted] = useState(false);
@@ -270,7 +269,7 @@ export function HomeQuickEstimate({
     try {
       const saved = JSON.parse(raw) as Partial<QuickEstimateReturnState>;
       if (
-        saved.version !== 1 ||
+        saved.version !== 2 ||
         typeof saved.savedAt !== "number" ||
         Date.now() - saved.savedAt > 24 * 60 * 60 * 1000 ||
         !saved.objectType ||
@@ -290,7 +289,6 @@ export function HomeQuickEstimate({
       setFloors(saved.floors ?? 1);
       setHasAttic(saved.hasAttic ?? false);
       setOutdoorHeight(saved.outdoorHeight ?? "");
-      setWallDistance(saved.wallDistance ?? "");
       if (saved.matches && (saved.matchStatus === "ready" || saved.matchStatus === "error")) {
         setMatches(saved.matches);
         setMatchStatus(saved.matchStatus);
@@ -312,12 +310,12 @@ export function HomeQuickEstimate({
       outlet,
       diameterMm: diameter === "unknown" ? null : Number(diameter),
       route,
-      floors,
-      hasAttic,
+      floors: route === "ceiling" ? floors : 1,
+      hasAttic: route === "ceiling" && hasAttic,
       outdoorHeightM: route === "wall" && Number.isFinite(height) && height > 0 ? height : 0,
-      wallDistanceM: wallDistance === "unknown" ? null : Number(wallDistance),
+      wallDistanceM: route === "wall" ? QUICK_ESTIMATE_WALL_DISTANCE_M : null,
     };
-  }, [diameter, equipmentStatus, equipmentType, floors, hasAttic, objectType, outlet, outdoorHeight, route, wallDistance]);
+  }, [diameter, equipmentStatus, equipmentType, floors, hasAttic, objectType, outlet, outdoorHeight, route]);
 
   const draft = useMemo(() => answers ? quickEstimateDraft(answers) : null, [answers]);
   const calculation = useMemo(() => answers && draft ? calculateChimney({
@@ -325,7 +323,7 @@ export function HomeQuickEstimate({
     outlet: answers.outlet === "top" ? "vertical" : "horizontal",
     floors: answers.floors,
     heightM: quickEstimateHeightM(answers),
-    distanceM: answers.route === "wall" ? (answers.wallDistanceM ?? 1.5) : 0,
+    distanceM: answers.route === "wall" ? (answers.wallDistanceM ?? QUICK_ESTIMATE_WALL_DISTANCE_M) : 0,
     roofType: "pitched",
     draft,
   }) : null, [answers, draft]);
@@ -337,7 +335,7 @@ export function HomeQuickEstimate({
       outlet: answers.outlet === "top" ? "vertical" : "horizontal",
       floors: answers.floors,
       heightM: quickEstimateHeightM(answers),
-      distanceM: answers.route === "wall" ? (answers.wallDistanceM ?? 1.5) : 0,
+      distanceM: answers.route === "wall" ? (answers.wallDistanceM ?? QUICK_ESTIMATE_WALL_DISTANCE_M) : 0,
       roofType: "pitched",
       draft: schemeDraft,
     });
@@ -409,13 +407,20 @@ export function HomeQuickEstimate({
 
   const canContinue = step === 0 ? Boolean(objectType)
     : step === 1 ? Boolean(equipmentStatus && outlet)
-    : step === 2 ? Boolean(route)
-        : route === "ceiling" || (Number(outdoorHeight) > 0 && Number(wallDistance) > 0);
+    : step === 2 ? Boolean(route) && (route === "ceiling" || Number(outdoorHeight) > 0)
+    : false;
 
   function restart() {
     setStep(firstStep);
     setObjectType(fixedObjectType ?? null);
     setEquipmentType(fixedEquipmentType ?? (fixedObjectType === "banya" ? "bania" : ""));
+    setEquipmentStatus("installed");
+    setOutlet(null);
+    setDiameter("unknown");
+    setRoute(null);
+    setFloors(1);
+    setHasAttic(false);
+    setOutdoorHeight("");
     setMatches({});
     setMatchStatus("idle");
     setLeadSubmitted(false);
@@ -426,7 +431,7 @@ export function HomeQuickEstimate({
   function rememberQuickEstimate() {
     if (!objectType || !equipmentStatus || !outlet || !route) return;
     const snapshot: QuickEstimateReturnState = {
-      version: 1,
+      version: 2,
       savedAt: Date.now(),
       objectType,
       equipmentStatus,
@@ -437,7 +442,6 @@ export function HomeQuickEstimate({
       floors,
       hasAttic,
       outdoorHeight,
-      wallDistance,
       matches,
       matchStatus: matchStatus === "error" ? "error" : "ready",
       leadSubmitted,
@@ -458,10 +462,10 @@ export function HomeQuickEstimate({
 
         <div className={styles.quiz}>
           <div className={styles.topbar}>
-            <button className={styles.back} disabled={step === firstStep} onClick={() => setStep((step - 1) as Step)} type="button">Назад</button>
-            <div className={styles.progress} aria-label={`Шаг ${step - firstStep + 1} из ${5 - firstStep}`}>
-              <div className={styles.track}><i style={{ width: `${((step - firstStep + 1) / (5 - firstStep)) * 100}%` }} /></div>
-              <span>Шаг {step - firstStep + 1} из {5 - firstStep}</span>
+            <button className={styles.back} disabled={step === firstStep} onClick={() => setStep(step === 4 ? 2 : (step - 1) as Step)} type="button">Назад</button>
+            <div className={styles.progress} aria-label={`Шаг ${(step === 4 ? 3 : step) - firstStep + 1} из ${4 - firstStep}`}>
+              <div className={styles.track}><i style={{ width: `${(((step === 4 ? 3 : step) - firstStep + 1) / (4 - firstStep)) * 100}%` }} /></div>
+              <span>Шаг {(step === 4 ? 3 : step) - firstStep + 1} из {4 - firstStep}</span>
             </div>
             <span className={styles.quickMark}>Быстро</span>
           </div>
@@ -515,15 +519,12 @@ export function HomeQuickEstimate({
               <div className={styles.heading}><small>Маршрут</small><h3>Как пойдёт дымоход?</h3></div>
               <div className={styles.choices}>
                 {routeChoices.map((choice) => <button className={`${styles.choice} ${styles.routeChoice} ${route === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => setRoute(choice.id)} type="button" aria-pressed={route === choice.id}>
-                  <Image alt={choice.label} height={826} src={withBase(choice.image, assetBasePath)} unoptimized width={1100} />{choice.label}
+                  <Image alt="" aria-hidden height={826} src={withBase(choice.image, assetBasePath)} unoptimized width={1100} />{choice.label}
                 </button>)}
               </div>
-            </> : null}
-
-            {step === 3 && route === "ceiling" ? <>
+            {route === "ceiling" ? <div className={styles.routeParameters}>
               <div className={styles.heading}>
-                <small>Размеры трассы</small>
-                <h3>{objectType === "banya" ? "Сколько уровней проходит трасса?" : "Сколько этажей?"}</h3>
+                <h4>{objectType === "banya" ? "Сколько уровней проходит трасса?" : "Сколько этажей?"}</h4>
                 <p>Для предварительного расчёта используем типовые допущения. Точные высоты и проходы проверим по замерам.</p>
               </div>
               <div className={`${styles.choices} ${styles.choicesThree}`}>
@@ -534,33 +535,26 @@ export function HomeQuickEstimate({
                 <button className={`${styles.choice} ${hasAttic ? styles.selected : ""}`} onClick={() => setHasAttic(true)} type="button" aria-pressed={hasAttic}>Да, добавляем 1,5 м</button>
                 <button className={`${styles.choice} ${!hasAttic ? styles.selected : ""}`} onClick={() => setHasAttic(false)} type="button" aria-pressed={!hasAttic}>Нет</button>
               </div>
-            </> : null}
+            </div> : null}
 
-            {step === 3 && route === "wall" ? <>
-              <div className={styles.heading}><small>Размеры трассы</small><h3>Наружный участок</h3><p>Укажите примерную высоту и расстояние от патрубка до стены.</p></div>
+            {route === "wall" ? <div className={styles.routeParameters}>
+              <div className={styles.heading}><h4>Высота наружного участка</h4><p id="quick-outdoor-height-help">От выхода через стену до верхней точки дымохода.</p></div>
               <div className={styles.fieldGrid}>
                 <label className={styles.field}>Высота наружного дымохода
-                  <select value={outdoorHeight} onChange={(event) => setOutdoorHeight(event.target.value)}>
+                  <select aria-describedby="quick-outdoor-height-help" value={outdoorHeight} onChange={(event) => setOutdoorHeight(event.target.value)}>
                     <option value="">Выберите высоту</option>
                     {[3, 4, 5, 6, 7, 8].map((value) => <option key={value} value={value}>{value} м</option>)}
                   </select>
                 </label>
-                <label className={styles.field}>Расстояние от патрубка до стены
-                  <select value={wallDistance} onChange={(event) => setWallDistance(event.target.value)}>
-                    <option value="">Выберите расстояние</option>
-                    {[0.5, 1, 1.5, 2].map((value) => <option key={value} value={value}>{String(value).replace(".", ",")} м</option>)}
-                  </select>
-                </label>
               </div>
+              <p className={styles.parameterNote}>Расстояние от патрубка до стены предварительно принято 0,5 м. Точный размер уточним по замерам.</p>
+            </div> : null}
             </> : null}
 
             {step === 4 ? <>
               <div className={styles.heading}>
-                <small>Предварительный результат</small>
-                <h3>{leadSubmitted ? "Ориентировочный состав комплекта" : "Расчёт готов"}</h3>
-                <p>{leadSubmitted
-                  ? "Стоимость и состав рассчитаны по указанным параметрам. Перед заказом менеджер проверит комплект."
-                  : "Предварительная стоимость уже рассчитана. Оставьте имя и телефон, чтобы открыть схему и подробный состав комплекта."}</p>
+                <h3>Предварительный расчёт готов</h3>
+                <p>Схема, состав и стоимость доступны без отправки контактов. Перед заказом менеджер проверит комплект по вашим замерам.</p>
               </div>
               {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
               {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
@@ -576,23 +570,26 @@ export function HomeQuickEstimate({
                   </div>
                 </div>
                 {!leadSubmitted ? (
-                  <div className={styles.leadGate}>
+                  <div className={styles.reviewRequest}>
                     <EstimateLeadDialog
-                      description="Введите имя и телефон, чтобы открыть предварительную SVG-схему и подробный состав. Менеджер получит полный расчёт и проверит его перед заказом."
+                      buttonLabel="Отправить расчёт на проверку"
+                      description="Оставьте контакты — менеджер проверит схему и состав, уточнит размеры и свяжется с вами. Текущий расчёт приложим автоматически."
                       disabled={matchStatus !== "ready" && matchStatus !== "error"}
                       estimate={estimate}
-                      heading="Откройте схему и состав"
-                      inline
+                      heading="Проверим расчёт и свяжемся с вами"
+                      reviewMode
+                      triggerClassName={styles.reviewButton}
                       metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
                       onSubmitted={(customer) => {
                         setLeadCustomer(customer);
                         setLeadSubmitted(true);
                       }}
                       source={leadSource}
-                      submitLabel="Показать схему и состав"
+                      submitLabel="Отправить на проверку"
                     />
+                    <p>Менеджер проверит схему и состав, уточнит размеры и свяжется с вами.</p>
                   </div>
-                ) : <>
+                ) : null}
                 {answers && schemeCalculation ? (
                   <QuickEstimateScheme answers={answers} calculation={schemeCalculation} />
                 ) : null}
@@ -642,9 +639,10 @@ export function HomeQuickEstimate({
                 <p className={styles.precisionNotice}><strong>Это предварительный расчёт.</strong> Менеджер проверит размеры, совместимость и позиции без цены перед заказом.</p>
                 <section className={styles.received} aria-labelledby="quick-estimate-received-title">
                   <div>
-                    <h4 id="quick-estimate-received-title">Заявка получена</h4>
+                    <h4 id="quick-estimate-received-title">{leadSubmitted ? "Расчёт отправлен на проверку" : "Сохраните предварительную смету"}</h4>
                     <p>
-                      Офис работает по будням с 9:00 до 17:00. Мы свяжемся с вами как можно быстрее. Также вы можете позвонить нам в рабочее время:{" "}
+                      {leadSubmitted ? "Менеджер свяжется с вами по указанным контактам. " : "PDF содержит текущий состав и допущения расчёта. "}
+                      Офис работает по будням с 9:00 до 17:00. Вы можете позвонить нам в рабочее время:{" "}
                       <a className={styles.mobilePhone} href={operator.phoneHref}>{operator.phone}</a>
                       <span className={styles.desktopPhone}>{operator.phone}</span>.
                     </p>
@@ -660,17 +658,15 @@ export function HomeQuickEstimate({
                   </button>
                   {pdfStatus === "error" ? <p className={styles.pdfError} role="alert">Не удалось сформировать PDF. Попробуйте ещё раз.</p> : null}
                 </section>
-                </>}
-
                 <div className={styles.resultActions}>
-                  <button className={styles.editButton} onClick={() => setStep(3)} type="button">Изменить ответы</button>
+                  <button className={styles.editButton} onClick={() => setStep(2)} type="button">Изменить ответы</button>
                   <button className={styles.restartButton} onClick={restart} type="button"><Refresh aria-hidden size={16} /> Рассчитать заново</button>
                 </div>
               </> : null}
             </> : null}
 
             {step < 4 ? <div className={styles.footer}>
-              <button className={styles.next} disabled={!canContinue} onClick={() => setStep((step + 1) as Step)} type="button">Продолжить <ArrowRight aria-hidden size={18} /></button>
+              <button className={styles.next} disabled={!canContinue} onClick={() => setStep(step === 2 ? 4 : (step + 1) as Step)} type="button">{step === 2 ? "Показать расчёт" : "Продолжить"} <ArrowRight aria-hidden size={18} /></button>
             </div> : null}
           </div>
         </div>

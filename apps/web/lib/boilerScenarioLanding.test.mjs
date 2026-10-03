@@ -39,7 +39,7 @@ test("boiler landings include contact paths, trust, FAQ and structured data", ()
   assert.match(landing, /<LeadForm/);
   assert.match(landing, /<SolutionTrustSections/);
   assert.match(landing, /"@type": "FAQPage"/);
-  assert.match(landing, /после отправки контактов/);
+  assert.match(landing, /без отправки контактов/);
   assert.match(landing, /href="#quick-estimate"/);
   assert.match(landing, /href="#help-with-selection"/);
 });

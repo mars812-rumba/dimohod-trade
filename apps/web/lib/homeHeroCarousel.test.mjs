@@ -26,7 +26,7 @@ test("hero carousel references existing responsive image assets", async () => {
 
 test("hero keeps a stable offer and sends the primary action to the quick calculation", () => {
   assert.match(componentSource, /Рассчитайте комплект дымохода за 2 минуты/u);
-  assert.match(componentSource, /Ответьте на 5 простых вопросов/u);
+  assert.match(componentSource, /Укажите отопитель и маршрут/u);
   assert.match(componentSource, /предварительную смету и состав/u);
   assert.match(componentSource, /className=\{styles\.cta\} href="\/bystryy-raschet"/);
   assert.match(componentSource, /Рассчитать комплект/u);

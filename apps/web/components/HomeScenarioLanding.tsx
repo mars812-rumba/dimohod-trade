@@ -152,7 +152,7 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
 
         <section className={styles.resultStrip} aria-label="Результат быстрого расчёта">
           <div className={styles.shell}>
-            <div><strong>Стоимость и состав</strong><span>после отправки контактов</span></div>
+            <div><strong>Стоимость, состав и схема</strong><span>без отправки контактов</span></div>
             <div><strong>Товарный состав</strong><span>с количеством и ценами</span></div>
             <div><strong>Проверка менеджером</strong><span>перед оформлением заказа</span></div>
           </div>
@@ -179,14 +179,14 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
             <div className={styles.helpPanel}>
               <div className={styles.sectionHeading}>
                 <h2 id="help-title">Не знаете параметры? Поможем подобрать</h2>
-                <p>Пришлите фото, план или название оборудования. Скажем, каких данных не хватает для проверки.</p>
+                <p>Оставьте контакты, менеджер перезвонит и уточнит данные для подбора. Если есть фото, план или паспорт оборудования, прикрепите их по желанию.</p>
               </div>
               <LeadForm
                 attachmentLabel="Добавить фото или план"
                 commentPlaceholder="Что уже известно: модель, диаметр, этажность или предполагаемый маршрут"
                 source="solution-dom-help"
                 submitLabel="Оставить заявку"
-                successMessage="Менеджер посмотрит материалы и сообщит, что нужно уточнить для подбора."
+                successMessage="Менеджер перезвонит и уточнит данные для подбора комплекта."
               />
             </div>
           </div>

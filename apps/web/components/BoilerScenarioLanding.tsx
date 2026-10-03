@@ -78,7 +78,7 @@ const configByKind: Record<BoilerKind, BoilerLandingConfig> = {
     formCommentPlaceholder: "Что уже известно: модель котла, топливо, диаметр патрубка, маршрут или размеры",
     formImage: "/images/home/scenario-tt-kotel.webp",
     formImageAlt: "Твердотопливный котёл и элементы дымохода в котельной",
-    formTitle: "Не знаете параметры? Пришлите паспорт и фото",
+    formTitle: "Не знаете параметры? Поможем разобраться",
     heroText:
       "Укажите параметры патрубка и маршрут котельной. Покажем предварительный состав, реальные товары и ориентировочную стоимость.",
     h1: "Рассчитайте дымоход для твердотопливного котла",
@@ -132,7 +132,7 @@ const configByKind: Record<BoilerKind, BoilerLandingConfig> = {
     formCommentPlaceholder: "Что уже известно: модель котла, тип системы, размеры подключения или маршрут",
     formImage: "/images/home/scenario-gaz.webp",
     formImageAlt: "Газовый котёл и элементы системы отвода продуктов сгорания",
-    formTitle: "Пришлите модель котла и документацию",
+    formTitle: "Нужен подбор для котла? Оставьте заявку",
     heroText:
       "Выберите маршрут и укажите известные параметры. Состав и применимость элементов проверим по документации конкретного котла.",
     h1: "Рассчитайте дымоход для газового котла",
@@ -280,7 +280,7 @@ export function BoilerScenarioLanding({
         <section className={styles.resultStrip} aria-label="Результат быстрого расчёта">
           <div className={styles.shell}>
             <div><strong>Предварительный результат</strong><span>после нескольких вопросов</span></div>
-            <div><strong>Стоимость и состав</strong><span>после отправки контактов</span></div>
+            <div><strong>Стоимость, состав и схема</strong><span>без отправки контактов</span></div>
             <div><strong>Проверка менеджером</strong><span>перед оформлением заказа</span></div>
           </div>
         </section>
@@ -308,14 +308,14 @@ export function BoilerScenarioLanding({
             <div className={styles.helpPanel}>
               <div className={styles.sectionHeading}>
                 <h2 id="boiler-help-title">{config.formTitle}</h2>
-                <p>Добавьте фотографию, название модели или паспорт оборудования. Менеджер сообщит, какие данные нужно уточнить.</p>
+                <p>Оставьте контакты — менеджер перезвонит и уточнит модель оборудования и данные объекта. Фото или паспорт можно прикрепить по желанию.</p>
               </div>
               <LeadForm
                 attachmentLabel="Добавить фото или паспорт"
                 commentPlaceholder={config.formCommentPlaceholder}
                 source={`${config.leadSource}-help`}
                 submitLabel="Оставить заявку"
-                successMessage="Менеджер посмотрит материалы и сообщит, что нужно уточнить для подбора."
+                successMessage="Менеджер перезвонит и уточнит данные для подбора комплекта."
               />
             </div>
           </div>

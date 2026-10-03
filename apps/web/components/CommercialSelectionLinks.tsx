@@ -21,7 +21,11 @@ export function CommercialSelectionLinks({ scenario }: { scenario: "pech" | "ban
           <Link href="/guides/komplekt-s-troynikom-90">Состав для маршрута через стену</Link>
           {isBath ? <Link href="/guides/dymohod-dlya-bani">Какие данные подготовить по бане</Link> : null}
         </nav>
-        <Link className={styles.action} href={isBath ? "/zamery?edit=1&object=banya" : "/zamery?edit=1&object=house"}>Рассчитать комплект по замерам</Link>
+        <div className={styles.actions}>
+          <Link className={styles.action} href={isBath ? "/zamery?edit=1&object=banya" : "/zamery?edit=1&object=house"}>Рассчитать комплект по замерам</Link>
+          <a className={styles.secondaryAction} href="#help-with-selection">Оставить заявку</a>
+        </div>
+        <p>Не готовы к замерам? Оставьте контакты — менеджер перезвонит и поможет разобраться с исходными данными.</p>
       </div>
     </section>
   );

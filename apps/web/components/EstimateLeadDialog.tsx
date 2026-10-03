@@ -23,6 +23,7 @@ type EstimateLeadDialogProps = {
   estimate: ChimneyEstimate;
   heading?: string;
   inline?: boolean;
+  reviewMode?: boolean;
   metrikaGoal?: MetrikaGoal;
   onSubmitted?: (customer: ChimneyEstimateCustomer) => void;
   source?: string;
@@ -93,6 +94,7 @@ export function EstimateLeadDialog({
   estimate,
   heading = "Отправить BOM менеджеру",
   inline = false,
+  reviewMode = false,
   metrikaGoal = METRIKA_GOALS.deepMeasurementFormSent,
   onSubmitted,
   source = "chimney-estimate",
@@ -245,7 +247,7 @@ export function EstimateLeadDialog({
       <dialog
         aria-describedby={descriptionId}
         aria-labelledby={titleId}
-        className="estimate-lead-dialog"
+        className={`estimate-lead-dialog${reviewMode ? " estimate-lead-dialog-review" : ""}`}
         onCancel={(event) => {
           if (status === "sending") event.preventDefault();
         }}
@@ -270,7 +272,7 @@ export function EstimateLeadDialog({
                 <h2 id={titleId}>{status === "success" ? "Спасибо! Расчёт отправлен" : "Заявка сохранена"}</h2>
                 <p id={descriptionId}>
                   {status === "success"
-                    ? "Менеджер свяжется с вами в течение 30 минут по указанному способу связи."
+                    ? "Менеджер проверит расчёт и свяжется с вами по указанному способу связи."
                     : "Письмо менеджеру сейчас не отправилось. Чтобы не ждать, позвоните по номеру +7 (965) 075-65-55."}
                 </p>
                 <button onClick={close} type="button">Закрыть</button>

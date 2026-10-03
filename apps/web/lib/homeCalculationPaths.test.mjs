@@ -46,7 +46,7 @@ test("positioning promise replaces the old comparison and leads into measurement
 test("hero opens the quick estimate while navigation keeps the format choice", () => {
   assert.match(hero, /href="\/bystryy-raschet"/);
   assert.match(hero, /Рассчитать комплект/);
-  assert.match(hero, /Перейти к 5 простым вопросам/);
+  assert.match(hero, /Перейти к быстрому расчёту/);
   assert.match(header, /header-configurator" href="\/raschet"/);
   assert.match(header, /<span>Калькулятор<\/span>/);
 });

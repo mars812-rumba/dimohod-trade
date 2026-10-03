@@ -8,5 +8,8 @@
 .links a { color: #173d4c; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; overflow-wrap: anywhere; }
 .action { display: inline-flex; justify-content: center; align-items: center; min-height: 48px; padding: 12px 20px; border-radius: 8px; color: #fff; background: #bd3d16; font-size: 15px; font-weight: 700; }
 .action:hover { background: #9c3010; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.secondaryAction { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 20px; border: 1px solid #173d4c; border-radius: 8px; color: #173d4c; background: #fff; font-size: 15px; font-weight: 700; }
+.secondaryAction:hover { background: #eaf0f1; }
 .shell a:focus-visible { outline: 3px solid #bd3d16; outline-offset: 4px; }
-@media (max-width: 560px) { .shell { width: calc(100% - 28px); } .action { width: 100%; text-align: center; } }
+@media (max-width: 560px) { .shell { width: calc(100% - 28px); } .action, .secondaryAction { width: 100%; text-align: center; } }

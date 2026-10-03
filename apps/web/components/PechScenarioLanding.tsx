@@ -124,7 +124,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
                 <a className={styles.primaryButton} href="#quick-estimate">
                   Рассчитать комплект <ArrowRight aria-hidden size={18} />
                 </a>
-                <a className={styles.secondaryButton} href="#help-with-selection">Отправить фото</a>
+                <a className={styles.secondaryButton} href="#help-with-selection">Оставить заявку</a>
               </div>
             </div>
             <div className={styles.heroMedia}>
@@ -143,7 +143,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
 
         <section className={styles.resultStrip} aria-label="Результат быстрого расчёта">
           <div className={styles.shell}>
-            <div><strong>Стоимость и состав</strong><span>после отправки контактов</span></div>
+            <div><strong>Стоимость, состав и схема</strong><span>без отправки контактов</span></div>
             <div><strong>Товарный состав</strong><span>с количеством и ценами</span></div>
             <div><strong>Проверка менеджером</strong><span>перед оформлением заказа</span></div>
           </div>
@@ -171,15 +171,15 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
             </div>
             <div className={styles.helpPanel}>
               <div className={styles.sectionHeading}>
-                <h2 id="pech-help-title">Не знаете параметры? Пришлите фото</h2>
-                <p>Добавьте название или паспорт печи, общий вид места установки и предполагаемых проходов. Менеджер сообщит, какие размеры нужно уточнить.</p>
+                <h2 id="pech-help-title">Не знаете параметры? Поможем разобраться</h2>
+                <p>Оставьте контакты — менеджер перезвонит и уточнит данные для подбора комплекта. Если есть фото печи, паспорта или места установки, прикрепите его для более предметного разговора.</p>
               </div>
               <LeadForm
                 attachmentLabel="Добавить фото или паспорт"
                 commentPlaceholder="Что уже известно: модель печи, диаметр, маршрут или размеры дома"
                 source="solution-pech-help"
                 submitLabel="Оставить заявку"
-                successMessage="Менеджер посмотрит материалы и сообщит, что нужно уточнить для подбора."
+                successMessage="Менеджер перезвонит и уточнит данные для подбора комплекта."
               />
             </div>
           </div>
@@ -333,7 +333,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
             </div>
             <div className={styles.finalActions}>
               <a className={styles.primaryButton} href="#quick-estimate">Рассчитать комплект</a>
-              <a className={styles.secondaryButton} href="#help-with-selection">Отправить фото</a>
+              <a className={styles.secondaryButton} href="#help-with-selection">Оставить заявку</a>
             </div>
           </div>
         </section>

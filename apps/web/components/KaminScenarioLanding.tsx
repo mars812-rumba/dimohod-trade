@@ -118,7 +118,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               <p className={styles.eyebrow}>Камин в доме</p>
               <h1>Дымоход и монтаж каминной топки под ключ</h1>
               <p className={styles.heroText}>
-                Пришлите модель топки, план или фотографии объекта. Быстрый расчёт покажет предварительную стоимость комплектующих дымохода, а монтаж топки, короб и другие работы рассчитаем отдельно по вашему объекту.
+                Оставьте контакты для подбора по вашему объекту; паспорт топки, план или фото можно приложить по желанию. Быстрый расчёт покажет предварительную стоимость комплектующих дымохода, а монтаж топки, короб и другие работы рассчитаем отдельно.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#quick-estimate">
@@ -172,16 +172,16 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
             <div className={styles.helpPanel}>
               <div className={styles.sectionHeading}>
                 <p className={styles.eyebrow}>Индивидуальный расчёт</p>
-                <h2 id="kamin-request-title">Пришлите модель топки, план или фотографии</h2>
-                <p>Не обязательно собирать все размеры заранее. Начните с того, что уже есть, — менеджер посмотрит материалы и перечислит недостающие данные.</p>
+                <h2 id="kamin-request-title">Нужен подбор для камина? Оставьте заявку</h2>
+                <p>Менеджер перезвонит и уточнит модель топки и данные объекта. Если есть паспорт, план или фото, прикрепите их по желанию для более предметного разговора.</p>
               </div>
               <LeadForm
                 attachmentLabel="Добавить фото, план или паспорт"
                 commentPlaceholder="Модель топки, адрес объекта, что уже построено и какой результат нужен"
                 configuration="Сценарий: дымоход и монтаж каминной топки"
                 source="solution-kamin-project"
-                submitLabel="Получить расчёт проекта"
-                successMessage="Менеджер изучит материалы и свяжется с вами для уточнения проекта камина."
+                submitLabel="Оставить заявку"
+                successMessage="Менеджер перезвонит для уточнения проекта камина."
               />
             </div>
           </div>
@@ -247,7 +247,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
                 <p>Этого достаточно, чтобы начать сбор исходных данных. После просмотра материалов менеджер сообщит, что нужно измерить или уточнить.</p>
               </div>
               <a className={styles.secondaryButton} href="#project-request">
-                Отправить материалы <ArrowRight aria-hidden size={17} />
+                Оставить заявку <ArrowRight aria-hidden size={17} />
               </a>
             </div>
           </div>
@@ -330,7 +330,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               <p>Отправьте модель топки, фотографии или план. Начнём с имеющихся данных и составим список необходимых уточнений.</p>
             </div>
             <div className={styles.finalActions}>
-              <a className={styles.primaryButton} href="#project-request">Отправить материалы</a>
+              <a className={styles.primaryButton} href="#project-request">Оставить заявку</a>
             </div>
           </div>
         </section>

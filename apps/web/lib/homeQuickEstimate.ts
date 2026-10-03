@@ -6,6 +6,8 @@ import {
 import type { ChimneyBomLine } from "./chimneyCalculation";
 
 export const QUICK_ESTIMATE_DEFAULT_DIAMETER_MM = 120;
+// Owner-confirmed quick-estimate assumption, not a measured or safety clearance.
+export const QUICK_ESTIMATE_WALL_DISTANCE_M = 0.5;
 export const QUICK_ESTIMATE_FLOOR_HEIGHT_MM = 2500;
 export const QUICK_ESTIMATE_FLOOR_THICKNESS_MM = 200;
 export const QUICK_ESTIMATE_ATTIC_HEIGHT_MM = 1500;
@@ -41,7 +43,7 @@ export type QuickEstimateAnswers = {
 export function quickEstimateDraft(answers: QuickEstimateAnswers): ScenarioConfiguratorDraft {
   const scenario = answers.objectType === "banya" ? "banya" : "dom";
   const draft = createEmptyScenarioDraft(scenario);
-  const wallDistanceM = answers.wallDistanceM ?? 0;
+  const wallDistanceM = answers.wallDistanceM ?? QUICK_ESTIMATE_WALL_DISTANCE_M;
   const levelHeight = String(QUICK_ESTIMATE_FLOOR_HEIGHT_MM);
 
   return {
@@ -222,6 +224,9 @@ export function quickEstimateAssumptions(answers: QuickEstimateAnswers): string[
       );
     }
     items.push("Кровельный комплект: УПК AISI 430 по наружному диаметру + мастер-флеш по запросу");
+  } else {
+    items.push(`Высота наружного участка ${answers.outdoorHeightM} м — от выхода через стену до верхней точки`);
+    items.push(`Расстояние от патрубка до стены предварительно принято ${String(answers.wallDistanceM ?? QUICK_ESTIMATE_WALL_DISTANCE_M).replace(".", ",")} м; уточним по замерам`);
   }
   return items;
 }

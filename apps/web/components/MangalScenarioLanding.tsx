@@ -115,7 +115,7 @@ export function MangalScenarioLanding({ assetBasePath = "" }: { assetBasePath?: 
             <div className={styles.heroCopy}>
               <h1>Вытяжка и дымоход для мангальной зоны</h1>
               <p className={styles.heroText}>
-                Пришлите фото и известные размеры объекта. Подготовим индивидуальный состав системы и перечень монтажных работ без универсального готового комплекта.
+                Оставьте контакты для индивидуального подбора. Если есть фото и известные размеры объекта, прикрепите их по желанию; данные уточним в разговоре.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#project-request">
@@ -160,16 +160,16 @@ export function MangalScenarioLanding({ assetBasePath = "" }: { assetBasePath?: 
             </div>
             <div className={styles.helpPanel}>
               <div className={styles.sectionHeading}>
-                <h2 id="mangal-request-title">Пришлите фото мангальной зоны</h2>
-                <p>Начните с фото и известных размеров. Специалист изучит объект и сообщит, какие данные потребуются для расчёта.</p>
+                <h2 id="mangal-request-title">Нужен подбор для мангальной зоны?</h2>
+                <p>Оставьте контакты — менеджер перезвонит и уточнит данные объекта. Если есть фото или план, прикрепите их по желанию.</p>
               </div>
               <LeadForm
                 attachmentLabel="Добавить фото или план"
                 commentPlaceholder="Адрес, размеры мангала и помещения, что уже установлено и какой результат нужен"
                 configuration="Сценарий: вытяжка и дымоход для мангальной зоны"
                 source="solution-mangal-project"
-                submitLabel="Отправить на расчёт"
-                successMessage="Менеджер изучит материалы и свяжется с вами для уточнения системы дымоудаления."
+                submitLabel="Оставить заявку"
+                successMessage="Менеджер перезвонит для уточнения системы дымоудаления."
               />
             </div>
           </div>
@@ -202,10 +202,10 @@ export function MangalScenarioLanding({ assetBasePath = "" }: { assetBasePath?: 
             <div className={styles.measurementCallout}>
               <div>
                 <strong>Мангальная зона уже построена?</strong>
-                <p>Пришлите общий вид, очаг, потолок или кровлю и предполагаемый выход дымохода. По материалам определим, какие размеры нужно уточнить.</p>
+                <p>Оставьте контакты — менеджер уточнит данные объекта. Фото очага, потолка, кровли и предполагаемого выхода дымохода можно приложить по желанию.</p>
               </div>
               <a className={styles.secondaryButton} href="#project-request">
-                Отправить материалы <ArrowRight aria-hidden size={17} />
+                Оставить заявку <ArrowRight aria-hidden size={17} />
               </a>
             </div>
           </div>
@@ -313,7 +313,7 @@ export function MangalScenarioLanding({ assetBasePath = "" }: { assetBasePath?: 
           <div className={`${styles.shell} ${styles.finalPanel}`}>
             <div>
               <h2>Получите расчёт системы по вашему объекту</h2>
-              <p>Пришлите фото и известные размеры. Начнём с имеющихся данных и составим список необходимых уточнений.</p>
+              <p>Оставьте контакты — менеджер перезвонит и уточнит исходные данные. Фото и известные размеры можно приложить по желанию.</p>
             </div>
             <div className={styles.finalActions}>
               <a className={styles.primaryButton} href="#project-request">Получить расчёт по фото</a>

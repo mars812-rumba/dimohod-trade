@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useId, useState } from "react";
 import { CheckCircle2, Paperclip, Send } from "lucide-react";
 import { METRIKA_GOALS, reachMetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
@@ -25,15 +25,17 @@ export function LeadForm({
   title,
   commentPlaceholder = "Модель печи, размеры, удобное время для звонка",
   attachmentLabel = "Фото или план",
-  submitLabel = "Отправить инженеру",
-  successMessage = "Специалист проверит материалы и свяжется с вами.",
+  submitLabel = "Оставить заявку",
+  successMessage = "Менеджер перезвонит по указанному телефону и уточнит данные для подбора.",
 }: LeadFormProps) {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
+  const attachmentHelpId = useId();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (status === "sending") return;
     setStatus("sending");
     setMessage("");
     const form = event.currentTarget;
@@ -91,7 +93,7 @@ export function LeadForm({
         </label>
       </div>
       <label>
-        <span>Комментарий</span>
+        <span>Комментарий — необязательно</span>
         <textarea
           name="comment"
           rows={compact ? 3 : 4}
@@ -102,10 +104,11 @@ export function LeadForm({
       <div className="lead-form-footer">
         <label className="lead-file">
           <Paperclip aria-hidden size={16} />
-          <span>{attachmentName || attachmentLabel}</span>
+          <span>{attachmentName ? `Прикреплено: ${attachmentName}` : `${attachmentLabel} — необязательно`}</span>
           <input
             name="attachment"
             type="file"
+            aria-describedby={attachmentHelpId}
             accept="image/jpeg,image/png,image/webp,application/pdf"
             onChange={(event) => setAttachmentName(event.currentTarget.files?.[0]?.name ?? "")}
           />
@@ -114,7 +117,7 @@ export function LeadForm({
           <Send aria-hidden size={16} /> {status === "sending" ? "Отправляем…" : submitLabel}
         </button>
       </div>
-      <small className="lead-form-note">PDF, JPG, PNG или WebP до 10 МБ.</small>
+      <small className="lead-form-note" id={attachmentHelpId}>Можно отправить заявку без фото. Если есть фото, план или паспорт, прикрепите для более предметного разговора. PDF, JPG, PNG или WebP до 10 МБ.</small>
       <PersonalDataConsent />
       {status === "error" ? <p className="lead-form-error" role="alert">{message}</p> : null}
     </form>
