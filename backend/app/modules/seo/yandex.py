@@ -7,6 +7,7 @@ import httpx
 
 WEBMASTER_API_URL = "https://api.webmaster.yandex.net/v4"
 METRIKA_API_URL = "https://api-metrika.yandex.net"
+SEARCH_API_URL = "https://searchapi.api.cloud.yandex.net"
 
 
 class YandexAPIError(RuntimeError):
@@ -31,6 +32,7 @@ def _normalized_site_url(value: str) -> str:
 
 class _YandexClient:
     service = "Yandex"
+    auth_scheme = "OAuth"
 
     def __init__(self, token: str, client: httpx.AsyncClient | None = None) -> None:
         if not token.strip():
@@ -46,7 +48,7 @@ class _YandexClient:
         params: dict[str, Any] | None = None,
         json: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        headers = {"Authorization": f"OAuth {self._token}", "Accept": "application/json"}
+        headers = {"Authorization": f"{self.auth_scheme} {self._token}", "Accept": "application/json"}
         if json is not None:
             headers["Content-Type"] = "application/json; charset=UTF-8"
 
@@ -157,4 +159,91 @@ class YandexMetrikaClient(_YandexClient):
                 "accuracy": "full",
                 "limit": limit,
             },
+        )
+
+
+class YandexWordstatClient(_YandexClient):
+    service = "Yandex Wordstat"
+    auth_scheme = "Api-Key"
+
+    def __init__(
+        self,
+        api_key: str,
+        folder_id: str,
+        client: httpx.AsyncClient | None = None,
+    ) -> None:
+        super().__init__(api_key, client=client)
+        if not folder_id.strip():
+            raise ValueError("Yandex Search API folder ID is not configured")
+        self._folder_id = folder_id.strip()
+
+    async def get_top(
+        self,
+        phrase: str,
+        *,
+        num_phrases: int = 100,
+        regions: list[str] | None = None,
+        devices: list[str] | None = None,
+    ) -> dict[str, Any]:
+        return await self._request(
+            "POST",
+            f"{SEARCH_API_URL}/v2/wordstat/topRequests",
+            json={
+                "phrase": phrase,
+                "numPhrases": num_phrases,
+                "regions": regions or [],
+                "devices": devices or ["DEVICE_ALL"],
+                "folderId": self._folder_id,
+            },
+        )
+
+    async def get_dynamics(
+        self,
+        phrase: str,
+        *,
+        period: str,
+        from_date: str,
+        to_date: str | None = None,
+        regions: list[str] | None = None,
+        devices: list[str] | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "phrase": phrase,
+            "period": period,
+            "fromDate": from_date,
+            "regions": regions or [],
+            "devices": devices or ["DEVICE_ALL"],
+            "folderId": self._folder_id,
+        }
+        if to_date:
+            payload["toDate"] = to_date
+        return await self._request(
+            "POST",
+            f"{SEARCH_API_URL}/v2/wordstat/dynamics",
+            json=payload,
+        )
+
+    async def get_regions_distribution(
+        self,
+        phrase: str,
+        *,
+        region: str = "REGION_ALL",
+        devices: list[str] | None = None,
+    ) -> dict[str, Any]:
+        return await self._request(
+            "POST",
+            f"{SEARCH_API_URL}/v2/wordstat/regions",
+            json={
+                "phrase": phrase,
+                "region": region,
+                "devices": devices or ["DEVICE_ALL"],
+                "folderId": self._folder_id,
+            },
+        )
+
+    async def get_regions_tree(self) -> dict[str, Any]:
+        return await self._request(
+            "POST",
+            f"{SEARCH_API_URL}/v2/wordstat/getRegionsTree",
+            json={"folderId": self._folder_id},
         )

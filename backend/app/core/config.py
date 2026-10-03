@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     yandex_webmaster_host_url: str = "https://dimohod-trade.pro"
     yandex_metrika_token: str | None = None
     yandex_metrika_counter_id: int = 112091795
+    yandex_search_api_key: str | None = None
+    yandex_search_folder_id: str | None = None
+    yandex_catalog_id: str | None = None
     yandex_wordstat_token: str | None = None
     lead_recipient_email: str = "office@dimohod-trade.pro"
     lead_from_email: str = "office@dimohod-trade.pro"

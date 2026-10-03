@@ -27,11 +27,14 @@ YANDEX_METRIKA_COUNTER_ID=112091795
 
 ## 3. Wordstat
 
-Wordstat использует отдельный API и заголовок `Authorization: Bearer`. После создания OAuth-приложения нужно запросить доступ к API Wordstat через поддержку Яндекс Директа. До одобрения токен оставляется пустым:
+Вордстат перенесён в Yandex Cloud Search API. Для подключения нужны сервисный аккаунт с разрешением `yc.search-api.execute`, API-ключ этого аккаунта и идентификатор каталога. OAuth-токен Вебмастера или Метрики здесь не используется.
 
 ```dotenv
-YANDEX_WORDSTAT_TOKEN=
+YANDEX_SEARCH_API_KEY=...
+YANDEX_SEARCH_FOLDER_ID=...
 ```
+
+Ключ хранится только в серверном `.env`. Для совместимости конфигурация также принимает прежнее имя `YANDEX_WORDSTAT_TOKEN` для ключа и `YANDEX_CATALOG_ID` для каталога, но новые установки должны использовать названия выше.
 
 ## 4. Проверка после перезапуска backend
 
@@ -44,6 +47,10 @@ GET /api/v1/admin/seo/yandex/webmaster/queries?indicator=QUERY&limit=100
 GET /api/v1/admin/seo/yandex/webmaster/queries?indicator=URL&limit=100
 GET /api/v1/admin/seo/yandex/metrika/overview
 GET /api/v1/admin/seo/yandex/metrika/search-phrases?date1=30daysAgo&date2=today&limit=100
+GET /api/v1/admin/seo/yandex/wordstat/top?phrase=дымоход&num_phrases=100
+GET /api/v1/admin/seo/yandex/wordstat/dynamics?phrase=дымоход&period=PERIOD_MONTHLY&from_date=2026-01-01
+GET /api/v1/admin/seo/yandex/wordstat/regions?phrase=дымоход
+GET /api/v1/admin/seo/yandex/wordstat/regions-tree
 ```
 
 `status` возвращает только признаки настройки и никогда не возвращает сами токены.

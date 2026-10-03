@@ -32,3 +32,7 @@ class YandexMetrikaSearchPhrases(BaseModel):
     date1: str = Field(max_length=32)
     date2: str = Field(max_length=32)
     data: dict[str, Any]
+
+
+class YandexWordstatResponse(BaseModel):
+    data: dict[str, Any]
