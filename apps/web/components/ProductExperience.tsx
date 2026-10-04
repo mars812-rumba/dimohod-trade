@@ -1758,14 +1758,14 @@ export function ProductExperience({
               />
             ) : null}
             <button
-              className="button full-button"
+              className="button full-button product-request-cta"
               type="button"
               aria-expanded={showLeadForm}
               onClick={() => setShowLeadForm((current) => !current)}
             >
               Оставить заявку
             </button>
-            <Link className="button secondary full-button" href="/zamery?edit=1">
+            <Link className="button secondary full-button product-kit-cta" href="/zamery?edit=1">
               Рассчитать полный комплект
             </Link>
           </div>

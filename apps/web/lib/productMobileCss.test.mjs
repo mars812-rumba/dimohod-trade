@@ -45,3 +45,12 @@ test("desktop variant panel separates the fixed price from scrollable content", 
   assert.match(product, /key: "material", label: "Внут\. труба"/);
   assert.match(product, /key: "attribute:outer_material", label: "Наруж\. труба"/);
 });
+
+test("product actions use explicit roles rather than the first button's position", () => {
+  assert.match(product, /className="button full-button product-request-cta"/);
+  assert.match(product, /className="button secondary full-button product-kit-cta"/);
+  assert.match(css, /\.product-page \.sku-cta \.product-request-cta \{[\s\S]*?background: var\(--product-steel-deep\);/);
+  assert.match(css, /\.product-page \.sku-cta \.product-kit-cta \{[\s\S]*?background: var\(--product-white\);/);
+  assert.doesNotMatch(css, /\.product-page \.sku-cta \.button:first-child/);
+  assert.match(css, /\.variant-option\[aria-pressed="true"\] \{[\s\S]*?background: #eaf1f3;/);
+});
