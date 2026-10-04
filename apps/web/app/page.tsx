@@ -933,11 +933,13 @@ export default async function HomePage() {
                       </div>
                       <div
                         className={styles.reviewStars}
+                        role="img"
                         aria-label={`Оценка ${review.rating} из 5`}
                       >
                         {Array.from({ length: 5 }, (_, index) => (
                           <Star
                             key={index}
+                            aria-hidden="true"
                             size={18}
                             fill={index < review.rating ? "currentColor" : "none"}
                           />
