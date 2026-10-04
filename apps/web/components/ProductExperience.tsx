@@ -514,12 +514,12 @@ function dimensionLabel(sku: Product["skus"][number], key: VariantDimensionKey):
 }
 
 const dimensionDefinitions: Array<{ key: VariantDimensionKey; label: string }> = [
-  { key: "material", label: "Материал внутренней трубы" },
+  { key: "material", label: "Внут. труба" },
   { key: "diameter", label: "Диаметр d/D" },
-  { key: "steel_grade", label: "Марка стали внутренней трубы" },
-  { key: "wall_thickness_mm", label: "Толщина внутренней трубы" },
-  { key: "attribute:outer_material", label: "Материал наружной трубы" },
-  { key: "attribute:outer_steel_grade", label: "Марка стали наружной трубы" },
+  { key: "steel_grade", label: "Сталь внут. трубы" },
+  { key: "wall_thickness_mm", label: "Толщина внут. трубы" },
+  { key: "attribute:outer_material", label: "Наруж. труба" },
+  { key: "attribute:outer_steel_grade", label: "Сталь наруж. трубы" },
   { key: "length_mm", label: "Длина" },
   { key: "insulation_mm", label: "Утепление" },
   { key: "angle_deg", label: "Угол" },
@@ -1617,11 +1617,18 @@ export function ProductExperience({
 
         <aside className="sku-panel">
           {activeSku ? (
-            <>
               <div className="sku-price-block sku-price-block-selection">
                 <p className="sku-price-note">за штуку, включая НДС</p>
                 <div className="sku-price">{formatPrice(activeSku.price_rub)}</div>
               </div>
+          ) : (
+            <div className="sku-price-block">
+              <div className="sku-price-na">Цена по запросу</div>
+            </div>
+          )}
+
+          <div className="sku-panel-scroll">
+            {activeSku ? (
               <details className="variant-picker-details" open>
                 <summary className="variant-picker-head">
                   <span>Выберите исполнение</span>
@@ -1728,12 +1735,7 @@ export function ProductExperience({
                   ) : null}
                 </div>
               </details>
-            </>
-          ) : (
-            <div className="sku-price-block">
-              <div className="sku-price-na">Цена по запросу</div>
-            </div>
-          )}
+            ) : null}
 
           <div className="sku-cta">
             {activeSku ? (
@@ -1794,6 +1796,7 @@ export function ProductExperience({
             <a href="mailto:office@dimohod-trade.pro" className="panel-email">
               <Mail size={14} /> office@dimohod-trade.pro
             </a>
+          </div>
           </div>
         </aside>
       </div>

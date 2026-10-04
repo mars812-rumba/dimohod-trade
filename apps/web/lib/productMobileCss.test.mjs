@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const css = fs.readFileSync(path.join(here, "../app/globals.css"), "utf8");
+const product = fs.readFileSync(path.join(here, "../components/ProductExperience.tsx"), "utf8");
 const productMobileStart = css.indexOf(
   "@media (max-width: 768px) {",
   css.indexOf(".product-page .product-back-link"),
@@ -31,4 +32,16 @@ test("mobile catalog cards use readable facts and wrapping badges", () => {
   assert.match(catalogMobileCss, /\.catalog-page \.catalog-category-facts dd \{[\s\S]*?font-size: 13px;[\s\S]*?overflow-wrap: anywhere;/);
   assert.match(catalogMobileCss, /\.catalog-page \.catalog-product-image-badges \{[\s\S]*?flex-wrap: wrap;/);
   assert.match(catalogMobileCss, /\.catalog-page \.catalog-product-image-badges \.product-image-badge \{[\s\S]*?font-size: 12px;[\s\S]*?white-space: normal;/);
+});
+
+test("desktop variant panel separates the fixed price from scrollable content", () => {
+  const start = css.indexOf("@media (min-width: 1025px) {", css.indexOf(".product-page .product-back-link"));
+  const desktop = css.slice(start, css.indexOf("@media (max-width: 1024px) {", start));
+  assert.match(desktop, /\.sku-panel \{[\s\S]*?display: flex;[\s\S]*?max-height: calc\(100dvh - 108px\);/);
+  assert.match(desktop, /\.sku-panel-scroll \{[\s\S]*?min-height: 0;[\s\S]*?overflow-y: auto;/);
+  assert.match(desktop, /\.sku-cta \{[\s\S]*?position: sticky;[\s\S]*?bottom: 0;/);
+  assert.match(desktop, /\.variant-group legend \{[\s\S]*?min-height: 28px;/);
+  assert.ok(product.indexOf('className="sku-price-block sku-price-block-selection"') < product.indexOf('className="sku-panel-scroll"'));
+  assert.match(product, /key: "material", label: "Внут\. труба"/);
+  assert.match(product, /key: "attribute:outer_material", label: "Наруж\. труба"/);
 });
