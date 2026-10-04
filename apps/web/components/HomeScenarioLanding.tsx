@@ -290,6 +290,7 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
                 <details key={item.question}>
                   <summary>{item.question}</summary>
                   <p>{item.answer}</p>
+                  {item.links?.map((link) => <p key={link.href}><Link href={link.href}>{link.label}</Link></p>)}
                 </details>
               ))}
             </div>

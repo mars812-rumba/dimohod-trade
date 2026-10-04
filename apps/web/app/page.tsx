@@ -1,3 +1,4 @@
+import scenarioFaqCatalog from "@/lib/scenarioFaqCatalog.json";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -211,12 +212,7 @@ const routeExamples = [
   },
 ];
 
-const faq = [
-  ["Можно ли заказать комплект только по фото?", "Фото помогает начать подбор, но обычно нужны модель печи, диаметр патрубка, высота и места прохода через конструкции. Если данных не хватит, инженер перечислит, что уточнить."],
-  ["Конфигуратор сразу показывает окончательный комплект?", "Конфигуратор собирает комплект по указанным параметрам. Перед заказом специалист проверяет диаметр, сталь, узлы прохода и конкретные позиции."],
-  ["Какую цену показывает расчёт?", "Быстрый расчёт показывает ориентировочную стоимость найденных позиций. Если у части изделий нет цены, сумма отмечается как неполная. После расчёта по замерам менеджер проверяет состав, совместимость и итоговую смету перед заказом."],
-  ["Можно прислать готовый план или свою смету?", "Да. Прикрепите PDF или изображение к форме — мы сверим маршрут и отметим недостающие данные."],
-];
+const faq = scenarioFaqCatalog["/"].items;
 
 const yandexReviews = [
   {
@@ -1022,8 +1018,14 @@ export default async function HomePage() {
 
       <section className={styles.faqSection}>
         <div className={styles.shell}>
-          <div className={styles.sectionHeading}><div><p className={styles.overline}>Коротко о подборе</p><h2>Частые вопросы.</h2></div><p>Ответы о комплекте из конфигуратора, материалах и проверке перед заказом.</p></div>
-          <div className={styles.faqList}>{faq.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div>
+          <div className={styles.sectionHeading}><div><h2>{scenarioFaqCatalog["/"].title}</h2></div><p>Ответы о стоимости, составе заказа, доставке и проверке перед покупкой.</p></div>
+          <div className={styles.faqList}>{faq.map((item) => (
+            <details key={item.id}>
+              <summary>{item.question}</summary>
+              <p>{item.answer}</p>
+              {item.links.map((link) => <p key={link.href}><Link href={link.href}>{link.label}</Link></p>)}
+            </details>
+          ))}</div>
         </div>
       </section>
 
