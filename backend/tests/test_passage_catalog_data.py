@@ -92,12 +92,14 @@ def test_flange_straight_and_angled_prices_remain_separate_variants() -> None:
 def test_confirmed_mounting_products_keep_source_prices_and_roles() -> None:
     master_flash = sku("master-flesh", "DT-MASTER-FLASH-2")
     wall_console = sku("konsol-universalnaya", "DT-CONSOLE-UNIVERSAL-930-D350")
-    floor_console = sku("konsol-teleskopicheskaya", "DT-CONSOLE-TELESCOPIC-900-1200")
+    telescopic_console = sku("konsol-teleskopicheskaya", "DT-CONSOLE-TELESCOPIC-900-1200")
     floor_clamp = product("homut-v-perekrytie")
 
     assert master_flash.price_rub == Decimal("2300")
     assert wall_console.price_rub == Decimal("3000")
     assert product("konsol-universalnaya").extra_attributes["mounting_type"] == "настенная"
-    assert floor_console.price_rub == Decimal("2500")
-    assert product("konsol-teleskopicheskaya").extra_attributes["mounting_type"] == "напольная"
+    assert telescopic_console.price_rub == Decimal("2500")
+    assert product("konsol-teleskopicheskaya").extra_attributes["mounting_type"] == "настенная"
+    assert product("konsol-teleskopicheskaya").application_tags == ("стена",)
+    assert "Напольная" not in product("konsol-teleskopicheskaya").short_description
     assert floor_clamp.extra_attributes["diameter_boundary_needs_review"] is True
