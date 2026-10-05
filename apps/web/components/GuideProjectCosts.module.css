@@ -1,0 +1,10 @@
+.project { margin: 32px 0; }
+.project h3 { font-size: 24px; line-height: 1.2; margin: 0 0 16px; }
+.table { width: 100%; border-collapse: collapse; font-size: 16px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.table caption { text-align: left; font-weight: 700; margin-bottom: 12px; }
+.table th, .table td { padding: 12px 0; border-bottom: 1px solid var(--guide-line); text-align: left; vertical-align: top; }
+.table tbody th { font-weight: 400; }
+.table th:first-child { padding-right: 20px; }
+.table td { white-space: nowrap; text-align: right; }
+.table tfoot { font-weight: 700; }
+@media (max-width: 520px) { .table th:first-child { padding-right: 12px; } }

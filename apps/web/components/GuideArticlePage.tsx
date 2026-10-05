@@ -16,6 +16,7 @@ import {
 import styles from "./GuideArticlePage.module.css";
 import { guideDate } from "@/lib/guidePresentation";
 import { GuideEstimateExample } from "./GuideEstimateExample";
+import { GuideProjectCosts } from "./GuideProjectCosts";
 
 type GuideArticlePageProps = {
   article: GuideArticle;
@@ -104,6 +105,8 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                 ))}
               </ul>
             </section>
+
+            {article.slug === "komplekt-dymohoda-dlya-pechi" ? <GuideProjectCosts /> : null}
 
             {article.sections.map((section) => (
               <section className={styles.section} key={section.title}>
