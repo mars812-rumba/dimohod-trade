@@ -1,0 +1,19 @@
+.section {
+  background: var(--landing-paper, #f3f6f6);
+  color: var(--landing-ink, #173b48);
+  padding: clamp(48px, 7vw, 88px) 0;
+  border-bottom: 1px solid var(--landing-line, #d1dce0);
+}
+.shell { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
+.section h2 { font-family: var(--font-heading); font-size: var(--type-section-title, 36px); line-height: 1.1; text-wrap: balance; margin: 0 0 24px; }
+.section h3 { font-size: 22px; line-height: 1.25; margin: 32px 0 16px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 80px); }
+.section p { font-size: 16px; line-height: 1.65; max-width: 72ch; margin: 0 0 16px; }
+.prices { margin: 24px 0; font-variant-numeric: tabular-nums; }
+.prices div { display: flex; justify-content: space-between; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--landing-line, #d1dce0); }
+.prices dd { margin: 0; font-weight: 700; text-align: right; flex-shrink: 0; }
+.link { color: inherit; font-weight: 700; text-underline-offset: 4px; }
+.link:hover { text-decoration-thickness: 2px; }
+.link:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
+.section .services { margin: 32px 0 0; }
+@media (max-width: 720px) { .shell { width: calc(100% - 32px); } .layout { grid-template-columns: minmax(0, 1fr); gap: 0; } }

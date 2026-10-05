@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { solutionCertificates } from "@/lib/solutionTrust";
 import styles from "./SolutionTrustSections.module.css";
+import { InstallationTermsSection } from "./InstallationTermsSection";
 
 const advantages = [
   {
@@ -32,11 +33,12 @@ const advantages = [
   },
 ] as const;
 
-export function SolutionTrustSections({ assetBasePath = "" }: { assetBasePath?: string }) {
+export function SolutionTrustSections({ assetBasePath = "", fireplace = false }: { assetBasePath?: string; fireplace?: boolean }) {
   const assetUrl = (path: string) => `${assetBasePath}${path}`;
 
   return (
     <>
+      <InstallationTermsSection fireplace={fireplace} />
       <section className={styles.advantagesSection} aria-labelledby="advantages-title">
         <div className={styles.shell}>
           <div className={styles.sectionHeading}>

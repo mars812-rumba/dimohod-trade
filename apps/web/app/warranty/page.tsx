@@ -9,6 +9,7 @@ import {
   IconUser as User,
 } from "@tabler/icons-react";
 import styles from "./page.module.css";
+import { installationTerms } from "@/lib/installationTerms";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro";
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -124,6 +125,14 @@ export default function WarrantyPage() {
             <p>Без сложной формы: получаем материалы, находим заказ и разбираем обращение по существу.</p>
           </header>
           <div className={styles.principleGrid}>
+            <article>
+              <h3>Гарантия на изделия — до 12 лет</h3>
+              <p>{installationTerms.productWarranty}</p>
+            </article>
+            <article>
+              <h3>Гарантия на монтаж — 36 месяцев</h3>
+              <p>{installationTerms.installationWarranty}</p>
+            </article>
             <article>
               <h3>Условия указаны в заказе</h3>
               <p>Срок и условия гарантии смотрите в документах, полученных при оформлении заказа.</p>

@@ -253,7 +253,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
           </div>
         </section>
 
-        <SolutionTrustSections assetBasePath={assetBasePath} />
+        <SolutionTrustSections assetBasePath={assetBasePath} fireplace />
 
         <section className={styles.reviewsSection} aria-labelledby="kamin-reviews-title">
           <div className={`${styles.shell} ${styles.reviewsLayout}`}>

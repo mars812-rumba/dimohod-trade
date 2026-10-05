@@ -1,4 +1,5 @@
 import scenarioFaqCatalog from "@/lib/scenarioFaqCatalog.json";
+import { InstallationTermsSection } from "@/components/InstallationTermsSection";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -863,13 +864,15 @@ export default async function HomePage() {
               <h2 id="works-title">Дымоходы на реальных объектах.</h2>
             </div>
             <p>
-              Пять фотосерий показывают подключение внутри помещений, проходы через
+              Фотографии выполненных работ показывают подключение внутри помещений, проходы через
               конструкции и завершение дымохода над кровлей.
             </p>
           </div>
           <HomeWorksShowcase />
         </div>
       </section>
+
+      <InstallationTermsSection compact />
 
       <section className={styles.reviewsSection} aria-labelledby="reviews-title">
         <div className={styles.shell}>
