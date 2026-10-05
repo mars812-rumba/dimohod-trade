@@ -23,6 +23,7 @@ import {
 import type { CategoryNode, CatalogTreeResponse } from "@/lib/api";
 import { InstallAppButton } from "./InstallAppButton";
 import { CartHeaderLink } from "./CartHeaderLink";
+import { MaxContactLink } from "./MaxContactLink";
 import {
   personalDataConsentPath,
   privacyPolicyPath,
@@ -222,6 +223,7 @@ export function SiteHeader() {
               <Link href="/pechi">Печи</Link>
               <Link href="/configurator">Сохранённые расчёты</Link>
               <Link href="/#send-materials">Оставить заявку</Link>
+              <div className="desktop-menu-install"><InstallAppButton /></div>
               <span className="desktop-nav-label">Документы</span>
               <Link href={privacyPolicyPath}>Политика персональных данных</Link>
               <Link href={personalDataConsentPath}>Согласие на обработку данных</Link>
@@ -235,6 +237,7 @@ export function SiteHeader() {
             <InstallAppButton />
           </div>
           <CartHeaderLink />
+          <MaxContactLink compact />
           <a
             aria-label="Позвонить: +7 965 075-65-55"
             className="header-phone"
@@ -244,7 +247,7 @@ export function SiteHeader() {
             <Phone aria-hidden size={17} />
             <span>+7 (965) 075-65-55</span>
           </a>
-          <Link className="header-configurator" href="/raschet">
+          <Link aria-label="Калькулятор" className="header-configurator" href="/raschet">
             <SlidersHorizontal aria-hidden size={17} />
             <span>Калькулятор</span>
           </Link>
@@ -345,6 +348,7 @@ export function SiteHeader() {
           </nav>
 
           <div className="mobile-menu-footer">
+            <MaxContactLink onClick={closeMenu} />
             <a href="tel:+79650756555">
               <Phone aria-hidden size={16} />
               <span>+7 (965) 075-65-55</span>

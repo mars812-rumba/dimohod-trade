@@ -627,6 +627,61 @@ ul {
   align-items: center;
   gap: 10px;
   margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.desktop-menu-install { display: none; }
+
+.max-contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  width: fit-content;
+  color: inherit;
+}
+
+.max-contact-link img {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.max-contact-link-compact {
+  justify-content: center;
+  width: 40px;
+  flex: 0 0 40px;
+}
+
+.max-contact-link:hover {
+  text-decoration: underline;
+}
+
+.max-contact-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .header-right {
+    gap: 4px;
+  }
+
+  .header-configurator span {
+    display: none;
+  }
+
+  .header-right .header-configurator > svg {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .header-configurator {
+    justify-content: center;
+    width: 40px;
+  }
 }
 
 .install-app {
@@ -670,6 +725,8 @@ ul {
   color: rgba(255, 255, 255, 0.86);
   font-size: 13px;
   font-weight: 640;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .header-cart {
@@ -749,7 +806,7 @@ ul {
   outline-offset: 2px;
 }
 
-@media (min-width: 1025px) and (max-width: 1320px) {
+@media (min-width: 1025px) and (max-width: 1640px) {
   .site-header {
     gap: 14px;
     padding-inline: 20px;
@@ -765,6 +822,10 @@ ul {
 
   .header-install {
     display: none;
+  }
+
+  .desktop-menu-install {
+    display: block;
   }
 
   .header-phone {
@@ -4751,7 +4812,7 @@ body.mobile-menu-open {
   color: #2d2612;
   background: #e5bb58;
   box-shadow: 0 4px 12px rgba(16, 33, 39, 0.14);
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.2;
   pointer-events: none;
@@ -5476,6 +5537,31 @@ body.mobile-menu-open {
 
 .faq-open .faq-chevron {
   transform: rotate(180deg);
+}
+
+.product-faq-item > summary {
+  min-height: 48px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.product-faq-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.product-faq-item > summary:focus-visible {
+  outline: 2px solid var(--product-steel-deep, var(--text));
+  outline-offset: -2px;
+}
+
+.product-faq-item[open] .faq-chevron {
+  transform: rotate(180deg);
+}
+
+.product-faq-item .faq-body {
+  color: var(--text);
+  font-size: 16px;
+  overflow-wrap: anywhere;
 }
 
 .faq-body {
@@ -7317,7 +7403,7 @@ body.mobile-menu-open {
     max-width: calc(100% - 16px);
     min-height: 28px;
     padding: 5px 7px;
-    font-size: 12px;
+    font-size: 14px;
     overflow-wrap: anywhere;
   }
 

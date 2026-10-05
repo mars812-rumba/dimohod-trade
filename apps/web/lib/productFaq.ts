@@ -1,9 +1,104 @@
 import type { Product, SKU } from "@/lib/api";
+import catalog from "./productFaqCatalog.json" with { type: "json" };
 
 export type ProductFaqItem = {
+  id?: string;
   q: string;
   a: string;
 };
+
+type FamilyFaq = { set: string; slug: string; title: string; items: ProductFaqItem[] };
+const familyFaqs: Record<string, FamilyFaq> = catalog;
+
+export function productFaqTitle(product: Product): string {
+  return `Вопросы о товаре: ${familyFaqs[product.id]?.title ?? product.name}`;
+}
+
+function positiveNumber(value: unknown): string | null {
+  if (typeof value !== "number" && typeof value !== "string") return null;
+  if (typeof value === "string" && !value.trim()) return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? String(number).replace(".", ",") : null;
+}
+
+function attributeText(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function materialLabel(material: unknown, steel: unknown, thickness: unknown): string | null {
+  const label = attributeText(material);
+  if (!label) return null;
+  const parts = [label];
+  // A steel grade is never attributed to galvanized material.
+  const grade = attributeText(steel);
+  if (grade && !/оцинк/i.test(label)) parts.push(grade);
+  const wall = positiveNumber(thickness);
+  if (wall) parts.push(`${wall} мм`);
+  return parts.join(", ");
+}
+
+function catalogFaqItems(family: FamilyFaq, sku: SKU | null): ProductFaqItem[] {
+  const base = family.items.map((item) => ({ ...item }));
+  if (!sku) return base;
+  const parameters: ProductFaqItem[] = [];
+  const inner = positiveNumber(sku.diameter_mm);
+  const outer = positiveNumber(sku.outer_diameter_mm);
+  const sandwich = family.slug.startsWith("sendvich-");
+  if (sandwich && inner && outer && Number(sku.outer_diameter_mm) > Number(sku.diameter_mm)) {
+    parameters.push({
+      id: `${family.set}-P01`,
+      q: "Какие диаметры у выбранного исполнения?",
+      a: `В выбранном исполнении внутренний канал — ${inner} мм, наружный кожух — ${outer} мм. При подборе соседних сэндвич-элементов сверяйте оба размера и конструкцию соединения. Крепёж и проходки дополнительно проверяют по наружной поверхности в месте установки.`,
+    });
+  }
+  const length = positiveNumber(sku.length_mm);
+  if ((family.set === "F01" || family.set === "F02") && length) {
+    const effective = positiveNumber(sku.attributes.effective_length_mm);
+    parameters.push({
+      id: `${family.set}-P02`,
+      q: "Какова длина выбранной трубы?",
+      a: `Номинальная длина выбранной секции — ${length} мм. При составлении трассы учитывайте посадку соединений: прибавка к общей длине собранного участка может быть меньше номинальной длины изделия.${effective ? ` Монтажная длина этого исполнения — ${effective} мм.` : ""}`,
+    });
+  }
+  if (sandwich) {
+    const innerMaterial = materialLabel(sku.material, sku.steel_grade, sku.wall_thickness_mm);
+    const outerMaterial = materialLabel(sku.attributes.outer_material, sku.attributes.outer_steel_grade, sku.attributes.outer_wall_thickness_mm);
+    if (innerMaterial && outerMaterial) parameters.push({
+      id: `${family.set}-P03`,
+      q: "Из чего сделаны внутренняя труба и наружный кожух?",
+      a: `Внутренняя труба выбранного исполнения: ${innerMaterial}. Наружный кожух: ${outerMaterial}. Это разные части сэндвича: материал кожуха нельзя использовать как характеристику дымового канала. Допустимый режим эксплуатации проверяют по документации системы.`,
+    });
+    const insulation = positiveNumber(sku.insulation_mm);
+    if (insulation) parameters.push({
+      id: `${family.set}-P04`,
+      q: "Какая толщина утепления у этого исполнения?",
+      a: `У выбранного исполнения слой утепления ${insulation} мм. Допустимые расстояния до конструкций по этому размеру не определяют; их нужно сверить с документацией системы.`,
+    });
+  }
+  // Only a specifically confirmed outer-fit range, not a generic diameter field.
+  const outerFit = attributeText(sku.attributes.outer_fit_range);
+  if (["F12", "F13", "F14", "F15", "F30", "F31", "F35"].includes(family.set) && outerFit) parameters.push({
+    id: `${family.set}-P05`,
+    q: "Для какого наружного диаметра подходит выбранное исполнение?",
+    a: `Рабочий диапазон охвата выбранного исполнения — ${outerFit}. Сопоставьте его с наружным размером трубы в месте установки. Дополнительно проверьте конструкцию посадки и остальные параметры узла.`,
+  });
+  const included = sku.attributes.included_items;
+  if (Array.isArray(included) && included.length && included.every((item) => attributeText(item))) parameters.push({
+    id: `${family.set}-P06`,
+    q: "Что входит в комплект выбранного изделия?",
+    a: `В поставку выбранного исполнения входят: ${included.map((item) => String(item).trim()).join(", ")}. Для сборки узла могут понадобиться дополнительные детали по схеме дымохода. Изображения соседних элементов на общей фотографии не означают их включение в комплект.`,
+  });
+  for (const item of parameters.slice(0, 2)) {
+    // Replace the equivalent generic question instead of repeating it.
+    const replacement = item.id?.endsWith("-P01")
+      ? (family.set === "F02" ? "F02-Q1" : family.set === "F22" ? "F22-Q2" : null)
+      : null;
+    const index = replacement ? base.findIndex((candidate) => candidate.id === replacement) : -1;
+    if (index >= 0) base[index] = item;
+    else base.push(item);
+  }
+  return base;
+}
 
 type KindFact = {
   purpose: string;
@@ -175,13 +270,16 @@ function selectedSkuAnswer(product: Product, sku: SKU | null): string {
     sku.steel_grade ? `сталь ${sku.steel_grade}` : null,
     sku.contour ? `контур ${sku.contour}` : null,
   ].filter((value): value is string => Boolean(value));
-  const selected = facts.length ? facts.join(", ") : "параметры выбранного SKU";
+  const selected = facts.length ? facts.join(", ") : "параметры выбранного исполнения";
   return `Для выбранного артикула ${sku.article} проверьте ${selected}. Совпадение одного диаметра ещё не подтверждает совместимость всего узла — её сверяют по соседним элементам и маршруту.`;
 }
 
 export function productFaqItems(product: Product, activeSku: SKU | null): ProductFaqItem[] {
   const manualItems = customFaq(product);
   if (manualItems.length) return manualItems;
+
+  const family = familyFaqs[product.id];
+  if (family) return catalogFaqItems(family, activeSku);
 
   const fact = kindFacts[product.product_kind ?? ""];
   const rawKnowledge = product.extra_attributes.seo_knowledge;

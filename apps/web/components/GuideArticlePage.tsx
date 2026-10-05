@@ -17,6 +17,7 @@ import styles from "./GuideArticlePage.module.css";
 import { guideDate } from "@/lib/guidePresentation";
 import { GuideEstimateExample } from "./GuideEstimateExample";
 import { GuideProjectCosts } from "./GuideProjectCosts";
+import { LeadForm } from "./LeadForm";
 
 type GuideArticlePageProps = {
   article: GuideArticle;
@@ -125,7 +126,7 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
             <aside className={styles.safetyNote}>
               <AlertTriangle size={24} strokeWidth={1.8} aria-hidden />
               <div>
-                <h2>Граница предварительного расчёта</h2>
+                <h2>Что проверить перед заказом</h2>
                 <p>
                   Материал помогает собрать исходные данные и обсудить состав системы. Он не заменяет
                   паспорт отопителя, проект, документацию производителя дымохода и проверку узлов на
@@ -138,7 +139,6 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
               <div className={styles.sourcesTitle}>
                 <BookOpen size={23} strokeWidth={1.7} aria-hidden />
                 <div>
-                  <p>Проверяемая основа</p>
                   <h2 id="sources-title">Источники</h2>
                 </div>
               </div>
@@ -152,6 +152,21 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                   </li>
                 ))}
               </ol>
+            </section>
+            <section className={styles.section} aria-labelledby="guide-selection-title">
+              <h2 id="guide-selection-title">Поможем подобрать комплект под вашу задачу</h2>
+              <p>Оставьте заявку. Если есть модель печи, фотографии или готовый список деталей, приложите их — менеджер уточнит недостающие данные и поможет с подбором.</p>
+              <details className={styles.selectionRequest}>
+                <summary className={styles.primaryButton}>Помочь с подбором</summary>
+                <LeadForm
+                  source={`guide-selection:${article.slug}`}
+                  configuration={`Подбор комплекта. Статья: ${article.title}`}
+                  attachmentLabel="Фото, план или паспорт"
+                  submitLabel="Отправить заявку на подбор"
+                  compact
+                />
+              </details>
+              <Link className={styles.selectionCalculation} href={guideConfiguratorHref}>Рассчитать самостоятельно</Link>
             </section>
           </div>
 

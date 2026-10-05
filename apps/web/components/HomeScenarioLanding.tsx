@@ -264,7 +264,7 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
               <article>
                 <Route aria-hidden size={25} />
                 <h3>Маршрут</h3>
-                <p>Выход через кровлю и наружный подъём по фасаду формируют разные предварительные BOM.</p>
+                <p>Выход через кровлю и наружный подъём по фасаду дают разный предварительный состав комплекта.</p>
               </article>
               <article>
                 <ShieldCheck aria-hidden size={25} />

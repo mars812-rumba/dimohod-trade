@@ -33,7 +33,7 @@ import { LeadForm } from "@/components/LeadForm";
 import { YandexRatingBadge } from "@/components/YandexRatingBadge";
 import { productSkus, type CompatibleProduct, type Product, type SKU } from "@/lib/api";
 import { isLaserWeldedPipe, steelWithThicknessLabel } from "@/lib/productLabels";
-import { productFaqItems } from "@/lib/productFaq";
+import { productFaqItems, productFaqTitle } from "@/lib/productFaq";
 import { productPublicPath, productSelectionPath } from "@/lib/productUrls";
 import {
   steelSelectionBadges,
@@ -895,16 +895,14 @@ function visualSkuMediaByRole(
 }
 
 function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-
   return (
-    <div className={`faq-item${open ? " faq-open" : ""}`}>
-      <button className="faq-trigger" onClick={() => setOpen((value) => !value)} type="button">
+    <details className="faq-item product-faq-item">
+      <summary className="faq-trigger">
         <span>{q}</span>
-        <ChevronDown size={16} className="faq-chevron" />
-      </button>
-      {open ? <div className="faq-body">{a}</div> : null}
-    </div>
+        <ChevronDown aria-hidden="true" size={16} className="faq-chevron" />
+      </summary>
+      <div className="faq-body">{a}</div>
+    </details>
   );
 }
 
@@ -938,7 +936,7 @@ function ProductCopyHeading({ title }: { title: string }) {
       <span className="product-copy-heading-icon" aria-hidden="true">
         <Icon size={17} strokeWidth={2} />
       </span>
-      <span>{title}</span>
+      <span>{title === "Характеристики выбранного SKU" ? "Характеристики выбранного исполнения" : title}</span>
     </h3>
   );
 }
@@ -1543,8 +1541,7 @@ export function ProductExperience({
                   <div>
                     <h3>Совместимые изделия</h3>
                     <p>
-                      Показываем варианты из выбранных в админке семейств, которые подходят
-                      к текущему SKU по правилам подбора.
+                      Комплектующие, подобранные для выбранного исполнения.
                       {hasCompatibleLengthChoices ? " У труб длину можно выбрать прямо в карточке." : ""}
                     </p>
                   </div>
@@ -1599,10 +1596,10 @@ export function ProductExperience({
           ) : null}
 
           <section className="product-section">
-            <h2 className="product-section-title">Вопросы и ответы</h2>
+            <h2 className="product-section-title">{productFaqTitle(product)}</h2>
             <div className="faq-list">
               {faqItems.map((item) => (
-                <FaqItem key={item.q} q={item.q} a={item.a} />
+                <FaqItem key={item.id ?? item.q} q={item.q} a={item.a} />
               ))}
             </div>
           </section>

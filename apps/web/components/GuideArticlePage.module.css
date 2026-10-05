@@ -139,6 +139,13 @@
 }
 
 .content { min-width: 0; }
+.selectionRequest { margin: 20px 0 16px; }
+.selectionRequest summary { cursor: pointer; list-style: none; }
+.selectionRequest summary::-webkit-details-marker { display: none; }
+.selectionRequest summary:focus-visible { outline: 3px solid var(--guide-accent); outline-offset: 3px; }
+.selectionRequest[open] summary { margin-bottom: 24px; }
+.selectionCalculation { color: #173f48; text-decoration: underline; text-underline-offset: 3px; }
+.selectionCalculation:focus-visible { outline: 3px solid var(--guide-accent); outline-offset: 3px; }
 .estimateTableWrap { max-width: 100%; overflow-x: auto; margin: 24px 0; }
 .estimateTableWrap:focus-visible { outline: 3px solid var(--guide-accent); outline-offset: 3px; }
 .estimateTable { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 15px; line-height: 1.5; font-variant-numeric: tabular-nums; }

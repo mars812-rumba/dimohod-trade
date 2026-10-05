@@ -556,8 +556,8 @@ export function HomeQuickEstimate({
                 <h3>Предварительный расчёт готов</h3>
                 <p>Схема, состав и стоимость доступны без отправки контактов. Перед заказом менеджер проверит комплект по вашим замерам.</p>
               </div>
-              {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем реальные SKU каталога и считаем стоимость…</p> : null}
-              {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. BOM уже рассчитан, стоимость уточним после замеров.</p> : null}
+              {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем изделия каталога и считаем стоимость…</p> : null}
+              {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. Предварительный состав комплекта рассчитан, стоимость уточним после замеров.</p> : null}
               {estimate && calculation ? <>
                 <div className={styles.resultOverview}>
                   <div>
