@@ -213,10 +213,10 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
         <section className={styles.worksSection} aria-labelledby="works-title">
           <div className={styles.shell}>
             <div className={styles.sectionHeading}>
-              <h2 id="works-title">Один объект, весь маршрут дымохода</h2>
+              <h2 id="works-title">Выполненные работы в частных домах</h2>
               <p>На фотографиях видны подключение, проходы через конструкции и завершение над кровлей.</p>
             </div>
-            <HomeWorksShowcase objectIds={[1]} />
+            <HomeWorksShowcase objectIds={[11, 10, 1]} />
           </div>
         </section>
 

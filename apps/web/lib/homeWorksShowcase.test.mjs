@@ -1,9 +1,52 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import test from "node:test";
 
 const source = readFileSync(new URL("../components/HomeWorksShowcase.tsx", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../components/HomeWorksShowcase.module.css", import.meta.url), "utf8");
+
+test("Zvezda case comes first, includes four WebP photos and excludes the client's stove from its price", () => {
+  const block = source.slice(source.indexOf("id: 11,"), source.indexOf("id: 10,"));
+  assert.ok(source.indexOf("id: 11,") < source.indexOf("id: 10,"));
+  assert.match(block, /СНТ «Звезда»/);
+  assert.match(block, /Демонтировали старый дымоход, установили печь клиента/);
+  assert.match(block, /стоимость не включена в итог/);
+  assert.doesNotMatch(block, /утеплённый|безопасный|AISI|сертификат/);
+  const values = [...block.matchAll(/value: "([\d ]+) ₽"/g)].map(match => Number(match[1].replaceAll(" ", "")));
+  assert.deepEqual(values, [55000, 35000, 6000, 96000]);
+  assert.equal(values.slice(0, -1).reduce((sum, value) => sum + value, 0), values.at(-1));
+  assert.equal([...block.matchAll(/src: "\/images\/works\/object-11\//g)].length, 4);
+  for (let index = 1; index <= 4; index += 1) {
+    const image = readFileSync(new URL(`../public/images/works/object-11/0${index}.webp`, import.meta.url));
+    assert.equal(image.toString("ascii", 0, 4), "RIFF");
+    assert.equal(image.toString("ascii", 8, 12), "WEBP");
+    assert.ok(image.length < 300000);
+  }
+});
+
+test("Lampovo case has five WebP photographs and the owner's six-item cost breakdown", () => {
+  const block = source.slice(source.indexOf("id: 10,"), source.indexOf("id: 1,"));
+  assert.match(block, /Лампово/);
+  assert.match(block, /Dacha 2 с конфорками/);
+  assert.match(block, /без изоляции между внутренним и наружным контурами/);
+  assert.match(block, /Astonit на стенах: 9×800×1200 мм/);
+  assert.match(block, /213 880 ₽/);
+  const values = [...block.matchAll(/value: "([\d ]+) ₽"/g)].map(match => Number(match[1].replaceAll(" ", "")));
+  assert.deepEqual(values, [66000, 94380, 36500, 5500, 6000, 5500, 213880]);
+  assert.equal(values.slice(0, -1).reduce((sum, value) => sum + value, 0), values.at(-1));
+  for (let index = 1; index <= 5; index += 1) {
+    const path = new URL(`../public/images/works/object-10/0${index}.webp`, import.meta.url);
+    const image = readFileSync(path);
+    assert.equal(image.toString("ascii", 0, 4), "RIFF");
+    assert.equal(image.toString("ascii", 8, 12), "WEBP");
+    assert.ok(statSync(path).size < 200000);
+    assert.match(block, new RegExp(`object-10\\/0${index}\\.webp`));
+  }
+  const home = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const landing = readFileSync(new URL("../components/HomeScenarioLanding.tsx", import.meta.url), "utf8");
+  assert.match(home, /<HomeWorksShowcase \/>/);
+  assert.match(landing, /<HomeWorksShowcase objectIds=\{\[11, 10, 1\]\} \/>/);
+});
 
 test("completed object 1 shows the confirmed project details and separate prices", () => {
   assert.match(source, /scenario: "Дымоход для дома"/);
