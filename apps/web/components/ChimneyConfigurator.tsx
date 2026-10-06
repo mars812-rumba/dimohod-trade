@@ -2452,7 +2452,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           </div>
           {calculation.variants.length > 1 ? (
             <fieldset className="configurator-variants">
-              <legend>Допустимые раскладки без стыков в проходах</legend>
+              <legend>{calculation.routeKind === "ceiling" ? "Предварительные раскладки труб" : "Допустимые раскладки без стыков в проходах"}</legend>
               {calculation.variants.map((variant, index) => (
                 <label key={variant.id}>
                   <input
@@ -2488,6 +2488,12 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             <div className="configurator-calculation-errors" role="alert">
               <strong>Схему нужно изменить</strong>
               {calculation.errors.map((error) => <p key={error}>{error}</p>)}
+            </div>
+          ) : null}
+          {calculation.floorJointReviewItems.length ? (
+            <div className="configurator-note" role="status">
+              <strong>Проверить стыки в перекрытиях перед заказом</strong>
+              {calculation.floorJointReviewItems.map((item) => <span key={item}>{item}</span>)}
             </div>
           ) : null}
         </div>
@@ -2648,7 +2654,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               <AlertTriangle aria-hidden size={18} />
               <strong>Проверить перед заказом</strong>
             </div>
-            {calculation.reviewItems.map((item) => (
+            {calculation.reviewItems.filter((item) => !calculation.floorJointReviewItems.includes(item)).map((item) => (
               <p key={item}>{item}</p>
             ))}
           </div>

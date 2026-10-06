@@ -124,6 +124,7 @@ export type ChimneyCalculation = {
   errors: string[];
   notes: string[];
   reviewItems: string[];
+  floorJointReviewItems: string[];
 };
 
 export type CalculationInput = {
@@ -202,6 +203,7 @@ export function solvePipeLayouts({
   fallbackZone,
   contour = "сэндвич",
   maxVariants = 3,
+  floorJointsRequireReview = false,
 }: {
   axis: RouteAxis;
   startMm: number;
@@ -210,6 +212,7 @@ export function solvePipeLayouts({
   fallbackZone: PlacedPipe["zone"];
   contour?: PlacedPipe["contour"];
   maxVariants?: number;
+  floorJointsRequireReview?: boolean;
 }): PipeLayoutVariant[] {
   if (targetMm <= startMm) return [];
   const maximumEnd = targetMm + PIPE_LENGTHS[0].effectiveMm;
@@ -219,6 +222,9 @@ export function solvePipeLayouts({
   const results: PipeLayoutVariant[] = [];
   const bestDepthAtEnd = new Map<number, number>([[startMm, 0]]);
   const resultLimit = Math.max(16, maxVariants * 8);
+  const blockingZones = floorJointsRequireReview
+    ? forbiddenZones.filter((zone) => zone.kind !== "floor")
+    : forbiddenZones;
 
   while (queue.length && results.length < resultLimit) {
     const current = queue.shift()!;
@@ -226,7 +232,7 @@ export function solvePipeLayouts({
     for (const length of PIPE_LENGTHS) {
       const endMm = current.endMm + length.effectiveMm;
       if (endMm > maximumEnd) continue;
-      if (jointInsideForbiddenZone(endMm, forbiddenZones)) continue;
+      if (jointInsideForbiddenZone(endMm, blockingZones)) continue;
       const lengths = [...current.lengths, length];
       if (endMm >= targetMm) {
         let cursor = startMm;
@@ -963,6 +969,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     ? "ceiling"
     : input.outlet === "horizontal" ? "wall-rear" : "wall-top";
   const errors: string[] = [];
+  const floorJointReviewItems: string[] = [];
   const notes = [
     "Каждый стык проверяется по абсолютной координате трассы.",
     `Расчётные полезные длины учитывают соединение ${PIPE_SOCKET_OVERLAP_MM} мм.`,
@@ -1069,7 +1076,9 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     reviewItems.unshift("Высота конька должна быть выше наружной границы кровельного прохода; проверьте замеры.");
   }
   fixedParts.forEach((part) => {
-    const forbidden = jointInsideForbiddenZone(part.endMm, forbiddenZones);
+    const forbidden = jointInsideForbiddenZone(part.endMm, forbiddenZones.filter((zone) => zone.kind !== "floor"));
+    // Floor conflicts do not stop a preliminary estimate. Keep wall and roof
+    // constraints blocking, and report floor joints explicitly below.
     if (forbidden) errors.push(`Стык после «${part.label}» попадает внутрь зоны «${forbidden.label}».`);
   });
   if (!forbiddenZones.length) {
@@ -1083,7 +1092,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   let facadeConsolePositionsMm: number[] = [];
   if (!errors.length) {
     if (routeKind === "ceiling") {
-      variants = solvePipeLayouts({ axis: "vertical", startMm: pipeStartMm, targetMm: routeTargetMm, forbiddenZones, fallbackZone: hasAttic ? "attic_or_cold_zone" : "indoor_warm" });
+      variants = solvePipeLayouts({ axis: "vertical", startMm: pipeStartMm, targetMm: routeTargetMm, forbiddenZones, fallbackZone: hasAttic ? "attic_or_cold_zone" : "indoor_warm", floorJointsRequireReview: true });
     } else if (routeKind === "wall-rear") {
       const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
       const wallStartMm = positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000;
@@ -1238,6 +1247,21 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
 
   variants = variants.map((variant) => applyThicknessProfiles(variant));
 
+  if (routeKind === "ceiling") {
+    const jointPositions = new Set([
+      ...fixedParts.map((part) => part.endMm),
+      ...variants.flatMap((variant) => variant.jointPositionsMm),
+    ]);
+    for (const positionMm of jointPositions) {
+      const floorZone = forbiddenZones.find((zone) => zone.kind === "floor"
+        && positionMm > zone.startMm && positionMm < zone.endMm);
+      if (floorZone) {
+        floorJointReviewItems.push(`Расчётный стык на отметке ${positionMm} мм попадает в «${floorZone.label}» (${floorZone.startMm}–${floorZone.endMm} мм). Стык трубы не может находиться внутри перекрытия. Перед заказом специалист должен скорректировать раскладку; показан предварительный состав комплекта, а не готовое монтажное решение.`);
+      }
+    }
+    reviewItems.unshift(...floorJointReviewItems);
+  }
+
   const bom = summarizePipeBom(variants, routeKind);
   addRouteNodes(
     bom,
@@ -1280,6 +1304,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     errors,
     notes,
     reviewItems,
+    floorJointReviewItems,
   };
 }
 
