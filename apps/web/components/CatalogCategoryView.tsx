@@ -12,6 +12,8 @@ import {
   type CatalogDiameterLink,
 } from "@/components/CatalogProductCard";
 import { CatalogVariantFilters } from "@/components/CatalogVariantFilters";
+import { CatalogPipeSelectionHelp } from "@/components/CatalogPipeSelectionHelp";
+import { CatalogSandwichOffers } from "@/components/CatalogSandwichOffers";
 import {
   catalogCategoryPath,
   catalogFilteredHeading,
@@ -303,7 +305,9 @@ export async function CatalogCategoryView({
             </nav>
           ) : null}
 
-          <details className="catalog-mobile-filter" open>
+          {category.slug === "sendvich-truby" ? <CatalogPipeSelectionHelp /> : null}
+
+          <details className="catalog-mobile-filter" id={category.slug === "sendvich-truby" ? "sandwich-filters" : undefined} open>
             <summary>
               <span><SlidersHorizontal size={17} /> Фильтры</span>
               <ChevronDown aria-hidden="true" className="catalog-filter-chevron" size={17} />
@@ -335,6 +339,19 @@ export async function CatalogCategoryView({
               ) : null}
             </form>
           </details>
+
+          {showSandwichContent ? (
+            <CatalogSandwichOffers
+              diameters={availableFilters.diameters.map(item => item.value)}
+              selection={{
+                length: defaultLength,
+                material: preferredMaterial,
+                steelGrade: preferredSteel,
+                outerMaterial: preferredOuterMaterial,
+                outerSteelGrade: preferredOuterSteel,
+              }}
+            />
+          ) : null}
 
           {productResponse.items.length ? (
             <div className="catalog-products-grid">
