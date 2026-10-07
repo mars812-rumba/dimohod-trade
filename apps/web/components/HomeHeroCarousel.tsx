@@ -32,7 +32,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   const [isMobile, setIsMobile] = useState(false);
   const [mobileVideoFailed, setMobileVideoFailed] = useState(false);
   const [mobileVideoPlaying, setMobileVideoPlaying] = useState(false);
-  const [mobileVideoRequested, setMobileVideoRequested] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -62,7 +61,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
       setActiveIndex((index) => (index + 1) % slides.length);
     }, 6500);
     return () => window.clearInterval(interval);
-  }, [isMobile, mobileVideoFailed, mobileVideoRequested, reduceMotion]);
+  }, [isMobile, mobileVideoFailed, reduceMotion]);
 
   useEffect(() => {
     const video = mobileVideoRef.current;
@@ -80,12 +79,12 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
     );
     observer.observe(video);
     return () => observer.disconnect();
-  }, [isMobile, mobileVideoFailed, mobileVideoRequested, reduceMotion]);
+  }, [isMobile, mobileVideoFailed, reduceMotion]);
 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
   const mobileVideoPosterPath = `${assetBasePath}/images/home/hero-projects/0826-poster.webp`;
-  const usesMobileVideo = isMobile && !reduceMotion && !mobileVideoFailed && mobileVideoRequested;
+  const usesMobileVideo = isMobile && !reduceMotion && !mobileVideoFailed;
 
   return (
     <section
@@ -129,7 +128,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
               loop
               muted
               playsInline
-              preload="none"
+              preload="metadata"
               poster={mobileVideoPosterPath}
               aria-hidden="true"
               onPlaying={() => {
@@ -188,24 +187,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             />
           ))}
         </div>
-        {isMobile && !reduceMotion && !mobileVideoFailed ? (
-          <button
-            className={styles.videoToggle}
-            type="button"
-            onClick={() => {
-              if (mobileVideoPlaying) {
-                mobileVideoRef.current?.pause();
-                setMobileVideoRequested(false);
-              } else if (mobileVideoRequested) {
-                void mobileVideoRef.current?.play().catch(() => undefined);
-              } else {
-                setMobileVideoRequested(true);
-              }
-            }}
-          >
-            {mobileVideoPlaying ? "Приостановить видео" : "Посмотреть видео"}
-          </button>
-        ) : null}
       </div>
     </section>
   );
