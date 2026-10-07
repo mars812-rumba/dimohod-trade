@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
-import { getProduct, productSkus, type Product, type SKU } from "@/lib/api";
+import { getCompatibleProducts, getProduct, productSkus, type Product, type SKU } from "@/lib/api";
 import { ProductExperience } from "@/components/ProductExperience";
 import {
   isUuidReference,
@@ -10,8 +10,9 @@ import {
   productPublicPath,
   productSelectionPath,
 } from "@/lib/productUrls";
-import { ensureDiameterInTitle } from "@/lib/productMetadata";
+import { ensureDiameterInTitle, normalizeProductParameterSpacing } from "@/lib/productMetadata";
 import { productFaqItems } from "@/lib/productFaq";
+import { productOfferAvailability } from "@/lib/productAvailability";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -107,10 +108,10 @@ function applySeoTemplate(value: string, product: Product, sku: SKU | null) {
     "{diameter}": diameter,
     "{dimensions}": dimensions,
   };
-  return Object.entries(replacements)
+  return normalizeProductParameterSpacing(Object.entries(replacements)
     .reduce((result, [token, replacement]) => result.replaceAll(token, replacement), value)
     .replace(/\s{2,}/g, " ")
-    .trim();
+    .trim());
 }
 
 function isLegacySkuSpecificSeo(value: string, product: Product) {
@@ -245,15 +246,11 @@ function productJsonLd(product: Product, sku: SKU | null) {
       )
     : [];
   const image = productImage(product, sku);
-  const availability = {
-    in_stock: "https://schema.org/InStock",
-    out_of_stock: "https://schema.org/OutOfStock",
-    on_order: "https://schema.org/BackOrder",
-  }[sku?.stock_status ?? ""];
+  const availability = productOfferAvailability(sku?.stock_status);
   const offer = sku?.price_rub && Number(sku.price_rub) > 0
     ? {
         "@type": "Offer",
-        url: canonicalUrl,
+        url: absoluteUrl(productSelectionPath(product.slug, sku, sku.article)),
         priceCurrency: "RUB",
         price: sku.price_rub,
         availability,
@@ -263,8 +260,9 @@ function productJsonLd(product: Product, sku: SKU | null) {
     ? {
         "@type": "Product",
         "@id": productId,
-        name: skuSeoAttribute(sku, "h1") ?? sku.name,
+        name: normalizeProductParameterSpacing(skuSeoAttribute(sku, "h1") ?? sku.name),
         sku: sku.article,
+        brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
         url: canonicalUrl,
         description: metadataDescription(product, sku),
         size: [diameterLabel(sku), sku.length_mm ? `L=${sku.length_mm} мм` : null]
@@ -416,6 +414,15 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
       : target);
   }
   const jsonLd = productJsonLd(product, initialSku);
+  // Render the selected variant's existing compatibility rules on the server.
+  // Do not cache prices here or make a failed recommendations request hide the
+  // main product; the client can retry through its existing loading mechanism.
+  const compatibleProducts = await getCompatibleProducts(product.slug, initialSku.id, { fresh: true })
+    .catch(() => {
+      console.warn("Product compatibility unavailable during server rendering");
+      return [];
+    });
+  const initialProduct = { ...product, compatible_products: compatibleProducts };
 
   return (
     <>
@@ -424,7 +431,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
         type="application/ld+json"
       />
       <ProductExperience
-        product={product}
+        product={initialProduct}
         initialSkuKey={initialSku.id}
         returnToQuickEstimate={fromQuickEstimate}
       />

@@ -379,14 +379,17 @@ export async function getProducts({
 export async function getCompatibleProducts(
   productSlug: string,
   skuReference: string,
+  options: { fresh?: boolean } = {},
 ): Promise<CompatibleProduct[]> {
   const response = await fetch(
     `${apiBaseUrl}/api/v1/products/${encodeURIComponent(productSlug)}/compatible?sku=${encodeURIComponent(skuReference)}`,
     {
-      next: {
-        revalidate: 300,
-        tags: [`home-compatible-${productSlug}-${skuReference}`],
-      },
+      ...(options.fresh
+        ? { cache: "no-store" as const }
+        : { next: {
+            revalidate: 300,
+            tags: [`home-compatible-${productSlug}-${skuReference}`],
+          } }),
     },
   );
 
