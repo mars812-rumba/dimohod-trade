@@ -32,6 +32,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   const [isMobile, setIsMobile] = useState(false);
   const [mobileVideoFailed, setMobileVideoFailed] = useState(false);
   const [mobileVideoPlaying, setMobileVideoPlaying] = useState(false);
+  const [mobileVideoRequested, setMobileVideoRequested] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -61,7 +62,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
       setActiveIndex((index) => (index + 1) % slides.length);
     }, 6500);
     return () => window.clearInterval(interval);
-  }, [isMobile, mobileVideoFailed, reduceMotion]);
+  }, [isMobile, mobileVideoFailed, mobileVideoRequested, reduceMotion]);
 
   useEffect(() => {
     const video = mobileVideoRef.current;
@@ -79,12 +80,12 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
     );
     observer.observe(video);
     return () => observer.disconnect();
-  }, [isMobile, mobileVideoFailed, reduceMotion]);
+  }, [isMobile, mobileVideoFailed, mobileVideoRequested, reduceMotion]);
 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
   const mobileVideoPosterPath = `${assetBasePath}/images/home/hero-projects/0826-poster.webp`;
-  const usesMobileVideo = isMobile && !reduceMotion && !mobileVideoFailed;
+  const usesMobileVideo = isMobile && !reduceMotion && !mobileVideoFailed && mobileVideoRequested;
 
   return (
     <section
@@ -104,26 +105,22 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
     >
       <div className={styles.carouselFrame}>
         <div className={styles.imageStage} aria-live="off">
-          <Image
-            key={imagePath}
-            className={styles.slideImage}
-            src={imagePath}
-            alt={`Концептуальная визуализация: ${alt.toLocaleLowerCase("ru-RU")}`}
-            fill
-            priority={activeIndex === 0}
-            unoptimized
-            sizes="100vw"
-          />
-          <Image
-            className={styles.mobilePoster}
-            src={mobileVideoPosterPath}
-            alt=""
-            fill
-            priority
-            unoptimized
-            sizes="(max-width: 720px) 100vw, 0px"
-            aria-hidden="true"
-          />
+          <link rel="preload" as="image" href={mobileVideoPosterPath} media="(max-width: 720px)" fetchPriority="high" />
+          <link rel="preload" as="image" href={`${assetBasePath}/images/home/hero-projects/${slides[0][0]}`} media="(min-width: 721px)" fetchPriority="high" />
+          <picture>
+            <source media="(max-width: 720px)" srcSet={mobileVideoPosterPath} />
+            <Image
+              key={imagePath}
+              className={styles.slideImage}
+              src={imagePath}
+              alt={`Концептуальная визуализация: ${alt.toLocaleLowerCase("ru-RU")}`}
+              fill
+              loading={activeIndex === 0 ? "eager" : "lazy"}
+              fetchPriority={activeIndex === 0 ? "high" : "auto"}
+              unoptimized
+              sizes="100vw"
+            />
+          </picture>
           {usesMobileVideo ? (
             <video
               ref={mobileVideoRef}
@@ -132,7 +129,7 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
               loop
               muted
               playsInline
-              preload="metadata"
+              preload="none"
               poster={mobileVideoPosterPath}
               aria-hidden="true"
               onPlaying={() => {
@@ -191,6 +188,24 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             />
           ))}
         </div>
+        {isMobile && !reduceMotion && !mobileVideoFailed ? (
+          <button
+            className={styles.videoToggle}
+            type="button"
+            onClick={() => {
+              if (mobileVideoPlaying) {
+                mobileVideoRef.current?.pause();
+                setMobileVideoRequested(false);
+              } else if (mobileVideoRequested) {
+                void mobileVideoRef.current?.play().catch(() => undefined);
+              } else {
+                setMobileVideoRequested(true);
+              }
+            }}
+          >
+            {mobileVideoPlaying ? "Приостановить видео" : "Посмотреть видео"}
+          </button>
+        ) : null}
       </div>
     </section>
   );

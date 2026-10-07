@@ -2317,6 +2317,7 @@ body.mobile-menu-open {
 .lead-file svg { color: #326276; }
 .lead-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .lead-form-note { color: #52656c; font-size: 13px; line-height: 1.5; }
+.lead-form button { background: #bd3d16; }
 .lead-file span { overflow-wrap: anywhere; }
 .personal-data-consent { font-size: 11px; line-height: 1.5; }
 .personal-data-consent label { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 9px; align-items: start; color: #5d6d72; }

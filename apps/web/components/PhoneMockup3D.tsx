@@ -228,7 +228,6 @@ export function PhoneMockup3D({ assetBasePath = "" }: { assetBasePath?: string }
                           fill
                           sizes="(max-width: 720px) 206px, 272px"
                           src={`${assetBasePath}${slide.src}`}
-                          unoptimized
                         />
                       </div>
                     ))}

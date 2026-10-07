@@ -45,6 +45,27 @@
   display: none;
 }
 
+.videoToggle {
+  position: absolute;
+  z-index: 4;
+  right: 18px;
+  bottom: 140px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #b7c7cc;
+  border-radius: 3px;
+  color: #fff;
+  background: #102127;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.videoToggle:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
 .renderDisclosure {
   position: absolute;
   z-index: 3;
@@ -207,7 +228,8 @@
   }
 
   .slideImage {
-    display: none;
+    display: block;
+    object-position: center 56%;
   }
 
   .mobilePoster {
@@ -298,7 +320,8 @@
   }
 
   .renderDisclosure {
-    top: 250px;
+    top: auto;
+    bottom: 200px;
     left: 18px;
   }
 }

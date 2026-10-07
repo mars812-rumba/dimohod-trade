@@ -66,7 +66,7 @@
 
 .primary {
   color: #fff;
-  background: #ed5b2a;
+  background: #bd3d16;
 }
 
 .actions button:hover {
@@ -78,7 +78,7 @@
 }
 
 .primary:hover {
-  background: #d94d20;
+  background: #a93412;
 }
 
 .copy a:focus-visible,

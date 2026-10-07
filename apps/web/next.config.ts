@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["178.236.16.63", "sunny-rentals.online"],
   basePath,
   reactStrictMode: true,
+  // Optional isolated output directory for local production verification.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+  experimental: { inlineCss: true },
+  images: { qualities: [72, 75, 76, 78, 80, 82, 84, 86, 88] },
   async headers() {
     const imageCacheHeaders = [
       {
