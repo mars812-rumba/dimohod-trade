@@ -10,7 +10,7 @@ test("header reserves action widths and offers installation in the compact deskt
   assert.match(css, /min-width: 1025px\) and \(max-width: 1640px/);
   assert.match(css, /\.header-right\s*\{[^}]*flex-shrink: 0;[^}]*white-space: nowrap;/);
   assert.match(header, /className="desktop-menu-install"><InstallAppButton/);
-  for (const text of ['href="tel:+79650756555"', '<CartHeaderLink', 'href="/raschet"', 'href="/catalog"']) assert.ok(header.includes(text), text);
+  for (const text of ['href="tel:+79643424565"', '<CartHeaderLink', 'href="/raschet"', 'href="/catalog"']) assert.ok(header.includes(text), text);
 });
 
 test("public copy names products and schemes without changing data identifiers", () => {

@@ -90,7 +90,7 @@ const organizationJsonLd = {
       legalName: "ООО «Дымоходы-трейд плюс»",
       url: "https://dimohod-trade.pro/",
       logo: "https://dimohod-trade.pro/brand/logo-original.jpg",
-      telephone: "+7 965 075-65-55",
+      telephone: "+7 964 342-45-65",
       email: "office@dimohod-trade.pro",
       address: {
         "@type": "PostalAddress",
@@ -798,7 +798,7 @@ export default async function HomePage() {
                 Если параметры пока неизвестны, быстрый расчёт использует допущения и показывает
                 их отдельно. Перед заказом специалист уточнит данные отопителя и проверит состав комплекта.
               </p>
-              <a href="tel:+79650756555" className={styles.textLink}>
+              <a href="tel:+79643424565" className={styles.textLink}>
                 Обсудить трассу с инженером <ArrowRight size={16} />
               </a>
             </div>
@@ -1050,7 +1050,7 @@ export default async function HomePage() {
               </p>
             </div>
             <LeadForm source="homepage-materials" compact />
-            <div className={styles.contactAlternatives}><a href="tel:+79650756555"><Phone size={16} /> +7 (965) 075-65-55</a><a href="mailto:office@dimohod-trade.pro"><Mail size={16} /> office@dimohod-trade.pro</a></div>
+            <div className={styles.contactAlternatives}><a href="tel:+79643424565"><Phone aria-hidden size={16} /> +7 (964) 342-45-65</a><a href="tel:+78126424545"><Phone aria-hidden size={16} /> +7 (812) 642-45-45</a><a href="mailto:office@dimohod-trade.pro"><Mail aria-hidden size={16} /> office@dimohod-trade.pro</a></div>
           </div>
         </div>
       </section>
@@ -1068,7 +1068,7 @@ export default async function HomePage() {
                 уточнения состава комплекта и адреса получения.
               </p>
             </div>
-            <a className={styles.deliveryAction} href="tel:+79650756555">
+            <a className={styles.deliveryAction} href="tel:+79643424565">
               <Phone aria-hidden size={18} />
               Уточнить доставку
             </a>

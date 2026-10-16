@@ -56,11 +56,13 @@
 }
 
 .links a:hover,
+.contactLink:hover,
 .developer:hover {
   color: #fff;
 }
 
 .links a:focus-visible,
+.contactLink:focus-visible,
 .brand a:focus-visible,
 .developer:focus-visible {
   border-radius: 4px;
@@ -80,6 +82,19 @@
   font-size: 12px;
   line-height: 1.55;
 }
+
+.contactLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  max-width: 100%;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.contactLink svg { flex-shrink: 0; }
+.contactLink span { overflow-wrap: anywhere; }
 
 .bottom {
   display: flex;

@@ -11,7 +11,7 @@ test("MAX is shared across header, menu and footer without replacing the phone",
   assert.match(header, /<MaxContactLink compact \/>/);
   assert.match(header, /<MaxContactLink onClick=\{closeMenu\} \/>/);
   assert.match(footer, /<MaxContactLink \/>/);
-  assert.match(header, /href="tel:\+79650756555"/);
+  assert.match(header, /href="tel:\+79643424565"/);
   assert.match(link, /href=\{maxContactUrl\}/);
   assert.match(link, /aria-label="Написать в MAX/);
   assert.match(link, /rel="noopener noreferrer"/);

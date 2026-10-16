@@ -9,7 +9,7 @@ test("homepage explains nationwide delivery without inventing a fixed price", ()
   assert.match(page, /Доставка по всей России\./);
   assert.match(page, /Стоимость и способ доставки рассчитываем индивидуально для каждого заказа/);
   assert.match(page, /Уточнить доставку/);
-  assert.match(page, /className=\{styles\.deliveryAction\} href="tel:\+79650756555"/);
+  assert.match(page, /className=\{styles\.deliveryAction\} href="tel:\+79643424565"/);
 });
 
 test("delivery sits between the contact form and the physical store map", () => {

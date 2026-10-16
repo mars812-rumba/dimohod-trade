@@ -4,6 +4,8 @@ import {
   IconBrandTelegram as BrandTelegram,
   IconFileCheck as FileCheck,
   IconMapPin as MapPin,
+  IconMail as Mail,
+  IconPhone as Phone,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,6 +16,7 @@ import {
   userAgreementPath,
 } from "@/lib/privacy";
 import styles from "./SiteFooter.module.css";
+import { MaxContactLink } from "./MaxContactLink";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -47,7 +50,7 @@ export function SiteFooter() {
             <Link href="/warranty">Гарантия</Link>
             <Link href="/about">О компании</Link>
             <Link href="/configurator">Конфигуратор</Link>
-            <a href="tel:+79650756555">Контакты</a>
+            <a href="tel:+79643424565">Контакты</a>
           </nav>
 
           <nav className={styles.links} aria-label="Правовые документы">
@@ -60,6 +63,19 @@ export function SiteFooter() {
 
           <div className={styles.contacts}>
             <strong>Контакты</strong>
+            <a className={styles.contactLink} href="tel:+79643424565">
+              <Phone aria-hidden size={15} />
+              <span>+7 (964) 342-45-65</span>
+            </a>
+            <a className={styles.contactLink} href="tel:+78126424545">
+              <Phone aria-hidden size={15} />
+              <span>+7 (812) 642-45-45</span>
+            </a>
+            <a className={styles.contactLink} href="mailto:office@dimohod-trade.pro">
+              <Mail aria-hidden size={15} />
+              <span>office@dimohod-trade.pro</span>
+            </a>
+            <MaxContactLink />
             <div>
               <MapPin aria-hidden size={15} />
               <span>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2</span>

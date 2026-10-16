@@ -239,13 +239,13 @@ export function SiteHeader() {
           <CartHeaderLink />
           <MaxContactLink compact />
           <a
-            aria-label="Позвонить: +7 965 075-65-55"
+            aria-label="Позвонить: +7 964 342-45-65"
             className="header-phone"
-            href="tel:+79650756555"
+            href="tel:+79643424565"
             title="Позвонить"
           >
             <Phone aria-hidden size={17} />
-            <span>+7 (965) 075-65-55</span>
+            <span>+7 (964) 342-45-65</span>
           </a>
           <Link aria-label="Калькулятор" className="header-configurator" href="/raschet">
             <SlidersHorizontal aria-hidden size={17} />
@@ -349,9 +349,13 @@ export function SiteHeader() {
 
           <div className="mobile-menu-footer">
             <MaxContactLink onClick={closeMenu} />
-            <a href="tel:+79650756555">
+            <a href="tel:+79643424565">
               <Phone aria-hidden size={16} />
-              <span>+7 (965) 075-65-55</span>
+              <span>+7 (964) 342-45-65</span>
+            </a>
+            <a href="tel:+78126424545">
+              <Phone aria-hidden size={16} />
+              <span>+7 (812) 642-45-45</span>
             </a>
             <a href="mailto:office@dimohod-trade.pro">
               <Mail aria-hidden size={16} />
