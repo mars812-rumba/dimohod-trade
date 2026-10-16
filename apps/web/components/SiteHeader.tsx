@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  IconAdjustmentsHorizontal as SlidersHorizontal,
   IconChevronDown as ChevronDown,
   IconMail as Mail,
   IconMapPin as MapPin,
@@ -247,9 +246,8 @@ export function SiteHeader() {
             <Phone aria-hidden size={17} />
             <span>+7 (964) 342-45-65</span>
           </a>
-          <Link aria-label="Калькулятор" className="header-configurator" href="/raschet">
-            <SlidersHorizontal aria-hidden size={17} />
-            <span>Калькулятор</span>
+          <Link className="header-configurator" href="/raschet">
+            Расчёт
           </Link>
         </div>
       </header>

@@ -669,18 +669,10 @@ ul {
     gap: 4px;
   }
 
-  .header-configurator span {
-    display: none;
-  }
-
-  .header-right .header-configurator > svg {
-    display: block;
-    flex-shrink: 0;
-  }
-
   .header-configurator {
     justify-content: center;
-    width: 40px;
+    width: auto;
+    min-width: 68px;
   }
 }
 
@@ -771,6 +763,8 @@ ul {
 
 .header-configurator {
   display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
   gap: 8px;
   align-items: center;
   justify-content: center;
@@ -6156,9 +6150,6 @@ body.mobile-menu-open {
     padding-inline: 9px;
   }
 
-  .header-configurator > svg {
-    display: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
