@@ -10,7 +10,7 @@ export function InstallationTermsSection({ compact = false, fireplace = false }:
         <p className={styles.intro}>Можно заказать комплект изделий или комплект с монтажом. {terms.team} {terms.geography}</p>
         {compact ? <>
           <p className={styles.intro}>Предварительный расчёт помогает определить состав. После отдельного платного замера согласуем окончательную стоимость. При сдаче — проверка работы системы, тестовая топка и акт.</p>
-          <Link className={styles.link} href="/solutions/dom#installation-terms">Стоимость замера и условия монтажа</Link>
+          <Link className={styles.link} href="/montazh#installation-terms">Стоимость замера и условия монтажа</Link>
         </> : <>
           <div className={styles.layout}>
             <div>

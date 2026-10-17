@@ -16,7 +16,7 @@ test("confirmed commercial conditions keep measurement, manufacture and warranti
 
 test("homepage links to complete server-rendered conditions and fireplace scope stays specific", () => {
   assert.match(read("../app/page.tsx"), /<InstallationTermsSection compact \/>/);
-  assert.match(section, /href="\/solutions\/dom#installation-terms"/);
+  assert.match(section, /href="\/montazh#installation-terms"/);
   assert.match(read("../components/SolutionTrustSections.tsx"), /<InstallationTermsSection fireplace=\{fireplace\} \/>/);
   assert.match(read("../components/KaminScenarioLanding.tsx"), /assetBasePath=\{assetBasePath\} fireplace/);
   assert.match(section, /fireplace \? <p>\{terms\.fireplace\}/);

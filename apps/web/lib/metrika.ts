@@ -7,6 +7,7 @@ export const METRIKA_GOALS = {
   deepMeasurementFormSent: "deep_measurement_form_sent",
   catalogCartSent: "catalog_cart_sent",
   phoneClick: "phone_click",
+  estimatePdfDownloadRequested: "estimate_pdf_download_requested",
 } as const;
 
 export type MetrikaGoal = (typeof METRIKA_GOALS)[keyof typeof METRIKA_GOALS];

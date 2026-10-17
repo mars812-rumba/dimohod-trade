@@ -1,6 +1,7 @@
 import type { Content, TableCell, TDocumentDefinitions } from "pdfmake/interfaces";
 import type { ChimneyEstimate } from "./chimneyEstimate";
 import { formatRub } from "./chimneyEstimate";
+import { METRIKA_GOALS, reachMetrikaGoal } from "./metrika";
 
 const MATCH_LABELS = {
   exact: "точное исполнение",
@@ -161,7 +162,7 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
       text: "Предварительный расчёт. Итоговый состав, совместимость, наличие и стоимость необходимо подтвердить перед заказом. Цены зафиксированы на момент формирования документа.",
       style: "notice",
     },
-    { text: "Дымоход Трейд · +7 (965) 075-65-55 · office@dimohod-trade.pro", alignment: "center", color: "#607075", fontSize: 8, margin: [0, 14, 0, 0] },
+    { text: "Дымоход Трейд · +7 (964) 342-45-65 · office@dimohod-trade.pro", alignment: "center", color: "#607075", fontSize: 8, margin: [0, 14, 0, 0] },
   ];
 
   const documentDefinition: TDocumentDefinitions = {
@@ -202,4 +203,5 @@ export async function downloadChimneyEstimatePdf(estimate: ChimneyEstimate): Pro
   const pdf = await createChimneyEstimatePdf(estimate);
   const reference = estimate.reference?.toLocaleLowerCase("ru-RU") ?? "dymohoda";
   pdf.download(`smeta-${reference}-${filenameDate(estimate.generatedAt)}.pdf`);
+  reachMetrikaGoal(METRIKA_GOALS.estimatePdfDownloadRequested);
 }

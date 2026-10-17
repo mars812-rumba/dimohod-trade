@@ -53,6 +53,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/delivery"), lastModified: lastModified.delivery },
     { url: absoluteUrl("/warranty"), lastModified: lastModified.warranty },
     { url: absoluteUrl("/about"), lastModified: lastModified.about },
+    { url: absoluteUrl("/contacts") },
+    { url: absoluteUrl("/montazh") },
     { url: absoluteUrl("/configurator"), lastModified: lastModified.configurator },
     { url: absoluteUrl("/promyshlennye-dymohody"), lastModified: lastModified.industrialChimneys },
     ...Object.keys(scenarioPages).map((slug) => ({

@@ -45,7 +45,7 @@ export default function DeliveryPage() {
             рассчитываем индивидуально после уточнения состава заказа и пункта назначения.
           </p>
           <div className={styles.actions}>
-            <a className={styles.primaryAction} href="tel:+79650756555">
+            <a className={styles.primaryAction} href="tel:+79643424565">
               <Phone aria-hidden size={19} /> Рассчитать доставку
             </a>
             <Link className={styles.secondaryAction} href="/catalog">
@@ -133,7 +133,7 @@ export default function DeliveryPage() {
             <h2>Нужен расчёт доставки?</h2>
             <p>Назовите состав заказа и пункт назначения — менеджер рассчитает стоимость.</p>
           </div>
-          <a href="tel:+79650756555">+7 (965) 075-65-55</a>
+          <a href="tel:+79643424565">+7 (964) 342-45-65</a>
         </section>
       </div>
     </main>

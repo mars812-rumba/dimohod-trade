@@ -187,8 +187,8 @@ export default function WarrantyPage() {
             <a className={styles.primaryAction} href={warrantyMailto}>
               <Mail aria-hidden size={18} /> Написать по гарантии
             </a>
-            <a className={styles.phoneAction} href="tel:+79650756555">
-              <Phone aria-hidden size={18} /> +7 (965) 075-65-55
+            <a className={styles.phoneAction} href="tel:+79643424565">
+              <Phone aria-hidden size={18} /> +7 (964) 342-45-65
             </a>
           </div>
         </section>

@@ -251,7 +251,7 @@ export default function IndustrialChimneysPage() {
               <h2>Получите расчёт промышленного дымохода</h2>
               <p>Оставьте контакты, специалист перезвонит и уточнит данные для расчёта. Чертёж, спецификацию или фото можно прикрепить по желанию.</p>
               <div className={styles.contacts}>
-                <a href="tel:+79650756555"><Phone aria-hidden size={17} />+7 (965) 075-65-55</a>
+                <a href="tel:+79643424565"><Phone aria-hidden size={17} />+7 (964) 342-45-65</a>
                 <a href="mailto:office@dimohod-trade.pro"><Mail aria-hidden size={17} />office@dimohod-trade.pro</a>
               </div>
             </div>

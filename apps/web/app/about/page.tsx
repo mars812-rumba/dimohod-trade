@@ -62,7 +62,7 @@ const aboutJsonLd = {
     legalName: "ООО «Дымоходы-трейд плюс»",
     foundingDate: "2014",
     url: "https://dimohod-trade.pro/",
-    telephone: "+7 965 075-65-55",
+    telephone: "+7 964 342-45-65",
     email: "office@dimohod-trade.pro",
     address: {
       "@type": "PostalAddress",
@@ -326,7 +326,7 @@ export default function AboutPage() {
               >
                 Построить маршрут <ArrowRight aria-hidden size={17} />
               </a>
-              <a href="tel:+79650756555"><Phone aria-hidden size={17} /> Позвонить</a>
+              <a href="tel:+79643424565"><Phone aria-hidden size={17} /> Позвонить</a>
             </div>
           </div>
 

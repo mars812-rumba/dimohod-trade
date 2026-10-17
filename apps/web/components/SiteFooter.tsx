@@ -50,7 +50,8 @@ export function SiteFooter() {
             <Link href="/warranty">Гарантия</Link>
             <Link href="/about">О компании</Link>
             <Link href="/configurator">Конфигуратор</Link>
-            <a href="tel:+79643424565">Контакты</a>
+            <Link href="/montazh">Монтаж и замер</Link>
+            <Link href="/contacts">Контакты</Link>
           </nav>
 
           <nav className={styles.links} aria-label="Правовые документы">

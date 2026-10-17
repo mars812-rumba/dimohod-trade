@@ -201,6 +201,7 @@ export function SiteHeader() {
               <Link href="/solutions/mangalnaya-zona">Для мангальной зоны</Link>
               <Link href="/solutions/tverdotoplivny-kotel">Для твердотопливного котла</Link>
               <Link href="/solutions/gazovyy-kotel">Для газового котла</Link>
+              <Link href="/montazh">Монтаж и замер</Link>
               <Link href="/promyshlennye-dymohody">Промышленные дымоходы</Link>
             </div>
           </details>
@@ -316,6 +317,8 @@ export function SiteHeader() {
               </div>
             </details>
             <Link href="/about" onClick={closeMenu}>О компании</Link>
+            <Link href="/montazh" onClick={closeMenu}>Монтаж и замер</Link>
+            <Link href="/contacts" onClick={closeMenu}>Контакты</Link>
             <Link href="/delivery" onClick={closeMenu}>Доставка</Link>
             <Link href="/warranty" onClick={closeMenu}>Гарантия</Link>
             <Link href="/guides" onClick={closeMenu}>Статьи</Link>

@@ -1787,8 +1787,8 @@ export function ProductExperience({
 
           <div className="panel-contact-block">
             <p>Нужна консультация по совместимости?</p>
-            <a href="tel:+79650756555" className="panel-phone">
-              <Phone size={14} /> +7 (965) 075-65-55
+            <a href="tel:+79643424565" className="panel-phone">
+              <Phone size={14} /> +7 (964) 342-45-65
             </a>
             <a href="mailto:office@dimohod-trade.pro" className="panel-email">
               <Mail size={14} /> office@dimohod-trade.pro
