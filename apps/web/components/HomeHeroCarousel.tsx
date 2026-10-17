@@ -155,28 +155,32 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
         ) : null}
 
         <div className={styles.heroOffer}>
+          <p className={styles.heroOfferEyebrow}>Производство дымоходов · Санкт-Петербург и Ленинградская область</p>
           <h1 className={styles.heroOfferTitle}>
-            Рассчитайте комплект дымохода за 2 минуты
+            Подберём комплект дымохода для вашего дома или бани
           </h1>
           <p className={styles.heroOfferText}>
-            Укажите отопитель и маршрут — получите предварительную смету и состав
-            комплекта с ценами.
+            Рассчитайте предварительную стоимость, получите список комплектующих и схему установки — прямо на сайте.
           </p>
           <div className={styles.heroActions}>
             <Link className={styles.cta} href="/bystryy-raschet">
               <IconFileTypePdf size={21} strokeWidth={1.7} aria-hidden />
               <div className={styles.ctaCopy}>
                 <strong>Рассчитать комплект</strong>
-                <span>Перейти к быстрому расчёту</span>
               </div>
               <IconArrowRight size={18} strokeWidth={1.8} aria-hidden />
             </Link>
 
             <Link className={styles.catalogCta} href="/catalog">
-              <span>Открыть каталог</span>
+              <span>Перейти в каталог</span>
               <IconArrowRight size={17} strokeWidth={1.8} aria-hidden />
             </Link>
           </div>
+          <ul className={styles.heroBenefits} aria-label="Результаты предварительного расчёта">
+            <li>Предварительная стоимость</li>
+            <li>Состав комплекта</li>
+            <li>Схема и PDF-смета</li>
+          </ul>
         </div>
 
         <div className={styles.progress} aria-hidden="true">

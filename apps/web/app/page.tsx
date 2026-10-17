@@ -55,16 +55,16 @@ import styles from "./page.module.css";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Дымоход Трейд — подбор комплекта дымохода",
+  title: "Купить дымоход в СПб от производителя | Дымоход Трейд",
   description:
-    "Получите схему, состав комплекта и предварительную смету дымохода для бани, печи, камина или котла. Перед заказом специалист проверит исходные данные и позиции.",
+    "Дымоходы от производителя в Санкт-Петербурге: сэндвич-системы для дома и бани. Подбор комплекта, предварительная стоимость, схема и PDF-смета. Проверка перед заказом.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "ru_RU",
     url: "/",
-    title: "Дымоход Трейд — подбор комплекта дымохода",
-    description: "Подбор дымохода по отопителю и маршруту: схема, состав комплекта и предварительная смета.",
+    title: "Купить дымоход в СПб от производителя | Дымоход Трейд",
+    description: "Комплект дымохода для дома или бани: предварительная стоимость, состав, схема и PDF-смета. Перед заказом специалист проверит комплектацию.",
     images: [{
       url: "/images/home/hero-projects/log-house-facade.webp",
       width: 1600,
@@ -74,8 +74,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Дымоход Трейд — подбор комплекта дымохода",
-    description: "Подбор дымохода по отопителю и маршруту: схема, состав комплекта и предварительная смета.",
+    title: "Купить дымоход в СПб от производителя | Дымоход Трейд",
+    description: "Комплект дымохода для дома или бани: предварительная стоимость, состав, схема и PDF-смета. Перед заказом специалист проверит комплектацию.",
     images: ["/images/home/hero-projects/log-house-facade.webp"],
   },
 };
@@ -265,7 +265,7 @@ const checks = [
 const calculationResults = [
   "Стоимость комплекта",
   "Подробный список изделий",
-  "Схема монтажа по замерам",
+  "Предварительная схема по замерам",
   "Готовая PDF-смета",
 ];
 
@@ -432,43 +432,43 @@ export default async function HomePage() {
         <section className={styles.positioningSection} aria-labelledby="positioning-title">
           <div className={styles.shell}>
             <div className={styles.positioningIntro}>
-              <p className={styles.overline}>Без ручного подбора деталей</p>
               <h2 id="positioning-title">
-                Получите комплект дымохода под ваш отопитель и маршрут
+                Не нужно разбираться в десятках деталей — поможем собрать подходящий комплект
               </h2>
               <p className={styles.positioningLead}>
-                Укажите отопитель и основные размеры трассы. Получите список деталей, понятную
-                схему для себя или монтажника. Быстрый расчёт показывает ориентировочную стоимость,
-                а после расчёта по замерам менеджер подтверждает состав и итоговую смету.
+                Укажите модель отопителя и основные размеры. Система подготовит предварительный
+                состав дымохода и рассчитает стоимость изделий. Перед заказом специалист уточнит
+                данные и проверит комплектацию.
               </p>
             </div>
 
             <div className={styles.positioningPoints}>
               <article className={styles.positioningPoint}>
                 <span className={styles.positioningIcon} aria-hidden>
-                  <Link2 size={24} strokeWidth={1.8} />
+                  <Gauge size={24} strokeWidth={1.8} />
                 </span>
-                <h3>Не подбираете детали вручную</h3>
-                <p>Диаметры, соединения и исполнения сверяем внутри одного комплекта.</p>
+                <h3>Понятная стоимость</h3>
+                <p>Сразу видите цены и количество изделий в предварительном расчёте.</p>
               </article>
 
               <article className={styles.positioningPoint}>
                 <span className={styles.positioningIcon} aria-hidden>
                   <Ruler size={24} strokeWidth={1.8} />
                 </span>
-                <h3>Получаете схему монтажа</h3>
-                <p>По вашим размерам формируется схема, которую можно обсудить с монтажником.</p>
+                <h3>Наглядная схема</h3>
+                <p>Понимаете предполагаемый маршрут дымохода и расположение основных узлов.</p>
               </article>
 
               <article className={styles.positioningPoint}>
                 <span className={styles.positioningIcon} aria-hidden>
                   <ShieldCheck size={24} strokeWidth={1.8} />
                 </span>
-                <h3>Видите состав и предварительную стоимость</h3>
-                <p>Сразу видите количество деталей и цены найденных позиций. Итоговую смету подтверждает менеджер.</p>
+                <h3>Проверка специалистом</h3>
+                <p>Уточним параметры отопителя, маршрут и окончательный состав перед заказом.</p>
               </article>
             </div>
 
+            <p className={styles.positioningNote}>Предварительная схема не заменяет проект и документацию производителя.</p>
             <Link className={styles.positioningLink} href="#measurement-choice">
               Получить схему и смету
               <ArrowRight size={19} strokeWidth={1.8} aria-hidden />
@@ -485,11 +485,11 @@ export default async function HomePage() {
             <div className={styles.benefitsIntro}>
               <h2 id="home-benefits-title">
                 <span>Узнайте ориентировочную стоимость</span>
-                <span>или подготовьте точную смету</span>
+                <span>или подготовьте замеры для проверки</span>
               </h2>
               <p className={styles.benefitsIntroNote}>
-                Для быстрого расчёта достаточно основных параметров. Для точной сметы понадобится
-                рулетка 5–10 м и полный замер.
+                Для быстрого расчёта достаточно основных параметров. Для подробной сметы понадобится
+                полный замер; окончательный состав проверит специалист.
               </p>
             </div>
 

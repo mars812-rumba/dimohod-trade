@@ -8,7 +8,7 @@ const header = readFileSync(new URL("../components/SiteHeader.tsx", import.meta.
 const hero = readFileSync(new URL("../components/HomeHeroCarousel.tsx", import.meta.url), "utf8");
 
 test("homepage sends measurement entry points to one format choice", () => {
-  assert.match(page, /<span>Узнайте ориентировочную стоимость<\/span>\s*<span>или подготовьте точную смету<\/span>/);
+  assert.match(page, /<span>Узнайте ориентировочную стоимость<\/span>\s*<span>или подготовьте замеры для проверки<\/span>/);
   assert.match(page, /Начать расчёт/);
   assert.match(page, /href="\/raschet"/);
   assert.doesNotMatch(page, /Сначала выберите формат/);
@@ -22,7 +22,7 @@ test("homepage sends measurement entry points to one format choice", () => {
   assert.match(page, /Для быстрого расчёта достаточно основных параметров/);
   assert.match(
     page,
-    /<h2 id="home-benefits-title">\s*<span>Узнайте ориентировочную стоимость<\/span>\s*<span>или подготовьте точную смету<\/span>/,
+    /<h2 id="home-benefits-title">\s*<span>Узнайте ориентировочную стоимость<\/span>\s*<span>или подготовьте замеры для проверки<\/span>/,
   );
   assert.doesNotMatch(page, /calculationEquipmentNote/);
   assert.match(pageStyles, /\.calculationFormatCta[\s\S]*border-radius: 30px/);
@@ -34,10 +34,10 @@ test("positioning promise replaces the old comparison and leads into measurement
 
   assert.ok(positioningStart > -1);
   assert.ok(measurementStart > positioningStart);
-  assert.match(page, /Получите комплект дымохода под ваш отопитель и маршрут/);
-  assert.match(page, /Не подбираете детали вручную/);
-  assert.match(page, /Получаете схему монтажа/);
-  assert.match(page, /Видите состав и предварительную стоимость/);
+  assert.match(page, /Не нужно разбираться в десятках деталей — поможем собрать подходящий комплект/);
+  assert.match(page, /Понятная стоимость/);
+  assert.match(page, /Наглядная схема/);
+  assert.match(page, /Проверка специалистом/);
   assert.match(page, /className=\{styles\.positioningLink\} href="#measurement-choice"/);
   assert.doesNotMatch(page, /Трубу купить легко\. Сложнее собрать правильный дымоход/);
   assert.doesNotMatch(page, /Мы продаём не трубы/);
@@ -46,9 +46,9 @@ test("positioning promise replaces the old comparison and leads into measurement
 test("hero opens the quick estimate while navigation keeps the format choice", () => {
   assert.match(hero, /href="\/bystryy-raschet"/);
   assert.match(hero, /Рассчитать комплект/);
-  assert.match(hero, /Перейти к быстрому расчёту/);
+  assert.match(hero, /Предварительная стоимость/);
   assert.match(header, /header-configurator" href="\/raschet"/);
-  assert.match(header, /<span>Калькулятор<\/span>/);
+  assert.match(header, /header-configurator" href="\/raschet">\s*Расчёт/);
 });
 
 const choicePage = readFileSync(new URL("../app/raschet/page.tsx", import.meta.url), "utf8");

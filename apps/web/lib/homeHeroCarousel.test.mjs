@@ -25,16 +25,16 @@ test("hero carousel references existing responsive image assets", async () => {
 });
 
 test("hero keeps a stable offer and sends the primary action to the quick calculation", () => {
-  assert.match(componentSource, /Рассчитайте комплект дымохода за 2 минуты/u);
-  assert.match(componentSource, /Укажите отопитель и маршрут/u);
-  assert.match(componentSource, /предварительную смету и состав/u);
+  assert.match(componentSource, /Подберём комплект дымохода для вашего дома или бани/u);
+  assert.match(componentSource, /Рассчитайте предварительную стоимость/u);
+  assert.match(componentSource, /Производство дымоходов · Санкт-Петербург и Ленинградская область/u);
   assert.match(componentSource, /className=\{styles\.cta\} href="\/bystryy-raschet"/);
   assert.match(componentSource, /Рассчитать комплект/u);
 });
 
 test("hero preserves a secondary catalog action", () => {
   assert.match(componentSource, /className=\{styles\.catalogCta\} href="\/catalog"/);
-  assert.match(componentSource, /Открыть каталог/u);
+  assert.match(componentSource, /Перейти в каталог/u);
   assert.match(stylesSource, /background: rgba\(16, 33, 39, 0\.58\)/);
 });
 
@@ -46,11 +46,13 @@ test("desktop hero keeps both actions in one larger row below the offer copy", (
   assert.match(stylesSource, /\.heroActions \{[\s\S]*?display: flex;[\s\S]*?gap: 12px;[\s\S]*?margin-top: 30px;/u);
   assert.match(stylesSource, /\.cta \{[\s\S]*?min-width: 260px;[\s\S]*?min-height: 58px;/u);
   assert.match(stylesSource, /\.catalogCta \{[\s\S]*?min-width: 220px;[\s\S]*?min-height: 58px;/u);
-  assert.match(stylesSource, /@media \(max-width: 720px\) \{[\s\S]*?\.heroActions \{[\s\S]*?position: absolute;[\s\S]*?display: grid;/u);
+  const mobile = stylesSource.slice(stylesSource.indexOf("@media (max-width: 720px)"));
+  assert.match(mobile, /\.heroActions \{\s*display: grid;/u);
+  assert.doesNotMatch(mobile, /\.heroActions \{[^}]*position: absolute;/u);
 });
 
 test("mobile hero reserves orange for the primary action and keeps the offer readable over media", () => {
-  assert.match(stylesSource, /\.cta \{[\s\S]*?background: #ed5b2a;/u);
+  assert.match(stylesSource, /\.cta \{[\s\S]*?background: #bd3d16;/u);
   assert.match(stylesSource, /\.carouselFrame::after \{[\s\S]*?linear-gradient/u);
   assert.match(stylesSource, /\.heroOffer \{[\s\S]*?color: #fff;/u);
   assert.match(globalStylesSource, /\.mobile-menu-trigger \{[\s\S]*?border: 0;[\s\S]*?background: transparent;/u);

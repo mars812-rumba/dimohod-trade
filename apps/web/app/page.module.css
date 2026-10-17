@@ -722,7 +722,7 @@
   font-size: var(--type-section-title);
   font-weight: 760;
   line-height: 0.98;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.035em;
   text-wrap: balance;
 }
 
@@ -733,6 +733,14 @@
   font-size: clamp(16px, 1.45vw, 18px);
   line-height: 1.65;
   text-wrap: pretty;
+}
+
+.positioningNote {
+  margin: 20px 0 0;
+  max-width: 72ch;
+  color: #52666d;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .positioningPoints {
