@@ -450,7 +450,7 @@ export function HomeQuickEstimate({
   }
 
   return (
-    <section className={styles.section} id="quick-estimate" aria-labelledby="quick-estimate-title">
+    <section className={`${styles.section}${fixedObjectType ? ` ${styles.scenarioSection}` : ""}`} id="quick-estimate" aria-labelledby="quick-estimate-title">
       <div className={styles.shell}>
         <div className={styles.intro}>
           <div>
