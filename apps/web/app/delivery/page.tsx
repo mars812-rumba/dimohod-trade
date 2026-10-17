@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { workingHoursText } from "@/lib/contactLinks";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -132,6 +133,7 @@ export default function DeliveryPage() {
           <div>
             <h2>Нужен расчёт доставки?</h2>
             <p>Назовите состав заказа и пункт назначения — менеджер рассчитает стоимость.</p>
+            <p>{workingHoursText}</p>
           </div>
           <a href="tel:+79643424565">+7 (964) 342-45-65</a>
         </section>

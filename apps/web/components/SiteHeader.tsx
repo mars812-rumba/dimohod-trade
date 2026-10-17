@@ -1,5 +1,7 @@
 "use client";
 
+import { workingHoursText } from "@/lib/contactLinks";
+
 import {
   IconChevronDown as ChevronDown,
   IconMail as Mail,
@@ -242,7 +244,7 @@ export function SiteHeader() {
             aria-label="Позвонить: +7 964 342-45-65"
             className="header-phone"
             href="tel:+79643424565"
-            title="Позвонить"
+            title={`Позвонить · ${workingHoursText}`}
           >
             <Phone aria-hidden size={17} />
             <span>+7 (964) 342-45-65</span>
@@ -349,6 +351,7 @@ export function SiteHeader() {
           </nav>
 
           <div className="mobile-menu-footer">
+            <p>{workingHoursText}</p>
             <MaxContactLink onClick={closeMenu} />
             <a href="tel:+79643424565">
               <Phone aria-hidden size={16} />

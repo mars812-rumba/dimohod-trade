@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { workingHoursText } from "@/lib/contactLinks";
 import Link from "next/link";
 import styles from "./page.module.css";
 
@@ -34,7 +35,8 @@ export default function ContactsPage() {
           <section className={styles.section} aria-labelledby="visit-title">
             <h2 id="visit-title">Офис и производство</h2>
             <address>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2</address>
-            <p>Время посещения согласуйте заранее по телефону. Уточните часы работы и возможность встречи перед поездкой.</p>
+            <p>{workingHoursText}</p>
+            <p>Время посещения согласуйте заранее по телефону.</p>
             <a className={styles.textLink} href="https://yandex.ru/maps/?text=Санкт-Петербург%2C%20ул.%202-й%20Луч%2C%204%2C%20корп.%202" target="_blank" rel="noopener noreferrer">Построить маршрут на Яндекс Картах</a>
           </section>
         </div>

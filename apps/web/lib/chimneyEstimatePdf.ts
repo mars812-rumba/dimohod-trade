@@ -1,6 +1,7 @@
 import type { Content, TableCell, TDocumentDefinitions } from "pdfmake/interfaces";
 import type { ChimneyEstimate } from "./chimneyEstimate";
 import { formatRub } from "./chimneyEstimate";
+import { workingHoursText } from "./contactLinks";
 import { METRIKA_GOALS, reachMetrikaGoal } from "./metrika";
 
 const MATCH_LABELS = {
@@ -162,7 +163,7 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
       text: "Предварительный расчёт. Итоговый состав, совместимость, наличие и стоимость необходимо подтвердить перед заказом. Цены зафиксированы на момент формирования документа.",
       style: "notice",
     },
-    { text: "Дымоход Трейд · +7 (964) 342-45-65 · office@dimohod-trade.pro", alignment: "center", color: "#607075", fontSize: 8, margin: [0, 14, 0, 0] },
+    { text: `Дымоход Трейд · +7 (964) 342-45-65 · office@dimohod-trade.pro · ${workingHoursText}`, alignment: "center", color: "#607075", fontSize: 8, margin: [0, 14, 0, 0] },
   ];
 
   const documentDefinition: TDocumentDefinitions = {

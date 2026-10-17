@@ -1,5 +1,7 @@
 "use client";
 
+import { workingHoursText } from "@/lib/contactLinks";
+
 import {
   IconBrandTelegram as BrandTelegram,
   IconFileCheck as FileCheck,
@@ -64,6 +66,7 @@ export function SiteFooter() {
 
           <div className={styles.contacts}>
             <strong>Контакты</strong>
+            <div><span>{workingHoursText}</span></div>
             <a className={styles.contactLink} href="tel:+79643424565">
               <Phone aria-hidden size={15} />
               <span>+7 (964) 342-45-65</span>

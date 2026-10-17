@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { workingHoursText } from "@/lib/contactLinks";
 import Link from "next/link";
 import {
   IconArrowRight as ArrowRight,
@@ -182,6 +183,7 @@ export default function WarrantyPage() {
           <div>
             <h2 id="warranty-contact-title">Готовы отправить обращение?</h2>
             <p>Письмо откроется с готовой темой и подсказкой, какие сведения добавить.</p>
+            <p>{workingHoursText}</p>
           </div>
           <div className={styles.finalActions}>
             <a className={styles.primaryAction} href={warrantyMailto}>

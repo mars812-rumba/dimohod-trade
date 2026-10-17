@@ -1,4 +1,5 @@
 import scenarioFaqCatalog from "@/lib/scenarioFaqCatalog.json";
+import { workingHoursText } from "@/lib/contactLinks";
 import { InstallationTermsSection } from "@/components/InstallationTermsSection";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -1050,6 +1051,7 @@ export default async function HomePage() {
               </p>
             </div>
             <LeadForm source="homepage-materials" compact />
+            <p>{workingHoursText}</p>
             <div className={styles.contactAlternatives}><a href="tel:+79643424565"><Phone aria-hidden size={16} /> +7 (964) 342-45-65</a><a href="tel:+78126424545"><Phone aria-hidden size={16} /> +7 (812) 642-45-45</a><a href="mailto:office@dimohod-trade.pro"><Mail aria-hidden size={16} /> office@dimohod-trade.pro</a></div>
           </div>
         </div>
@@ -1083,6 +1085,7 @@ export default async function HomePage() {
               <div>
                 <h2 id="map-title">Дымоход-Трейд на карте.</h2>
                 <p>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2 · этаж 1</p>
+                <p>{workingHoursText}</p>
               </div>
               <a
                 href="https://yandex.ru/maps/org/dymokhod_treyd/1368513691/"

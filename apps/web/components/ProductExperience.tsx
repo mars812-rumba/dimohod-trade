@@ -1,5 +1,7 @@
 "use client";
 
+import { workingHoursText } from "@/lib/contactLinks";
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -1787,6 +1789,7 @@ export function ProductExperience({
 
           <div className="panel-contact-block">
             <p>Нужна консультация по совместимости?</p>
+            <p>{workingHoursText}</p>
             <a href="tel:+79643424565" className="panel-phone">
               <Phone size={14} /> +7 (964) 342-45-65
             </a>

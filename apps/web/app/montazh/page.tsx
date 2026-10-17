@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { workingHoursText } from "@/lib/contactLinks";
 import Link from "next/link";
 import { InstallationTermsSection } from "@/components/InstallationTermsSection";
 import { HomeWorksShowcase } from "@/components/HomeWorksShowcase";
@@ -45,6 +46,7 @@ export default function InstallationPage() {
         </section>
         <section className={styles.section} id="installation-request" aria-labelledby="request-title">
           <h2 id="request-title">Обсудить монтаж на вашем объекте</h2>
+          <p>{workingHoursText}</p>
           <p>Укажите, где находится объект, какой отопитель установлен и что нужно сделать. Фотографии можно приложить по желанию.</p>
           <LeadForm source="installation-page" submitLabel="Обсудить монтаж" commentPlaceholder="Населённый пункт, отопитель, маршрут и необходимые работы" />
           <div className={styles.actions}><Link className={styles.textLink} href="/contacts">Телефоны и адрес производства</Link><Link className={styles.textLink} href="/solutions/banya">Комплект для бани</Link><Link className={styles.textLink} href="/solutions/dom">Комплект для дома</Link><Link className={styles.textLink} href="/solutions/pech">Комплект для печи</Link></div>

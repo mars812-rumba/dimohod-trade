@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { workingHoursText } from "@/lib/contactLinks";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -316,7 +317,7 @@ export default function AboutPage() {
             <div className={styles.visitFacts}>
               <p><MapPin aria-hidden size={20} /> Санкт-Петербург, ул. 2-й Луч, 4, корп. 2</p>
               <p><TruckDelivery aria-hidden size={20} /> Доставляем готовые заказы по всей России</p>
-              <p><Clock aria-hidden size={20} /> Время посещения лучше согласовать заранее</p>
+              <p><Clock aria-hidden size={20} /> {workingHoursText}</p>
             </div>
             <div className={styles.visitActions}>
               <a

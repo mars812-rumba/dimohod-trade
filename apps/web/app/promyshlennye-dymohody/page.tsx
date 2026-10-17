@@ -1,5 +1,6 @@
 import scenarioFaqCatalog from "@/lib/scenarioFaqCatalog.json";
 import type { Metadata } from "next";
+import { workingHoursText } from "@/lib/contactLinks";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -254,6 +255,7 @@ export default function IndustrialChimneysPage() {
                 <a href="tel:+79643424565"><Phone aria-hidden size={17} />+7 (964) 342-45-65</a>
                 <a href="mailto:office@dimohod-trade.pro"><Mail aria-hidden size={17} />office@dimohod-trade.pro</a>
               </div>
+              <p>{workingHoursText}</p>
             </div>
             <div className={styles.formPanel}>
               <LeadForm
