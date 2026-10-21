@@ -57,9 +57,9 @@ test("manager can save a revision and generate its protected PDF", () => {
 test("catalog BOM editing is constrained to exact catalog variants", () => {
   assert.match(componentSource, /manager\/catalog\/metadata/);
   assert.match(componentSource, /categorySlug/);
-  assert.match(componentSource, /Марка стали/);
-  assert.match(componentSource, /Толщина/);
-  assert.match(componentSource, /Длина/);
+  assert.match(componentSource, /estimateVariantFields/);
+  assert.match(componentSource, /estimateVariantOptions/);
+  assert.match(componentSource, /selectEstimateVariant/);
   assert.match(componentSource, /\/catalog\/items/);
   assert.match(componentSource, /skuMedia/);
   assert.match(componentSource, /<Thumb media=/);
@@ -68,6 +68,8 @@ test("catalog BOM editing is constrained to exact catalog variants", () => {
   assert.match(componentSource, /saveQuantity/);
   assert.match(componentSource, /replaceVariant/);
   assert.match(componentSource, /product_kind\?\.includes\("труб"\)/);
+  assert.match(componentSource, /isSandwichProduct\(p\)/);
+  assert.match(componentSource, /const available=estimateGeometryVariants\(variants,current\)/);
 });
 
 test("flange rows expose the verified base size as an inline SKU selector", () => {
