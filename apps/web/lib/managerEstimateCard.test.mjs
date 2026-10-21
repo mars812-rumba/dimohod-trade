@@ -54,6 +54,17 @@ test("manager can save a revision and generate its protected PDF", () => {
   assert.match(componentSource, /pdf_file/);
 });
 
+test("catalog lines expose an estimate-only unit price and retain saved PDF prices", () => {
+  assert.match(componentSource, /Стоимость за 1 шт., ₽/);
+  assert.match(componentSource, /Цена по каталогу:/);
+  assert.match(componentSource, /Вернуть цену каталога/);
+  assert.match(componentSource, /step="0\.01"/);
+  assert.match(componentSource, /quantity:Number\(draft.quantity\),unitPriceRub/);
+  assert.match(componentSource, /Number\.isFinite\(unitPriceRub\)/);
+  assert.match(componentSource, /unitPriceRub:line\.unit_price_rub,lineTotalRub:line\.line_total_rub/);
+  assert.doesNotMatch(componentSource, /Название, цена и характеристики берутся из каталога/);
+});
+
 test("catalog BOM editing is constrained to exact catalog variants", () => {
   assert.match(componentSource, /manager\/catalog\/metadata/);
   assert.match(componentSource, /categorySlug/);
@@ -78,6 +89,10 @@ test("flange rows expose the verified base size as an inline SKU selector", () =
   assert.match(componentSource, /skuTextAttribute\(current,"base_size"\)/);
   assert.match(componentSource, /skuTextAttribute\(current,"execution"\)/);
   assert.match(componentSource, /label="Размер"/);
+  assert.match(componentSource, /flangeExecutionVariant\(product\.skus,current,event\.target\.checked\)/);
+  assert.match(componentSource, /type="checkbox" aria-describedby=\{statusId\}/);
+  assert.match(componentSource, /Угловой фланец/);
+  assert.match(componentSource, /disabled=\{disabled\|\|!executionKnown\|\|!alternative\}/);
   assert.match(componentSource, /onSelect=\{sku=>replaceVariant\(line,sku\)\}/);
 });
 

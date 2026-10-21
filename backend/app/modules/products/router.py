@@ -380,6 +380,7 @@ def sku_matches_filters(
     insulation_mm: int | None,
     contour: str | None,
     base_size: str | None = None,
+    execution: str | None = None,
 ) -> bool:
     return (
         sku.is_active
@@ -406,6 +407,7 @@ def sku_matches_filters(
         and (insulation_mm is None or sku.insulation_mm == insulation_mm)
         and (contour is None or (sku.contour or "").casefold().strip() == contour.casefold().strip())
         and (base_size is None or (sku.attributes or {}).get("base_size") == base_size)
+        and (execution is None or (sku.attributes or {}).get("execution") == execution)
     )
 
 
@@ -570,6 +572,7 @@ async def read_products(
     insulation_mm: int | None = Query(default=None, ge=0, le=10000),
     contour: str | None = Query(default=None, min_length=1, max_length=32),
     base_size: str | None = Query(default=None, min_length=1, max_length=32),
+    execution: str | None = Query(default=None, min_length=1, max_length=32),
     preferred_diameter: str | None = Query(default=None, pattern=r"^(?:\d+:\d*|\d*:\d+)$"),
     preferred_steel_grade: str | None = Query(default=None, min_length=1, max_length=32),
     preferred_material: str | None = Query(default=None, min_length=1, max_length=32),
@@ -596,6 +599,7 @@ async def read_products(
         insulation_mm=insulation_mm,
         contour=contour,
         base_size=base_size,
+        execution=execution,
         preferred_diameter=preferred_diameter,
         preferred_steel_grade=preferred_steel_grade,
         preferred_material=preferred_material,
@@ -629,6 +633,7 @@ async def read_products(
         insulation_mm=insulation_mm,
         contour=contour,
         base_size=base_size,
+        execution=execution,
     )
     items: list[ProductListItem] = []
 
@@ -653,6 +658,7 @@ async def read_products(
                 insulation_mm=insulation_mm,
                 contour=contour,
                 base_size=base_size,
+                execution=execution,
             )
         ]
         preferred_skus = [

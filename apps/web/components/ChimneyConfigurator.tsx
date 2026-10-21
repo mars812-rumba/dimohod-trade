@@ -1863,6 +1863,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         line.preferredSteelGrade ?? null,
         line.preferredOuterSteelGrade ?? null,
         line.catalogBaseSize ?? null,
+        line.catalogExecution ?? null,
       ]),
   ), [selectedBom]);
   const rearSceneGraph = useMemo(() => (
@@ -1905,6 +1906,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       if (line.catalogCategorySlug) params.set("category", line.catalogCategorySlug);
       if (line.catalogSearch) params.set("q", line.catalogSearch);
       if (line.catalogBaseSize) params.set("base_size", line.catalogBaseSize);
+      if (line.catalogExecution) params.set("execution", line.catalogExecution);
       const exactDiameter = diameterKinds.has(line.productKind);
       const exactBySandwichOuterDiameter = line.catalogDiameterMode === "sandwich-outer-exact";
       const rangeBySandwichOuterDiameter = line.catalogDiameterMode === "sandwich-outer-range";
@@ -2496,6 +2498,12 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               {calculation.floorJointReviewItems.map((item) => <span key={item}>{item}</span>)}
             </div>
           ) : null}
+          {calculation.roofJointReviewItems.length ? (
+            <div className="configurator-note" role="status">
+              <strong>Проверить стыки в кровельном проходе перед заказом</strong>
+              {calculation.roofJointReviewItems.map((item) => <span key={item}>{item}</span>)}
+            </div>
+          ) : null}
         </div>
 
         <div className="configurator-spec">
@@ -2654,7 +2662,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               <AlertTriangle aria-hidden size={18} />
               <strong>Проверить перед заказом</strong>
             </div>
-            {calculation.reviewItems.filter((item) => !calculation.floorJointReviewItems.includes(item)).map((item) => (
+            {calculation.reviewItems.filter((item) => !calculation.floorJointReviewItems.includes(item) && !calculation.roofJointReviewItems.includes(item)).map((item) => (
               <p key={item}>{item}</p>
             ))}
           </div>

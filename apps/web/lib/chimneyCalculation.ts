@@ -87,6 +87,7 @@ export type ChimneyBomLine = {
   preferredSteelGrade?: string;
   preferredOuterSteelGrade?: string;
   catalogBaseSize?: string;
+  catalogExecution?: string;
   removable?: boolean;
   quantityNote?: string;
   fixedUnitPriceRub?: number;
@@ -125,6 +126,7 @@ export type ChimneyCalculation = {
   notes: string[];
   reviewItems: string[];
   floorJointReviewItems: string[];
+  roofJointReviewItems: string[];
 };
 
 export type CalculationInput = {
@@ -204,6 +206,7 @@ export function solvePipeLayouts({
   contour = "сэндвич",
   maxVariants = 3,
   floorJointsRequireReview = false,
+  roofJointsRequireReview = false,
 }: {
   axis: RouteAxis;
   startMm: number;
@@ -213,6 +216,7 @@ export function solvePipeLayouts({
   contour?: PlacedPipe["contour"];
   maxVariants?: number;
   floorJointsRequireReview?: boolean;
+  roofJointsRequireReview?: boolean;
 }): PipeLayoutVariant[] {
   if (targetMm <= startMm) return [];
   const maximumEnd = targetMm + PIPE_LENGTHS[0].effectiveMm;
@@ -222,9 +226,9 @@ export function solvePipeLayouts({
   const results: PipeLayoutVariant[] = [];
   const bestDepthAtEnd = new Map<number, number>([[startMm, 0]]);
   const resultLimit = Math.max(16, maxVariants * 8);
-  const blockingZones = floorJointsRequireReview
-    ? forbiddenZones.filter((zone) => zone.kind !== "floor")
-    : forbiddenZones;
+  const blockingZones = forbiddenZones.filter((zone) =>
+    !(floorJointsRequireReview && zone.kind === "floor")
+    && !(roofJointsRequireReview && zone.kind === "roof"));
 
   while (queue.length && results.length < resultLimit) {
     const current = queue.shift()!;
@@ -731,13 +735,17 @@ function addRouteNodes(
     bom.push({
       key: "roof-interior-flange",
       productKind: "фланец",
-      label: "Фланец кровельного прохода со стороны помещения, AISI 430",
+      label: "Фланец кровельного прохода угловой 600×750 мм, AISI 430",
       quantity: 1,
       zone: "roof",
-      selectionReason: "Добавлен со стороны помещения по правилу кровельного узла; исполнение из стали AISI 430.",
+      selectionReason: "Со стороны помещения: угловой фланец 600×750 мм, AISI 430, по утверждённому правилу комплектации кровельного прохода.",
       requiresSku: true,
+      catalogCategorySlug: "flantsy",
+      catalogSearch: "Фланец декоративный",
+      catalogBaseSize: CHIMNEY_ENGINEERING_RULES.roofFlange.baseSize,
+      catalogExecution: CHIMNEY_ENGINEERING_RULES.roofFlange.execution,
       materialPreference: "catalog-default",
-      preferredSteelGrade: "AISI 430",
+      preferredSteelGrade: CHIMNEY_ENGINEERING_RULES.roofFlange.steelGrade,
     });
     bom.push({
       key: "roof-master-flash",
@@ -970,6 +978,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     : input.outlet === "horizontal" ? "wall-rear" : "wall-top";
   const errors: string[] = [];
   const floorJointReviewItems: string[] = [];
+  const roofJointReviewItems: string[] = [];
   const notes = [
     "Каждый стык проверяется по абсолютной координате трассы.",
     `Расчётные полезные длины учитывают соединение ${PIPE_SOCKET_OVERLAP_MM} мм.`,
@@ -1076,9 +1085,9 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     reviewItems.unshift("Высота конька должна быть выше наружной границы кровельного прохода; проверьте замеры.");
   }
   fixedParts.forEach((part) => {
-    const forbidden = jointInsideForbiddenZone(part.endMm, forbiddenZones.filter((zone) => zone.kind !== "floor"));
-    // Floor conflicts do not stop a preliminary estimate. Keep wall and roof
-    // constraints blocking, and report floor joints explicitly below.
+    const forbidden = jointInsideForbiddenZone(part.endMm, forbiddenZones.filter((zone) => zone.kind === "wall"));
+    // Floor and roof conflicts require manual correction of a preliminary
+    // estimate. Wall passage constraints remain blocking.
     if (forbidden) errors.push(`Стык после «${part.label}» попадает внутрь зоны «${forbidden.label}».`);
   });
   if (!forbiddenZones.length) {
@@ -1092,7 +1101,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
   let facadeConsolePositionsMm: number[] = [];
   if (!errors.length) {
     if (routeKind === "ceiling") {
-      variants = solvePipeLayouts({ axis: "vertical", startMm: pipeStartMm, targetMm: routeTargetMm, forbiddenZones, fallbackZone: hasAttic ? "attic_or_cold_zone" : "indoor_warm", floorJointsRequireReview: true });
+      variants = solvePipeLayouts({ axis: "vertical", startMm: pipeStartMm, targetMm: routeTargetMm, forbiddenZones, fallbackZone: hasAttic ? "attic_or_cold_zone" : "indoor_warm", floorJointsRequireReview: true, roofJointsRequireReview: true });
     } else if (routeKind === "wall-rear") {
       const outdoorHeightMm = (positiveNumber(input.draft?.outdoorHeight) ?? input.heightM) * 1000;
       const wallStartMm = positiveNumber(input.draft?.wallDistance) ?? input.distanceM * 1000;
@@ -1258,8 +1267,13 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
       if (floorZone) {
         floorJointReviewItems.push(`Расчётный стык на отметке ${positionMm} мм попадает в «${floorZone.label}» (${floorZone.startMm}–${floorZone.endMm} мм). Стык трубы не может находиться внутри перекрытия. Перед заказом специалист должен скорректировать раскладку; показан предварительный состав комплекта, а не готовое монтажное решение.`);
       }
+      const roofZone = forbiddenZones.find((zone) => zone.kind === "roof"
+        && positionMm > zone.startMm && positionMm < zone.endMm);
+      if (roofZone) {
+        roofJointReviewItems.push(`Расчётный стык на отметке ${positionMm} мм попадает в кровельный проход (${roofZone.startMm}–${roofZone.endMm} мм). Перед заказом специалист должен проверить и скорректировать раскладку по документации системы. Предварительный расчёт не подтверждает допустимость соединения внутри кровельного прохода.`);
+      }
     }
-    reviewItems.unshift(...floorJointReviewItems);
+    reviewItems.unshift(...floorJointReviewItems, ...roofJointReviewItems);
   }
 
   const bom = summarizePipeBom(variants, routeKind);
@@ -1305,6 +1319,7 @@ export function calculateChimney(input: CalculationInput): ChimneyCalculation {
     notes,
     reviewItems,
     floorJointReviewItems,
+    roofJointReviewItems,
   };
 }
 

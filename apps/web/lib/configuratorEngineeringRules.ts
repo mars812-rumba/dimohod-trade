@@ -54,6 +54,12 @@ export const CHIMNEY_ENGINEERING_RULES = {
     flangeBaseSize: "600×600 мм",
     flangeSteelGrade: "AISI 430",
   },
+  // Owner-confirmed roof-passage selection, 2026-10-21; not a universal building standard.
+  roofFlange: {
+    baseSize: "600×750 мм",
+    execution: "Под углом",
+    steelGrade: "AISI 430",
+  },
 } as const;
 
 export type ChimneyThicknessProfile = "first-floor-0.8" | "upper-outdoor-0.5";

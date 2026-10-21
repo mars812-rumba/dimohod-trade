@@ -463,6 +463,7 @@ async def list_products(
     insulation_mm: int | None = None,
     contour: str | None = None,
     base_size: str | None = None,
+    execution: str | None = None,
 ) -> tuple[list[Product], int]:
     kind_order = case(
         (Product.product_kind == "труба", 10),
@@ -519,6 +520,8 @@ async def list_products(
         sku_filters.append(func.lower(func.trim(SKU.contour)) == contour.casefold().strip())
     if base_size:
         sku_filters.append(SKU.attributes["base_size"].as_string() == base_size)
+    if execution:
+        sku_filters.append(SKU.attributes["execution"].as_string() == execution)
     if len(sku_filters) > 2:
         filters.append(exists(select(SKU.id).where(*sku_filters)))
 
