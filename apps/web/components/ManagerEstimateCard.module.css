@@ -78,15 +78,23 @@
 .documentActions {
   display: grid;
   grid-template-columns: auto minmax(150px, 210px) auto;
+  grid-template-rows: auto 44px auto;
   flex: 0 1 auto;
   align-items: center;
-  gap: 8px;
+  gap: 5px 8px;
 }
 
-.quotationField { display: grid; gap: 5px; min-width: 0; flex: 1 1 175px; }
+.documentActions > button { grid-row: 2; height: 44px; min-height: 44px; }
+.documentActions > button:first-child { grid-column: 1; }
+.documentActions > button:last-child { grid-column: 3; }
+.quotationField { display: contents; }
+.quotationField > * { grid-column: 2; min-width: 0; }
+.quotationField label { grid-row: 1; }
+.quotationField input { grid-row: 2; }
+.quotationField small { grid-row: 3; }
 .quotationField label { color: #526369; font-size: 12px; font-weight: 600; }
 .quotationField input {
-  width: 100%; min-width: 0; min-height: 42px; padding: 9px 11px;
+  width: 100%; min-width: 0; height: 44px; min-height: 44px; padding: 9px 11px;
   color: #102127; background: #fff; border: 1px solid #bdc9cb;
   border-radius: 7px; font: inherit; font-size: 14px;
 }
@@ -661,6 +669,10 @@
   opacity: 1;
 }
 
+.clampExecutionChoice { min-width: 0; }
+.clampExecutionChoice label { min-width: 0; width: 100%; }
+.clampExecutionChoice select { min-width: 0; width: 100%; max-width: 100%; }
+
 .inlineVariants select:focus-visible,
 .quantityField input:focus-visible {
   outline: 3px solid rgba(237, 91, 42, .4);
@@ -847,7 +859,8 @@
   .lineProduct small { overflow-wrap: anywhere; }
   .documentBar { align-items: stretch; flex-direction: column; gap: 12px; }
   .documentActions { display: flex; flex-direction: column; }
-  .quotationField { flex-basis: auto; width: 100%; }
+  .quotationField { display: grid; gap: 5px; min-width: 0; width: 100%; }
+  .quotationField > * { grid-column: auto; grid-row: auto; }
   .documentDownloads { flex-direction: column; }
   .documentActions button { width: 100%; }
   .total { padding: 18px 0 0; border-top: 1px solid rgba(255, 255, 255, .2); border-left: 0; }

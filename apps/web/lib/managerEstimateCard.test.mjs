@@ -125,3 +125,17 @@ test("manager estimate stays inside the mobile viewport", () => {
   assert.match(stylesSource, /\.quantityField\s*\{[\s\S]*?min-height:\s*36px;/);
   assert.match(stylesSource, /min-width:\s*0/);
 });
+
+test("legacy clamps expose explicit labelled SKU choices without silently changing an estimate", () => {
+  assert.match(componentSource, /clampNeedsExecutionChoice\(product.skus,current\)/);
+  assert.match(componentSource, /aria-label="Диаметр хомута" aria-describedby=\{statusId\}/);
+  assert.match(componentSource, /clampOptionLabel\(sku\)/);
+  assert.match(componentSource, /цена и характеристики изменятся по выбранному артикулу/);
+});
+
+test("desktop document buttons align to the input row, not its caption and hint", () => {
+  assert.match(stylesSource, /grid-template-rows: auto 44px auto/);
+  assert.match(stylesSource, /\.documentActions > button \{ grid-row: 2; height: 44px/);
+  assert.match(stylesSource, /\.quotationField input \{ grid-row: 2;/);
+  assert.match(stylesSource, /\.quotationField \{ display: grid; gap: 5px; min-width: 0; width: 100%;/);
+});

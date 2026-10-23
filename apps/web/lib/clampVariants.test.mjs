@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs";
-import { isDiameterClampProduct, clampDiameterVariants } from "./clampVariants.ts";
+import { isDiameterClampProduct, clampDiameterVariants, clampNeedsExecutionChoice, clampOptionLabel } from "./clampVariants.ts";
 
 const current = { id: "d100", diameter_mm: 100, outer_diameter_mm: null, material: "Нержавеющая сталь",
   steel_grade: "AISI 430", wall_thickness_mm: "0.50", contour: "одностенный", length_mm: null,
@@ -21,6 +21,18 @@ test("diameter options preserve material, steel, thickness and execution", () =>
   ];
   assert.deepEqual(clampDiameterVariants([current, ...unrelated, d250], current), [current, d250]);
   assert.deepEqual(clampDiameterVariants([current], current).map(sku => sku.diameter_mm), [100]);
+});
+
+test("legacy Ø100 with conflicting material requires an explicit catalogue execution, not a guessed replacement", () => {
+  const legacy = {...current, id:"legacy", article:"DT-GOLYE-01-16-D100", steel_grade:null, wall_thickness_mm:"0.80"};
+  const zinc250 = {...legacy, id:"zinc250", diameter_mm:250, material:"оцинковка", article:"DT-GOLYE-01-16-D250"};
+  const catalog = [legacy, zinc250];
+  assert.deepEqual(clampDiameterVariants(catalog, legacy), [legacy]);
+  assert.equal(clampNeedsExecutionChoice(catalog, legacy), true);
+  assert.match(clampOptionLabel(zinc250), /250 мм · оцинковка · 0.80 мм · DT-GOLYE-01-16-D250/);
+  assert.match(clampOptionLabel(legacy), /Нержавеющая сталь/);
+  assert.equal(clampNeedsExecutionChoice([legacy], legacy), false);
+  assert.equal(clampNeedsExecutionChoice([current,d250], current), false);
 });
 
 // Execute the actual request-building block, including the product-kind guard

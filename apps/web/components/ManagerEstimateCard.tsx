@@ -6,7 +6,7 @@ import { Fragment, useEffect, useId, useMemo, useState } from "react";
 import type { MediaItem, Product, ProductListItem, ProductListResponse, SKU } from "@/lib/api";
 import type { ChimneyEstimate } from "@/lib/chimneyEstimate";
 import { flangeExecutionVariant } from "@/lib/flangeVariants";
-import { isDiameterClampProduct, clampDiameterVariants } from "@/lib/clampVariants";
+import { isDiameterClampProduct, clampDiameterVariants, clampNeedsExecutionChoice, clampOptionLabel } from "@/lib/clampVariants";
 import { estimateVariantFields, estimateVariantValue, estimateVariantOptions, selectEstimateVariant, isSandwichProduct, estimateGeometryVariants } from "@/lib/estimateSkuVariants";
 import { createChimneyEstimatePdfBlob } from "@/lib/chimneyEstimatePdf";
 import { createChimneySpecificationPdfBlob } from "@/lib/chimneySpecificationPdf";
@@ -126,8 +126,14 @@ function SkuVariantFields({variants,current,disabled,onSelect,picker=false}:{var
   </div>;
 }
 function ClampDiameterControls({product,current,disabled,onSelect}:{product:Product;current:SKU;disabled:boolean;onSelect:(sku:SKU)=>void}) {
+  const statusId=useId();
   const variants=clampDiameterVariants(product.skus,current);
+  const needsExecution=clampNeedsExecutionChoice(product.skus,current);
   const diameters=[...new Set(variants.map(sku=>sku.diameter_mm!))].sort((left,right)=>left-right).map(String);
+  if(needsExecution){
+    const choices=product.skus.filter(sku=>sku.diameter_mm!==null).sort((left,right)=>left.diameter_mm!-right.diameter_mm!);
+    return <div className={styles.clampExecutionChoice}><div className={styles.inlineVariants}><label><span>Диаметр хомута и исполнение</span><select aria-label="Диаметр хомута" aria-describedby={statusId} value={current.id} disabled={disabled} onChange={event=>{const sku=choices.find(item=>item.id===event.target.value);if(sku&&sku.id!==current.id)onSelect(sku)}}>{choices.map(sku=><option key={sku.id} value={sku.id}>{clampOptionLabel(sku)}</option>)}</select></label></div><small id={statusId}>Для текущего исполнения нет других диаметров. Выберите диаметр и материал из каталога; цена и характеристики изменятся по выбранному артикулу.</small></div>;
+  }
   return <div className={styles.inlineVariants}><InlineSelect label="Диаметр хомута" value={val(current.diameter_mm)} options={diameters} suffix=" мм" disabled={disabled} onChange={value=>{const sku=variants.find(item=>item.diameter_mm===Number(value));if(sku&&sku.id!==current.id)onSelect(sku)}}/></div>;
 }
 

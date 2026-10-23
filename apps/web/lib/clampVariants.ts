@@ -25,3 +25,15 @@ export function clampDiameterVariants(variants: readonly SKU[], current: SKU): S
     && sku.attributes.execution === current.attributes.execution
     && sku.attributes.base_size === current.attributes.base_size);
 }
+
+/** An isolated legacy SKU needs an explicit execution choice, never a guessed substitute. */
+export function clampNeedsExecutionChoice(variants: readonly SKU[], current: SKU): boolean {
+  return new Set(clampDiameterVariants(variants, current).map(sku => sku.diameter_mm)).size < 2
+    && variants.some(sku => sku.diameter_mm !== null && sku.diameter_mm !== current.diameter_mm);
+}
+
+export function clampOptionLabel(sku: SKU): string {
+  return [ `${sku.diameter_mm} мм`, sku.material, sku.steel_grade,
+    sku.wall_thickness_mm == null ? null : `${sku.wall_thickness_mm} мм`, sku.article,
+  ].filter(Boolean).join(" · ");
+}
