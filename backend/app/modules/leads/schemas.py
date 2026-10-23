@@ -92,6 +92,10 @@ class ManagerRevision(LeadEstimateModel):
     revision: int = Field(ge=1)
 
 
+class ManagerDocumentDetails(ManagerRevision):
+    quotation_number: str = Field(max_length=80, pattern=r"^[^\x00-\x1f\x7f]*$")
+
+
 class ManagerCatalogMetadataRequest(LeadEstimateModel):
     sku_ids: list[UUID] = Field(default_factory=list, max_length=300)
 

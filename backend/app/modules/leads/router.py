@@ -8,6 +8,7 @@ from asyncio import to_thread
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
+from typing import Literal
 from urllib.parse import quote
 
 from fastapi import (
@@ -37,6 +38,7 @@ from app.modules.leads.schemas import (
     LeadEstimate,
     ManagerCatalogMetadataRequest,
     ManagerCatalogSelection,
+    ManagerDocumentDetails,
     ManagerLineCreate,
     ManagerLineUpdate,
     ManagerRevision,
@@ -342,11 +344,44 @@ async def save_manager_lead_snapshot(
     return metadata
 
 
+@router.patch("/{lead_id}/manager/document")
+async def update_manager_document(
+    lead_id: str,
+    payload: ManagerDocumentDetails,
+    response: Response,
+    manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
+    admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
+    admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
+) -> dict[str, object]:
+    lead_dir, record = authorized_manager_lead(lead_id, manager_token, admin_token, admin_session)
+    estimate = read_estimate_record(lead_dir, record)
+    check_revision(estimate, payload.revision)
+    number = payload.quotation_number.strip()
+    if number != estimate.get("quotation_number", ""):
+        estimate["quotation_number"] = number
+        estimate["revision"] = payload.revision + 1
+        save_manager_estimate(lead_dir, record, estimate)
+    response.headers["Cache-Control"] = "no-store"
+    return estimate
+
+
+async def read_manager_pdf_upload(upload: UploadFile) -> bytes:
+    if upload.content_type != "application/pdf":
+        raise HTTPException(status_code=415, detail="Ожидается PDF-файл")
+    content = await upload.read(MAX_MANAGER_PDF_SIZE + 1)
+    if len(content) > MAX_MANAGER_PDF_SIZE:
+        raise HTTPException(status_code=413, detail="PDF должен быть не больше 12 МБ")
+    if not content.startswith(b"%PDF-"):
+        raise HTTPException(status_code=422, detail="Файл не является корректным PDF")
+    return content
+
+
 @router.post("/{lead_id}/manager/pdf", status_code=status.HTTP_201_CREATED)
 async def save_manager_lead_pdf(
     lead_id: str,
     revision: int = Form(..., ge=1),
     pdf_file: UploadFile = File(...),
+    specification_file: UploadFile | None = File(None),
     manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
     admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
     admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
@@ -356,13 +391,12 @@ async def save_manager_lead_pdf(
     )
     estimate = read_estimate_record(lead_dir, record)
     check_revision(estimate, revision)
-    if pdf_file.content_type != "application/pdf":
-        raise HTTPException(status_code=415, detail="Ожидается PDF-файл")
-    content = await pdf_file.read(MAX_MANAGER_PDF_SIZE + 1)
-    if len(content) > MAX_MANAGER_PDF_SIZE:
-        raise HTTPException(status_code=413, detail="PDF должен быть не больше 12 МБ")
-    if not content.startswith(b"%PDF-"):
-        raise HTTPException(status_code=422, detail="Файл не является корректным PDF")
+    content = await read_manager_pdf_upload(pdf_file)
+    specification_content = None
+    if specification_file is not None:
+        if not estimate.get("quotation_number"):
+            raise HTTPException(status_code=422, detail="Укажите номер КП")
+        specification_content = await read_manager_pdf_upload(specification_file)
 
     save_estimate_snapshot(lead_dir, record, estimate)
     versioned_filename = f"estimate-r{revision}.pdf"
@@ -374,12 +408,25 @@ async def save_manager_lead_pdf(
     shutil.copyfile(versioned_path, latest_temporary)
     latest_temporary.replace(lead_dir / "manager-estimate.pdf")
 
+    specification_filename = None
+    if specification_content is not None:
+        specification_filename = f"specification-r{revision}.pdf"
+        temporary = lead_dir / f"{specification_filename}.tmp"
+        temporary.write_bytes(specification_content)
+        temporary.replace(lead_dir / specification_filename)
+
     generated_at = datetime.now(UTC).isoformat()
     metadata = {
         "revision": revision,
         "generated_at": generated_at,
         "filename": versioned_filename,
         "download_url": f"/api/v1/leads/{lead_id}/manager/pdf",
+        "quotation_number": estimate.get("quotation_number", ""),
+        "specification_filename": specification_filename,
+        "specification_download_url": (
+            f"/api/v1/leads/{lead_id}/manager/pdf?document=specification"
+            if specification_filename else None
+        ),
     }
     record["manager_pdf"] = metadata
     write_lead_record(lead_dir, record)
@@ -389,20 +436,31 @@ async def save_manager_lead_pdf(
 @router.get("/{lead_id}/manager/pdf", response_class=FileResponse)
 async def download_manager_lead_pdf(
     lead_id: str,
+    document: Literal["estimate", "specification"] = "estimate",
     manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
     admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
     admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
 ) -> FileResponse:
-    lead_dir, _ = authorized_manager_lead(
+    lead_dir, record = authorized_manager_lead(
         lead_id, manager_token, admin_token, admin_session
     )
     pdf_path = lead_dir / "manager-estimate.pdf"
+    if document == "specification":
+        estimate = read_estimate_record(lead_dir, record)
+        metadata = record.get("manager_pdf") or {}
+        revision = estimate.get("revision", 1)
+        expected = f"specification-r{revision}.pdf"
+        if (metadata.get("revision") != revision
+            or metadata.get("quotation_number") != estimate.get("quotation_number")
+            or metadata.get("specification_filename") != expected):
+            raise HTTPException(status_code=404, detail="Сформируйте спецификацию для текущей редакции сметы")
+        pdf_path = lead_dir / expected
     if not pdf_path.is_file():
         raise HTTPException(status_code=404, detail="PDF для этой сметы ещё не сформирован")
     return FileResponse(
         pdf_path,
         media_type="application/pdf",
-        filename=f"smeta-{lead_id[:8].upper()}.pdf",
+        filename=f"{'specification' if document == 'specification' else 'smeta'}-{lead_id[:8].upper()}.pdf",
         headers={"Cache-Control": "no-store"},
     )
 

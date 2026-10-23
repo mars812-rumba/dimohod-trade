@@ -54,6 +54,19 @@ test("manager can save a revision and generate its protected PDF", () => {
   assert.match(componentSource, /pdf_file/);
 });
 
+test("quotation number is saved before two PDFs of the same revision and downloads are separate", () => {
+  assert.match(componentSource, /htmlFor="quotation-number"/);
+  assert.match(componentSource, /aria-invalid=\{quotationError\}/);
+  assert.match(componentSource, /\/manager\/document/);
+  assert.match(componentSource, /saveSnapshot\(false,current\)/);
+  assert.match(componentSource, /createChimneySpecificationPdfBlob\(estimate,number\)/);
+  assert.match(componentSource, /form\.set\("specification_file"/);
+  assert.match(componentSource, /documents\.revision===payload\.revision/);
+  assert.match(componentSource, /documents\.quotationNumber===quotationNumber\.trim\(\)/);
+  assert.match(componentSource, /Скачать смету/);
+  assert.match(componentSource, /Скачать спецификацию без цен/);
+});
+
 test("catalog lines expose an estimate-only unit price and retain saved PDF prices", () => {
   assert.match(componentSource, /Стоимость за 1 шт., ₽/);
   assert.match(componentSource, /Цена по каталогу:/);
