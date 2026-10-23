@@ -270,24 +270,6 @@ const calculationResults = [
   "Готовая PDF-смета",
 ];
 
-const catalogGroups = [
-  {
-    title: "Одноконтурные элементы",
-    text: "Подключение к печи и участки внутри тёплого помещения.",
-    tags: ["Трубы", "Отводы", "Тройники", "Шиберы"],
-  },
-  {
-    title: "Сэндвич-система",
-    text: "Утеплённый контур для улицы, чердака и других холодных зон.",
-    tags: ["Утепление 50 мм", "Хомуты", "Оголовки"],
-  },
-  {
-    title: "Монтаж и проходы",
-    text: "Узлы, которые связывают комплект с конструкциями конкретного объекта.",
-    tags: ["ППУ", "Кронштейны", "Разделки"],
-  },
-];
-
 const featuredProductCard = {
   name: "Сэндвич-труба Ø150/250",
   variant: "L=1000 мм · AISI 304 · 0,8 мм · изоляция 50 мм",
@@ -811,34 +793,6 @@ export default async function HomePage() {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.catalogSection}>
-        <div className={styles.shell}>
-          <div className={styles.catalogHead}>
-            <div>
-              <p className={styles.overline}>Каталог для тех, кто знает деталь</p>
-              <h2>Ищите по назначению, а выбирайте по характеристикам.</h2>
-            </div>
-            <Link href="/catalog" className={styles.secondaryButton}>
-              Весь каталог <ArrowRight size={17} />
-            </Link>
-          </div>
-          <div className={styles.catalogGrid}>
-            {catalogGroups.map((group, index) => (
-              <article key={group.title} className={styles.catalogCard}>
-                <span className={styles.catalogNumber}>0{index + 1}</span>
-                <h3>{group.title}</h3>
-                <p>{group.text}</p>
-                <div className={styles.tags}>
-                  {group.tags.map((tag) => (
-                    <span key={tag}>{tag}</span>
-                  ))}
-                </div>
-              </article>
-            ))}
           </div>
         </div>
       </section>

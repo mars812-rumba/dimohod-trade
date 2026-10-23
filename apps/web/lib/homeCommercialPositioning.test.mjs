@@ -7,6 +7,13 @@ const hero = read("../components/HomeHeroCarousel.tsx");
 const page = read("../app/page.tsx");
 const css = read("../components/HomeHeroCarousel.module.css");
 
+test("homepage omits the redundant category overview while the hero retains catalogue navigation", () => {
+  assert.doesNotMatch(page, /catalogGroups|styles\.catalogSection|Ищите по назначению|Каталог для тех, кто знает деталь/);
+  assert.match(page, /styles\.safetySection/);
+  assert.match(page, /styles\.trustSection/);
+  assert.match(hero, /href="\/catalog"/);
+});
+
 test("hero describes the buyer result with two existing routes and three compact benefits", () => {
   assert.match(hero, /Подберём комплект дымохода для вашего дома или бани/);
   assert.match(hero, /Производство дымоходов · Санкт-Петербург и Ленинградская область/);
