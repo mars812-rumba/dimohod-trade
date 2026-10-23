@@ -1911,7 +1911,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
       const exactBySandwichOuterDiameter = line.catalogDiameterMode === "sandwich-outer-exact";
       const rangeBySandwichOuterDiameter = line.catalogDiameterMode === "sandwich-outer-range";
       const exactByFields = exactDiameter || exactBySandwichOuterDiameter || rangeBySandwichOuterDiameter;
-      if (exactDiameter) {
+      if (exactDiameter || exactBySandwichOuterDiameter) {
         const outerDiameter = line.insulationMm !== undefined
           ? diameter + line.insulationMm * 2
           : null;
