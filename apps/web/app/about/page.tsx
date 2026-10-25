@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AboutHeroVideo } from "@/components/AboutHeroVideo";
 import { workingHoursText } from "@/lib/contactLinks";
 import Image from "next/image";
 import Link from "next/link";
@@ -87,15 +88,11 @@ export default function AboutPage() {
       />
 
       <section className={styles.hero}>
+        <AboutHeroVideo assetBasePath={appBasePath} />
         <div className={`${styles.shell} ${styles.heroGrid}`}>
           <div className={styles.heroCopy}>
             <p className={styles.since}>Санкт-Петербург · работаем с 2014 года</p>
-            <h1>Производим дымоходы и помогаем собрать систему целиком</h1>
-            <p className={styles.heroLead}>
-              «Дымоход Трейд» производит модульные дымоходы из нержавеющей стали.
-              На сайте можно рассчитать предварительный комплект или выбрать отдельные
-              изделия, а менеджер проверит исходные данные и подготовит окончательную смету.
-            </p>
+            <h1>Производим дымоходы с 2014 года</h1>
             <div className={styles.heroActions}>
               <Link className={styles.primaryAction} href="/bystryy-raschet#quick-estimate">
                 Рассчитать за 2 минуты <ArrowRight aria-hidden size={18} />
@@ -105,12 +102,23 @@ export default function AboutPage() {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
 
+      <section className={styles.introSection} aria-labelledby="company-intro-title">
+        <div className={`${styles.shell} ${styles.introGrid}`}>
+          <div className={styles.introCopy}>
+            <h2 id="company-intro-title">Помогаем собрать систему целиком</h2>
+            <p className={styles.heroLead}>
+              «Дымоход Трейд» производит модульные дымоходы из нержавеющей стали.
+              На сайте можно рассчитать предварительный комплект или выбрать отдельные
+              изделия, а менеджер проверит исходные данные и подготовит окончательную смету.
+            </p>
+          </div>
           <figure className={styles.heroMedia}>
             <Image
               alt="Сотрудник Дымоход Трейд рядом со станком лазерной резки"
               height={1448}
-              priority
               sizes="(max-width: 820px) 100vw, 48vw"
               src={imagePath("production-hero.webp")}
               width={1086}
