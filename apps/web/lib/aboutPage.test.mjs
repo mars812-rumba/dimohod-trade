@@ -14,19 +14,19 @@ test("about hero uses the former homepage video and moves its explanation to the
   assert.match(hero, /<h1>Производим дымоходы с 2014 года<\/h1>/);
   assert.doesNotMatch(hero, /Помогаем собрать|heroLead|production-hero/);
   assert.match(page, /id="company-intro-title">Помогаем собрать систему целиком/);
-  assert.match(styles, /font-size: clamp\(40px, 4.5vw, 64px\)/);
-  assert.match(styles, /font-size: clamp\(30px, 8.3vw, 38px\)/);
+  assert.doesNotMatch(hero, /styles\.since|Санкт-Петербург · работаем/);
+  assert.match(styles, /font-size: clamp\(50px, 6.4vw, 82px\)/);
+  assert.match(styles, /font-size: clamp\(42px, 13vw, 62px\)/);
 });
 
-test("background video is silent, pausable, respects reduced motion and keeps a poster on failure", () => {
+test("background video has no pause button, is silent, respects reduced motion and keeps a poster on failure", () => {
   assert.match(video, /autoPlay muted loop playsInline/);
   assert.match(video, /\/videos\/home\/0826.mp4/);
   assert.match(video, /prefers-reduced-motion: reduce/);
   assert.match(video, /setEnabled\(!media.matches\)/);
   assert.match(video, /enabled && !failed/);
   assert.match(video, /onError=\{\(\) => setFailed\(true\)\}/);
-  assert.match(video, /Приостановить видео/);
-  assert.match(video, /manuallyPaused.current/);
+  assert.doesNotMatch(video, /<button|Приостановить видео|manuallyPaused/);
   assert.match(video, /IntersectionObserver/);
   assert.match(video, /0826-poster.webp/);
 });

@@ -91,7 +91,6 @@ export default function AboutPage() {
         <AboutHeroVideo assetBasePath={appBasePath} />
         <div className={`${styles.shell} ${styles.heroGrid}`}>
           <div className={styles.heroCopy}>
-            <p className={styles.since}>Санкт-Петербург · работаем с 2014 года</p>
             <h1>Производим дымоходы с 2014 года</h1>
             <div className={styles.heroActions}>
               <Link className={styles.primaryAction} href="/bystryy-raschet#quick-estimate">

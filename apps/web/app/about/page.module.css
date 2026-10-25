@@ -25,42 +25,47 @@
 }
 
 .hero {
-  padding: clamp(40px, 6vw, 76px) 0 clamp(64px, 8vw, 104px);
+  position: relative;
+  min-height: calc(100svh - 68px);
+  overflow: hidden;
   color: #fff;
   background: var(--about-deep);
 }
 
 .heroGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
-  gap: clamp(38px, 6vw, 84px);
-  align-items: center;
+  position: relative;
+  z-index: 2;
+  min-height: inherit;
+  display: flex;
 }
 
 .heroCopy {
-  padding: 32px 0;
+  display: flex;
+  flex-direction: column;
+  min-height: inherit;
+  width: min(760px, 100%);
+  box-sizing: border-box;
+  padding: 16px 0 28px;
 }
 
-.since {
-  margin: 0 0 24px;
-  color: #ff8a61;
-  font-size: 14px;
-  font-weight: 740;
-}
+.hero::after { position: absolute; inset: 0; z-index: 1; content: ""; pointer-events: none;
+  background: linear-gradient(90deg, rgba(8,23,29,.76), rgba(8,23,29,.42)); }
+.introSection { padding: clamp(56px, 7vw, 96px) 0; }
+.introGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .7fr); gap: 48px; align-items: center; }
 
 .hero h1 {
   max-width: 12ch;
   margin: 0;
   font-size: clamp(50px, 6.4vw, 82px);
   font-weight: 720;
-  line-height: 0.94;
+  line-height: .94;
   letter-spacing: -0.035em;
 }
 
 .heroLead {
   max-width: 640px;
   margin: 28px 0 0;
-  color: #cfdbde;
+  color: var(--about-muted);
   font-size: clamp(17px, 1.7vw, 20px);
   line-height: 1.62;
 }
@@ -75,7 +80,8 @@
 }
 
 .heroActions {
-  margin-top: 34px;
+  margin-top: auto;
+  padding-top: 32px;
 }
 
 .primaryAction,
@@ -137,7 +143,7 @@
 }
 
 .heroMedia {
-  min-height: 660px;
+  min-height: 420px;
   border-radius: 12px;
 }
 
@@ -191,6 +197,7 @@
 }
 
 .sectionHeading h2,
+.introCopy h2,
 .productionIntro h2,
 .materialCopy h2,
 .approachCopy h2,
@@ -552,6 +559,7 @@
 }
 
 @media (max-width: 980px) {
+  .hero h1 { font-size: clamp(46px, 7vw, 66px); }
   .heroGrid,
   .materialGrid,
   .approachGrid,
@@ -560,12 +568,8 @@
     gap: 38px;
   }
 
-  .hero h1 {
-    font-size: clamp(46px, 7vw, 66px);
-  }
-
   .heroMedia {
-    min-height: 570px;
+    min-height: 420px;
   }
 
   .productionGallery {
@@ -585,10 +589,11 @@
   }
 
   .hero {
-    padding-top: 28px;
+    min-height: calc(100svh - 72px);
   }
 
   .heroGrid,
+  .introGrid,
   .sectionHeading,
   .productionIntro,
   .materialGrid,
@@ -600,12 +605,13 @@
   }
 
   .heroCopy {
-    padding: 12px 0 4px;
+    padding: 12px 0 28px;
   }
 
   .hero h1 {
     max-width: 14ch;
     font-size: clamp(42px, 13vw, 62px);
+    line-height: .94;
   }
 
   .heroMedia {
