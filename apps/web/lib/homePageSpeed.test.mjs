@@ -4,17 +4,12 @@ import test from "node:test";
 
 const source = async (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-test("mobile hero autoplays video without requiring a button", async () => {
+test("hero preloads one shared first slide without downloading mobile video or its poster", async () => {
   const hero = await source("../components/HomeHeroCarousel.tsx");
   assert.doesNotMatch(hero, /mobileVideoRequested|videoToggle|Посмотреть видео/);
-  assert.match(hero, /const usesMobileVideo = isMobile && !reduceMotion && !mobileVideoFailed;/);
-  assert.match(hero, /<video[\s\S]*?autoPlay[\s\S]*?loop[\s\S]*?muted[\s\S]*?playsInline/);
-  assert.match(hero, /<link rel="preload" as="image" href=\{mobileVideoPosterPath\} media="\(max-width: 720px\)" fetchPriority="high"/);
-  assert.match(hero, /<picture>[\s\S]*<source media="\(max-width: 720px\)" srcSet=\{mobileVideoPosterPath\}/);
+  assert.doesNotMatch(hero, /<video|0826|mobileVideo|<source/);
+  assert.match(hero, /<link rel="preload" as="image" href=\{`\$\{assetBasePath\}\/images\/home\/hero-projects\/\$\{slides\[0\]\[0\]\}`\} fetchPriority="high"/);
   assert.match(hero, /loading=\{activeIndex === 0 \? "eager" : "lazy"\}/);
-  assert.match(hero, /preload="metadata"/);
-  assert.match(hero, /\/videos\/home\/0826\.mp4/);
-  assert.match(hero, /video\.play\(\)/);
 });
 
 test("phone screenshots use responsive optimization and MAX uses its small derivative", async () => {

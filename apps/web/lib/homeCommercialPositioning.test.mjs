@@ -43,6 +43,7 @@ test("hero can grow with content without absolute mobile actions or new media de
   assert.match(css, /min-height: calc\(100svh - 72px\)/);
   assert.match(css, /\.heroOffer \{\s*position: relative;/);
   assert.doesNotMatch(css, /\.heroActions \{[^}]*position: absolute/);
-  assert.match(hero, /autoPlay[\s\S]*loop[\s\S]*muted[\s\S]*playsInline/);
+  assert.match(hero, /src=\{imagePath\}/);
+  assert.doesNotMatch(hero, /<video/);
   assert.doesNotMatch(hero, /mobileVideoRequested|videoToggle/);
 });

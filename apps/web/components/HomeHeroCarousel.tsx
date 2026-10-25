@@ -29,11 +29,7 @@ type HomeHeroCarouselProps = {
 export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [mobileVideoFailed, setMobileVideoFailed] = useState(false);
-  const [mobileVideoPlaying, setMobileVideoPlaying] = useState(false);
   const touchStartX = useRef<number | null>(null);
-  const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const showSlide = (index: number) => {
     setActiveIndex((index + slides.length) % slides.length);
@@ -41,50 +37,26 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
 
   useEffect(() => {
     const motionMedia = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const mobileMedia = window.matchMedia("(max-width: 720px)");
     const updateMediaPreferences = () => {
       setReduceMotion(motionMedia.matches);
-      setIsMobile(mobileMedia.matches);
     };
     updateMediaPreferences();
     motionMedia.addEventListener("change", updateMediaPreferences);
-    mobileMedia.addEventListener("change", updateMediaPreferences);
     return () => {
       motionMedia.removeEventListener("change", updateMediaPreferences);
-      mobileMedia.removeEventListener("change", updateMediaPreferences);
     };
   }, []);
 
   useEffect(() => {
-    if (reduceMotion || (isMobile && !mobileVideoFailed)) return;
+    if (reduceMotion) return;
     const interval = window.setInterval(() => {
       setActiveIndex((index) => (index + 1) % slides.length);
     }, 6500);
     return () => window.clearInterval(interval);
-  }, [isMobile, mobileVideoFailed, reduceMotion]);
-
-  useEffect(() => {
-    const video = mobileVideoRef.current;
-    if (!video) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          void video.play().catch(() => undefined);
-        } else {
-          video.pause();
-        }
-      },
-      { threshold: 0.1 },
-    );
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, [isMobile, mobileVideoFailed, reduceMotion]);
+  }, [reduceMotion]);
 
   const [fileName, alt] = slides[activeIndex];
   const imagePath = `${assetBasePath}/images/home/hero-projects/${fileName}`;
-  const mobileVideoPosterPath = `${assetBasePath}/images/home/hero-projects/0826-poster.webp`;
-  const usesMobileVideo = isMobile && !reduceMotion && !mobileVideoFailed;
 
   return (
     <section
@@ -104,55 +76,21 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
     >
       <div className={styles.carouselFrame}>
         <div className={styles.imageStage} aria-live="off">
-          <link rel="preload" as="image" href={mobileVideoPosterPath} media="(max-width: 720px)" fetchPriority="high" />
-          <link rel="preload" as="image" href={`${assetBasePath}/images/home/hero-projects/${slides[0][0]}`} media="(min-width: 721px)" fetchPriority="high" />
-          <picture>
-            <source media="(max-width: 720px)" srcSet={mobileVideoPosterPath} />
-            <Image
-              key={imagePath}
-              className={styles.slideImage}
-              src={imagePath}
-              alt={`Концептуальная визуализация: ${alt.toLocaleLowerCase("ru-RU")}`}
-              fill
-              loading={activeIndex === 0 ? "eager" : "lazy"}
-              fetchPriority={activeIndex === 0 ? "high" : "auto"}
-              unoptimized
-              sizes="100vw"
-            />
-          </picture>
-          {usesMobileVideo ? (
-            <video
-              ref={mobileVideoRef}
-              className={`${styles.mobileVideo} ${mobileVideoPlaying ? styles.mobileVideoPlaying : ""}`}
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="metadata"
-              poster={mobileVideoPosterPath}
-              aria-hidden="true"
-              onPlaying={() => {
-                setMobileVideoPlaying(true);
-              }}
-              onPause={() => {
-                setMobileVideoPlaying(false);
-              }}
-              onWaiting={() => {
-                setMobileVideoPlaying(false);
-              }}
-              onError={() => {
-                setMobileVideoPlaying(false);
-                setMobileVideoFailed(true);
-              }}
-            >
-              <source src={`${assetBasePath}/videos/home/0826.mp4`} type="video/mp4" />
-            </video>
-          ) : null}
+          <link rel="preload" as="image" href={`${assetBasePath}/images/home/hero-projects/${slides[0][0]}`} fetchPriority="high" />
+          <Image
+            key={imagePath}
+            className={styles.slideImage}
+            src={imagePath}
+            alt={`Концептуальная визуализация: ${alt.toLocaleLowerCase("ru-RU")}`}
+            fill
+            loading={activeIndex === 0 ? "eager" : "lazy"}
+            fetchPriority={activeIndex === 0 ? "high" : "auto"}
+            unoptimized
+            sizes="100vw"
+          />
         </div>
 
-        {!(isMobile && mobileVideoPlaying) ? (
-          <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
-        ) : null}
+        <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
 
         <div className={styles.heroOffer}>
           <p className={styles.heroOfferEyebrow}>Производство дымоходов · Санкт-Петербург и Ленинградская область</p>

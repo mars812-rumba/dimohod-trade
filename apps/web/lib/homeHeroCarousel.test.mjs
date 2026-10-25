@@ -11,7 +11,7 @@ const globalStylesSource = await readFile(globalStylesUrl, "utf8");
 
 test("hero carousel references existing responsive image assets", async () => {
   assert.doesNotMatch(componentSource, /\.mobile\.webp/);
-  assert.match(componentSource, /<source src=\{`\$\{assetBasePath\}\/videos\/home\/0826\.mp4`\}/);
+  assert.doesNotMatch(componentSource, /<video|\/videos\/|mobileVideoPosterPath|<picture/);
 
   const fileNames = [...componentSource.matchAll(/\["([^"]+\.webp)",/g)]
     .map((match) => match[1]);
@@ -21,7 +21,15 @@ test("hero carousel references existing responsive image assets", async () => {
     `../public/images/home/hero-projects/${fileName}`,
     import.meta.url,
   ))));
-  await access(new URL("../public/videos/home/0826.mp4", import.meta.url));
+});
+
+test("mobile and desktop share slide rotation and swipes, respecting reduced motion", () => {
+  assert.doesNotMatch(componentSource, /isMobile|mobileVideo|setIsMobile/);
+  assert.match(componentSource, /if \(reduceMotion\) return;/);
+  assert.match(componentSource, /6500/);
+  assert.match(componentSource, /onTouchStart=/);
+  assert.match(componentSource, /onTouchEnd=/);
+  assert.match(componentSource, /showSlide\(activeIndex \+ \(delta < 0 \? 1 : -1\)\)/);
 });
 
 test("hero keeps a stable offer and sends the primary action to the quick calculation", () => {
