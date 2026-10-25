@@ -11,9 +11,11 @@ const video = readFileSync(new URL("../components/AboutHeroVideo.tsx", import.me
 test("about hero uses the former homepage video and moves its explanation to the next section", () => {
   assert.match(page, /<AboutHeroVideo assetBasePath=\{appBasePath\}/);
   const hero = page.slice(page.indexOf('<section className={styles.hero}>'), page.indexOf('<section className={styles.introSection}'));
-  assert.match(hero, /<h1>Производим дымоходы с 2014 года<\/h1>/);
-  assert.doesNotMatch(hero, /Помогаем собрать|heroLead|production-hero/);
-  assert.match(page, /id="company-intro-title">Помогаем собрать систему целиком/);
+  assert.match(hero, /<h1>Производим дымоходы с 2014<\/h1>/);
+  assert.match(hero, /className=\{styles.heroSubtitle\}>Помогаем собрать систему целиком/);
+  assert.doesNotMatch(hero, /heroLead|production-hero/);
+  assert.equal(page.match(/Помогаем собрать систему целиком/g)?.length, 1);
+  assert.match(page, /styles.introSection\} aria-label="О компании"/);
   assert.doesNotMatch(hero, /styles\.since|Санкт-Петербург · работаем/);
   assert.match(styles, /font-size: clamp\(50px, 6.4vw, 82px\)/);
   assert.match(styles, /font-size: clamp\(42px, 13vw, 62px\)/);

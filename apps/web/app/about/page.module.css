@@ -70,6 +70,17 @@
   line-height: 1.62;
 }
 
+.heroSubtitle {
+  max-width: 38ch;
+  margin: 24px 0 0;
+  color: #fff;
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.introCopy .heroLead { margin-top: 0; }
+
 .heroActions,
 .processActions,
 .visitActions,
@@ -197,7 +208,6 @@
 }
 
 .sectionHeading h2,
-.introCopy h2,
 .productionIntro h2,
 .materialCopy h2,
 .approachCopy h2,
