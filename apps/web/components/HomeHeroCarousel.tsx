@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./HomeHeroCarousel.module.css";
 
 const slides = [
+  ["designer-fireplace.webp", "Подвесной камин и дымоход в интерьере"],
   ["industrial-facade.webp", "Промышленный объект с установленными дымоходами"],
   ["roof-chimney.webp", "Дымоход на скатной кровле"],
   ["wood-house-stove.webp", "Печь и дымоход в деревянном доме"],
@@ -19,7 +20,6 @@ const slides = [
   ["boiler-room.webp", "Дымоход в котельной"],
   ["facade-wall-route.webp", "Наружный маршрут дымохода вдоль стены дома"],
   ["wood-stove-fire.webp", "Работающая печь с дымоходом в деревянном интерьере"],
-  ["designer-fireplace.webp", "Подвесной камин и дымоход в интерьере"],
 ] as const;
 
 type HomeHeroCarouselProps = {
@@ -89,8 +89,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
             sizes="100vw"
           />
         </div>
-
-        <span className={styles.renderDisclosure}>Концептуальная визуализация</span>
 
         <div className={styles.heroOffer}>
           <p className={styles.heroOfferEyebrow}>Производство дымоходов · Санкт-Петербург и Ленинградская область</p>

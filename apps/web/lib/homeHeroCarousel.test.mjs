@@ -9,6 +9,16 @@ const componentSource = await readFile(componentUrl, "utf8");
 const stylesSource = await readFile(stylesUrl, "utf8");
 const globalStylesSource = await readFile(globalStylesUrl, "utf8");
 
+test("the owner's fireplace image opens the shared carousel and is preloaded first", () => {
+  const images = [...componentSource.matchAll(/\["([^"]+\.webp)",/g)].map(match => match[1]);
+  assert.equal(images[0], "designer-fireplace.webp");
+  assert.equal(images.length, 10);
+  assert.equal(new Set(images).size, 10);
+  assert.equal(images[1], "industrial-facade.webp");
+  assert.match(componentSource, /useState\(0\)/);
+  assert.match(componentSource, /hero-projects\/\$\{slides\[0\]\[0\]\}/);
+});
+
 test("hero carousel references existing responsive image assets", async () => {
   assert.doesNotMatch(componentSource, /\.mobile\.webp/);
   assert.doesNotMatch(componentSource, /<video|\/videos\/|mobileVideoPosterPath|<picture/);
@@ -30,6 +40,15 @@ test("mobile and desktop share slide rotation and swipes, respecting reduced mot
   assert.match(componentSource, /onTouchStart=/);
   assert.match(componentSource, /onTouchEnd=/);
   assert.match(componentSource, /showSlide\(activeIndex \+ \(delta < 0 \? 1 : -1\)\)/);
+});
+
+test("hero omits the visible disclosure badge and anchors the offer to its former top line", () => {
+  assert.doesNotMatch(componentSource, /styles\.renderDisclosure/);
+  assert.doesNotMatch(stylesSource, /\.renderDisclosure/);
+  assert.match(stylesSource, /padding: 16px 0 64px;/);
+  assert.match(stylesSource, /padding: 12px 0 calc\(18px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(stylesSource, /align-items: flex-start;/);
+  assert.match(componentSource, /alt=\{`Концептуальная визуализация:/);
 });
 
 test("hero keeps a stable offer and sends the primary action to the quick calculation", () => {
