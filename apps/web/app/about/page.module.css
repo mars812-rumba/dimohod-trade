@@ -51,7 +51,8 @@
 .hero::after { position: absolute; inset: 0; z-index: 1; content: ""; pointer-events: none;
   background: linear-gradient(90deg, rgba(8,23,29,.76), rgba(8,23,29,.42)); }
 .introSection { padding: clamp(56px, 7vw, 96px) 0; }
-.introGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .7fr); gap: 48px; align-items: center; }
+.introGrid { max-width: 620px; }
+.introGrid .heroMedia { min-height: 660px; }
 
 .hero h1 {
   max-width: 12ch;
@@ -65,7 +66,7 @@
 .heroLead {
   max-width: 640px;
   margin: 28px 0 0;
-  color: var(--about-muted);
+  color: #fff;
   font-size: clamp(17px, 1.7vw, 20px);
   line-height: 1.62;
 }
@@ -79,7 +80,6 @@
   line-height: 1.35;
 }
 
-.introCopy .heroLead { margin-top: 0; }
 
 .heroActions,
 .processActions,
@@ -603,7 +603,6 @@
   }
 
   .heroGrid,
-  .introGrid,
   .sectionHeading,
   .productionIntro,
   .materialGrid,
@@ -628,6 +627,7 @@
     min-height: auto;
     aspect-ratio: 4 / 5;
   }
+  .introGrid .heroMedia { min-height: auto; }
 
   .equipmentGrid {
     grid-template-columns: 1fr;

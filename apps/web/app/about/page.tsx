@@ -93,6 +93,11 @@ export default function AboutPage() {
           <div className={styles.heroCopy}>
             <h1>Производим дымоходы с 2014</h1>
             <p className={styles.heroSubtitle}>Помогаем собрать систему целиком</p>
+            <p className={styles.heroLead}>
+              «Дымоход Трейд» производит модульные дымоходы из нержавеющей стали.
+              На сайте можно рассчитать предварительный комплект или выбрать отдельные
+              изделия, а менеджер проверит исходные данные и подготовит окончательную смету.
+            </p>
             <div className={styles.heroActions}>
               <Link className={styles.primaryAction} href="/bystryy-raschet#quick-estimate">
                 Рассчитать за 2 минуты <ArrowRight aria-hidden size={18} />
@@ -105,15 +110,8 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className={styles.introSection} aria-label="О компании">
+      <section className={styles.introSection} aria-label="Фотография производства">
         <div className={`${styles.shell} ${styles.introGrid}`}>
-          <div className={styles.introCopy}>
-            <p className={styles.heroLead}>
-              «Дымоход Трейд» производит модульные дымоходы из нержавеющей стали.
-              На сайте можно рассчитать предварительный комплект или выбрать отдельные
-              изделия, а менеджер проверит исходные данные и подготовит окончательную смету.
-            </p>
-          </div>
           <figure className={styles.heroMedia}>
             <Image
               alt="Сотрудник Дымоход Трейд рядом со станком лазерной резки"

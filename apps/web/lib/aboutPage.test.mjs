@@ -8,14 +8,18 @@ const header = readFileSync(new URL("../components/SiteHeader.tsx", import.meta.
 const sitemap = readFileSync(new URL("../app/sitemap.ts", import.meta.url), "utf8");
 const video = readFileSync(new URL("../components/AboutHeroVideo.tsx", import.meta.url), "utf8");
 
-test("about hero uses the former homepage video and moves its explanation to the next section", () => {
+test("about hero uses the former homepage video with the complete company introduction", () => {
   assert.match(page, /<AboutHeroVideo assetBasePath=\{appBasePath\}/);
   const hero = page.slice(page.indexOf('<section className={styles.hero}>'), page.indexOf('<section className={styles.introSection}'));
   assert.match(hero, /<h1>Производим дымоходы с 2014<\/h1>/);
   assert.match(hero, /className=\{styles.heroSubtitle\}>Помогаем собрать систему целиком/);
-  assert.doesNotMatch(hero, /heroLead|production-hero/);
+  assert.match(hero, /styles.heroLead/);
+  assert.match(hero, /«Дымоход Трейд» производит модульные дымоходы из нержавеющей стали/);
+  assert.match(hero, /менеджер проверит исходные данные и подготовит окончательную смету/);
+  assert.equal(page.match(/«Дымоход Трейд» производит модульные дымоходы из нержавеющей стали/g)?.length, 1);
+  assert.doesNotMatch(page, /styles.introCopy/);
   assert.equal(page.match(/Помогаем собрать систему целиком/g)?.length, 1);
-  assert.match(page, /styles.introSection\} aria-label="О компании"/);
+  assert.match(page, /styles.introSection\} aria-label="Фотография производства"/);
   assert.doesNotMatch(hero, /styles\.since|Санкт-Петербург · работаем/);
   assert.match(styles, /font-size: clamp\(50px, 6.4vw, 82px\)/);
   assert.match(styles, /font-size: clamp\(42px, 13vw, 62px\)/);
