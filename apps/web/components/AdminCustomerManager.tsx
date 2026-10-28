@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import styles from "./AdminCustomerManager.module.css";
+import { LeadNotes } from "./LeadNotes";
 
 type CustomerContact = {
   method: "phone" | "whatsapp" | "telegram" | "email";
@@ -22,6 +23,7 @@ type CustomerContact = {
 };
 
 type CustomerEstimate = {
+  notes?: string;
   lead_id: string;
   profile_name: string;
   status: string;
@@ -145,6 +147,12 @@ export function AdminCustomerManager() {
     router.refresh();
   }
 
+  function updateNotes(customerId: string, leadId: string, notes: string) {
+    setCustomers(current => current.map(customer => customer.id === customerId ? {
+      ...customer, estimates: customer.estimates.map(estimate => estimate.lead_id === leadId ? { ...estimate, notes } : estimate),
+    } : customer));
+  }
+
   return (
     <main className={styles.shell}>
       <nav className={styles.topbar} aria-label="Навигация администратора">
@@ -233,12 +241,17 @@ export function AdminCustomerManager() {
                       </div>
                     </dl>
                   </div>
+                  <div className={styles.leadActions}>
+                  <LeadNotes customerId={customer.id} leadId={latestEstimate.lead_id} notes={latestEstimate.notes}
+                    onSaved={notes => updateNotes(customer.id, latestEstimate.lead_id, notes)}>
                   <Link
                     className={styles.openEstimate}
                     href={`/admin/estimates/${latestEstimate.lead_id}#admin=1`}
                   >
                     Открыть смету <ExternalLink aria-hidden size={16} />
                   </Link>
+                  </LeadNotes>
+                  </div>
                 </>
               ) : null}
             </div>
@@ -251,6 +264,9 @@ export function AdminCustomerManager() {
                 </summary>
                 <div className={styles.compactEstimateList}>
                   {previousEstimates.map((estimate) => (
+                    <div key={estimate.lead_id}>
+                    <LeadNotes customerId={customer.id} leadId={estimate.lead_id} notes={estimate.notes}
+                      onSaved={notes => updateNotes(customer.id, estimate.lead_id, notes)} />
                     <Link
                       className={styles.compactEstimateRow}
                       href={`/admin/estimates/${estimate.lead_id}#admin=1`}
@@ -267,6 +283,7 @@ export function AdminCustomerManager() {
                       </span>
                       <ExternalLink aria-hidden size={16} />
                     </Link>
+                    </div>
                   ))}
                 </div>
               </details>

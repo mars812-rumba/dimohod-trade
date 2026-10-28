@@ -48,6 +48,29 @@ test("customer manager exposes status feedback", () => {
   assert.match(componentSource, /Загружаем клиентов/);
 });
 
+test("latest estimate and note buttons share a two-column row with matching heights", () => {
+  const notes=fs.readFileSync(path.join(here,"../components/LeadNotes.tsx"),"utf8");
+  const css=fs.readFileSync(path.join(here,"../components/AdminCustomerManager.module.css"),"utf8");
+  assert.match(componentSource, /onSaved=\{notes => updateNotes\(customer.id, latestEstimate.lead_id, notes\)\}>/);
+  assert.match(componentSource, /Открыть смету[\s\S]*?<\/Link>\s*<\/LeadNotes>/);
+  assert.match(notes, /styles.leadActionButtons/);
+  assert.match(css, /\.leadActionButtons \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(css, /min-height: 52px; box-sizing: border-box/);
+});
+
+test("internal notes are shown before opening both latest and previous estimates", () => {
+  assert.match(componentSource, /notes\?: string/);
+  assert.equal(componentSource.match(/<LeadNotes /g)?.length,2);
+  assert.match(componentSource, /<LeadNotes[\s\S]*?className=\{styles.openEstimate\}/);
+  const notes=fs.readFileSync(path.join(here,"../components/LeadNotes.tsx"),"utf8");
+  assert.match(notes, /method: "PATCH", credentials: "include", cache: "no-store"/);
+  assert.match(notes, /expected_notes: notes/);
+  assert.match(notes, /textarea/);
+  assert.match(notes, /role="alert"/);
+  assert.match(notes, /maxLength=\{5000\}/);
+  assert.match(notes, /\{notes \? <p className=\{styles.noteText\}/);
+});
+
 test("customer database is excluded from search indexing", () => {
   assert.match(pageSource, /robots: \{ index: false, follow: false \}/);
 });

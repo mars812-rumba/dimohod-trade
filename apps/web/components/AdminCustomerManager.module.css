@@ -175,7 +175,7 @@
 
 .customerSummary {
   display: grid;
-  grid-template-columns: minmax(240px, 1.1fr) minmax(250px, 0.9fr) auto;
+  grid-template-columns: minmax(240px, 1.1fr) minmax(250px, 0.9fr) minmax(220px, .9fr);
   align-items: center;
   gap: 28px;
   padding: 20px;
@@ -297,6 +297,40 @@
   color: #c9501b;
   background: #fff7f2;
 }
+
+.leadActions { display: grid; gap: 12px; min-width: 0; }
+.leadActionButtons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 8px;
+}
+.leadActionButtons > button, .leadActionButtons > a {
+  min-width: 0; width: 100%; min-height: 52px; box-sizing: border-box;
+  padding: 8px 10px; white-space: normal; line-height: 1.3;
+}
+.leadActionButtons > a svg { flex-shrink: 0; }
+.leadNotes { min-width: 0; color: #244f59; font-size: 13px; }
+.leadNotes form { display: grid; gap: 8px; }
+.leadNotes label { font-weight: 700; }
+.leadNotes textarea {
+  width: 100%; min-width: 0; box-sizing: border-box; resize: vertical;
+  padding: 10px; border: 1px solid #b8c9cd; border-radius: 6px;
+  font: inherit; color: #183c45; background: #fff;
+}
+.noteText { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+.noteActions { display: flex; flex-wrap: wrap; gap: 8px; }
+.leadNotes button {
+  min-height: 44px; padding: 8px 10px; border: 1px solid #b8c9cd; border-radius: 6px;
+  font: inherit; font-weight: 650; color: #244f59; background: #f5f8f8; cursor: pointer;
+}
+.leadNotes button:disabled { opacity: .65; cursor: wait; }
+.leadNotes button:focus-visible, .leadNotes textarea:focus-visible { outline: 3px solid #326276; outline-offset: 2px; }
+.leadNotes small { color: #496269; line-height: 1.4; }
+.leadNotes [role="alert"] { color: #a43a20; }
+.leadNotes [role="status"] { display: block; margin-top: 4px; }
+.compactEstimateList > div { padding: 12px 20px; border-top: 1px solid #edf1f2; }
+.compactEstimateList .compactEstimateRow { padding-inline: 0; }
 
 .previousEstimates {
   border-top: 1px solid #e4eaeb;
@@ -484,7 +518,7 @@
     grid-template-columns: minmax(0, 1fr) minmax(230px, 0.8fr);
   }
 
-  .openEstimate {
+  .leadActions {
     grid-column: 1 / -1;
     justify-self: start;
   }
