@@ -74,3 +74,13 @@ test("internal notes are shown before opening both latest and previous estimates
 test("customer database is excluded from search indexing", () => {
   assert.match(pageSource, /robots: \{ index: false, follow: false \}/);
 });
+
+test("saved notes stand out in a warm panel without losing multiline wrapping", () => {
+  const css = fs.readFileSync(path.join(here, "../components/AdminCustomerManager.module.css"), "utf8");
+  const noteRule = css.match(/\.noteText \{([^}]+)\}/)?.[1] ?? "";
+  assert.match(noteRule, /background: #fffaf7/);
+  assert.match(noteRule, /padding: 10px 12px/);
+  assert.match(noteRule, /font-weight: 600/);
+  assert.match(noteRule, /white-space: pre-wrap/);
+  assert.match(noteRule, /overflow-wrap: anywhere/);
+});

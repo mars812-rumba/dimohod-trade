@@ -318,7 +318,12 @@
   padding: 10px; border: 1px solid #b8c9cd; border-radius: 6px;
   font: inherit; color: #183c45; background: #fff;
 }
-.noteText { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+.noteText {
+  margin: 0 0 10px; padding: 10px 12px; border: 1px solid #f0d6c4;
+  border-left: 3px solid #c9501b; border-radius: 6px; background: #fffaf7;
+  color: #183c45; font-weight: 600;
+  white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5;
+}
 .noteActions { display: flex; flex-wrap: wrap; gap: 8px; }
 .leadNotes button {
   min-height: 44px; padding: 8px 10px; border: 1px solid #b8c9cd; border-radius: 6px;
