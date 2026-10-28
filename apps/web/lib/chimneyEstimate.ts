@@ -1,4 +1,4 @@
-import type { ProductListItem } from "./api";
+import type { MediaItem, ProductListItem } from "./api";
 import type { ChimneyBomLine } from "./chimneyCalculation";
 
 export type CatalogEstimateMatch = {
@@ -14,6 +14,7 @@ export type EstimateMeasurement = {
 };
 
 export type ChimneyEstimateLine = {
+  image?: MediaItem | null;
   key: string;
   skuId: string | null;
   label: string;
@@ -34,6 +35,10 @@ export type ChimneyEstimateCustomer = {
 };
 
 export type ChimneyEstimate = {
+  discountEnabled?: boolean;
+  discountPercent?: number;
+  discountAmountRub?: number;
+  totalAfterDiscountRub?: number;
   reference?: string;
   revision?: number;
   customer?: ChimneyEstimateCustomer;
@@ -205,6 +210,7 @@ export function buildChimneyEstimate({
       label: bomLine.label,
       article: match?.item.article ?? null,
       skuName: match?.item.name ?? null,
+      image: match?.item.primary_image ?? null,
       quantity: bomLine.quantity,
       unitPriceRub,
       lineTotalRub,

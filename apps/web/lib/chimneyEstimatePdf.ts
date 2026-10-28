@@ -1,6 +1,6 @@
 import type { Content, TableCell, TDocumentDefinitions } from "pdfmake/interfaces";
 import type { ChimneyEstimate } from "./chimneyEstimate";
-import { formatRub } from "./chimneyEstimate";
+import { loadEstimatePdfImages } from "./estimatePdfImages";
 import { workingHoursText } from "./contactLinks";
 import { METRIKA_GOALS, reachMetrikaGoal } from "./metrika";
 
@@ -14,6 +14,13 @@ const MATCH_LABELS = {
 
 const appBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const BRAND_LOGO_TIMEOUT_MS = 2500;
+
+// A manager's estimate price may include kopecks; do not round it in the PDF.
+function formatRub(value: number): string {
+  return new Intl.NumberFormat("ru-RU", {
+    style: "currency", currency: "RUB", minimumFractionDigits: 0, maximumFractionDigits: 2,
+  }).format(value);
+}
 
 async function loadBrandLogo(): Promise<string | null> {
   const controller = new AbortController();
@@ -49,25 +56,41 @@ function pdfDate(date: Date): string {
 }
 
 async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
-  const [pdfMakeModule, fontsModule, brandLogo] = await Promise.all([
+  const [pdfMakeModule, fontsModule, brandLogo, thumbnails] = await Promise.all([
     import("pdfmake/build/pdfmake"),
     import("pdfmake/build/vfs_fonts"),
     loadBrandLogo(),
+    loadEstimatePdfImages(estimate.lines.map(line => line.image)),
   ]);
   const pdfMake = pdfMakeModule.default;
   pdfMake.vfs = fontsModule.default as unknown as Record<string, string>;
+  const images: Record<string, string> = {};
+  const imageNames = new Map<string, string>();
+  const rowImages = thumbnails.map(data => {
+    if (!data) return null;
+    const existing = imageNames.get(data);
+    if (existing) return existing;
+    const name = `product${imageNames.size}`;
+    images[name] = data;
+    imageNames.set(data, name);
+    return name;
+  });
 
   const bomRows: TableCell[][] = estimate.lines.map((line, index) => [
     { text: String(index + 1), alignment: "center" },
     {
-      stack: [
+      columns: [
+        ...(rowImages[index] ? [{ image: rowImages[index]!, fit: [36, 42] as [number, number], width: 36, margin: [0, 2, 0, 0] as [number, number, number, number] }] : []),
+        { width: "*", stack: [
         { text: line.label, bold: true },
         line.skuName ? { text: line.skuName, fontSize: 8, color: "#4f6066", margin: [0, 2, 0, 0] } : { text: "Каталожная позиция не найдена", fontSize: 8, color: "#a04428", margin: [0, 2, 0, 0] },
         line.article ? { text: `Арт. ${line.article}`, fontSize: 8, color: "#4f6066" } : { text: "Артикул требует уточнения", fontSize: 8, color: "#a04428" },
         line.characteristics.length ? { text: line.characteristics.join(" · "), fontSize: 8, color: "#4f6066" } : { text: "Характеристики требуют уточнения", fontSize: 8, color: "#a04428" },
         { text: MATCH_LABELS[line.matchStatus], fontSize: 8, color: line.matchStatus === "exact" ? "#2c6f55" : "#a04428" },
         line.note ? { text: line.note, fontSize: 7, color: "#66767b", margin: [0, 2, 0, 0] } : { text: "" },
+        ] },
       ],
+      columnGap: 7,
     },
     { text: String(line.quantity), alignment: "center" },
     { text: line.unitPriceRub === null ? "По запросу" : formatRub(line.unitPriceRub), alignment: "right" },
@@ -112,10 +135,10 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
     {
       table: {
         widths: ["42%", "58%"],
-        body: estimate.measurements.map((item) => [
+        body: estimate.measurements.length ? estimate.measurements.map((item) => [
           { text: item.label, color: "#607075" },
           { text: item.value, bold: true },
-        ]),
+        ]) : [[{ text: "Параметры", color: "#607075" }, { text: "Не указаны" }]],
       },
       layout: "lightHorizontalLines",
       margin: [0, 0, 0, 16],
@@ -146,11 +169,15 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
     {
       columns: [
         { text: `${estimate.totalUnits} шт. · ${estimate.lines.length} типов позиций`, color: "#607075", width: "*" },
-        { text: `${estimate.unpricedLineCount ? "Итого по известным ценам" : "Итого"}: ${formatRub(estimate.knownSubtotalRub)}`, bold: true, fontSize: 12, alignment: "right", width: "auto" },
+        { text: `${estimate.discountEnabled ? (estimate.unpricedLineCount ? "По известным ценам без скидки" : "Сумма без скидки") : (estimate.unpricedLineCount ? "Итого по известным ценам" : "Итого")}: ${formatRub(estimate.knownSubtotalRub)}`, bold: true, fontSize: 12, alignment: "right", width: "auto" },
       ],
       margin: [0, 0, 0, 6],
     },
     ...(estimate.unpricedLineCount ? [{ text: `${estimate.unpricedLineCount} поз. без подтверждённой цены не включены в итог.`, color: "#a04428", alignment: "right", fontSize: 8, margin: [0, 0, 0, 14] } as Content] : []),
+    ...(estimate.discountEnabled ? [
+      { text: `Скидка ${estimate.discountPercent ?? 0}%: −${formatRub(estimate.discountAmountRub ?? 0)}`, alignment: "right", margin: [0, 0, 0, 6] } as Content,
+      { text: `${estimate.unpricedLineCount ? "Итого по известным ценам со скидкой" : "Итого со скидкой"}: ${formatRub(estimate.totalAfterDiscountRub ?? estimate.knownSubtotalRub)}`, bold: true, fontSize: 12, alignment: "right", margin: [0, 0, 0, 12] } as Content,
+    ] : []),
     ...(estimate.removedLabels.length ? [
       { text: "Удалено клиентом из комплекта", style: "section" } as Content,
       { ul: estimate.removedLabels, color: "#607075", fontSize: 8, margin: [0, 0, 0, 12] } as Content,
@@ -168,6 +195,7 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
 
   const documentDefinition: TDocumentDefinitions = {
     pageSize: "A4",
+    images,
     pageMargins: [34, 34, 34, 42],
     info: {
       title: "Предварительная смета дымохода",

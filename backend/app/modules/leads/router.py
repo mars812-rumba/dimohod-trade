@@ -6,6 +6,7 @@ import shutil
 import uuid
 from asyncio import to_thread
 from datetime import UTC, datetime
+from decimal import Decimal, ROUND_HALF_UP
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
@@ -162,6 +163,12 @@ def recalculate_estimate(estimate_record: dict[str, object]) -> None:
     estimate["priced_line_count"] = priced
     estimate["unpriced_line_count"] = len(lines) - priced
     estimate["total_units"] = units
+    if "discount_enabled" in estimate:
+        subtotal = Decimal(str(known_total)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        percent = Decimal(str(estimate.get("discount_percent", 0))) if estimate["discount_enabled"] else Decimal(0)
+        discount = (subtotal * percent / 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        estimate["discount_amount_rub"] = float(discount)
+        estimate["total_after_discount_rub"] = float(subtotal - discount)
 
 
 def write_estimate_record(lead_dir: Path, estimate: dict[str, object]) -> None:
@@ -357,8 +364,19 @@ async def update_manager_document(
     estimate = read_estimate_record(lead_dir, record)
     check_revision(estimate, payload.revision)
     number = payload.quotation_number.strip()
-    if number != estimate.get("quotation_number", ""):
+    details = estimate["estimate"]
+    discount_changed = (
+        payload.discount_enabled is not None and payload.discount_enabled != details.get("discount_enabled", False)
+        or payload.discount_percent is not None and payload.discount_percent != Decimal(str(details.get("discount_percent", 0)))
+    )
+    if number != estimate.get("quotation_number", "") or discount_changed:
         estimate["quotation_number"] = number
+        if payload.discount_enabled is not None:
+            details["discount_enabled"] = payload.discount_enabled
+        if payload.discount_percent is not None:
+            details["discount_percent"] = float(payload.discount_percent)
+        if discount_changed:
+            recalculate_estimate(estimate)
         estimate["revision"] = payload.revision + 1
         save_manager_estimate(lead_dir, record, estimate)
     response.headers["Cache-Control"] = "no-store"

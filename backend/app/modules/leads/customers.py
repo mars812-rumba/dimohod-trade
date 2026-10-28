@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
+from app.modules.leads.notes import read_notes
 
 
 def canonical_contact(method: str, contact: str) -> str:
@@ -41,7 +42,7 @@ def estimate_summary(lead_id: str, created_at: str, envelope: dict[str, Any]) ->
         "status": envelope.get("status", "submitted"),
         "created_at": created_at,
         "updated_at": datetime.now(UTC).isoformat(),
-        "known_total_rub": estimate.get("known_subtotal_rub", 0),
+        "known_total_rub": estimate.get("total_after_discount_rub", estimate.get("known_subtotal_rub", 0)),
         "item_count": len(estimate.get("lines", [])),
         "total_units": estimate.get("total_units", 0),
     }
@@ -116,6 +117,8 @@ def list_customers(storage_root: str | Path, search: str | None = None) -> list[
             customer = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
+        for estimate in customer.get("estimates", []):
+            estimate["notes"] = read_notes(storage_root, str(estimate.get("lead_id", "")))
         haystack = " ".join(
             [
                 str(customer.get("name", "")),

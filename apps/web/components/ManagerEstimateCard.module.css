@@ -11,6 +11,7 @@
 
 .topbar,
 .header,
+.discountPanel,
 .documentBar,
 .summaryGrid,
 .bomSection,
@@ -48,6 +49,19 @@
   background: #173d4c;
   border-radius: 18px 18px 0 0;
 }
+
+.discountPanel {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+  padding: 18px; border: 1px solid #cad3d5; border-radius: 12px; background: #fff;
+}
+.discountToggle { display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; cursor: pointer; }
+.discountToggle input { width: 20px; height: 20px; accent-color: #c9501b; }
+.discountField { display: grid; gap: 6px; font-size: 14px; }
+.discountField input { width: 120px; min-height: 44px; padding: 8px; box-sizing: border-box; border: 1px solid #b8c9cd; border-radius: 6px; font: inherit; }
+.discountPanel input:focus-visible { outline: 3px solid #326276; outline-offset: 2px; }
+.discountSummary { display: grid; gap: 4px; font-variant-numeric: tabular-nums; }
+.discountPanel > small { flex-basis: 100%; color: #496269; }
+.discountPanel [role="alert"] { flex-basis: 100%; margin: 0; color: #a43a20; }
 
 .documentBar {
   display: flex;

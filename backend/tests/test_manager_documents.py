@@ -103,3 +103,67 @@ def test_legacy_estimate_pdf_upload_still_works_without_number(fixture):
     assert result.status_code == 201
     assert client.get(BASE + "/pdf", headers=HEADERS).content == PDF
     assert client.get(BASE + "/pdf?document=specification", headers=HEADERS).status_code == 404
+
+
+def test_discount_persists_recalculates_and_is_captured_in_pdf_revision(fixture):
+    client, directory, _ = fixture
+    result = client.patch(BASE + "/document", headers=HEADERS, json={
+        "revision": 1, "quotationNumber": "DISCOUNT-1", "discountEnabled": True, "discountPercent": 10,
+    })
+    assert result.status_code == 200
+    estimate = result.json()["estimate"]
+    assert estimate["known_subtotal_rub"] == 9601
+    assert estimate["discount_amount_rub"] == 960.10
+    assert estimate["total_after_discount_rub"] == 8640.90
+    assert estimate["lines"][0]["unit_price_rub"] == 4800.5
+    assert client.get(BASE, headers=HEADERS).json()["estimate"] == estimate
+    assert upload(client).status_code == 201
+    snapshot = json.loads((directory / "estimate-revisions/revision-2.json").read_text())
+    assert snapshot["estimate"] == estimate
+    edited = client.patch(BASE + "/items/line", headers=HEADERS, json={"revision": 2, "quantity": 1})
+    assert edited.status_code == 200
+    assert edited.json()["estimate"]["total_after_discount_rub"] == 4320.45
+    assert client.patch(BASE + "/document", headers=HEADERS, json={"revision": 2, "quotationNumber": "X", "discountEnabled": False}).status_code == 409
+    removed = client.patch(BASE + "/document", headers=HEADERS, json={"revision": 3, "quotationNumber": "DISCOUNT-1", "discountEnabled": False})
+    assert removed.status_code == 200
+    assert removed.json()["estimate"]["discount_amount_rub"] == 0
+    assert removed.json()["estimate"]["total_after_discount_rub"] == 4800.5
+
+
+@pytest.mark.parametrize("percent", [-1, 101, "NaN", "Infinity", 1.234])
+def test_invalid_discount_is_rejected_without_writing(fixture, percent):
+    client, directory, _ = fixture
+    before = (directory / "estimate.json").read_bytes()
+    result = client.patch(BASE + "/document", headers=HEADERS, json={"revision": 1, "quotationNumber": "X", "discountEnabled": True, "discountPercent": percent})
+    assert result.status_code == 422
+    assert (directory / "estimate.json").read_bytes() == before
+
+
+@pytest.mark.parametrize("percent,amount,total", [(0, 0, 9601), (100, 9601, 0), (12.55, 1204.93, 8396.07)])
+def test_discount_boundaries_and_fractional_percent(fixture, percent, amount, total):
+    client, _, _ = fixture
+    body = {"revision": 1, "quotationNumber": "X", "discountEnabled": True, "discountPercent": percent}
+    assert client.patch(BASE + "/document", json=body).status_code == 404
+    result = client.patch(BASE + "/document", headers=HEADERS, json=body)
+    assert result.status_code == 200
+    assert result.json()["estimate"]["discount_amount_rub"] == amount
+    assert result.json()["estimate"]["total_after_discount_rub"] == total
+
+
+def test_discount_rounding_unpriced_lines_and_customer_total():
+    from app.modules.leads.router import recalculate_estimate
+    from app.modules.leads.customers import estimate_summary
+
+    envelope = {"estimate": {"discount_enabled": True, "discount_percent": 10, "lines": [
+        {"quantity": 1, "unit_price_rub": 60251.53}, {"quantity": 2, "unit_price_rub": None},
+    ]}}
+    recalculate_estimate(envelope)
+    estimate = envelope["estimate"]
+    assert estimate["discount_amount_rub"] == 6025.15
+    assert estimate["total_after_discount_rub"] == 54226.38
+    assert estimate["unpriced_line_count"] == 1
+    assert estimate_summary(LEAD, "2026-10-28", envelope)["known_total_rub"] == 54226.38
+    estimate["lines"] = [{"quantity": 1, "unit_price_rub": 0.05}]
+    recalculate_estimate(envelope)
+    assert estimate["discount_amount_rub"] == 0.01
+    assert estimate["total_after_discount_rub"] == 0.04

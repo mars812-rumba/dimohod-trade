@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
@@ -94,6 +95,8 @@ class ManagerRevision(LeadEstimateModel):
 
 class ManagerDocumentDetails(ManagerRevision):
     quotation_number: str = Field(max_length=80, pattern=r"^[^\x00-\x1f\x7f]*$")
+    discount_enabled: bool | None = None
+    discount_percent: Decimal | None = Field(default=None, ge=0, le=100, decimal_places=2, allow_inf_nan=False)
 
 
 class ManagerCatalogMetadataRequest(LeadEstimateModel):
