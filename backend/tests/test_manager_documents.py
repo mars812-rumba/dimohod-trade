@@ -167,3 +167,43 @@ def test_discount_rounding_unpriced_lines_and_customer_total():
     recalculate_estimate(envelope)
     assert estimate["discount_amount_rub"] == 0.01
     assert estimate["total_after_discount_rub"] == 0.04
+
+
+def test_forced_catalog_selection_keeps_real_sku_and_persists_warning(fixture, monkeypatch):
+    from decimal import Decimal
+    from types import SimpleNamespace
+    from uuid import UUID
+    from app.db.session import get_db
+
+    client, directory, _ = fixture
+    sid = UUID("00000000-0000-0000-0000-000000000250")
+    sku = SimpleNamespace(id=sid, article="LOCAL-CLAMP-D250", name="Хомут Ø250",
+        diameter_mm=250, outer_diameter_mm=None, steel_grade="AISI 430", material="нержавеющая сталь",
+        wall_thickness_mm=Decimal("0.50"), length_mm=None, angle_deg=None, insulation_mm=None,
+        price_rub=Decimal("1234.50"), attributes={})
+    sku.product = SimpleNamespace(id=sid, slug="local-clamp", name="Широкий хомут", product_kind="крепеж", category_id=sid,
+        skus=[sku], extra_attributes={}, category=SimpleNamespace(id=sid, slug="homuty-i-krepezh", name="Хомуты"))
+    async def lookup(session, ids):
+        return {str(sid): sku} if sid in ids else {}
+    monkeypatch.setattr("app.modules.leads.router.catalog_skus", lookup)
+    monkeypatch.setattr("app.modules.leads.router.primary_visual_sku_image", lambda *args: None)
+    monkeypatch.setattr("app.modules.leads.router.primary_product_image", lambda *args: None)
+    client.app.dependency_overrides[get_db] = lambda: None
+    body = {"revision":1,"skuId":str(sid),"quantity":2,"note":"Локальное примечание","forceAdd":True}
+    assert client.post(BASE+"/catalog/items", json=body).status_code == 404
+    added = client.post(BASE+"/catalog/items", headers=HEADERS, json=body)
+    assert added.status_code == 201
+    line = added.json()["estimate"]["lines"][-1]
+    assert line["sku_id"] == str(sid) and line["unit_price_rub"] == 1234.5
+    assert line["quantity"] == 2 and line["note"] == body["note"]
+    assert line["match_status"] == "candidate" and "Требует проверки" in line["selection_warning"]
+    assert client.get(BASE, headers=HEADERS).json()["estimate"]["lines"][-1] == line
+    assert client.post(BASE+"/save", headers=HEADERS, json={"revision":2}).status_code == 200
+    saved = json.loads((directory/"estimate-revisions/revision-2.json").read_text())
+    assert saved["estimate"]["lines"][-1]["selection_warning"] == line["selection_warning"]
+    assert client.post(BASE+"/catalog/items", headers=HEADERS, json=body).status_code == 409
+    assert client.post(BASE+"/catalog/items", headers=HEADERS, json={**body,"revision":2,"skuId":"00000000-0000-0000-0000-000000000999"}).status_code == 404
+    updated = client.patch(BASE+"/catalog/items/"+line["id"], headers=HEADERS, json={**body,"revision":2,"forceAdd":False})
+    assert updated.status_code == 200
+    assert updated.json()["estimate"]["lines"][-1]["selection_warning"] is None
+    client.app.dependency_overrides.clear()

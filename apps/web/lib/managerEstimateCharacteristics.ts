@@ -1,10 +1,11 @@
 /** Resolve only the exact SKU; never substitute a family/default variant. */
 export function managerEstimateCharacteristics(
-  line: { sku_id: string | null; characteristics: string[] },
+  line: { sku_id: string | null; characteristics: string[]; selection_warning?: string | null },
   metadata: Record<string, { estimate_characteristics?: string[] | null }>,
 ): string[] {
   const canonical = line.sku_id ? metadata[line.sku_id]?.estimate_characteristics : null;
-  return canonical?.length ? canonical : line.characteristics;
+  const values = canonical?.length ? canonical : line.characteristics;
+  return line.selection_warning && !values.includes(line.selection_warning) ? [...values, line.selection_warning] : values;
 }
 
 export function managerEstimateNames(

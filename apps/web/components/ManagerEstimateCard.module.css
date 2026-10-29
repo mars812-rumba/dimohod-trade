@@ -528,6 +528,8 @@
 }
 
 .pickerNote textarea { resize: vertical; }
+.pickerNote select { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; padding: 10px; border: 1px solid #b8c9cd; border-radius: 6px; font: inherit; background: #fff; color: #183c45; }
+.pickerNote select:focus-visible { outline: 3px solid #326276; outline-offset: 2px; }
 
 .searchResults li span {
   color: #69787d;

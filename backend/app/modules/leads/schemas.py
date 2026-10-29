@@ -108,3 +108,4 @@ class ManagerCatalogSelection(LeadEstimateModel):
     sku_id: UUID
     quantity: int = Field(default=1, ge=1, le=10_000)
     note: str = Field(default="", max_length=4000)
+    force_add: bool = False

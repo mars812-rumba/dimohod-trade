@@ -353,7 +353,7 @@ def catalog_characteristics(sku: SKU) -> list[str]:
     return characteristics
 
 
-def catalog_line(sku: SKU, *, quantity: int, note: str, line_id: str | None = None) -> dict[str, object]:
+def catalog_line(sku: SKU, *, quantity: int, note: str, line_id: str | None = None, force_add: bool = False) -> dict[str, object]:
     metadata = catalog_sku_metadata(sku)
     return {
         "id": line_id or uuid.uuid4().hex,
@@ -367,7 +367,8 @@ def catalog_line(sku: SKU, *, quantity: int, note: str, line_id: str | None = No
         "line_total_rub": None,
         "characteristics": catalog_characteristics(sku),
         "note": note,
-        "match_status": "exact",
+        "match_status": "candidate" if force_add else "exact",
+        "selection_warning": "Требует проверки: товар добавлен принудительно, без совпадения с диаметром сметы." if force_add else None,
         **{key: value for key, value in metadata.items() if key not in {"sku_id", "article", "sku_name", "unit_price_rub", "estimate_characteristics"}},
     }
 
@@ -579,7 +580,7 @@ async def create_manager_catalog_line(
     if sku is None:
         raise HTTPException(status_code=404, detail="Активный SKU не найден в каталоге")
     estimate["estimate"]["lines"].append(
-        catalog_line(sku, quantity=payload.quantity, note=payload.note)
+        catalog_line(sku, quantity=payload.quantity, note=payload.note, force_add=payload.force_add)
     )
     estimate["revision"] = payload.revision + 1
     recalculate_estimate(estimate)
@@ -628,6 +629,7 @@ async def replace_manager_catalog_line(
         quantity=payload.quantity,
         note=payload.note,
         line_id=item_id,
+        force_add=payload.force_add,
     )
     estimate["revision"] = payload.revision + 1
     recalculate_estimate(estimate)

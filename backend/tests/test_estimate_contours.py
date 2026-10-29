@@ -56,6 +56,12 @@ def test_catalog_add_replace_and_pdf_metadata_share_exact_characteristics(monkey
     assert line["article"] == sku.article and line["sku_id"] == str(sku.id)
     assert line["quantity"] == 4 and line["unit_price_rub"] == 10879
     assert line["id"] == "original-line" and line["note"] == "Сохранить"
+    forced = catalog_line(sku, quantity=4, note="Сохранить", force_add=True)
+    assert forced["match_status"] == "candidate"
+    assert "Требует проверки" in forced["selection_warning"]
+    assert forced["sku_id"] == line["sku_id"] and forced["unit_price_rub"] == line["unit_price_rub"]
+    assert forced["note"] == "Сохранить"
+    assert line["match_status"] == "exact" and line["selection_warning"] is None
 
 
 def test_pipe_names_distinguish_insulated_and_single_wall_and_keep_dimensions():

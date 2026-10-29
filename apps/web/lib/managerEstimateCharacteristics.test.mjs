@@ -20,6 +20,12 @@ test("manual, non-sandwich and unavailable SKUs retain saved characteristics",()
   }
 });
 
+test("forced selection warning is included in both PDF characteristic lists",()=>{
+  const line={sku_id:"clamp",characteristics:["Ø 250 мм"],selection_warning:"Требует проверки: принудительно"};
+  assert.deepEqual(resolve(line,{clamp:{estimate_characteristics:["Ø 250 мм","AISI 430"]}}),["Ø 250 мм","AISI 430",line.selection_warning]);
+  assert.deepEqual(resolve(line,{}),["Ø 250 мм",line.selection_warning]);
+});
+
 test("both PDF name fields use the exact SKU contour names, not a neighboring variant",()=>{
   const line={sku_id:"sandwich",label:"Труба",sku_name:"Труба L=1000 мм"};
   const metadata={sandwich:{estimate_label:"Сэндвич-труба",estimate_sku_name:"Сэндвич-труба L=1000 мм"},single:{estimate_label:"Труба",estimate_sku_name:"Труба L=500 мм"}};
