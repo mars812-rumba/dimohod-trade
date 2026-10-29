@@ -6,6 +6,7 @@ import { Fragment, useEffect, useId, useMemo, useState } from "react";
 import type { MediaItem, Product, ProductListItem, ProductListResponse, SKU } from "@/lib/api";
 import type { ChimneyEstimate } from "@/lib/chimneyEstimate";
 import { estimateDiscount } from "@/lib/estimateDiscount";
+import { managerEstimateCharacteristics, managerEstimateNames } from "@/lib/managerEstimateCharacteristics";
 import { flangeExecutionVariant, flangeMaterialVariants, flangeMaterialLabel } from "@/lib/flangeVariants";
 import { isDiameterClampProduct, clampDiameterVariants, clampNeedsExecutionChoice, clampOptionLabel } from "@/lib/clampVariants";
 import { estimateVariantFields, estimateVariantValue, estimateVariantOptions, selectEstimateVariant, isSandwichProduct, estimateGeometryVariants } from "@/lib/estimateSkuVariants";
@@ -15,7 +16,7 @@ import styles from "./ManagerEstimateCard.module.css";
 
 type Line = { id:string; key:string; sku_id:string|null; label:string; article:string|null; sku_name:string|null; quantity:number; unit_price_rub:number|null; line_total_rub:number|null; characteristics:string[]; note:string; match_status:"exact"|"candidate"|"nearest"|"missing"|"manual"; removed_at?:string; image?:MediaItem|null };
 type Envelope = { schema_version:number; quotation_number?:string; lead_id:string; status:string; revision:number; removed_lines:Line[]; customer:{name:string;contact_method:"phone"|"whatsapp"|"telegram"|"email";contact:string}; estimate:{discount_enabled?:boolean;discount_percent?:number;discount_amount_rub?:number;total_after_discount_rub?:number;profile_name:string;generated_at:string;source_url:string;measurements:Array<{label:string;value:string}>;lines:Line[];known_subtotal_rub:number;priced_line_count:number;unpriced_line_count:number;total_units:number;review_items:string[];calculation_errors:string[]} };
-type Meta = { sku_id:string; product_id:string; product_slug:string; product_name:string; category_id:string; category_slug:string; category_name:string; article:string; sku_name:string; steel_grade:string|null; wall_thickness_mm:number|null; diameter_mm:number|null; outer_diameter_mm:number|null; length_mm:number|null; unit_price_rub:number|null; image:MediaItem|null };
+type Meta = { estimate_label?:string; estimate_sku_name?:string; estimate_characteristics?:string[]|null; sku_id:string; product_id:string; product_slug:string; product_name:string; category_id:string; category_slug:string; category_name:string; article:string; sku_name:string; steel_grade:string|null; wall_thickness_mm:number|null; diameter_mm:number|null; outer_diameter_mm:number|null; length_mm:number|null; unit_price_rub:number|null; image:MediaItem|null };
 type Draft = {label:string;quantity:string;unitPrice:string;characteristics:string;note:string};
 type Picker = {target:string|null;categorySlug:string|null;categoryName:string|null;diameter:number|null;outer:number|null;quantity:number;note:string};
 const api = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -88,7 +89,16 @@ export function ManagerEstimateCard({leadId}:{leadId:string}){
     setDocumentBusy("pdf");setNotice("");setDocuments(null);
     try{
       const current=await saveDocumentDetails();await saveSnapshot(false,current);
-      const estimate=estimateForPdf(current,meta),number=current.quotation_number??"";
+      let pdfMeta=meta;
+      const skuIds=[...new Set(current.estimate.lines.flatMap(line=>line.sku_id?[line.sku_id]:[]))];
+      if(skuIds.length){
+        const response=await fetch(`${api}/api/v1/leads/${leadId}/manager/catalog/metadata`,{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json",...headers()},body:JSON.stringify({skuIds})});
+        if(!response.ok)throw Error("Не удалось проверить характеристики каталога. Повторите формирование PDF.");
+        const body=await response.json() as {items:Meta[]};
+        pdfMeta=Object.fromEntries(body.items.map(item=>[item.sku_id,item]));setMeta(pdfMeta);
+      }
+      const estimate=estimateForPdf(current,pdfMeta),number=current.quotation_number??"";
+      estimate.lines=estimate.lines.map((line,index)=>({...line,...managerEstimateNames(current.estimate.lines[index],pdfMeta),characteristics:managerEstimateCharacteristics(current.estimate.lines[index],pdfMeta)}));
       Object.assign(estimate,{discountEnabled:current.estimate.discount_enabled,discountPercent:current.estimate.discount_percent,discountAmountRub:current.estimate.discount_amount_rub,totalAfterDiscountRub:current.estimate.total_after_discount_rub});
       const [blob,specification]=await Promise.all([createChimneyEstimatePdfBlob(estimate),createChimneySpecificationPdfBlob(estimate,number)]);
       const filename=`smeta-DT-${current.lead_id.slice(0,8).toUpperCase()}-r${current.revision}.pdf`;

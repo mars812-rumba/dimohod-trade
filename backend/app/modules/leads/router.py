@@ -6,7 +6,7 @@ import shutil
 import uuid
 from asyncio import to_thread
 from datetime import UTC, datetime
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
@@ -32,6 +32,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.db.session import get_db
+from app.db.price_section_attributes import outer_pipe_attributes
 from app.modules.admin.auth import ADMIN_SESSION_COOKIE, valid_admin_session
 from app.modules.leads.customers import sync_customer_estimate, upsert_customer
 from app.modules.leads.email import send_customer_confirmation_email, send_lead_email
@@ -45,6 +46,7 @@ from app.modules.leads.schemas import (
     ManagerRevision,
 )
 from app.modules.products.models import SKU, Product
+from app.modules.products.service import contour_group
 from app.modules.products.router import primary_product_image, primary_visual_sku_image
 
 
@@ -272,6 +274,8 @@ def catalog_sku_metadata(sku: SKU) -> dict[str, object]:
         "category_name": product.category.name,
         "article": sku.article,
         "sku_name": sku.name,
+        **estimate_pipe_names(sku),
+        "estimate_characteristics": catalog_characteristics(sku) if has_outer_contour(sku) else None,
         "steel_grade": sku.steel_grade,
         "wall_thickness_mm": float(sku.wall_thickness_mm)
         if sku.wall_thickness_mm is not None
@@ -284,34 +288,87 @@ def catalog_sku_metadata(sku: SKU) -> dict[str, object]:
     }
 
 
-def catalog_line(sku: SKU, *, quantity: int, note: str, line_id: str | None = None) -> dict[str, object]:
-    metadata = catalog_sku_metadata(sku)
+def estimate_pipe_names(sku: SKU) -> dict[str, str]:
+    """Display names only; the catalog entity, article and chosen SKU are unchanged."""
+    if getattr(sku.product, "product_kind", None) != "труба":
+        return {}
+    contour = contour_group(sku.contour)
+    if contour in {"sandwich", "двустенный", "двухконтурный"}:
+        label = "Сэндвич-труба"
+    elif contour == "single":
+        label = "Труба"
+    elif sku.insulation_mm and sku.diameter_mm and sku.outer_diameter_mm and sku.outer_diameter_mm > sku.diameter_mm:
+        label = "Сэндвич-труба"
+    else:
+        return {}
+    name, replaced = re.subn(r"^(?:сэндвич[-\s]*)?труба\b", lambda _: label, sku.name, count=1, flags=re.IGNORECASE)
+    if not replaced:
+        name = f"{label} · {sku.name}"
+    return {"estimate_label": label, "estimate_sku_name": name}
+
+
+def has_outer_contour(sku: SKU) -> bool:
+    attributes = outer_pipe_attributes(sku.attributes)
+    return any(attributes.get(key) is not None for key in ("outer_steel_grade", "outer_material", "outer_wall_thickness_mm"))
+
+
+def catalog_characteristics(sku: SKU) -> list[str]:
+    def thickness(value: object) -> str | None:
+        if value is None or str(value).strip() == "":
+            return None
+        try:
+            parsed = Decimal(str(value).replace(',', '.'))
+            if not parsed.is_finite() or parsed <= 0:
+                return None
+            return f"{format(parsed.normalize(), 'f').replace('.', ',')} мм"
+        except (InvalidOperation, ValueError, TypeError):
+            return None
+
     characteristics = []
     if sku.diameter_mm is not None:
         diameter = str(sku.diameter_mm)
         if sku.outer_diameter_mm is not None:
             diameter += f"/{sku.outer_diameter_mm}"
         characteristics.append(f"Ø {diameter} мм")
-    if sku.steel_grade:
-        characteristics.append(sku.steel_grade)
-    if sku.wall_thickness_mm is not None:
-        characteristics.append(f"{sku.wall_thickness_mm.normalize()} мм")
+    if has_outer_contour(sku):
+        attributes = outer_pipe_attributes(sku.attributes)
+        inner = [sku.steel_grade or sku.material, thickness(sku.wall_thickness_mm)]
+        outer = [attributes.get("outer_steel_grade") or attributes.get("outer_material"), thickness(attributes.get("outer_wall_thickness_mm"))]
+        for label, parts in (("Внутренняя труба", inner), ("Наружная труба", outer)):
+            values = [str(value) for value in parts if value]
+            if values:
+                characteristics.append(f"{label}: {' · '.join(values)}")
+    else:
+        if sku.steel_grade:
+            characteristics.append(sku.steel_grade)
+        if sku.wall_thickness_mm is not None:
+            characteristics.append(f"{sku.wall_thickness_mm.normalize()} мм")
     if sku.length_mm is not None:
         characteristics.append(f"L {sku.length_mm} мм")
+    if has_outer_contour(sku):
+        if sku.angle_deg is not None:
+            characteristics.append(f"Угол {sku.angle_deg}°")
+        if sku.insulation_mm is not None:
+            characteristics.append(f"Изоляция {sku.insulation_mm} мм")
+    return characteristics
+
+
+def catalog_line(sku: SKU, *, quantity: int, note: str, line_id: str | None = None) -> dict[str, object]:
+    metadata = catalog_sku_metadata(sku)
     return {
         "id": line_id or uuid.uuid4().hex,
         "key": f"catalog-{sku.id}",
         "sku_id": str(sku.id),
-        "label": sku.product.name,
+        "label": metadata.get("estimate_label", sku.product.name),
         "article": sku.article,
-        "sku_name": sku.name,
+        "sku_name": metadata.get("estimate_sku_name", sku.name),
         "quantity": quantity,
         "unit_price_rub": metadata["unit_price_rub"],
         "line_total_rub": None,
-        "characteristics": characteristics,
+        "characteristics": catalog_characteristics(sku),
         "note": note,
         "match_status": "exact",
-        **{key: value for key, value in metadata.items() if key not in {"sku_id", "article", "sku_name", "unit_price_rub"}},
+        **{key: value for key, value in metadata.items() if key not in {"sku_id", "article", "sku_name", "unit_price_rub", "estimate_characteristics"}},
     }
 
 
