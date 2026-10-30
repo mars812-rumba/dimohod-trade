@@ -48,6 +48,7 @@ import {
 import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
 import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
 import { EstimateLeadDialog } from "./EstimateLeadDialog";
+import { trackSolutionsCalculator } from "@/lib/solutionsCalculatorAnalytics";
 
 type RouteType = "ceiling" | "wall";
 type StoveType = "bania" | "pech" | "kamin" | "tt-kotel" | "gaz" | "diesel";
@@ -2071,7 +2072,14 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     calculationErrors: calculation.errors,
   }), [activeProfile?.name, calculation.errors, calculation.reviewItems, catalogMatches, estimateMeasurements, removedBom, selectedBom]);
 
+  useEffect(() => {
+    if (activeProfile && catalogMatchStatus === "ready" && estimate.lines.length && !calculation.errors.length && !diagramValidationErrors.length) {
+      trackSolutionsCalculator("result", { scenario: calculation.routeKind, source: "chimney-estimate" });
+    }
+  }, [activeProfile, catalogMatchStatus, estimate, calculation.errors.length, calculation.routeKind, diagramValidationErrors.length]);
+
   const loadCalculationProfile = (profileId: string) => {
+    if (profileId) trackSolutionsCalculator("start", { first_field: "saved_profile", source: "chimney-estimate" });
     setActiveProfileId(profileId);
     if (!profileId) {
       setTransferredDraft(null);

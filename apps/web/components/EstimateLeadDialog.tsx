@@ -13,6 +13,7 @@ import { chimneyEstimateLeadPayload, chimneyEstimateText } from "@/lib/chimneyEs
 import { createChimneyEstimatePdfBlob } from "@/lib/chimneyEstimatePdf";
 import { METRIKA_GOALS, reachMetrikaGoal, type MetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
+import { trackSolutionsCalculator } from "@/lib/solutionsCalculatorAnalytics";
 
 type ContactMethod = "phone" | "whatsapp" | "telegram" | "email";
 
@@ -162,6 +163,11 @@ export function EstimateLeadDialog({
       const goalParams = { source, path: window.location.pathname };
       reachMetrikaGoal(METRIKA_GOALS.leadSubmitted, goalParams);
       reachMetrikaGoal(metrikaGoal, goalParams);
+      if (payload?.status === "accepted" && (
+        metrikaGoal === METRIKA_GOALS.deepMeasurementFormSent || metrikaGoal === METRIKA_GOALS.quickEstimateContactSent
+      )) {
+        trackSolutionsCalculator("submit", { source });
+      }
       onSubmitted?.(customer);
     } catch (error) {
       setStatus("error");

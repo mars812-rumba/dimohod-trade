@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { trackSolutionsCalculator, resetSolutionsCalculatorAnalytics } from "@/lib/solutionsCalculatorAnalytics";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   IconArrowRight as ArrowRight,
@@ -411,6 +412,7 @@ export function HomeQuickEstimate({
     : false;
 
   function restart() {
+    resetSolutionsCalculatorAnalytics();
     setStep(firstStep);
     setObjectType(fixedObjectType ?? null);
     setEquipmentType(fixedEquipmentType ?? (fixedObjectType === "banya" ? "bania" : ""));
@@ -449,6 +451,12 @@ export function HomeQuickEstimate({
     window.sessionStorage.setItem(QUICK_ESTIMATE_RETURN_KEY, JSON.stringify(snapshot));
   }
 
+  useEffect(() => {
+    if (step === 4 && matchStatus === "ready" && estimate?.lines.length && calculation && !calculation.errors.length) {
+      trackSolutionsCalculator("result", { scenario: answers?.objectType ?? "quick", source: leadSource });
+    }
+  }, [step, matchStatus, estimate, calculation, answers?.objectType, leadSource]);
+
   return (
     <section className={`${styles.section}${fixedObjectType ? ` ${styles.scenarioSection}` : ""}`} id="quick-estimate" aria-labelledby="quick-estimate-title">
       <div className={styles.shell}>
@@ -477,6 +485,7 @@ export function HomeQuickEstimate({
                 {objectChoices.map((choice) => <button className={`${styles.choice} ${objectType === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => {
                   setObjectType(choice.id);
                   if (choice.id === "banya") setEquipmentType("bania");
+                  trackSolutionsCalculator("start",{first_field:"objectType",source:leadSource});
                 }} type="button" aria-pressed={objectType === choice.id}>
                   <Image alt="" aria-hidden height={96} src={withBase(choice.icon, assetBasePath)} unoptimized width={96} />
                   {choice.label}
@@ -487,12 +496,13 @@ export function HomeQuickEstimate({
             {step === 1 ? <>
               <div className={styles.heading}><small>Отопитель</small><h3>Что уже известно?</h3><p>Если модель ещё не выбрана, оставьте тип пустым. Точные параметры уточним позже.</p></div>
               <div className={styles.compactChoices}>
-                {statusChoices.map((choice) => <button className={`${styles.choice} ${equipmentStatus === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => setEquipmentStatus(choice.id)} type="button" aria-pressed={equipmentStatus === choice.id}>{choice.label}</button>)}
+                {statusChoices.map((choice) => <button className={`${styles.choice} ${equipmentStatus === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => {setEquipmentStatus(choice.id);trackSolutionsCalculator("start",{first_field:"equipmentStatus",source:leadSource})}} type="button" aria-pressed={equipmentStatus === choice.id}>{choice.label}</button>)}
               </div>
               <p className={styles.subheading}>Тип отопителя</p>
               <div className={`${styles.choices} ${styles.heaterChoices}`}>
                 {availableHeaterChoices.map((choice) => <button className={`${styles.choice} ${equipmentType === choice.id ? styles.selected : ""}`} disabled={Boolean(fixedEquipmentType)} key={choice.id} onClick={() => {
                   if (!fixedEquipmentType) setEquipmentType(equipmentType === choice.id ? "" : choice.id);
+                  if (!fixedEquipmentType) trackSolutionsCalculator("start",{first_field:"equipmentType",source:leadSource});
                 }} type="button" aria-pressed={equipmentType === choice.id}>
                   <Image alt="" aria-hidden height={64} src={withBase(choice.icon, assetBasePath)} unoptimized width={64} />{choice.label}
                 </button>)}
@@ -501,7 +511,7 @@ export function HomeQuickEstimate({
                 <div>
                   <p className={styles.subheading}>Выход патрубка</p>
                   <div className={styles.choices}>
-                    {outletChoices.map((choice) => <button className={`${styles.choice} ${outlet === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => setOutlet(choice.id)} type="button" aria-pressed={outlet === choice.id}>
+                    {outletChoices.map((choice) => <button className={`${styles.choice} ${outlet === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => {setOutlet(choice.id);trackSolutionsCalculator("start",{first_field:"outlet",source:leadSource})}} type="button" aria-pressed={outlet === choice.id}>
                       <Image alt="" aria-hidden height={72} src={withBase(choice.icon, assetBasePath)} unoptimized width={72} />{choice.label}
                     </button>)}
                   </div>

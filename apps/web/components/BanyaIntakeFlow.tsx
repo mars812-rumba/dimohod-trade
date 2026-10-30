@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { trackSolutionsCalculator } from "@/lib/solutionsCalculatorAnalytics";
 import { IconArrowRight as ArrowRight, IconChevronDown as ChevronDown } from "@tabler/icons-react";
 import { type ReactNode, useEffect, useState } from "react";
 import {
@@ -482,7 +483,12 @@ export function BanyaIntakeFlow({
           <p>Поля можно заполнять не по порядку. Неизвестные данные оставьте пустыми и добавьте позже.</p>
         </div>
 
-        <div className={styles.intakeSteps}>
+        <div className={styles.intakeSteps} onChange={(event) => {
+          const field = event.target as HTMLInputElement;
+          if (field.value.trim() || field.type === "checkbox") {
+            trackSolutionsCalculator("start", { scenario, first_field: field.name || field.id || "measurement" });
+          }
+        }}>
           <section className={styles.intakeStep} aria-labelledby="stove-step-title">
             <div className={styles.stepHeading}>
               <span>Шаг 1</span>
