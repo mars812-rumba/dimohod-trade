@@ -1789,7 +1789,7 @@
 }
 
 .trustGrid svg { color: var(--signal); }
-.trustGrid strong { font-size: 18px; }
+.trustGrid h3 { margin: 0; font-size: 18px; font-weight: 700; line-height: inherit; }
 .trustGrid span { color: #617177; font-size: 13px; line-height: 1.6; }
 
 .companyLine {
@@ -1970,9 +1970,11 @@
   min-width: 0;
 }
 
-.reviewHeader strong {
+.reviewAuthor {
+  margin: 0;
   color: var(--ink);
   font-size: 15px;
+  font-weight: 700;
   line-height: 1.25;
 }
 

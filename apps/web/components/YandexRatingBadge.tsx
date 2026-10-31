@@ -6,6 +6,7 @@ export function YandexRatingBadge() {
   return (
     <span
       className="yandex-rating-badge"
+      role="group"
       aria-label={`Рейтинг компании ${YANDEX_MAPS_RATING} из 5 на Яндекс Картах`}
     >
       <Image

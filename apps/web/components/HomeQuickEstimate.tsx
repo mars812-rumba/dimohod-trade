@@ -471,7 +471,7 @@ export function HomeQuickEstimate({
         <div className={styles.quiz}>
           <div className={styles.topbar}>
             <button className={styles.back} disabled={step === firstStep} onClick={() => setStep(step === 4 ? 2 : (step - 1) as Step)} type="button">Назад</button>
-            <div className={styles.progress} aria-label={`Шаг ${(step === 4 ? 3 : step) - firstStep + 1} из ${4 - firstStep}`}>
+            <div className={styles.progress}>
               <div className={styles.track}><i style={{ width: `${(((step === 4 ? 3 : step) - firstStep + 1) / (4 - firstStep)) * 100}%` }} /></div>
               <span>Шаг {(step === 4 ? 3 : step) - firstStep + 1} из {4 - firstStep}</span>
             </div>

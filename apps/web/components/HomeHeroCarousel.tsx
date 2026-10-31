@@ -61,7 +61,6 @@ export function HomeHeroCarousel({ assetBasePath = "" }: HomeHeroCarouselProps) 
   return (
     <section
       className={styles.hero}
-      role="region"
       aria-roledescription="карусель"
       aria-label="Визуализации вариантов дымоходных систем"
       onTouchStart={(event) => {

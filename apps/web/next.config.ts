@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["178.236.16.63", "sunny-rentals.online"],
   basePath,
   reactStrictMode: true,
+  // Keep title, canonical and social metadata in <head> for every client,
+  // including HTML validators and crawlers that do not render streamed metadata.
+  htmlLimitedBots: /.*/,
   // Optional isolated output directory for local production verification.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   experimental: { inlineCss: true },

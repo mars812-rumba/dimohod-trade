@@ -760,11 +760,11 @@ export default async function HomePage() {
                   />
                   <small>Визуализация</small>
                 </span>
-                <span className={styles.routeExampleBody}>
+                <div className={styles.routeExampleBody}>
                   <h3>{item.title}</h3>
                   <span>{item.text}</span>
                   <b>{item.action} <ArrowRight size={15} aria-hidden /></b>
-                </span>
+                </div>
               </Link>
             ))}
           </div>
@@ -804,9 +804,9 @@ export default async function HomePage() {
             <p>Не обещаем совместимость без параметров отопителя и трассы. Предварительный расчёт становится основанием для проверки специалистом.</p>
           </div>
           <div className={styles.trustGrid}>
-            <article><Boxes size={24} /><strong>Конкретные позиции</strong><span>Сверяем выбранные изделия, их параметры и количество в предварительном составе.</span></article>
-            <article><ShieldCheck size={24} /><strong>Без неподтверждённых обещаний</strong><span>Не публикуем общие условия, пока они не подтверждены для конкретного заказа.</span></article>
-            <article><Wrench size={24} /><strong>Инженерная проверка</strong><span>Собранный в конфигураторе комплект не становится заказом, пока специалист не проверит исходные данные.</span></article>
+            <article><Boxes size={24} /><h3>Конкретные позиции</h3><span>Сверяем выбранные изделия, их параметры и количество в предварительном составе.</span></article>
+            <article><ShieldCheck size={24} /><h3>Без неподтверждённых обещаний</h3><span>Не публикуем общие условия, пока они не подтверждены для конкретного заказа.</span></article>
+            <article><Wrench size={24} /><h3>Инженерная проверка</h3><span>Собранный в конфигураторе комплект не становится заказом, пока специалист не проверит исходные данные.</span></article>
           </div>
           <div className={styles.companyLine}><MapPin size={16} /><span>Санкт-Петербург, ул. 2-й Луч, 4, корп. 2</span><FileCheck2 size={16} /><span>ООО «Дымоходы-трейд плюс» · ОГРН 1177847018216</span></div>
         </div>
@@ -848,6 +848,7 @@ export default async function HomePage() {
               </p>
               <div
                 className={styles.reviewsRating}
+                role="group"
                 aria-label={`Рейтинг ${YANDEX_MAPS_RATING} из 5`}
               >
                 <strong>{YANDEX_MAPS_RATING}</strong>
@@ -885,7 +886,7 @@ export default async function HomePage() {
                           {review.author.slice(0, 1)}
                         </span>
                         <div>
-                          <strong>{review.author}</strong>
+                          <h3 className={styles.reviewAuthor}>{review.author}</h3>
                           <span>{review.date}</span>
                         </div>
                       </div>

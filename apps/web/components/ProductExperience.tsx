@@ -1251,9 +1251,10 @@ export function ProductExperience({
     ? [
         diameterMm !== null ? `Ø ${diameterMm}${outerDiameter === null ? "" : `/${outerDiameter}`} мм` : null,
         activeSku.length_mm !== null ? `L ${activeSku.length_mm} мм` : null,
-        steelGrade ? `сталь ${steelGrade}` : material,
-        wallThicknessMm ? `толщина ${compactDecimal(wallThicknessMm)} мм` : null,
-        outerSteelLabel ? `наружный кожух ${outerSteelLabel}` : null,
+        steelGrade ? `${outerDiameter !== null ? "внутренняя сталь" : "сталь"} ${steelGrade}` : material,
+        wallThicknessMm ? `${outerDiameter !== null ? "толщина внутренней трубы" : "толщина"} ${compactDecimal(wallThicknessMm)} мм` : null,
+        outerSteelLabel ? `наружная труба ${outerSteelLabel}` : null,
+        !outerSteelLabel && outerMaterial ? `наружная труба ${outerMaterial}${outerWallThicknessMm ? ` · ${compactDecimal(outerWallThicknessMm)} мм` : ""}` : null,
       ].filter((value): value is string => Boolean(value))
     : [];
 
@@ -1351,7 +1352,7 @@ export function ProductExperience({
                 </div>
               ) : null}
               {activeImage?.kind !== "scheme" && steelBadges.length > 0 ? (
-                <div className="product-image-badges" aria-label="Характеристики выбранного варианта">
+                <div className="product-image-badges" role="group" aria-label="Характеристики выбранного варианта">
                   {steelBadges.map((badge) => (
                     <span
                       className={`product-image-badge product-image-badge-${badge.tone}`}
@@ -1364,7 +1365,7 @@ export function ProductExperience({
               ) : null}
             </div>
             {media.length > 1 ? (
-              <div className="product-gallery-thumbs" aria-label="Галерея товара">
+              <div className="product-gallery-thumbs" role="group" aria-label="Галерея товара">
                 {media.map((item, index) => (
                   <button
                     className={`product-thumb${selectedImage === index ? " product-thumb-active" : ""}`}

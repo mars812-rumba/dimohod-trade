@@ -341,7 +341,7 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
   return (
     <>
       <div className={`${styles.showcase} ${visibleObjects.length === 1 ? styles.singleObject : ""}`}>
-        {visibleObjects.length > 1 ? <div className={styles.objectList} aria-label="Выбор объекта">
+        {visibleObjects.length > 1 ? <div className={styles.objectList} role="group" aria-label="Выбор объекта">
           {visibleObjects.map((workObject, index) => (
             <button
               aria-controls="home-work-stage"
@@ -425,7 +425,7 @@ export function HomeWorksShowcase({ objectIds }: { objectIds?: number[] } = {}) 
             </section>
           ) : null}
 
-          <div className={styles.photoStrip} aria-label={`Фотографии: ${activeLabel}`}>
+          <div className={styles.photoStrip} role="group" aria-label={`Фотографии: ${activeLabel}`}>
             {activeObject.photos.map((photo, index) => (
               <button
                 aria-label={`Показать фотографию ${index + 1}`}

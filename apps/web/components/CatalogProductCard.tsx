@@ -62,7 +62,7 @@ function decimalLabel(value: string | number) {
     : String(value).replace(".", ",");
 }
 
-function catalogSpecs(product: ProductListItem) {
+function catalogSpecs(product: ProductListItem, limit = 5) {
   const attributes = product.attributes;
   const diameter = product.diameter_mm
     ? product.outer_diameter_mm
@@ -103,7 +103,7 @@ function catalogSpecs(product: ProductListItem) {
   ]
     .filter((value): value is string => Boolean(value))
     .filter((value, index, values) => values.indexOf(value) === index)
-    .slice(0, 5);
+    .slice(0, limit);
 }
 
 export function CatalogProductCard({
@@ -153,6 +153,7 @@ export function CatalogProductCard({
         {steelBadges.length > 0 ? (
           <div
             className="product-image-badges catalog-product-image-badges"
+            role="group"
             aria-label="Характеристики варианта"
           >
             {steelBadges.map((badge) => (
@@ -233,7 +234,7 @@ export function CatalogProductCard({
             article: product.article ?? product.selected_sku,
             skuName: product.name,
             unitPriceRub: price,
-            characteristics: specs,
+            characteristics: catalogSpecs(product, 30),
             imageUrl,
           }}
         />

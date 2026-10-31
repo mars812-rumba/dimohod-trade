@@ -60,7 +60,7 @@ export function ProductGalleryPreview({
           </div>
         ) : null}
         {badges.length > 0 ? (
-          <div className="product-image-badges" aria-label="Характеристики выбранного варианта">
+          <div className="product-image-badges" role="group" aria-label="Характеристики выбранного варианта">
             {badges.map((badge) => (
               <span
                 className={`product-image-badge product-image-badge-${badge.tone}`}
@@ -74,7 +74,7 @@ export function ProductGalleryPreview({
       </div>
 
       {media.length > 1 ? (
-        <div className={styles.productPreviewThumbs} aria-label={`Галерея товара «${productName}»`}>
+        <div className={styles.productPreviewThumbs} role="group" aria-label={`Галерея товара «${productName}»`}>
           {media.map((item, index) => {
             const label = roleLabel(item.role, index);
             const active = index === selectedIndex;
