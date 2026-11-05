@@ -1536,15 +1536,18 @@ class ReleaseManager:
                 ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
                 self.project_root, timeout=30,
             )
-            excluded = sorted({path for path in inventory.split("\0") if path and is_protected_commit_path(path, self.config.protected_paths)})
-            add_args = ["git", "add", "-A", "--", ".", *[f":(exclude,literal){path}" for path in excluded]]
+            all_paths = sorted({path for path in inventory.split("\0") if path and not is_protected_commit_path(path, self.config.protected_paths)})
+            # Explicit literal paths avoid Git's ignored-directory error when
+            # legacy tracked caches coexist with .gitignore. Inventory covers
+            # the entire project, including tracked deletions and new files.
+            add_commands = [["git", "--literal-pathspecs", "add", "-A", "--", *all_paths[offset:offset + 200]] for offset in range(0, len(all_paths), 200)]
         else:
             if not target_paths:
                 if skip_if_empty:
                     return "Новых разрешённых изменений нет — commit пропущен."
                 raise RuntimeError("Нет разрешённых изменений для commit")
-            add_args = ["git", "add", "-A", "--", *target_paths]
-        add_output = run_host_command(add_args, self.project_root, timeout=60)
+            add_commands = [["git", "--literal-pathspecs", "add", "-A", "--", *target_paths]]
+        add_output = "\n".join(run_host_command(args, self.project_root, timeout=60) for args in add_commands)
         staged = self.staged_paths()
         if not staged:
             if skip_if_empty:

@@ -43,7 +43,11 @@ def main():
         raise SystemExit('Production configuration is missing; refusing a fresh/empty deployment.')
     lock = (RUNTIME/'private/deploy.lock').open('a')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    if subprocess.check_output(['git', 'status', '--porcelain'], cwd=SOURCE).strip():
+    sys.path.insert(0, str(SOURCE))
+    from tools.codex_telegram_bot.bot import is_protected_commit_path
+    changed = subprocess.check_output(['git', 'diff', '--name-only', '-z', 'HEAD'], cwd=SOURCE).decode().split('\0')
+    changed += subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard', '-z'], cwd=SOURCE).decode().split('\0')
+    if any(path and not is_protected_commit_path(path) for path in changed):
         raise SystemExit('Commit all source changes first: /push or /ship.')
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=SOURCE, text=True).strip()
     from dotenv import dotenv_values

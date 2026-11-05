@@ -312,10 +312,14 @@ class BotUtilitiesTest(unittest.TestCase):
                 subprocess.run(args, cwd=root, check=True, capture_output=True)
             (root / "deleted.txt").write_text("old")
             (root / "edited.txt").write_text("old")
+            (root / "graphify-out").mkdir()
+            (root / "graphify-out/cache.json").write_text("old cache")
             subprocess.run(["git", "add", "-A"], cwd=root, check=True)
             subprocess.run(["git", "commit", "-m", "Initial"], cwd=root, check=True, capture_output=True)
             (root / "deleted.txt").unlink()
             (root / "edited.txt").write_text("new")
+            (root / "graphify-out/cache.json").write_text("updated ignored cache")
+            (root / ".gitignore").write_text("graphify-out/\n")
             (root / "новый файл.txt").write_text("new")
             (root / "backend").mkdir()
             (root / "backend/.env.production").write_text("SECRET=test-only")
@@ -332,6 +336,7 @@ class BotUtilitiesTest(unittest.TestCase):
             for expected in ["D\tdeleted.txt", "M\tedited.txt", "A\tновый файл.txt", "A\t.env.example"]:
                 self.assertIn(expected, files)
             self.assertNotIn(".env.production", files)
+            self.assertNotIn("graphify-out", files)
 
     def test_publish_and_ship_include_all_changes_despite_task_scope(self) -> None:
         for kind in ["ship", "publish"]:
