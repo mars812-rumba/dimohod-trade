@@ -45,7 +45,8 @@ CONTEXT_HISTORY_ITEMS = 5
 CONTEXT_HISTORY_BUDGET = 12000
 PROJECT_INSTRUCTIONS = """Работай только над проектом Dimohod Trade в текущем каталоге.
 Перед изменениями прочитай docs/PRODUCTION_VPS.md, PROJECT_CONTEXT.md и NEXT_STEPS.md.
-Production работает нативно на этом VPS через systemd, PostgreSQL и storage хранятся отдельно от Git.
+Production работает нативно на отдельном VPS 168.113.191.165 через systemd.
+Этот VPS хранит рабочие исходники и Telegram-бота; PostgreSQL и storage находятся на production VPS.
 Не запускай старые Docker/Beget deploy-скрипты; штатный релиз — deploy/native-deploy.sh.
 Используй приложенный контекст Graphify как карту связей проекта, затем проверяй важные выводы
 по исходным файлам. Если нужно исследовать дополнительные связи, выполни graphify query.
