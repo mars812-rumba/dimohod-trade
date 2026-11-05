@@ -60,7 +60,7 @@ async def generate_seo_json(system_prompt: str, prompt: str, schema: dict[str, A
         text = "".join(block["text"] for block in body.get("content", []) if block.get("type") == "text")
         result = json.loads(text)
         if not isinstance(result, dict):
-            raise ValueError("Expected a JSON object")
+            raise TypeError("Expected a JSON object")
         # Enforce the contract locally as well as at the provider boundary.
         if set(result) != set(schema["required"]) or any(not isinstance(value, str) for value in result.values()):
             raise ValueError("Unexpected SEO fields")
