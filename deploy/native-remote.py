@@ -40,12 +40,25 @@ def main():
     ).strip()
     ssh = ['ssh', '-i', config['key'], '-o', 'IdentitiesOnly=yes',
            '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15']
+    deployed = subprocess.check_output(
+        [*ssh, config['host'], 'git -C /home/dimohod-recovery rev-parse HEAD'],
+        text=True,
+    ).strip()
+    if len(deployed) != 40 or any(char not in '0123456789abcdef' for char in deployed):
+        raise SystemExit('Invalid production source commit.')
     remote_bundle = str(RUNTIME / 'private/incoming-source.bundle')
     with tempfile.TemporaryDirectory(dir=RUNTIME / 'private') as folder:
         bundle = str(Path(folder) / 'source.bundle')
-        run(['git', 'bundle', 'create', bundle, 'HEAD'], cwd=SOURCE)
-        run(['rsync', '-a', '-e', shlex.join(ssh), bundle,
-             config['host'] + ':' + remote_bundle])
+        if deployed == commit:
+            remote_bundle = '-'
+        else:
+            revisions = ['HEAD']
+            if subprocess.run(['git', 'merge-base', '--is-ancestor', deployed, commit],
+                              check=False, cwd=SOURCE, capture_output=True).returncode == 0:
+                revisions.append('^' + deployed)
+            run(['git', 'bundle', 'create', bundle, *revisions], cwd=SOURCE)
+            run(['rsync', '-a', '-e', shlex.join(ssh), bundle,
+                 config['host'] + ':' + remote_bundle])
         # Fixed remote operations; all variable arguments are shell quoted.
         script = r'''
 import subprocess, sys
@@ -62,8 +75,9 @@ run(['git', 'diff', '--quiet', 'HEAD'], cwd=source)
 if subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard'],
                            cwd=source).strip():
     raise SystemExit('Unexpected untracked files in production source checkout.')
-run(['git', 'fetch', bundle, 'HEAD'], cwd=source)
-actual = subprocess.check_output(['git', 'rev-parse', 'FETCH_HEAD'],
+if bundle != '-':
+    run(['git', 'fetch', bundle, 'HEAD'], cwd=source)
+actual = subprocess.check_output(['git', 'rev-parse', 'FETCH_HEAD' if bundle != '-' else 'HEAD'],
                                   cwd=source, text=True).strip()
 if actual != commit:
     raise SystemExit('Transferred commit does not match requested release.')
@@ -74,7 +88,8 @@ run(['journalctl', '-u', 'dimohod-deploy.service', '--since', started,
      '-o', 'cat', '--no-pager', '-n', '40'])
 if result.returncode:
     raise SystemExit(result.returncode)
-Path(bundle).unlink(missing_ok=True)
+if bundle != '-':
+    Path(bundle).unlink(missing_ok=True)
 '''
         command = shlex.join(['python3', '-c', script, remote_bundle, commit])
         run([*ssh, config['host'], command])
