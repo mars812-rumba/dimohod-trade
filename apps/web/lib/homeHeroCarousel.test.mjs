@@ -42,12 +42,11 @@ test("mobile and desktop share slide rotation and swipes, respecting reduced mot
   assert.match(componentSource, /showSlide\(activeIndex \+ \(delta < 0 \? 1 : -1\)\)/);
 });
 
-test("hero omits the visible disclosure badge and anchors the offer to its former top line", () => {
+test("hero omits the disclosure badge and retains responsive offer spacing", () => {
   assert.doesNotMatch(componentSource, /styles\.renderDisclosure/);
   assert.doesNotMatch(stylesSource, /\.renderDisclosure/);
-  assert.match(stylesSource, /padding: 16px 0 64px;/);
-  assert.match(stylesSource, /padding: 12px 0 calc\(18px \+ env\(safe-area-inset-bottom\)\)/);
-  assert.match(stylesSource, /align-items: flex-start;/);
+  assert.match(stylesSource, /padding: clamp\(64px, 9vh, 96px\) 0;/);
+  assert.match(stylesSource, /padding: 48px 0 calc\(18px \+ env\(safe-area-inset-bottom\)\)/);
   assert.match(componentSource, /alt=\{`Концептуальная визуализация:/);
 });
 

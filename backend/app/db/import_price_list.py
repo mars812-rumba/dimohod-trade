@@ -20,8 +20,7 @@ from app.db.catalog_item_rules import (
 from app.db.session import AsyncSessionLocal
 from app.db.steel_selection_profiles import with_steel_selection_profile
 from app.modules.catalog.models import Category
-from app.modules.products.models import NeedsReview, Product, SKU
-
+from app.modules.products.models import SKU, NeedsReview, Product
 
 SOURCE_NAME = "Дымоход Трейд price_list.json"
 BRAND = "Дымоход Трейд"
@@ -136,7 +135,9 @@ def parse_section(titles: list[str]) -> SectionSpec:
 
     inner_title = next((t for t in clean_titles if "внутрен" in t.lower()), title)
     outer_title = next((t for t in clean_titles if "наруж" in t.lower()), None)
-    insulation_title = next((t for t in clean_titles if "изоляц" in t.lower()), None)
+    # A single-wall heading says "Труба без изоляции"; that is not an
+    # insulation specification. Only the dedicated insulation heading counts.
+    insulation_title = next((t for t in clean_titles if re.match(r"^изоляци[яи]\b", t, re.IGNORECASE)), None)
 
     material, steel_grade, wall_thickness_mm = parse_material_part(inner_title)
     outer_material = outer_steel_grade = None
@@ -623,6 +624,18 @@ async def import_price_list(path: Path, sheet_name: str) -> dict[str, Any]:
                             stats["products_updated"] += 1
 
                         sku = await session.scalar(select(SKU).where(SKU.article == article))
+                        collision = await session.scalar(select(SKU.id).where(
+                            SKU.product_id == product.id,
+                            SKU.slug == variant_slug,
+                            SKU.article != article,
+                        ))
+                        if collision:
+                            # Distinct price rows can normalize to the same execution.
+                            # Preserve both source articles and prices, as the historical
+                            # damper migration does, rather than silently merging them.
+                            suffix = slugify(article)
+                            variant_slug = f"{variant_slug[:220-len(suffix)-1]}-{suffix}"
+                            stats["variant_slug_collisions_preserved"] += 1
                         sku_attributes = {
                             "diameter_mm": diameter_mm,
                             "outer_diameter_mm": outer_diameter_mm,

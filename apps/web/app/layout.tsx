@@ -51,6 +51,11 @@ export default function RootLayout({
       </Script>
       <body>
         <SiteHeader />
+        {process.env.NEXT_PUBLIC_CATALOG_RECOVERY_NOTICE ? (
+          <aside style={{ padding: "12px 20px", background: "#fff3cd", color: "#664d03", textAlign: "center" }}>
+            {process.env.NEXT_PUBLIC_CATALOG_RECOVERY_NOTICE}
+          </aside>
+        ) : null}
         {children}
         <SiteFooter />
         <YandexMetrika />

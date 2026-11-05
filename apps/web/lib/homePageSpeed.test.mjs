@@ -15,9 +15,8 @@ test("hero preloads one shared first slide without downloading mobile video or i
 test("phone screenshots use responsive optimization and MAX uses its small derivative", async () => {
   assert.doesNotMatch(await source("../components/PhoneMockup3D.tsx"), /\bunoptimized\b/);
   assert.match(await source("../components/MaxContactLink.tsx"), /max-52\.webp/);
-  const original = await stat(new URL("../public/brand/max.webp", import.meta.url));
   const optimized = await stat(new URL("../public/brand/max-52.webp", import.meta.url));
-  assert.ok(optimized.size < original.size / 2);
+  assert.ok(optimized.size < 4096, "the actually rendered 52px icon should remain lightweight");
 });
 
 test("image quality allowlist preserves existing public page requests", async () => {

@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (request.cookies.has(adminCookie)) return NextResponse.next();
-  const loginUrl = new URL("/admin/login", request.url);
+  const loginUrl = new URL("/admin/login", process.env.NEXT_PUBLIC_APP_URL || request.url);
   loginUrl.searchParams.set("next", request.nextUrl.pathname);
   return NextResponse.redirect(loginUrl);
 }

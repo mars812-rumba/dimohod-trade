@@ -1,5 +1,26 @@
 import type { Product, SKU } from "./api";
 
+export function estimatePickerVariants(
+  product: Product | null,
+  picker: { diameter: number | null; outer: number | null } | null,
+): SKU[] {
+  if (!product) return [];
+  if (!picker || picker.diameter === null) return product.skus;
+  if (isDiameterClampProduct(product)) {
+    return product.skus.filter(sku => sku.diameter_mm === (picker.outer ?? picker.diameter));
+  }
+  return product.skus.filter(sku => {
+    const minimum = dimension(sku.attributes.diameter_min_mm as number | string | null);
+    const maximum = dimension(sku.attributes.diameter_max_mm as number | string | null);
+    if (minimum !== null && maximum !== null) {
+      const required = picker.outer ?? picker.diameter!;
+      return minimum <= required && required <= maximum;
+    }
+    return (sku.diameter_mm === null || sku.diameter_mm === picker.diameter)
+      && (picker.outer === null || sku.outer_diameter_mm === null || sku.outer_diameter_mm === picker.outer);
+  });
+}
+
 export function isDiameterClampProduct(product: Pick<Product, "slug">): boolean {
   return ["odnostennyi-krepezh-homut-shirokii", "odnostennyi-krepezh-homut-silovoi"].includes(product.slug);
 }

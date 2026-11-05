@@ -19,7 +19,16 @@ coverage/
 *.tsbuildinfo
 
 *.pyc
+*.egg-info/
 *.log
 .codex-telegram/
 graphify-out/
 .DS_Store
+
+# Live CRM, credentials and PostgreSQL backups are never repository content.
+/storage/leads/
+/storage/customers/
+*.dump
+*.backup
+*.pem
+*.key

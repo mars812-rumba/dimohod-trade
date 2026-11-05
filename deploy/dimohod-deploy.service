@@ -1,0 +1,17 @@
+[Unit]
+Description=Deploy committed Dimohod release on this VPS
+After=network-online.target dimohod-postgres.service
+Requires=dimohod-postgres.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/dimohod-recovery
+ExecStart=/home/dimohod-production-runtime/venv/bin/python /home/dimohod-recovery/deploy/native-production.py
+TimeoutStartSec=1200
+Environment=PATH=/home/dimohod-production-runtime/node/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+UMask=0022
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/dimohod-production /home/dimohod-production-runtime /etc/systemd/system/dimohod-api.service /etc/systemd/system/dimohod-web.service

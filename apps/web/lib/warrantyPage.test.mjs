@@ -43,7 +43,7 @@ test("desktop navigation follows the requested order and calculator treatment", 
     assert.ok(next > position, `${label} must follow the previous navigation item`);
     position = next;
   }
-  assert.match(header, /header-configurator" href="\/raschet"[\s\S]*<span>Калькулятор<\/span>/u);
+  assert.match(header, /header-configurator" href="\/raschet">\s*Расчёт\s*<\/Link>/u);
   assert.match(styles + readFileSync(new URL("../app/globals.css", import.meta.url), "utf8"), /\.header-configurator[\s\S]*background: #ed5b2a;/u);
 });
 

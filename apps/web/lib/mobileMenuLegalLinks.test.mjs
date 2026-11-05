@@ -6,7 +6,7 @@ const header = readFileSync(new URL("../components/SiteHeader.tsx", import.meta.
 const styles = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
 
 test("mobile legal links use the same typography as category submenu links", () => {
-  assert.match(header, /className="mobile-menu-legal" aria-label="Правовые документы"/);
+  assert.match(header, /className="mobile-menu-legal"[^>]*aria-label="Правовые документы"/);
   assert.match(
     header,
     /mobile-menu-legal[\s\S]*privacyPolicyPath[\s\S]*personalDataConsentPath[\s\S]*userAgreementPath/,

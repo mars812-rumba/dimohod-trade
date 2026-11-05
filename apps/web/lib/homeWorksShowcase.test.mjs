@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import test from "node:test";
+import ts from "typescript";
 
 const source = readFileSync(new URL("../components/HomeWorksShowcase.tsx", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../components/HomeWorksShowcase.module.css", import.meta.url), "utf8");
@@ -24,28 +25,46 @@ test("Zvezda case comes first, includes four WebP photos and excludes the client
   }
 });
 
-test("Lampovo case has five WebP photographs and the owner's six-item cost breakdown", () => {
+test("unpublished Lampovo case retains the owner's six-item cost breakdown until its photos return", () => {
   const block = source.slice(source.indexOf("id: 10,"), source.indexOf("id: 1,"));
   assert.match(block, /Лампово/);
   assert.match(block, /Dacha 2 с конфорками/);
   assert.match(block, /без изоляции между внутренним и наружным контурами/);
   assert.match(block, /Astonit на стенах: 9×800×1200 мм/);
   assert.match(block, /213 880 ₽/);
+  assert.match(block, /published: false/);
   const values = [...block.matchAll(/value: "([\d ]+) ₽"/g)].map(match => Number(match[1].replaceAll(" ", "")));
   assert.deepEqual(values, [66000, 94380, 36500, 5500, 6000, 5500, 213880]);
   assert.equal(values.slice(0, -1).reduce((sum, value) => sum + value, 0), values.at(-1));
   for (let index = 1; index <= 5; index += 1) {
-    const path = new URL(`../public/images/works/object-10/0${index}.webp`, import.meta.url);
-    const image = readFileSync(path);
-    assert.equal(image.toString("ascii", 0, 4), "RIFF");
-    assert.equal(image.toString("ascii", 8, 12), "WEBP");
-    assert.ok(statSync(path).size < 200000);
     assert.match(block, new RegExp(`object-10\\/0${index}\\.webp`));
   }
   const home = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
   const landing = readFileSync(new URL("../components/HomeScenarioLanding.tsx", import.meta.url), "utf8");
   assert.match(home, /<HomeWorksShowcase \/>/);
   assert.match(landing, /<HomeWorksShowcase objectIds=\{\[11, 10, 1\]\} \/>/);
+});
+
+test("every published project's gallery and cover exist in the restored checkout", () => {
+  const ast = ts.createSourceFile("works.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let initializer;
+  for (const statement of ast.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    const declaration = statement.declarationList.declarations.find(item => item.name.getText(ast) === "workObjects");
+    if (declaration) initializer = declaration.initializer.getText(ast);
+  }
+  assert.ok(initializer);
+  const objects = new Function(`return (${initializer});`)();
+  const published = objects.filter(item => item.published !== false);
+  assert.ok(published.length > 0);
+  for (const object of published) {
+    assert.ok(object.photos.length > 0);
+    for (const path of new Set([...object.photos.map(photo => photo.src), object.coverPhoto].filter(Boolean))) {
+      const image = readFileSync(new URL(`../public${path}`, import.meta.url));
+      assert.equal(image.toString("ascii", 0, 4), "RIFF", path);
+      assert.equal(image.toString("ascii", 8, 12), "WEBP", path);
+    }
+  }
 });
 
 test("completed object 1 shows the confirmed project details and separate prices", () => {

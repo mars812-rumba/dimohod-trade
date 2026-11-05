@@ -136,6 +136,22 @@ def upgrade() -> None:
         return
 
     cleanout_id = source["id"]
+    existing_skirt = bind.execute(
+        sa.select(products.c.id).where(products.c.slug == "dekorativnaya-yubka")
+    ).scalar_one_or_none()
+    # Current price import already splits this owner-confirmed shared row.
+    # Do not create a second skirt family when replaying historical migrations.
+    if existing_skirt is not None and (source["extra_attributes"] or {}).get("owner_confirmed_price_row_split"):
+        cleanout_articles = list(bind.execute(
+            sa.select(skus.c.article).where(skus.c.product_id == cleanout_id)
+        ).scalars())
+        skirt_articles = list(bind.execute(
+            sa.select(skus.c.article).where(skus.c.product_id == existing_skirt)
+        ).scalars())
+        if (cleanout_articles and skirt_articles
+                and all("-CLEANOUT-" in article for article in cleanout_articles)
+                and all("-SKIRT-" in article for article in skirt_articles)):
+            return
     skirt_id = uuid.uuid5(SEED_NAMESPACE, "product:dekorativnaya-yubka")
     source_attributes = dict(source["extra_attributes"] or {})
     common_attributes = {

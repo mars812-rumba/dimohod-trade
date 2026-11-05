@@ -3,6 +3,11 @@ type DiameterVariant = {
   outer_diameter_mm: number | null;
 };
 
+export function normalizeProductParameterSpacing(value: string): string {
+  return value.replace(/(\d)\s*([×xх/])\s*(?=\d)/gu, "$1$2")
+    .replace(/(\d)\s*мм(?![а-яё])/giu, "$1 мм");
+}
+
 const DIAMETER_TEMPLATE_PATTERN = /\{(?:d|D|diameter|dimensions)\}/;
 
 function escapeRegExp(value: string) {

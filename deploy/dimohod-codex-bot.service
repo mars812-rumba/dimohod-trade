@@ -1,25 +1,29 @@
 [Unit]
-Description=Dimohod Trade Telegram Codex Bot
+Description=Telegram Codex gateway for Dimohod Trade
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/dimohod-trade
+WorkingDirectory=/home/codex-bot
+EnvironmentFile=/home/codex-bot/.env
+Environment=PYTHONUNBUFFERED=1
+Environment=DIMOHOD_GIT_BRANCH=recovery/catalog-without-old-db
+Environment=DIMOHOD_REMOTE_DEPLOY_HOST=
+Environment=PATH=/home/dimohod-production-runtime/node/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=CODEX_BOT_PROJECT_ROOT=/home/dimohod-recovery
+Environment=CODEX_BOT_CODEX_BINARY=/home/codex-bot/tools/codex_telegram_bot/codex-launcher.sh
+ExecStartPre=/usr/bin/python3 /home/codex-bot/check-config.py
 ExecStart=/usr/bin/python3 -m tools.codex_telegram_bot.bot
 Restart=on-failure
-RestartSec=5
-Environment=PYTHONUNBUFFERED=1
-Environment=CODEX_BOT_CODEX_BINARY=/home/dimohod-trade/tools/codex_telegram_bot/codex-launcher.sh
-
-# Codex needs its state/workspace; release commands need the Docker socket and
-# Docker/Buildx client state. The Docker daemon itself remains a separate service.
+RestartSec=10
+UMask=0077
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/dimohod-trade /home/sunny-rentals /home/irma /root/.codex /root/.docker /run/docker.sock /var/run/docker.sock
+ReadWritePaths=/home/codex-bot /home/dimohod-trade /home/dimohod-recovery /root/.codex /home/sunny-rentals
 PrivateDevices=true
 RestrictSUIDSGID=true
 LockPersonality=true

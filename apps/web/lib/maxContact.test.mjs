@@ -18,7 +18,8 @@ test("MAX is shared across header, menu and footer without replacing the phone",
   assert.match(read("./contactLinks.ts"), /https:\/\/max\.ru\/u\//);
   assert.match(read("./contactLinks.ts"), /https:\/\/max\.ru\/u\/f9LHodD0cOLL-zx1WLCq7_cpSLk9YTT8zYJhuQXqaIgrVW1kwJHHLdcpip4/);
   assert.doesNotMatch(read("./contactLinks.ts"), /f9LHodD0cOJc3LO8G1W3M0ukVh2gb0rJysvwEKyxI_ZqTse5JSqpEZCrm8I/);
-  const asset = fs.readFileSync(new URL("../public/brand/max.webp", import.meta.url));
+  assert.match(link, /\/brand\/max-52\.webp/);
+  const asset = fs.readFileSync(new URL("../public/brand/max-52.webp", import.meta.url));
   assert.equal(asset.toString("ascii", 0, 4), "RIFF");
   assert.equal(asset.toString("ascii", 8, 12), "WEBP");
 });

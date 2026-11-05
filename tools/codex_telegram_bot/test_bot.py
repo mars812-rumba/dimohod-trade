@@ -63,7 +63,7 @@ class BotUtilitiesTest(unittest.TestCase):
         config = build_project_configs(Path("/tmp/dimohod-test"))["dimohod"]
         self.assertEqual(
             config.deploy_commands,
-            (("bash", "deploy/local-deploy.sh"),),
+            (("bash", "deploy/native-deploy.sh"),),
         )
 
     def test_discovers_numbered_openai_keys_in_order(self) -> None:
@@ -140,7 +140,12 @@ class BotUtilitiesTest(unittest.TestCase):
 
     def test_release_protected_paths(self) -> None:
         self.assertTrue(is_protected_commit_path(".env"))
-        self.assertTrue(is_protected_commit_path("./prices/50mm.json"))
+        self.assertFalse(is_protected_commit_path("./prices/50mm.json"))
+        self.assertTrue(is_protected_commit_path("backend/.env.production"))
+        self.assertTrue(is_protected_commit_path("storage/leads/client.json"))
+        self.assertTrue(is_protected_commit_path("storage/customers/client.json"))
+        self.assertTrue(is_protected_commit_path("private/database.dump"))
+        self.assertFalse(is_protected_commit_path(".env.example"))
         self.assertTrue(is_protected_commit_path(".codex-telegram/state.json"))
         self.assertFalse(is_protected_commit_path("apps/web/app/page.tsx"))
 
@@ -216,7 +221,7 @@ class BotUtilitiesTest(unittest.TestCase):
         )
         self.assertEqual(
             allowed_changed_paths(status),
-            ["apps/web/app/page.tsx", "storage/catalog/new.png"],
+            ["apps/web/app/page.tsx", "prices/50mm.json", "backend/configurator/chimney-configurator-png.html", "storage/catalog/new.png"],
         )
 
     def test_commit_message_comes_from_prompt(self) -> None:
@@ -298,6 +303,42 @@ class BotUtilitiesTest(unittest.TestCase):
                 check=True,
             ).stdout.splitlines()
             self.assertEqual(committed, ["created.txt"])
+
+    def test_push_commits_all_changes_and_excludes_nested_secrets(self) -> None:
+        from tools.codex_telegram_bot.bot import run_host_command as actual_command
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            for args in (["git", "init", "-b", "main"], ["git", "config", "user.email", "test@example.test"], ["git", "config", "user.name", "Test User"]):
+                subprocess.run(args, cwd=root, check=True, capture_output=True)
+            (root / "deleted.txt").write_text("old")
+            (root / "edited.txt").write_text("old")
+            subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-m", "Initial"], cwd=root, check=True, capture_output=True)
+            (root / "deleted.txt").unlink()
+            (root / "edited.txt").write_text("new")
+            (root / "новый файл.txt").write_text("new")
+            (root / "backend").mkdir()
+            (root / "backend/.env.production").write_text("SECRET=test-only")
+            (root / ".env.example").write_text("API_KEY=")
+            config = replace(build_project_configs(root)["dimohod"], branch="main")
+            manager = ReleaseManager(root, config=config)
+            def command(args, cwd, timeout=1200):
+                if args[:2] == ["git", "push"]:
+                    return "pushed"
+                return actual_command(args, cwd, timeout)
+            with patch("tools.codex_telegram_bot.bot.run_host_command", side_effect=command):
+                self.assertIn("pushed", manager.push())
+            files = subprocess.check_output(["git", "-c", "core.quotePath=false", "show", "--pretty=", "--name-status", "HEAD"], cwd=root, text=True)
+            for expected in ["D\tdeleted.txt", "M\tedited.txt", "A\tновый файл.txt", "A\t.env.example"]:
+                self.assertIn(expected, files)
+            self.assertNotIn(".env.production", files)
+
+    def test_publish_and_ship_include_all_changes_despite_task_scope(self) -> None:
+        for kind in ["ship", "publish"]:
+            manager = ReleaseManager(Path("."))
+            with patch.object(manager, "test", return_value="ok"), patch.object(manager, "commit", return_value="ok") as commit, patch.object(manager, "push", return_value="ok"), patch.object(manager, "deploy", return_value="ok"):
+                manager.execute(PendingAction(kind, "Save all changes", paths=("only-one-file.txt",)))
+                commit.assert_called_once_with("Save all changes", skip_if_empty=True)
 
     def test_remote_deploy_syncs_code_storage_and_runs_fixed_script(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

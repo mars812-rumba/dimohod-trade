@@ -57,6 +57,9 @@ const workObjects: WorkObject[] = [
   },
   {
     id: 10,
+    // All five original photos are absent from Git. Keep the owner's case data
+    // but do not publish a gallery with broken image URLs during recovery.
+    published: false,
     scenario: "Дымоход для дома · Лампово",
     coverPhoto: "/images/works/object-10/05.webp",
     // Description and six separate cost items supplied by the owner on 05.10.2026.

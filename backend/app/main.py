@@ -17,7 +17,7 @@ class PublicMediaFiles(StaticFiles):
     """Serve catalog media without exposing private lead attachments."""
 
     async def get_response(self, path: str, scope: dict) -> Response:
-        if path == "leads" or path.startswith("leads/"):
+        if path.split("/", 1)[0] in {"leads", "customers"}:
             return Response(status_code=404)
         return await super().get_response(path, scope)
 

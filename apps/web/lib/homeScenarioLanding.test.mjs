@@ -20,7 +20,7 @@ test("home scenario uses the dedicated advertising landing", () => {
 });
 
 test("landing offers a complete calculation and an alternative lead path", () => {
-  assert.match(landingSource, /Ориентировочная стоимость/);
+  assert.match(landingSource, /Стоимость, состав и схема/);
   assert.match(landingSource, /Товарный состав/);
   assert.match(landingSource, /Не знаете параметры\? Поможем подобрать/);
   assert.match(landingSource, /source="solution-dom-help"/);
@@ -30,10 +30,10 @@ test("landing offers a complete calculation and an alternative lead path", () =>
   assert.match(quickEstimateSource, /fixedObjectType\?: QuickEstimateObject/);
 });
 
-test("landing shows reusable company advantages, warranty and current certificates", () => {
+test("landing shows reusable company advantages, order review and current certificates", () => {
   assert.match(landingSource, /SolutionTrustSections/);
   assert.match(trustSource, /Собственное производство/);
-  assert.match(trustSource, /Гарантия от 5 лет/);
+  assert.match(trustSource, /Проверка перед заказом/);
   assert.match(trustSource, /Доставка по России/);
   assert.match(trustSource, /корректного подбора, монтажа и условий/);
   assert.match(trustData, /действует до 30\.06\.2028/);

@@ -44,7 +44,9 @@ TEXT_MESSAGE_SETTLE_SECONDS = 2.5
 CONTEXT_HISTORY_ITEMS = 5
 CONTEXT_HISTORY_BUDGET = 12000
 PROJECT_INSTRUCTIONS = """Работай только над проектом Dimohod Trade в текущем каталоге.
-Перед изменениями прочитай PROJECT_CONTEXT.md и NEXT_STEPS.md.
+Перед изменениями прочитай docs/PRODUCTION_VPS.md, PROJECT_CONTEXT.md и NEXT_STEPS.md.
+Production работает нативно на этом VPS через systemd, PostgreSQL и storage хранятся отдельно от Git.
+Не запускай старые Docker/Beget deploy-скрипты; штатный релиз — deploy/native-deploy.sh.
 Используй приложенный контекст Graphify как карту связей проекта, затем проверяй важные выводы
 по исходным файлам. Если нужно исследовать дополнительные связи, выполни graphify query.
 Сохраняй существующие пользовательские незакоммиченные изменения. Не изменяй prices/ и
@@ -95,14 +97,14 @@ Git commit/push и production deploy выполняются отдельными
 Запрос пользователя из Telegram:
 """
 
-DEPLOY_BRANCH = "ui/replit-port"
+DEPLOY_BRANCH = os.getenv("DIMOHOD_GIT_BRANCH", "ui/replit-port")
 PENDING_ACTION_TTL_SECONDS = 300
 PROTECTED_COMMIT_PATHS = (
-    "prices/",
-    "backend/configurator/chimney-configurator-png.html",
     ".codex-telegram/",
     ".env",
     "graphify-out/",
+    "storage/leads/",
+    "storage/customers/",
 )
 
 
@@ -156,17 +158,12 @@ def build_project_configs(dimohod_root: Path) -> dict[str, ProjectConfig]:
             branch=DEPLOY_BRANCH,
             instructions=PROJECT_INSTRUCTIONS,
             protected_paths=PROTECTED_COMMIT_PATHS,
-            test_commands=(
-                ("docker", "compose", "exec", "-T", "backend", "pytest", "-q"),
-                ("npm", "run", "build:web"),
-            ),
-            deploy_commands=(
-                ("bash", "deploy/local-deploy.sh"),
-            ),
+            test_commands=(("bash", "deploy/native-check.sh"),),
+            deploy_commands=(("bash", "deploy/native-deploy.sh"),),
             sandbox_mode="danger-full-access",
             approval_policy="on-request",
             remote_deploy_host=(
-                os.getenv("DIMOHOD_REMOTE_DEPLOY_HOST", "deploy@217.114.10.254").strip()
+                os.getenv("DIMOHOD_REMOTE_DEPLOY_HOST", "").strip()
                 or None
             ),
             remote_deploy_root=(
@@ -1161,7 +1158,7 @@ HELP_TEXT = """Я управляю Codex в проектах Dimohod Trade и Su
 /image описание — сгенерировать изображение и прислать в чат
 /commit сообщение — подготовить commit изменений
 /publish сообщение — тесты → commit → push
-/push — подготовить push текущей ветки
+/push — git add -A → commit всех изменений → push
 /deploy — подготовить production deploy активного проекта
 /ship сообщение — тесты → commit → push → deploy
 /confirm — подтвердить подготовленное действие
@@ -1181,9 +1178,17 @@ def is_protected_commit_path(
     normalized = path.strip().replace("\\", "/")
     while normalized.startswith("./"):
         normalized = normalized[2:]
+    parts = Path(normalized).parts
+    if any(part in {".ssh", ".venv", "node_modules", "pgdata", "backups"} for part in parts):
+        return True
+    name = parts[-1] if parts else ""
+    if (name == ".env" or name.startswith(".env.")) and name not in {".env.example", ".env.sample"}:
+        return True
+    if name in {"auth.json", "credentials.json", "creds.json", "id_ed25519", "id_rsa"} or name.endswith((".pem", ".key", ".dump", ".backup")):
+        return True
     return any(
-        normalized == protected.rstrip("/") or normalized.startswith(protected)
-        for protected in protected_paths
+        normalized == protected.rstrip("/") or (protected.endswith("/") and normalized.startswith(protected))
+        for protected in protected_paths if protected != ".env"
     )
 
 
@@ -1524,15 +1529,22 @@ class ReleaseManager:
                     "В Git index уже есть посторонние изменения; безопасный commit остановлен:\n"
                     + "\n".join(unrelated_staged)
                 )
-        if not target_paths:
-            if skip_if_empty:
-                return "Новых разрешённых изменений нет — commit пропущен."
-            raise RuntimeError("Нет разрешённых изменений для commit")
-        add_output = run_host_command(
-            ["git", "add", "-A", "--", *target_paths],
-            self.project_root,
-            timeout=60,
-        )
+        if paths is None:
+            # Stage additions, modifications, renames and deletions across the
+            # entire project, excluding credentials and live runtime data.
+            inventory = run_host_command(
+                ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+                self.project_root, timeout=30,
+            )
+            excluded = sorted({path for path in inventory.split("\0") if path and is_protected_commit_path(path, self.config.protected_paths)})
+            add_args = ["git", "add", "-A", "--", ".", *[f":(exclude,literal){path}" for path in excluded]]
+        else:
+            if not target_paths:
+                if skip_if_empty:
+                    return "Новых разрешённых изменений нет — commit пропущен."
+                raise RuntimeError("Нет разрешённых изменений для commit")
+            add_args = ["git", "add", "-A", "--", *target_paths]
+        add_output = run_host_command(add_args, self.project_root, timeout=60)
         staged = self.staged_paths()
         if not staged:
             if skip_if_empty:
@@ -1553,11 +1565,14 @@ class ReleaseManager:
 
     def push(self) -> str:
         self.assert_branch()
-        return run_host_command(
-            ["git", "push", "origin", f"HEAD:refs/heads/{self.branch}"],
+        commit = self.commit(f"Update {self.config.key} via Telegram", skip_if_empty=True)
+        pushed = run_host_command(
+            ["git", "push", "--set-upstream", "origin", f"HEAD:refs/heads/{self.branch}"],
             self.project_root,
             timeout=300,
         )
+        return f"{commit}\n{pushed}"
+
 
     def test(self) -> str:
         outputs = []
@@ -1659,13 +1674,7 @@ class ReleaseManager:
                 return self.deploy()
             if action.kind == "ship":
                 tests = self.test()
-                commit = (
-                    self.commit(action.argument, skip_if_empty=True)
-                    if action.paths is None
-                    else self.commit(
-                        action.argument, skip_if_empty=True, paths=action.paths
-                    )
-                )
+                commit = self.commit(action.argument, skip_if_empty=True)
                 push = self.push()
                 has_repeated_deploy_command = any(
                     command in self.config.test_commands
@@ -1674,7 +1683,7 @@ class ReleaseManager:
                 deploy = (
                     self.deploy(
                         skip_tested_commands=True,
-                        paths=action.paths,
+                        paths=None,
                     )
                     if has_repeated_deploy_command
                     else self.deploy()
@@ -1685,13 +1694,7 @@ class ReleaseManager:
                 )
             if action.kind == "publish":
                 tests = self.test()
-                commit = (
-                    self.commit(action.argument, skip_if_empty=True)
-                    if action.paths is None
-                    else self.commit(
-                        action.argument, skip_if_empty=True, paths=action.paths
-                    )
-                )
+                commit = self.commit(action.argument, skip_if_empty=True)
                 push = self.push()
                 return f"Тесты:\n{tests}\n\nCommit:\n{commit}\n\nPush:\n{push}"
             raise RuntimeError(f"Неизвестное действие: {action.kind}")
@@ -1812,7 +1815,7 @@ class BotApplication:
         )
         running = "да" if self.runner.is_running(chat_id) else "нет"
         release_running = "да" if release.is_running() else "нет"
-        env_path = project.root / ".env"
+        env_path = Path(__file__).resolve().parents[2] / ".env"
         voice_status = (
             f"включены, модель {self.transcribe_model}, {self.selected_openai_key_label(chat_id)}"
             if self.openai_keys
@@ -1875,10 +1878,10 @@ class BotApplication:
             return
         descriptions = {
             "commit": f"создать commit «{action.argument}»",
-            "push": f"push HEAD → origin/{project.branch}",
+            "push": f"git add -A, commit всех изменений проекта и push → origin/{project.branch}",
             "deploy": (
                 "пересобрать и перезапустить production"
-                if project.key == "sunny"
+                if project.key in {"sunny", "dimohod"}
                 else "пересобрать и перезапустить Docker-сервисы backend + web"
             ),
             "publish": (
@@ -1891,7 +1894,7 @@ class BotApplication:
         }
         protected = "\n".join(f"• {path}" for path in project.protected_paths)
         scoped = ""
-        if paths is not None:
+        if paths is not None and kind == "commit":
             scoped = (
                 "\nВ commit войдут только файлы этого запроса:\n"
                 + "\n".join(f"• {path}" for path in paths[:20])
@@ -1959,7 +1962,7 @@ class BotApplication:
         labels = {
             "commit": "Создаю commit",
             "push": "Отправляю изменения в GitHub",
-            "deploy": "Выполняю Docker deploy",
+            "deploy": "Выполняю production deploy",
             "publish": "Запускаю тесты, commit и push",
             "ship": "Запускаю полный release pipeline",
         }
@@ -2767,7 +2770,9 @@ def main() -> int:
     )
     codex_binary = os.getenv("CODEX_BOT_CODEX_BINARY", "codex")
     api = TelegramAPI(token)
-    projects = build_project_configs(project_root)
+    project_workspace = Path(os.environ["CODEX_BOT_PROJECT_ROOT"]).resolve()
+    all_projects = build_project_configs(project_workspace)
+    projects = {key: all_projects[key] for key in ("dimohod", "sunny")}
     runner = CodexRunner(project_root, codex_binary, state, projects)
     app = BotApplication(
         api,
