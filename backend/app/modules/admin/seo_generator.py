@@ -19,8 +19,10 @@ def upstream_error(response: httpx.Response) -> HTTPException:
         message = ""
     if "credit balance" in message:
         return HTTPException(503, "На счёте Anthropic недостаточно API-кредитов. Пополните баланс Anthropic.")
-    if response.status_code in {401, 403}:
+    if response.status_code == 401:
         return HTTPException(503, "Anthropic отклонил авторизацию. Проверьте ANTHROPIC_API_KEY на сервере.")
+    if response.status_code == 403:
+        return HTTPException(503, "Anthropic запретил запрос с сервера. Проверьте доступ к API и ограничения провайдера.")
     if response.status_code == 404:
         return HTTPException(503, "Модель Anthropic недоступна. Проверьте ANTHROPIC_SEO_MODEL на сервере.")
     if response.status_code == 429:
@@ -41,7 +43,7 @@ async def generate_seo_json(system_prompt: str, prompt: str, schema: dict[str, A
         "output_config": {"format": {"type": "json_schema", "schema": schema}},
     }
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=60.0, proxy=settings.anthropic_proxy_url, trust_env=False) as client:
             response = await client.post(
                 ANTHROPIC_MESSAGES_URL,
                 headers={"x-api-key": settings.anthropic_api_key, "anthropic-version": "2023-06-01"},

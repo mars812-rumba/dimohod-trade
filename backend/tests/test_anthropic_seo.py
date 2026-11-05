@@ -15,8 +15,15 @@ def client_factory(monkeypatch):
     original = httpx.AsyncClient
     monkeypatch.setattr(seo_generator.settings, "anthropic_api_key", "test-key-not-real")
     monkeypatch.setattr(seo_generator.settings, "openai_api_key", None)
+    monkeypatch.setattr(seo_generator.settings, "anthropic_proxy_url", None)
     def install(handler):
-        monkeypatch.setattr(seo_generator.httpx, "AsyncClient", lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs))
+        options = {}
+        def factory(**kwargs):
+            options.update(kwargs)
+            kwargs.pop("proxy", None)
+            return original(transport=httpx.MockTransport(handler), **kwargs)
+        monkeypatch.setattr(seo_generator.httpx, "AsyncClient", factory)
+        return options
     return install
 
 
@@ -41,7 +48,7 @@ async def test_anthropic_request_uses_schema_and_works_without_openai(client_fac
 @pytest.mark.parametrize("upstream,message,expected,fragment", [
     (400, "Your credit balance is too low", 503, "API-кредитов"),
     (401, "private upstream detail", 503, "ANTHROPIC_API_KEY"),
-    (403, "private upstream detail", 503, "ANTHROPIC_API_KEY"),
+    (403, "private upstream detail", 503, "доступ к API"),
     (404, "private upstream detail", 503, "ANTHROPIC_SEO_MODEL"),
     (429, "private upstream detail", 429, "лимит"),
     (529, "private upstream detail", 503, "перегружен"),
@@ -87,3 +94,16 @@ async def test_timeout_is_distinguished_from_invalid_draft(client_factory):
     with pytest.raises(HTTPException) as result:
         await seo_generator.generate_seo_json("system", "facts", SEO_JSON_SCHEMA)
     assert result.value.status_code == 504
+
+
+@pytest.mark.asyncio
+async def test_proxy_preserves_provider_url_and_disables_environment_proxies(client_factory, monkeypatch):
+    def handler(request):
+        assert str(request.url) == "https://api.anthropic.com/v1/messages"
+        assert request.headers["x-api-key"] == "test-key-not-real"
+        return httpx.Response(200, json={"stop_reason": "end_turn", "content": [{"type": "text", "text": json.dumps(DRAFT)}]})
+    options = client_factory(handler)
+    monkeypatch.setattr(seo_generator.settings, "anthropic_proxy_url", "http://127.0.0.1:18443")
+    assert await seo_generator.generate_seo_json("facts", "facts", SEO_JSON_SCHEMA) == DRAFT
+    assert options["proxy"] == "http://127.0.0.1:18443"
+    assert options["trust_env"] is False

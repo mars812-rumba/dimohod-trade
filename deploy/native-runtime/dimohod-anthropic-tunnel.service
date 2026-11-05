@@ -1,0 +1,17 @@
+[Unit]
+Description=Private Anthropic SSH tunnel to Dimohod production
+After=network-online.target dimohod-anthropic-proxy.service
+Wants=network-online.target
+Requires=dimohod-anthropic-proxy.service
+[Service]
+User=root
+ExecStart=/usr/bin/ssh -NT -i /root/.ssh/id_ed25519_dimohod_deploy -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ConnectTimeout=15 -R 127.0.0.1:18443:127.0.0.1:18444 root@168.113.191.165
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+UMask=0077
+[Install]
+WantedBy=multi-user.target

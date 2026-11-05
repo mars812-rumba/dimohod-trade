@@ -1,0 +1,19 @@
+[Unit]
+Description=Private Anthropic TLS CONNECT relay
+After=network-online.target
+Wants=network-online.target
+[Service]
+User=dimohod-anthropic
+Group=dimohod-anthropic
+ExecStart=/usr/bin/python3 /home/dimohod-production-runtime/anthropic-connect-proxy.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+UMask=0077
+TasksMax=64
+MemoryMax=96M
+[Install]
+WantedBy=multi-user.target
