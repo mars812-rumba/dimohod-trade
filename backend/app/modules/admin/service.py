@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
-import httpx
 from fastapi import HTTPException, status
 from pydantic import ValidationError
 from sqlalchemy import func, or_, select
@@ -17,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.core.config import settings
+from app.modules.admin.seo_generator import generate_seo_json
 from app.media.images import (
     CatalogImageError,
     EncodedCatalogImage,
@@ -74,7 +74,6 @@ SKU_PHOTO_ROLE_FILENAMES = {
     "top": "sku-photo-2",
     "connection": "sku-photo-3",
 }
-OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 SEO_KNOWLEDGE_KEY = "seo_knowledge"
 FAQ_KEY = "faq"
 FAQ_DRAFT_KEY = "faq_draft"
@@ -461,10 +460,10 @@ async def generate_product_seo(
     seo_knowledge: AdminSEOProductKnowledge | None = None,
 ) -> AdminSEOGenerateResponse:
     product = await get_admin_product(session, product_id)
-    if not settings.openai_api_key:
+    if not settings.anthropic_api_key:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="OPENAI_API_KEY не настроен для backend",
+            detail="ANTHROPIC_API_KEY не настроен для backend",
         )
 
     facts_payload = await collect_product_seo_facts(
@@ -473,44 +472,16 @@ async def generate_product_seo(
         selected_sku_id=selected_sku_id,
         seo_knowledge=seo_knowledge,
     )
-    request_payload = {
-        "model": settings.openai_seo_model,
-        "input": [
-            {
-                "role": "system",
-                "content": (
-                    "Ты опытный консультант и редактор технического каталога дымоходов. "
-                    "Сначала доверяй только предоставленному пакету фактов, затем создавай черновик. "
-                    "Не восполняй отсутствующие технические данные знаниями модели. "
-                    "Пиши естественным человеческим языком: конкретно, спокойно, без канцелярита, "
-                    "рекламных штампов, повторов и ощущения шаблонной генерации."
-                ),
-            },
-            {"role": "user", "content": build_product_seo_prompt(facts_payload)},
-        ],
-        "text": {
-            "format": {
-                "type": "json_schema",
-                "name": "product_family_seo",
-                "strict": True,
-                "schema": SEO_JSON_SCHEMA,
-            }
-        },
-        "max_output_tokens": 3600,
-        "store": False,
-    }
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                OPENAI_RESPONSES_URL,
-                headers={
-                    "Authorization": f"Bearer {settings.openai_api_key}",
-                    "Content-Type": "application/json",
-                },
-                json=request_payload,
-            )
-            response.raise_for_status()
-        generated = json.loads(extract_openai_output_text(response.json()))
+        generated = await generate_seo_json(
+            "Ты опытный консультант и редактор технического каталога дымоходов. "
+            "Сначала доверяй только предоставленному пакету фактов, затем создавай черновик. "
+            "Не восполняй отсутствующие технические данные знаниями модели. "
+            "Пиши естественным человеческим языком: конкретно, спокойно, без канцелярита, "
+            "рекламных штампов, повторов и ощущения шаблонной генерации.",
+            build_product_seo_prompt(facts_payload),
+            SEO_JSON_SCHEMA,
+        )
         selected_sku = next(
             (sku for sku in product.skus if sku.id == selected_sku_id and sku.is_active),
             None,
@@ -526,26 +497,16 @@ async def generate_product_seo(
         generated["seo_description"] = parameterize_sku_meta(generated["seo_description"], selected_sku)
         return AdminSEOGenerateResponse(
             **generated,
-            model=settings.openai_seo_model,
+            model=settings.anthropic_seo_model,
             fact_warnings=[
                 f"Нет подтверждённых данных: {field}"
                 for field in facts_payload["missing_confirmed_sections"]
             ],
         )
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"OpenAI не сгенерировал SEO (HTTP {exc.response.status_code})",
-        ) from exc
-    except httpx.RequestError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Не удалось подключиться к OpenAI",
-        ) from exc
     except (ValueError, TypeError, ValidationError) as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="OpenAI вернул некорректный SEO-черновик",
+            detail="Anthropic вернул некорректный SEO-черновик",
         ) from exc
 
 

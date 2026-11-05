@@ -1100,12 +1100,12 @@ export default function AdminCatalogManager() {
       productSeoForm.seo_title,
       productSeoForm.seo_description,
     ].some((value) => value.trim());
-    if (hasExistingText && !window.confirm("Заменить текущий SEO-текст новым черновиком Codex?")) {
+    if (hasExistingText && !window.confirm("Заменить текущий SEO-текст новым SEO-черновиком?")) {
       return;
     }
 
     setIsGeneratingSeo(true);
-    setStatus("Codex формирует SEO-черновик по характеристикам SKU...");
+    setStatus("Формируем SEO-черновик по подтверждённым данным товара...");
     try {
       const response = await apiRequestWithStatus<GeneratedProductSeo>(
         `/api/v1/admin/products/${selectedProduct.id}/seo/generate`,

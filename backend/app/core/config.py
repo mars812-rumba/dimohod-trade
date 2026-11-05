@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     media_storage_dir: str = "../storage"
     openai_api_key: str | None = None
     openai_seo_model: str = "gpt-5.6-luna"
+    anthropic_api_key: str | None = None
+    anthropic_seo_model: str = "claude-sonnet-5-5"
     yandex_oauth_token: str | None = None
     yandex_webmaster_token: str | None = None
     yandex_webmaster_host_url: str = "https://dimohod-trade.pro"
