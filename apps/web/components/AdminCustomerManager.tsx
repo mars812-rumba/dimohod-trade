@@ -25,6 +25,7 @@ type CustomerContact = {
 type CustomerEstimate = {
   notes?: string;
   lead_id: string;
+  quotation_number?: string;
   profile_name: string;
   status: string;
   created_at: string;
@@ -230,6 +231,9 @@ export function AdminCustomerManager() {
                 <>
                   <div className={styles.estimateOverview}>
                     <strong className={styles.estimateProfile}>{latestEstimate.profile_name}</strong>
+                    {latestEstimate.quotation_number ? (
+                      <span className={styles.quotationNumber}>КП №{latestEstimate.quotation_number}</span>
+                    ) : null}
                     <dl className={styles.estimateStats}>
                       <div>
                         <dt>Позиций</dt>
@@ -274,6 +278,9 @@ export function AdminCustomerManager() {
                     >
                       <span className={styles.compactEstimateIdentity}>
                         <strong>{estimate.profile_name}</strong>
+                        {estimate.quotation_number ? (
+                          <small className={styles.compactQuotationNumber}>КП №{estimate.quotation_number}</small>
+                        ) : null}
                         <small>{formatDate(estimate.created_at)}</small>
                       </span>
                       <span className={styles.compactEstimateStats}>

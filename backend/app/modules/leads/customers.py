@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
+
 from app.modules.leads.notes import read_notes
 
 
@@ -38,6 +39,7 @@ def estimate_summary(lead_id: str, created_at: str, envelope: dict[str, Any]) ->
     estimate = envelope["estimate"]
     return {
         "lead_id": lead_id,
+        "quotation_number": envelope.get("quotation_number", ""),
         "profile_name": estimate.get("profile_name") or "Без названия",
         "status": envelope.get("status", "submitted"),
         "created_at": created_at,
@@ -111,19 +113,31 @@ def sync_customer_estimate(
 
 def list_customers(storage_root: str | Path, search: str | None = None) -> list[dict[str, Any]]:
     query = (search or "").strip().lower()
+    root = Path(storage_root)
     result = []
-    for path in customers_dir(storage_root).glob("*.json"):
+    for path in customers_dir(root).glob("*.json"):
         try:
             customer = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
         for estimate in customer.get("estimates", []):
-            estimate["notes"] = read_notes(storage_root, str(estimate.get("lead_id", "")))
+            lead_id = str(estimate.get("lead_id", ""))
+            estimate["notes"] = read_notes(root, lead_id)
+            if "quotation_number" not in estimate and re.fullmatch(r"[a-f0-9]{32}", lead_id):
+                estimate_path = root / "leads" / lead_id / "estimate.json"
+                try:
+                    envelope = json.loads(estimate_path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    envelope = {}
+                number = envelope.get("quotation_number")
+                if isinstance(number, str):
+                    estimate["quotation_number"] = number
         haystack = " ".join(
             [
                 str(customer.get("name", "")),
                 *(str(item.get("value", "")) for item in customer.get("contacts", [])),
                 *(str(item.get("profile_name", "")) for item in customer.get("estimates", [])),
+                *(str(item.get("quotation_number", "")) for item in customer.get("estimates", [])),
             ]
         ).lower()
         if not query or query in haystack:
