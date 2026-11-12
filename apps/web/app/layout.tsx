@@ -59,6 +59,11 @@ export default function RootLayout({
         {children}
         <SiteFooter />
         <YandexMetrika />
+        <Script
+          id="callibri-script"
+          src="https://cdn.callibri.ru/callibri.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
