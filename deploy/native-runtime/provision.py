@@ -32,7 +32,6 @@ if not env_file.exists():
         'SMTP_HOST': '', 'SMTP_PASSWORD': '', 'OPENAI_API_KEY': '',
         'API_BASE_URL': 'http://127.0.0.1:8102',
         'NEXT_PUBLIC_APP_URL': 'https://dimohod-trade.pro',
-        'NEXT_PUBLIC_CATALOG_RECOVERY_NOTICE': 'Каталог восстанавливается. Цены предварительные; позиции [ТЕСТ] по 100 ₽ требуют уточнения. Стоимость подтверждает менеджер.',
         'NEXT_TELEMETRY_DISABLED': '1', 'NODE_ENV': 'production',
     }
     env_file.write_text(''.join(k+'='+json.dumps(v, ensure_ascii=False)+'\n' for k,v in env.items()))
