@@ -160,6 +160,9 @@ class AdminProductFAQItem(BaseModel):
     question: str = Field(min_length=1, max_length=240)
     answer: str = Field(min_length=1, max_length=1600)
     evidence: list[str] = Field(min_length=1, max_length=10)
+    is_visible: bool = Field(default=True, alias="isVisible")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AdminProductUpdate(BaseModel):

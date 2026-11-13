@@ -78,6 +78,7 @@ SKU_PHOTO_ROLE_FILENAMES = {
 SEO_KNOWLEDGE_KEY = "seo_knowledge"
 FAQ_KEY = "faq"
 FAQ_DRAFT_KEY = "faq_draft"
+FAQ_CONFIGURED_KEY = "faq_configured"
 LEGACY_CONTENT_MIGRATION_KEY = "legacy_admin_content_migrated"
 SEO_EXCLUDED_COMPATIBILITY_RULE_CODES = frozenset({"single_wall_indoor_only"})
 SEO_JSON_SCHEMA = {
@@ -134,7 +135,14 @@ def sanitize_product_faq_items(items: list[AdminProductFAQItem]) -> list[dict[st
         if not question or not answer or not evidence or normalized_question in seen_questions:
             continue
         seen_questions.add(normalized_question)
-        sanitized.append({"question": question, "answer": answer, "evidence": evidence})
+        sanitized.append(
+            {
+                "question": question,
+                "answer": answer,
+                "evidence": evidence,
+                "is_visible": item.is_visible,
+            }
+        )
     return sanitized
 
 
@@ -1064,6 +1072,7 @@ async def update_product(
             extra_attributes[FAQ_DRAFT_KEY] = faq_draft
         else:
             extra_attributes.pop(FAQ_DRAFT_KEY, None)
+        extra_attributes[FAQ_CONFIGURED_KEY] = True
     if values.get("publish_faq"):
         publishable = faq_draft
         if publishable is None:
@@ -1075,14 +1084,16 @@ async def update_product(
                     publishable = []
             else:
                 publishable = []
-        if not publishable:
+        if not publishable or not any(item.get("is_visible", True) for item in publishable):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Save at least one FAQ item with evidence before publishing",
+                detail="Save at least one visible FAQ item with evidence before publishing",
             )
         extra_attributes[FAQ_KEY] = publishable
+        extra_attributes[FAQ_CONFIGURED_KEY] = True
     if values.get("unpublish_faq"):
         extra_attributes.pop(FAQ_KEY, None)
+        extra_attributes[FAQ_CONFIGURED_KEY] = True
     if "compatible_product_ids" in values:
         requested_ids = list(dict.fromkeys(values["compatible_product_ids"] or []))
         if product_id in requested_ids:

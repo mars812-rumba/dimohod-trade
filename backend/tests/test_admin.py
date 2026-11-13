@@ -501,7 +501,11 @@ def test_compact_product_attributes_keep_only_public_page_content() -> None:
         {
             "media": [{"url": "/media/catalog/photo.jpg"}],
             "seo_knowledge": {"summary": "Описание"},
-            "faq": [{"q": "Вопрос", "a": "Ответ"}],
+            "faq": [
+                {"question": "Вопрос", "answer": "Ответ", "evidence": ["internal"]},
+                {"question": "Скрытый", "answer": "Не показывать", "is_visible": False},
+            ],
+            "faq_configured": True,
             "seo_title": "Заголовок",
             "seo_description": "Описание страницы",
             "outer_diameter_mm": 200,
@@ -510,7 +514,8 @@ def test_compact_product_attributes_keep_only_public_page_content() -> None:
     ) == {
         "media": [{"url": "/media/catalog/photo.jpg"}],
         "seo_knowledge": {"summary": "Описание"},
-        "faq": [{"q": "Вопрос", "a": "Ответ"}],
+        "faq": [{"question": "Вопрос", "answer": "Ответ"}],
+        "faq_configured": True,
         "seo_title": "Заголовок",
         "seo_description": "Описание страницы",
         "outer_diameter_mm": 200,

@@ -291,11 +291,25 @@ def compact_product_attributes(attributes: dict[str, object] | None) -> dict[str
         "media",
         "seo_knowledge",
         "faq",
+        "faq_configured",
         "seo_title",
         "seo_description",
         "outer_diameter_mm",
     }
-    return {key: value for key, value in values.items() if key in allowed}
+    public = {key: value for key, value in values.items() if key in allowed and key != "faq"}
+    raw_faq = values.get("faq")
+    if isinstance(raw_faq, list):
+        faq = []
+        for item in raw_faq:
+            if not isinstance(item, dict) or item.get("is_visible", True) is False:
+                continue
+            question = item.get("question")
+            answer = item.get("answer")
+            if isinstance(question, str) and question.strip() and isinstance(answer, str) and answer.strip():
+                faq.append({"question": question.strip(), "answer": answer.strip()})
+        if faq:
+            public["faq"] = faq
+    return public
 
 
 def public_sku_read(

@@ -1598,14 +1598,16 @@ export function ProductExperience({
             </section>
           ) : null}
 
-          <section className="product-section">
-            <h2 className="product-section-title">{productFaqTitle(product)}</h2>
-            <div className="faq-list">
-              {faqItems.map((item) => (
-                <FaqItem key={item.id ?? item.q} q={item.q} a={item.a} />
-              ))}
-            </div>
-          </section>
+          {faqItems.length ? (
+            <section className="product-section">
+              <h2 className="product-section-title">{productFaqTitle(product)}</h2>
+              <div className="faq-list">
+                {faqItems.map((item) => (
+                  <FaqItem key={item.id ?? item.q} q={item.q} a={item.a} />
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <Link
             className="button secondary product-back-link"

@@ -670,6 +670,28 @@
   font-weight: 800;
 }
 
+.faqVisibility {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.faqVisibility input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+}
+
+.faqItemActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .mediaSectionHeader {
   display: grid;
   gap: 3px;

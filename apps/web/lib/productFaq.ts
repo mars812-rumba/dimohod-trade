@@ -11,7 +11,7 @@ type FamilyFaq = { set: string; slug: string; title: string; items: ProductFaqIt
 const familyFaqs: Record<string, FamilyFaq> = catalog;
 
 export function productFaqTitle(product: Product): string {
-  return `Вопросы о товаре: ${familyFaqs[product.id]?.title ?? product.name}`;
+  return `Вопросы о товаре: ${product.name}`;
 }
 
 function positiveNumber(value: unknown): string | null {
@@ -179,6 +179,7 @@ function customFaq(product: Product): ProductFaqItem[] {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((item) => {
     if (!item || typeof item !== "object") return [];
+    if ("is_visible" in item && item.is_visible === false) return [];
     const question = "question" in item && typeof item.question === "string" ? item.question.trim() : "";
     const answer = "answer" in item && typeof item.answer === "string" ? item.answer.trim() : "";
     return question && answer ? [{ q: question, a: answer }] : [];
@@ -277,6 +278,7 @@ function selectedSkuAnswer(product: Product, sku: SKU | null): string {
 export function productFaqItems(product: Product, activeSku: SKU | null): ProductFaqItem[] {
   const manualItems = customFaq(product);
   if (manualItems.length) return manualItems;
+  if (product.extra_attributes.faq_configured === true) return [];
 
   const family = familyFaqs[product.id];
   if (family) return catalogFaqItems(family, activeSku);

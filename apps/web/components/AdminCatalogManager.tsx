@@ -164,6 +164,7 @@ type ProductFaqDraftItem = {
   question: string;
   answer: string;
   evidence: string;
+  isVisible: boolean;
 };
 
 type PhotoRole = "general" | "top" | "connection";
@@ -551,7 +552,8 @@ function faqDraftFromProduct(product: AdminProduct): ProductFaqDraftItem[] {
     const evidence = Array.isArray(value.evidence)
       ? value.evidence.filter((entry): entry is string => typeof entry === "string").join("\n")
       : "";
-    return question && answer ? [{ question, answer, evidence }] : [];
+    const isVisible = typeof value.is_visible === "boolean" ? value.is_visible : true;
+    return question && answer ? [{ question, answer, evidence, isVisible }] : [];
   });
 }
 
@@ -566,7 +568,9 @@ function faqPayload(items: ProductFaqDraftItem[]) {
     const question = item.question.trim();
     const answer = item.answer.trim();
     const evidence = lines(item.evidence);
-    return question && answer && evidence.length ? [{ question, answer, evidence }] : [];
+    return question && answer && evidence.length
+      ? [{ question, answer, evidence, isVisible: item.isVisible }]
+      : [];
   });
 }
 
@@ -1080,6 +1084,7 @@ export default function AdminCatalogManager() {
         question: `Для чего используется «${selectedProduct.name}»?`,
         answer: confirmedPurpose.join(" "),
         evidence: selectedProduct.purpose.length ? "Product.purpose" : sourceNotes.join("\n"),
+        isVisible: true,
       });
     }
 
@@ -1096,6 +1101,7 @@ export default function AdminCatalogManager() {
         question: `Какие варианты «${selectedProduct.name}» есть в каталоге?`,
         answer: `В активных SKU указаны ${variantFacts.join("; ")}. Перед заказом выберите конкретный вариант в карточке.`,
         evidence: "Активные SKU семейства: diameter_mm, outer_diameter_mm, length_mm, steel_grade, material",
+        isVisible: true,
       });
     }
 
@@ -1108,12 +1114,23 @@ export default function AdminCatalogManager() {
         question: `Что проверить перед выбором «${selectedProduct.name}»?`,
         answer: selection.join(" "),
         evidence: sourceNotes.join("\n"),
+        isVisible: true,
       });
     }
     setFaqDraft(generated);
     setStatus(generated.length
       ? "Черновик FAQ собран из подтверждённых полей. Проверьте ответы и основания перед сохранением."
       : "Недостаточно подтверждённых данных для FAQ: заполните Product/SKU или данные SEO с источниками.");
+  }
+
+  function moveFaqItem(index: number, direction: -1 | 1) {
+    setFaqDraft((current) => {
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= current.length) return current;
+      const reordered = [...current];
+      [reordered[index], reordered[nextIndex]] = [reordered[nextIndex], reordered[index]];
+      return reordered;
+    });
   }
 
   async function persistFaq(action: "save" | "publish" | "unpublish") {
@@ -2472,11 +2489,19 @@ export default function AdminCatalogManager() {
                   </p>
                 </div>
                 <div aria-live="polite" className={styles.faqStatus}>
-                  {isFaqPublished ? "Опубликован" : "Не опубликован"} · пунктов в черновике: {faqDraft.length}
+                  {isFaqPublished ? "Опубликован" : "Не опубликован"} · пунктов: {faqDraft.length} · видно: {faqDraft.filter((item) => item.isVisible).length}
                 </div>
                 {faqDraft.map((item, index) => (
                   <fieldset className={styles.faqItem} key={`faq-${index}`}>
                     <legend>Вопрос {index + 1}</legend>
+                    <label className={styles.faqVisibility}>
+                      <input
+                        checked={item.isVisible}
+                        onChange={(event) => setFaqDraft((current) => current.map((entry, entryIndex) => entryIndex === index ? { ...entry, isVisible: event.target.checked } : entry))}
+                        type="checkbox"
+                      />
+                      Показывать на сайте
+                    </label>
                     <label className={styles.wideField} htmlFor={`faq-question-${index}`}>
                       Вопрос
                       <input
@@ -2505,14 +2530,22 @@ export default function AdminCatalogManager() {
                       />
                       <small id={`faq-evidence-help-${index}`}>Например: Product.purpose, активные SKU или название утверждённого документа.</small>
                     </label>
-                    <button
-                      aria-label={`Удалить вопрос ${index + 1}`}
-                      className={styles.clearButton}
-                      onClick={() => setFaqDraft((current) => current.filter((_, entryIndex) => entryIndex !== index))}
-                      type="button"
-                    >
-                      Удалить вопрос
-                    </button>
+                    <div className={styles.faqItemActions}>
+                      <button className={styles.ghostButton} disabled={index === 0} onClick={() => moveFaqItem(index, -1)} type="button">
+                        Выше
+                      </button>
+                      <button className={styles.ghostButton} disabled={index === faqDraft.length - 1} onClick={() => moveFaqItem(index, 1)} type="button">
+                        Ниже
+                      </button>
+                      <button
+                        aria-label={`Удалить вопрос ${index + 1}`}
+                        className={styles.clearButton}
+                        onClick={() => setFaqDraft((current) => current.filter((_, entryIndex) => entryIndex !== index))}
+                        type="button"
+                      >
+                        Удалить вопрос
+                      </button>
+                    </div>
                   </fieldset>
                 ))}
                 <div className={styles.seoEditorActions}>
@@ -2523,7 +2556,7 @@ export default function AdminCatalogManager() {
                     <button
                       className={styles.ghostButton}
                       disabled={isBusy || faqDraft.length >= 8}
-                      onClick={() => setFaqDraft((current) => [...current, { question: "", answer: "", evidence: "" }])}
+                      onClick={() => setFaqDraft((current) => [...current, { question: "", answer: "", evidence: "", isVisible: true }])}
                       type="button"
                     >
                       <Plus size={15} /> Добавить вопрос

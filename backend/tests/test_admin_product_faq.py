@@ -29,6 +29,7 @@ def test_faq_sanitizer_trims_and_deduplicates_questions_and_evidence() -> None:
             "question": "Какие варианты есть?",
             "answer": "Варианты перечислены в активных SKU.",
             "evidence": ["Active SKU"],
+            "is_visible": True,
         }
     ]
 
@@ -41,6 +42,7 @@ def test_product_update_accepts_explicit_faq_workflow_aliases() -> None:
                     "question": "Какие варианты есть?",
                     "answer": "Они перечислены в карточке.",
                     "evidence": ["Active SKU"],
+                    "isVisible": False,
                 }
             ],
             "publishFaq": True,
@@ -50,3 +52,4 @@ def test_product_update_accepts_explicit_faq_workflow_aliases() -> None:
     assert payload.publish_faq is True
     assert payload.unpublish_faq is False
     assert payload.faq_draft and payload.faq_draft[0].evidence == ["Active SKU"]
+    assert payload.faq_draft[0].is_visible is False

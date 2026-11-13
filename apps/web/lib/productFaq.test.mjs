@@ -78,7 +78,7 @@ test("family selection uses identity, not a substring in the name", () => {
   const faq = productFaqItems(product, null);
   assert.equal(faq.length, 4);
   assert.match(faq[0].a, /переходному элементу/);
-  assert.match(productFaqTitle(product), /Сэндвич-заглушка/);
+  assert.match(productFaqTitle(product), /Другое редакционное название/);
 });
 
 test("diameter question is replaced and refreshes together with selected SKU", () => {
@@ -129,6 +129,17 @@ test("manual editor FAQ retains priority", () => {
   const product = family("F01");
   product.extra_attributes.faq = [{ question: "Наш вопрос", answer: "Наш ответ" }];
   assert.deepEqual(productFaqItems(product, null), [{ q: "Наш вопрос", a: "Наш ответ" }]);
+});
+
+test("configured but unpublished FAQ does not fall back to hardcoded content", () => {
+  const product = family("F01");
+  product.extra_attributes.faq_configured = true;
+  assert.deepEqual(productFaqItems(product, null), []);
+  product.extra_attributes.faq = [
+    { question: "Видимый", answer: "Ответ" },
+    { question: "Скрытый", answer: "Не показывать", is_visible: false },
+  ];
+  assert.deepEqual(productFaqItems(product, null), [{ q: "Видимый", a: "Ответ" }]);
 });
 
 test("telescopic console is wall mounted according to the owner's clarification", () => {
