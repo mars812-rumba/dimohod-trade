@@ -7,6 +7,7 @@ from app.core.catalog_cache import invalidate_catalog_cache
 from app.db.session import get_db
 from app.modules.admin.schemas import (
     AdminCategoryRead,
+    AdminCategoryUpdate,
     AdminMediaItem,
     AdminPhotoScopeUpdate,
     AdminPhotoUpload,
@@ -36,6 +37,7 @@ from app.modules.admin.service import (
     list_admin_products,
     list_admin_skus,
     product_to_admin_read,
+    update_category_content,
     update_product,
     update_product_photo_scope,
     update_sku,
@@ -49,21 +51,43 @@ async def _catalog_changed(result):
     return result
 
 
+def _category_read(category, product_count: int) -> AdminCategoryRead:
+    attributes = category.extra_attributes or {}
+    seo_title = attributes.get("seo_title")
+    seo_description = attributes.get("seo_description")
+    return AdminCategoryRead(
+        id=category.id,
+        parent_id=category.parent_id,
+        name=category.name,
+        slug=category.slug,
+        product_count=product_count,
+        media_count=(1 if isinstance(attributes.get("category_cover"), dict) else 0),
+        description=category.description,
+        seo_title=seo_title if isinstance(seo_title, str) else None,
+        seo_description=seo_description if isinstance(seo_description, str) else None,
+        extra_attributes=attributes,
+    )
+
+
 @router.get("/categories", response_model=list[AdminCategoryRead])
 async def read_admin_categories(session: AsyncSession = Depends(get_db)) -> list[AdminCategoryRead]:
     rows = await list_admin_categories(session)
-    return [
-        AdminCategoryRead(
-            id=category.id,
-            parent_id=category.parent_id,
-            name=category.name,
-            slug=category.slug,
-            product_count=count,
-            media_count=(1 if isinstance(category.extra_attributes.get("category_cover"), dict) else 0),
-            extra_attributes=category.extra_attributes,
-        )
-        for category, count in rows
-    ]
+    return [_category_read(category, count) for category, count in rows]
+
+
+@router.patch("/categories/{category_id}", response_model=AdminCategoryRead)
+async def update_admin_category(
+    category_id: UUID,
+    payload: AdminCategoryUpdate,
+    session: AsyncSession = Depends(get_db),
+) -> AdminCategoryRead:
+    await update_category_content(session, category_id, payload)
+    await invalidate_catalog_cache()
+    rows = await list_admin_categories(session)
+    for category, count in rows:
+        if category.id == category_id:
+            return _category_read(category, count)
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
 
 
 @router.post("/categories/{category_id}/cover", response_model=AdminMediaItem, status_code=201)

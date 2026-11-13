@@ -4,6 +4,8 @@ export type CategoryNode = {
   name: string;
   slug: string;
   description: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
   sort_order: number;
   updated_at: string | null;
   cover: MediaItem | null;

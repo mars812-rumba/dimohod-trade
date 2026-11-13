@@ -13,6 +13,9 @@ type AdminCategory = {
   slug: string;
   product_count: number;
   media_count: number;
+  description: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
   extra_attributes: Record<string, unknown>;
 };
 
@@ -129,6 +132,12 @@ type ProductSeoFormState = {
   seo_title: string;
   seo_description: string;
   knowledge: ProductSeoKnowledgeFormState;
+};
+
+type CategorySeoFormState = {
+  description: string;
+  seo_title: string;
+  seo_description: string;
 };
 
 type GeneratedProductSeo = Omit<ProductSeoFormState, "knowledge"> & {
@@ -434,6 +443,12 @@ const emptyProductSeoForm: ProductSeoFormState = {
   },
 };
 
+const emptyCategorySeoForm: CategorySeoFormState = {
+  description: "",
+  seo_title: "",
+  seo_description: "",
+};
+
 function numberOrNull(value: string): number | null {
   const trimmed = value.trim();
   return trimmed ? Number(trimmed) : null;
@@ -726,6 +741,7 @@ export default function AdminCatalogManager() {
   const [compatibleProductIds, setCompatibleProductIds] = useState<string[]>([]);
   const [skuForm, setSkuForm] = useState<SKUFormState>(emptySkuForm);
   const [productSeoForm, setProductSeoForm] = useState<ProductSeoFormState>(emptyProductSeoForm);
+  const [categorySeoForm, setCategorySeoForm] = useState<CategorySeoFormState>(emptyCategorySeoForm);
   const [faqDraft, setFaqDraft] = useState<ProductFaqDraftItem[]>([]);
   const [photoDrafts, setPhotoDrafts] = useState<Record<PhotoRole, PhotoDraft>>(createEmptyPhotoDrafts);
   const [familyPhotoScopeDrafts, setFamilyPhotoScopeDrafts] = useState<Record<string, FamilyPhotoScopeDraft>>({});
@@ -910,6 +926,14 @@ export default function AdminCatalogManager() {
   }, [selectedCategoryId]);
 
   useEffect(() => {
+    setCategorySeoForm(selectedCategory ? {
+      description: selectedCategory.description ?? "",
+      seo_title: selectedCategory.seo_title ?? "",
+      seo_description: selectedCategory.seo_description ?? "",
+    } : emptyCategorySeoForm);
+  }, [selectedCategory]);
+
+  useEffect(() => {
     resetPhotoDrafts();
     setFamilyPhotoScopeDrafts({});
   }, [selectedProduct?.id]);
@@ -1009,6 +1033,34 @@ export default function AdminCatalogManager() {
           ? `Ошибка [HTTP ${error.status}]\n${message}`
           : `Ошибка [NETWORK]\n${message}`,
       );
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function saveCategorySeo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedCategory) return;
+    setIsBusy(true);
+    setStatus("Сохраняю описание категории...");
+    try {
+      const updated = await apiRequest<AdminCategory>(
+        `/api/v1/admin/categories/${selectedCategory.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            description: textOrNull(categorySeoForm.description),
+            seo_title: textOrNull(categorySeoForm.seo_title),
+            seo_description: textOrNull(categorySeoForm.seo_description),
+          }),
+        },
+      );
+      setCategories((current) => current.map((category) => (
+        category.id === updated.id ? updated : category
+      )));
+      setStatus("Описание категории сохранено");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Не удалось сохранить описание категории");
     } finally {
       setIsBusy(false);
     }
@@ -1891,7 +1943,42 @@ export default function AdminCatalogManager() {
               </span>
             </div>
             {selectedCategory ? (
-              <div className={styles.categoryCoverBlock}>
+              <>
+                <form className={styles.categorySeoEditor} onSubmit={saveCategorySeo}>
+                  <div className={styles.mediaSectionHeader}>
+                    <h3>SEO категории</h3>
+                    <p>Текст и метаданные страницы берутся из базы.</p>
+                  </div>
+                  <label className={styles.wideField}>
+                    Описание на странице
+                    <textarea
+                      onChange={(event) => setCategorySeoForm((current) => ({ ...current, description: event.target.value }))}
+                      value={categorySeoForm.description}
+                    />
+                  </label>
+                  <label className={styles.wideField}>
+                    SEO Title
+                    <input
+                      maxLength={180}
+                      onChange={(event) => setCategorySeoForm((current) => ({ ...current, seo_title: event.target.value }))}
+                      value={categorySeoForm.seo_title}
+                    />
+                    <small>{categorySeoForm.seo_title.length}/180</small>
+                  </label>
+                  <label className={styles.wideField}>
+                    Meta Description
+                    <textarea
+                      maxLength={320}
+                      onChange={(event) => setCategorySeoForm((current) => ({ ...current, seo_description: event.target.value }))}
+                      value={categorySeoForm.seo_description}
+                    />
+                    <small>{categorySeoForm.seo_description.length}/320</small>
+                  </label>
+                  <button className={styles.button} disabled={isBusy} type="submit">
+                    <Save size={15} /> Сохранить SEO
+                  </button>
+                </form>
+                <div className={styles.categoryCoverBlock}>
                 <div className={styles.mediaSectionHeader}>
                   <h3>Обложка категории</h3>
                   <p>Можно показать несколько изделий категории на одном фото.</p>
@@ -1952,7 +2039,8 @@ export default function AdminCatalogManager() {
                 >
                   <Save size={15} /> Сохранить обложку
                 </button>
-              </div>
+                </div>
+              </>
             ) : (
               <p className={styles.categoryHint}>Выберите конкретную категорию, чтобы добавить обложку.</p>
             )}

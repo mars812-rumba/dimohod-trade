@@ -12,9 +12,18 @@ class AdminCategoryRead(BaseModel):
     slug: str
     product_count: int = 0
     media_count: int = 0
+    description: str | None = None
+    seo_title: str | None = None
+    seo_description: str | None = None
     extra_attributes: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AdminCategoryUpdate(BaseModel):
+    description: str | None = None
+    seo_title: str | None = Field(default=None, max_length=180)
+    seo_description: str | None = Field(default=None, max_length=320)
 
 
 class AdminMediaItem(BaseModel):

@@ -19,6 +19,8 @@ class CategoryTreeNode(BaseModel):
     name: str
     slug: str
     description: str | None = None
+    seo_title: str | None = None
+    seo_description: str | None = None
     sort_order: int = 0
     updated_at: datetime | None = None
     cover: CatalogMediaItem | None = None

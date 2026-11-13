@@ -34,7 +34,6 @@ import {
 } from "@/lib/api";
 import { productPublicPath } from "@/lib/productUrls";
 import { filterVariantItems } from "@/lib/variantSelection";
-import { sandwichCategoryContent } from "@/lib/commercialContent";
 
 const PAGE_SIZE = 48;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://dimohod-trade.pro";
@@ -260,7 +259,7 @@ export async function CatalogCategoryView({
     outer_pipe: appliedOuterPipe,
   });
   const showSandwichContent = category.slug === "sendvich-truby" && !hasQuery && !seoPage;
-  const intro = seoPage?.intro ?? (showSandwichContent ? sandwichCategoryContent.intro : category.description);
+  const intro = seoPage?.intro ?? category.description;
 
   return (
     <>

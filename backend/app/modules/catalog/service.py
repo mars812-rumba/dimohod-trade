@@ -32,6 +32,11 @@ def category_cover(extra_attributes: dict[str, object] | None) -> CatalogMediaIt
     )
 
 
+def category_seo_value(extra_attributes: dict[str, object] | None, key: str) -> str | None:
+    value = (extra_attributes or {}).get(key)
+    return value if isinstance(value, str) and value.strip() else None
+
+
 async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
     result = await session.execute(
         select(Category)
@@ -102,6 +107,8 @@ async def get_catalog_tree(session: AsyncSession) -> list[CategoryTreeNode]:
             name=category.name,
             slug=category.slug,
             description=category.description,
+            seo_title=category_seo_value(category.extra_attributes, "seo_title"),
+            seo_description=category_seo_value(category.extra_attributes, "seo_description"),
             sort_order=category.sort_order,
             updated_at=updated_at[category.id],
             cover=category_cover(category.extra_attributes),

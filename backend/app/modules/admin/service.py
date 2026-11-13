@@ -25,6 +25,7 @@ from app.media.images import (
     store_encoded_catalog_image,
 )
 from app.modules.admin.schemas import (
+    AdminCategoryUpdate,
     AdminMediaItem,
     AdminPhotoUpload,
     AdminProductContentQuality,
@@ -90,6 +91,36 @@ SEO_JSON_SCHEMA = {
     "required": ["short_description", "description", "seo_title", "seo_description"],
     "additionalProperties": False,
 }
+
+
+async def update_category_content(
+    session: AsyncSession,
+    category_id: UUID,
+    payload: AdminCategoryUpdate,
+) -> Category:
+    category = await session.get(Category, category_id)
+    if category is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+
+    values = payload.model_dump(exclude_unset=True)
+    if "description" in values:
+        value = values.pop("description")
+        category.description = value.strip() if isinstance(value, str) and value.strip() else None
+
+    extra_attributes = dict(category.extra_attributes or {})
+    for key in ("seo_title", "seo_description"):
+        if key not in values:
+            continue
+        value = values[key]
+        if isinstance(value, str) and value.strip():
+            extra_attributes[key] = value.strip()
+        else:
+            extra_attributes.pop(key, None)
+    category.extra_attributes = extra_attributes
+
+    await session.commit()
+    await session.refresh(category)
+    return category
 
 
 def sanitize_product_faq_items(items: list[AdminProductFAQItem]) -> list[dict[str, object]]:

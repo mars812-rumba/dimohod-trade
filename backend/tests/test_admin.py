@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.modules.catalog.service import category_cover
+from app.modules.admin.schemas import AdminCategoryUpdate
 from app.modules.admin.service import (
     build_product_seo_prompt,
     canonical_photo_name,
@@ -30,6 +31,7 @@ from app.modules.admin.service import (
     sanitize_sku_seo_attributes,
     safe_asset_name,
     safe_storage_key,
+    update_category_content,
 )
 from app.modules.products.router import (
     compact_product_attributes,
@@ -281,6 +283,7 @@ def test_admin_routes_are_registered() -> None:
     assert response.status_code == 200
     paths = response.json()["paths"]
     assert "/api/v1/admin/categories" in paths
+    assert "patch" in paths["/api/v1/admin/categories/{category_id}"]
     assert "/api/v1/admin/products" in paths
     assert "/api/v1/admin/skus" in paths
     assert "/api/v1/admin/products/{product_id}/skus" in paths
@@ -293,6 +296,35 @@ def test_admin_routes_are_registered() -> None:
     assert "/api/v1/products/{slug}/compatible" in paths
     assert "/api/v1/products/{slug}/sku/{sku_key}" in paths
     assert "/api/v1/products/seo-pages" in paths
+
+
+@pytest.mark.asyncio
+async def test_category_content_is_saved_in_editable_database_fields() -> None:
+    category = SimpleNamespace(description=None, extra_attributes={"category_cover": {"url": "/x.jpg"}})
+    session = SimpleNamespace(
+        get=AsyncMock(return_value=category),
+        commit=AsyncMock(),
+        refresh=AsyncMock(),
+    )
+
+    result = await update_category_content(
+        session,
+        UUID("00000000-0000-0000-0000-000000000001"),
+        AdminCategoryUpdate(
+            description="  Текст категории  ",
+            seo_title="  Заголовок  ",
+            seo_description="  Описание выдачи  ",
+        ),
+    )
+
+    assert result is category
+    assert category.description == "Текст категории"
+    assert category.extra_attributes == {
+        "category_cover": {"url": "/x.jpg"},
+        "seo_title": "Заголовок",
+        "seo_description": "Описание выдачи",
+    }
+    session.commit.assert_awaited_once()
 
 
 def test_normalize_media_list_skips_invalid_items() -> None:

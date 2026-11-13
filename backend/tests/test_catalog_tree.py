@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from app.modules.catalog.service import category_seo_value
 from app.modules.catalog.visibility import has_public_category_cover, visible_category_ids
 
 
@@ -52,3 +53,11 @@ def test_blank_cover_url_is_not_public() -> None:
     item.extra_attributes["category_cover"]["url"] = "  "
 
     assert not has_public_category_cover(item)
+
+
+def test_category_seo_value_only_exposes_non_blank_database_text() -> None:
+    attributes = {"seo_title": "Купить отвод", "seo_description": "   "}
+
+    assert category_seo_value(attributes, "seo_title") == "Купить отвод"
+    assert category_seo_value(attributes, "seo_description") is None
+    assert category_seo_value(None, "seo_title") is None

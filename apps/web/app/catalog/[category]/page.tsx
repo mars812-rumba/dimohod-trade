@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CatalogCategoryView } from "@/components/CatalogCategoryView";
-import { sandwichCategoryContent } from "@/lib/commercialContent";
 import { getCatalogCategoryBySlug } from "@/lib/catalogCategories";
 import {
   catalogCategoryPath,
@@ -33,10 +32,10 @@ export async function generateMetadata({ params, searchParams }: CategoryPagePro
     };
   }
 
-  const isSandwich = category.slug === "sendvich-truby";
-  const title = isSandwich ? sandwichCategoryContent.title : `${category.name} — купить | Дымоход Трейд`;
-  const description = isSandwich ? sandwichCategoryContent.description : category.description
-    ?? `${category.name}: выбор изделий по диаметру, материалу и марке стали в каталоге Дымоход Трейд.`;
+  const title = category.seo_title?.trim() || `${category.name} — купить | Дымоход Трейд`;
+  const description = category.seo_description?.trim()
+    || category.description?.trim()
+    || `${category.name}: выбор изделий по диаметру, материалу и марке стали в каталоге Дымоход Трейд.`;
   const canonical = absoluteUrl(catalogCategoryPath(category.slug));
   const image = category.cover?.url ? absoluteUrl(category.cover.url) : undefined;
   return {
