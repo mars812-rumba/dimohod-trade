@@ -45,10 +45,41 @@ from tools.codex_telegram_bot.bot import (
     safe_markdown_filename,
     split_message,
     task_changed_paths,
+    transcribe_voice,
 )
 
 
 class BotUtilitiesTest(unittest.TestCase):
+    def test_transcribe_voice_uploads_telegram_ogg_without_ffmpeg(self) -> None:
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self):
+                return json.dumps({"text": "проверка"}).encode("utf-8")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source = Path(temp_dir) / "voice.ogg"
+            source.write_bytes(b"telegram-ogg-payload")
+
+            with patch(
+                "tools.codex_telegram_bot.bot.urllib.request.urlopen",
+                return_value=FakeResponse(),
+            ) as urlopen:
+                self.assertEqual(
+                    transcribe_voice(source, "secret-key", "transcribe-model"),
+                    "проверка",
+                )
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual(request.full_url, "https://api.openai.com/v1/audio/transcriptions")
+        self.assertIn(b'filename="voice.ogg"', request.data)
+        self.assertIn(b"Content-Type: audio/ogg", request.data)
+        self.assertIn(b"telegram-ogg-payload", request.data)
+
     def test_irma_project_configuration(self) -> None:
         config = build_project_configs(Path("/tmp/dimohod-test"))["irma"]
         self.assertEqual(config.root, Path("/home/irma"))

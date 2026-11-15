@@ -985,7 +985,10 @@ class CodexRunner:
 
 
 def encode_multipart(fields: dict[str, str], file_field: str, file_path: Path) -> tuple[bytes, str]:
-    return encode_multipart_payload(fields, [(file_field, file_path, "voice.mp3", "audio/mpeg")])
+    return encode_multipart_payload(
+        fields,
+        [(file_field, file_path, file_path.name, guess_mime_type(file_path))],
+    )
 
 
 class OpenAIQuotaError(RuntimeError):
@@ -1102,31 +1105,8 @@ def generate_image(prompt: str, openai_key: str, model: str, size: str, quality:
 
 
 def transcribe_voice(source: Path, openai_key: str, model: str) -> str:
-    converted = source.with_suffix(".mp3")
-    conversion = subprocess.run(
-        [
-            "ffmpeg",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-y",
-            "-i",
-            str(source),
-            "-vn",
-            "-codec:a",
-            "libmp3lame",
-            "-q:a",
-            "4",
-            str(converted),
-        ],
-        capture_output=True,
-        text=True,
-        timeout=120,
-    )
-    if conversion.returncode != 0:
-        raise RuntimeError(f"ffmpeg: {conversion.stderr[-500:]}")
     body, content_type = encode_multipart(
-        {"model": model, "language": "ru", "response_format": "json"}, "file", converted
+        {"model": model, "language": "ru", "response_format": "json"}, "file", source
     )
     request = urllib.request.Request(
         "https://api.openai.com/v1/audio/transcriptions",
