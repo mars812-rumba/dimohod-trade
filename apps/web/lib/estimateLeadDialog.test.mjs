@@ -18,7 +18,7 @@ const pdfSource = fs.readFileSync(path.join(here, "chimneyEstimatePdf.ts"), "utf
 test("estimate PDF receives submitted customer contacts and the project logo", () => {
   assert.match(componentSource, /const customer: ChimneyEstimateCustomer/);
   assert.match(componentSource, /currentEstimate = \{ \.\.\.estimate, customer, generatedAt: new Date\(\) \}/);
-  assert.match(componentSource, /onSubmitted\?\.\(customer\)/);
+  assert.match(componentSource, /onSubmitted\?\.\(customer, intent === "estimate_access" \? lead : undefined\)/);
   assert.match(pdfSource, /brand\/logo-original\.jpg/);
   assert.match(pdfSource, /estimate\.customer\.name/);
   assert.match(pdfSource, /estimate\.customer\.contact/);
@@ -46,7 +46,7 @@ test("a stalled PDF never blocks the contact lead or protected result", () => {
     componentSource.indexOf("createOptionalPdfAttachment(currentEstimate)")
       < componentSource.indexOf("fetch(`${apiBaseUrl}/api/v1/leads`"),
   );
-  assert.match(componentSource, /onSubmitted\?\.\(customer\)/);
+  assert.match(componentSource, /onSubmitted\?\.\(customer, intent === "estimate_access" \? lead : undefined\)/);
 });
 
 test("the form collects a contact method, consent and a spam honeypot", () => {
@@ -69,7 +69,7 @@ test("the detailed configurator gates its estimate before price, BOM and PDF", (
     Array.from(configuratorSource.matchAll(/<EstimateLeadDialog/g)).length,
     1,
   );
-  assert.match(configuratorSource, /!estimateUnlocked[\s\S]*inline[\s\S]*setEstimateUnlocked\(true\)/);
+  assert.match(configuratorSource, /!estimateUnlocked[\s\S]*inline[\s\S]*intent="estimate_access"[\s\S]*setEstimateAccess/);
   assert.ok(
     configuratorSource.indexOf("<EstimateLeadDialog") < configuratorSource.indexOf("selectedBom.map"),
     "contact gate must be rendered before the protected detailed BOM",

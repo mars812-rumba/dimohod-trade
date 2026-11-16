@@ -96,15 +96,39 @@ test("blocked or malformed storage does not break the form", () => {
 
 test("component wiring guards success and keeps existing business goals", () => {
   const dialog = read("../components/EstimateLeadDialog.tsx");
-  assert.ok(dialog.indexOf('trackSolutionsCalculator("submit"') > dialog.indexOf("if (!response.ok) throw"));
-  assert.match(dialog, /payload\?\.status\s*===\s*"accepted"/);
-  assert.match(dialog, /metrikaGoal\s*===\s*METRIKA_GOALS\.quickEstimateContactSent/);
+  assert.doesNotMatch(dialog, /trackSolutionsCalculator/);
+  assert.match(dialog, /payload\?\.status\s*!==\s*"accepted"/);
+  assert.match(dialog, /intent === "estimate_access" && !isQuickEstimateLead\(lead\)/);
   assert.match(dialog, /reachMetrikaGoal\(METRIKA_GOALS\.leadSubmitted/);
   assert.match(dialog, /reachMetrikaGoal\(metrikaGoal/);
   const quick = read("../components/HomeQuickEstimate.tsx");
   assert.match(quick, /step\s*===\s*4\s*&&\s*matchStatus\s*===\s*"ready"/);
   assert.match(quick, /!calculation\.errors\.length/);
   const full = read("../components/ChimneyConfigurator.tsx");
-  assert.match(full, /activeProfile\s*&&\s*catalogMatchStatus\s*===\s*"ready"/);
+  assert.match(full, /estimateUnlocked\s*&&\s*activeProfile\s*&&\s*catalogMatchStatus\s*===\s*"ready"/);
   assert.match(full, /!diagramValidationErrors\.length/);
+});
+
+test("only an accepted callback request counts as submit in both calculators", () => {
+  for (const path of ["../components/HomeQuickEstimate.tsx", "../components/EstimateCallbackRequest.tsx"]) {
+    const source = read(path);
+    assert.match(source, /X-Lead-Callback-Token/);
+    const guard = source.indexOf('payload?.status !== "callback_requested"');
+    assert.ok(guard > 0);
+    assert.ok(source.indexOf('trackSolutionsCalculator("submit"') > guard);
+  }
+  const full = read("../components/ChimneyConfigurator.tsx");
+  assert.match(full, /<EstimateCallbackRequest/);
+  assert.match(full, /callbackRequested: true/);
+  assert.match(full, /estimateAccess.key === estimateAccessKey/);
+  assert.ok(full.indexOf("<EstimateCallbackRequest") > full.indexOf("selectedBom.map"));
+});
+
+test("result goals require successful catalog matching and visible unlocked results", () => {
+  const full = read("../components/ChimneyConfigurator.tsx");
+  const quick = read("../components/HomeQuickEstimate.tsx");
+  assert.match(quick, /step === 4 && matchStatus === "ready" && lead/);
+  assert.match(full, /if \(estimateUnlocked && activeProfile && catalogMatchStatus === "ready"/);
+  const contact = read("../components/QuickEstimateContactForm.tsx");
+  assert.doesNotMatch(contact, /trackSolutionsCalculator\("submit"/);
 });

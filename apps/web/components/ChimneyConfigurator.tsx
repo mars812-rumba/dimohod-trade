@@ -48,6 +48,8 @@ import {
 import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
 import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
 import { EstimateLeadDialog } from "./EstimateLeadDialog";
+import { EstimateCallbackRequest } from "./EstimateCallbackRequest";
+import type { QuickEstimateLead } from "@/lib/quickEstimateLead";
 import { trackSolutionsCalculator } from "@/lib/solutionsCalculatorAnalytics";
 
 type RouteType = "ceiling" | "wall";
@@ -1705,7 +1707,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const [catalogMatches, setCatalogMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [catalogMatchStatus, setCatalogMatchStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [pdfStatus, setPdfStatus] = useState<"idle" | "generating" | "error">("idle");
-  const [estimateUnlocked, setEstimateUnlocked] = useState(false);
+  const [estimateAccess, setEstimateAccess] = useState<{ key: string; lead: QuickEstimateLead } | null>(null);
 
   useEffect(() => {
     try {
@@ -2072,11 +2074,16 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
     calculationErrors: calculation.errors,
   }), [activeProfile?.name, calculation.errors, calculation.reviewItems, catalogMatches, estimateMeasurements, removedBom, selectedBom]);
 
+  // Do not attach a callback to a different profile or an edited BOM. Ignore PDF timestamps.
+  const estimateAccessKey = JSON.stringify([activeProfileId, estimate.profileName, estimate.lines,
+    estimate.measurements, estimate.removedLabels, estimate.reviewItems, estimate.calculationErrors]);
+  const estimateUnlocked = Boolean(estimateAccess && estimateAccess.key === estimateAccessKey);
+
   useEffect(() => {
-    if (activeProfile && catalogMatchStatus === "ready" && estimate.lines.length && !calculation.errors.length && !diagramValidationErrors.length) {
+    if (estimateUnlocked && activeProfile && catalogMatchStatus === "ready" && estimate.lines.length && !calculation.errors.length && !diagramValidationErrors.length) {
       trackSolutionsCalculator("result", { scenario: calculation.routeKind, source: "chimney-estimate" });
     }
-  }, [activeProfile, catalogMatchStatus, estimate, calculation.errors.length, calculation.routeKind, diagramValidationErrors.length]);
+  }, [estimateUnlocked, activeProfile, catalogMatchStatus, estimate, calculation.errors.length, calculation.routeKind, diagramValidationErrors.length]);
 
   const loadCalculationProfile = (profileId: string) => {
     if (profileId) trackSolutionsCalculator("start", { first_field: "saved_profile", source: "chimney-estimate" });
@@ -2518,12 +2525,14 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           {!estimateUnlocked ? (
             <div className="configurator-estimate-lock">
               <EstimateLeadDialog
-                description={`Расчёт готов: ${selectedBom.length} позиций. Введите имя и телефон, чтобы увидеть предварительную стоимость, позиции BOM и скачать PDF. Расчёт одновременно уйдёт менеджеру на проверку.`}
+                description={`Расчёт готов: ${selectedBom.length} позиций. Введите имя и телефон, чтобы увидеть предварительную стоимость, позиции BOM и скачать PDF. Запрос на связь можно отправить отдельно под сметой.`}
                 disabled={!selectedBom.length || catalogMatchStatus === "loading"}
                 estimate={estimate}
                 heading="Откройте предварительную смету"
                 inline
-                onSubmitted={() => setEstimateUnlocked(true)}
+                intent="estimate_access"
+                key={estimateAccessKey}
+                onSubmitted={(_customer, lead) => { if (lead) setEstimateAccess({ key: estimateAccessKey, lead }); }}
                 submitLabel="Показать стоимость и BOM"
               />
             </div>
@@ -2665,6 +2674,13 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             {catalogMatchStatus === "idle" ? <p>Укажите одинаковые значения X и Y наружного диаметра патрубка для подбора SKU.</p> : null}
             {catalogMatchStatus === "error" ? <p>Каталог временно недоступен; геометрический расчёт и BOM сохранены.</p> : null}
           </div>
+          {estimateAccess && estimateUnlocked ? <EstimateCallbackRequest
+            key={estimateAccess.lead.id}
+            lead={estimateAccess.lead}
+            source="chimney-estimate"
+            onRequested={() => setEstimateAccess(current => current?.key === estimateAccessKey
+              ? { ...current, lead: { ...current.lead, callbackRequested: true } } : current)}
+          /> : null}
           <div className="configurator-review-list">
             <div className="configurator-review-title">
               <AlertTriangle aria-hidden size={18} />

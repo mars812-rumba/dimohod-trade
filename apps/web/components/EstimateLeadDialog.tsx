@@ -13,7 +13,7 @@ import { chimneyEstimateLeadPayload, chimneyEstimateText } from "@/lib/chimneyEs
 import { createChimneyEstimatePdfBlob } from "@/lib/chimneyEstimatePdf";
 import { METRIKA_GOALS, reachMetrikaGoal, type MetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
-import { trackSolutionsCalculator } from "@/lib/solutionsCalculatorAnalytics";
+import { isQuickEstimateLead, type QuickEstimateLead } from "@/lib/quickEstimateLead";
 
 type ContactMethod = "phone" | "whatsapp" | "telegram" | "email";
 
@@ -24,9 +24,10 @@ type EstimateLeadDialogProps = {
   estimate: ChimneyEstimate;
   heading?: string;
   inline?: boolean;
+  intent?: "manager_review" | "estimate_access";
   reviewMode?: boolean;
   metrikaGoal?: MetrikaGoal;
-  onSubmitted?: (customer: ChimneyEstimateCustomer) => void;
+  onSubmitted?: (customer: ChimneyEstimateCustomer, lead?: QuickEstimateLead) => void;
   source?: string;
   submitLabel?: string;
   triggerClassName?: string;
@@ -95,6 +96,7 @@ export function EstimateLeadDialog({
   estimate,
   heading = "Отправить BOM менеджеру",
   inline = false,
+  intent = "manager_review",
   reviewMode = false,
   metrikaGoal = METRIKA_GOALS.deepMeasurementFormSent,
   onSubmitted,
@@ -137,6 +139,7 @@ export function EstimateLeadDialog({
       };
       const currentEstimate = { ...estimate, customer, generatedAt: new Date() };
       data.set("source", source);
+      data.set("intent", intent);
       data.set(
         "configuration",
         `${chimneyEstimateText(currentEstimate)}\n\nСтраница расчёта: ${window.location.href}`.slice(0, 12000),
@@ -153,7 +156,13 @@ export function EstimateLeadDialog({
         body: data,
       });
       const payload = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(responseError(payload));
+      if (!response.ok || payload?.status !== "accepted") throw new Error(responseError(payload));
+      const lead = {
+        id: payload?.id, callbackToken: payload?.callback_token, customer, callbackRequested: false,
+      };
+      if (intent === "estimate_access" && !isQuickEstimateLead(lead)) {
+        throw new Error("Не удалось подтвердить сохранение контакта. Попробуйте ещё раз.");
+      }
       form.reset();
       setContactMethod("phone");
       const emailStatus = payload && typeof payload === "object" && "email_status" in payload
@@ -163,12 +172,7 @@ export function EstimateLeadDialog({
       const goalParams = { source, path: window.location.pathname };
       reachMetrikaGoal(METRIKA_GOALS.leadSubmitted, goalParams);
       reachMetrikaGoal(metrikaGoal, goalParams);
-      if (payload?.status === "accepted" && (
-        metrikaGoal === METRIKA_GOALS.deepMeasurementFormSent || metrikaGoal === METRIKA_GOALS.quickEstimateContactSent
-      )) {
-        trackSolutionsCalculator("submit", { source });
-      }
-      onSubmitted?.(customer);
+      onSubmitted?.(customer, intent === "estimate_access" ? lead : undefined);
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Не удалось отправить расчёт.");
@@ -230,7 +234,9 @@ export function EstimateLeadDialog({
               <Send aria-hidden size={17} />
               {status === "sending" ? "Отправляем расчёт…" : submitLabel}
             </button>
-            <small>После отправки сразу покажем предварительную стоимость и состав. Менеджер получит расчёт для проверки.</small>
+            <small>{intent === "estimate_access"
+              ? "После сохранения контакта покажем стоимость и состав. Чтобы попросить менеджера связаться, нажмите «Связаться со мной» под сметой."
+              : "После отправки сразу покажем предварительную стоимость и состав. Менеджер получит расчёт для проверки."}</small>
           </div>
         </form>
       </div>

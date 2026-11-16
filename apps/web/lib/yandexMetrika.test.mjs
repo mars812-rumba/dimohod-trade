@@ -30,7 +30,7 @@ test("business goals use reachGoal at the confirmed conversion points", () => {
   assert.match(metrika, /deep_measurement_form_sent/);
   assert.match(metrika, /phone_click/);
   assert.match(metrika, /"reachGoal"/);
-  assert.match(estimateDialog, /if \(!response\.ok\) throw/);
+  assert.match(estimateDialog, /if \(!response\.ok \|\| payload\?\.status !== "accepted"\) throw/);
   assert.match(estimateDialog, /reachMetrikaGoal\(METRIKA_GOALS\.leadSubmitted/);
   assert.match(estimateDialog, /reachMetrikaGoal\(metrikaGoal/);
   assert.match(leadForm, /if \(!response\.ok\) throw/);
