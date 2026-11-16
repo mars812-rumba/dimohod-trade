@@ -192,6 +192,30 @@
   text-wrap: balance;
 }
 
+.customerNameEditor { margin-bottom: 9px; min-width: 0; }
+.customerNameHeading { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.customerNameHeading h2 { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.customerNameEditor button {
+  min-height: 44px; padding: 8px 12px; border: 1px solid #b8c9cd;
+  border-radius: 8px; color: #244f59; background: #f5f8f8;
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.customerNameEditor .editNameButton { display: inline-flex; min-width: 44px; gap: 6px; align-items: center; justify-content: center; }
+.customerNameEditor form { display: grid; min-width: 0; gap: 8px; margin-top: 10px; }
+.customerNameEditor label { color: #244f59; font-size: 13px; font-weight: 700; }
+.customerNameEditor input {
+  width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 10px 12px;
+  border: 1px solid #b8c9cd; border-radius: 8px; background: #fff; color: #183c45;
+  font: inherit; font-size: 16px;
+}
+.customerNameEditor small { color: #496269; font-size: 12px; line-height: 1.4; }
+.customerNameEditor [role="alert"] { margin: 0; color: #a43a20; font-size: 13px; line-height: 1.4; }
+.customerNameEditor button:disabled { opacity: .65; cursor: wait; }
+.customerNameEditor button:focus-visible, .customerNameEditor input:focus-visible { outline: 3px solid #326276; outline-offset: 2px; }
+.nameActions { display: flex; gap: 8px; flex-wrap: wrap; }
+.nameStatus { display: block; color: #496269; font-size: 12px; }
+.nameStatus:empty { display: none; }
+
 .contacts {
   display: flex;
   flex-wrap: wrap;

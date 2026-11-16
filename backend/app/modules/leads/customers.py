@@ -1,5 +1,8 @@
+import fcntl
 import json
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -35,6 +38,37 @@ def write_customer(path: Path, customer: dict[str, Any]) -> None:
     temporary.replace(path)
 
 
+@contextmanager
+def customer_lock(storage_root: str | Path, customer_id: str) -> Iterator[Path]:
+    if not re.fullmatch(r"[a-f0-9]{32}", customer_id):
+        raise ValueError("Invalid customer ID")
+    directory = customers_dir(storage_root)
+    with (directory / f".{customer_id}.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield directory / f"{customer_id}.json"
+
+
+class CustomerNameConflictError(Exception):
+    pass
+
+
+def update_customer_name(
+    storage_root: str | Path, customer_id: str, name: str, expected_name: str,
+) -> dict[str, str]:
+    name = name.strip()
+    if len(name) > 100:
+        raise ValueError("Name exceeds 100 characters")
+    with customer_lock(storage_root, customer_id) as path:
+        customer = json.loads(path.read_text(encoding="utf-8"))
+        if (customer.get("name") or "") != expected_name:
+            raise CustomerNameConflictError("Customer name changed in another session")
+        now = datetime.now(UTC).isoformat()
+        changes = {"name": name, "name_source": "manual", "name_updated_at": now, "updated_at": now}
+        customer.update(changes)
+        write_customer(path, customer)
+    return changes
+
+
 def estimate_summary(lead_id: str, created_at: str, envelope: dict[str, Any]) -> dict[str, Any]:
     estimate = envelope["estimate"]
     return {
@@ -62,7 +96,15 @@ def upsert_customer(
     envelope: dict[str, Any],
 ) -> str:
     customer_id = customer_id_for(contact_method, contact)
-    path = customers_dir(storage_root) / f"{customer_id}.json"
+    with customer_lock(storage_root, customer_id) as path:
+        _upsert_customer(path, customer_id, lead_id, name, contact_method, contact, created_at, envelope)
+    return customer_id
+
+
+def _upsert_customer(
+    path: Path, customer_id: str, lead_id: str, name: str, contact_method: str,
+    contact: str, created_at: str, envelope: dict[str, Any],
+) -> None:
     now = datetime.now(UTC).isoformat()
     if path.is_file():
         try:
@@ -76,8 +118,9 @@ def upsert_customer(
     customer.setdefault("created_at", created_at)
     customer.setdefault("contacts", [])
     customer.setdefault("estimates", [])
-    if name or not customer.get("name"):
+    if customer.get("name_source") != "manual" and (name or not customer.get("name")):
         customer["name"] = name
+        customer["name_source"] = "auto"
     customer["updated_at"] = now
     if not any(
         item.get("method") == contact_method and item.get("value") == contact
@@ -91,16 +134,21 @@ def upsert_customer(
     customer["estimates"].append(summary)
     customer["estimates"].sort(key=lambda item: item.get("updated_at", ""), reverse=True)
     write_customer(path, customer)
-    return customer_id
 
 
 def sync_customer_estimate(
     storage_root: str | Path, lead_record: dict[str, Any], envelope: dict[str, Any]
 ) -> None:
     customer_id = lead_record.get("customer_id")
-    if not isinstance(customer_id, str):
+    if not isinstance(customer_id, str) or not re.fullmatch(r"[a-f0-9]{32}", customer_id):
         return
-    path = customers_dir(storage_root) / f"{customer_id}.json"
+    with customer_lock(storage_root, customer_id) as path:
+        _sync_customer_estimate(path, lead_record, envelope)
+
+
+def _sync_customer_estimate(
+    path: Path, lead_record: dict[str, Any], envelope: dict[str, Any],
+) -> None:
     if not path.is_file():
         return
     customer = json.loads(path.read_text(encoding="utf-8"))

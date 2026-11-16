@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import styles from "./AdminCustomerManager.module.css";
 import { LeadNotes } from "./LeadNotes";
+import { CustomerNameEditor } from "./CustomerNameEditor";
 
 type CustomerContact = {
   method: "phone" | "whatsapp" | "telegram" | "email";
@@ -165,6 +166,11 @@ export function AdminCustomerManager() {
     } : customer));
   }
 
+  function updateName(customerId: string, name: string, updatedAt: string) {
+    setCustomers(current => current.map(customer => customer.id === customerId
+      ? { ...customer, name, updated_at: updatedAt } : customer));
+  }
+
   return (
     <main className={styles.shell}>
       <nav className={styles.topbar} aria-label="Навигация администратора">
@@ -218,7 +224,8 @@ export function AdminCustomerManager() {
           <article className={styles.customerCard} key={customer.id}>
             <div className={styles.customerSummary}>
               <div className={styles.customerIdentity}>
-                <h2>{customer.name || "Без имени"}</h2>
+                <CustomerNameEditor customerId={customer.id} name={customer.name || ""}
+                  onSaved={(name, updatedAt) => updateName(customer.id, name, updatedAt)} />
                 <div className={styles.contacts}>
                   {customer.contacts.map((contact) => (
                     <a

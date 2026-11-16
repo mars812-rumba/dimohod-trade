@@ -8,7 +8,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.config import settings
 from app.modules.boms.dependencies import require_bom_admin
-from app.modules.leads.customers import list_customers
+from app.modules.leads.customers import (
+    CustomerNameConflictError,
+    list_customers,
+    update_customer_name,
+)
 from app.modules.leads.notes import NotesConflictError, write_notes
 
 router = APIRouter(dependencies=[Depends(require_bom_admin)])
@@ -18,6 +22,32 @@ class CustomerNotesUpdate(BaseModel):
     notes: str = Field(max_length=5000)
     expected_notes: str = Field(max_length=5000)
     model_config = ConfigDict(extra="forbid")
+
+
+class CustomerNameUpdate(BaseModel):
+    name: str = Field(max_length=100)
+    expected_name: str = Field(max_length=100)
+    model_config = ConfigDict(extra="forbid")
+
+
+@router.patch("/{customer_id}/name")
+def rename_customer(
+    customer_id: str, payload: CustomerNameUpdate, response: Response,
+) -> dict[str, str]:
+    if not re.fullmatch(r"[a-f0-9]{32}", customer_id):
+        raise HTTPException(status_code=404, detail="Клиент не найден")
+    try:
+        result = update_customer_name(
+            settings.media_storage_dir, customer_id, payload.name, payload.expected_name,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Клиент не найден") from exc
+    except CustomerNameConflictError as exc:
+        raise HTTPException(
+            status_code=409, detail="Имя уже изменено в другой вкладке. Обновите список клиентов.",
+        ) from exc
+    response.headers["Cache-Control"] = "no-store"
+    return result
 
 
 @router.patch("/{customer_id}/estimates/{lead_id}/notes")
