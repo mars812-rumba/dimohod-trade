@@ -124,8 +124,28 @@
 .choice:hover { border-color: #7394a1; background: #f1f5f4; }
 .selected { border: 2px solid #ed5b2a; background: #fff5f0; box-shadow: 0 0 0 3px rgba(237, 91, 42, .1); }
 .choice img { width: 86px; height: 86px; object-fit: contain; }
-.routeChoice { min-height: 230px; padding: 0 0 18px; overflow: hidden; }
-.routeChoice img { width: 100%; height: 178px; object-fit: cover; }
+.largeChoices { justify-items: center; gap: 16px; }
+.largeChoices .choice {
+  display: flex; width: min(100%, 320px); min-height: 164px; aspect-ratio: 1;
+  flex-direction: column; justify-content: center; gap: 10px; padding: 18px;
+  box-sizing: border-box; font-size: 17px; line-height: 1.25;
+}
+.largeChoices .choice img { display: block; flex: 1; width: 100%; height: 0; min-height: 0; object-fit: contain; }
+.largeChoiceLabel { flex-shrink: 0; width: 100%; }
+.routeSummary {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px;
+  align-items: center; padding: 12px; border: 1px solid #cbd4d6;
+  border-radius: 13px; background: #f8faf9;
+}
+.routeSummary img { width: 56px; height: 56px; object-fit: contain; }
+.routeSummary > div { display: grid; gap: 4px; min-width: 0; }
+.routeSummary small { color: #68797e; font-size: 11px; }
+.routeSummary strong { color: #173d4c; font-size: 14px; line-height: 1.3; }
+.routeSummary button {
+  min-height: 44px; padding: 8px 12px; border: 1px solid #bfcacc; border-radius: 8px;
+  color: #173d4c; background: #fff; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer;
+}
+.routeSummary:focus-visible, .routeSummary button:focus-visible { outline: 3px solid rgba(237, 91, 42, .35); outline-offset: 3px; }
 
 .fieldGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .field { display: grid; gap: 8px; color: #344950; font-size: 13px; font-weight: 750; }
@@ -284,9 +304,13 @@
   .objectChoices { grid-template-columns: 1fr; }
   .choice { min-height: 48px; gap: 6px; padding: 10px 8px; font-size: 14px; }
   .choice img { width: 56px; height: 56px; }
-  .objectChoices .choice { grid-template-columns: 64px auto; justify-content: start; gap: 18px; min-height: 94px; padding: 12px 20px; text-align: left; }
-  .routeChoice { min-height: 130px; padding: 0 0 10px; }
-  .routeChoice img { width: 100%; height: 100px; }
+  .largeChoices { flex: 1; grid-template-columns: 1fr; align-content: center; gap: 12px; }
+  .largeChoices .choice {
+    width: min(100%, var(--quick-choice-size, clamp(164px, calc((100dvh - 280px) / 2), 340px)));
+    gap: 8px; padding: 12px; font-size: 16px;
+  }
+  .routeSummary { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; padding: 10px; }
+  .routeSummary img { width: 44px; height: 44px; }
   .fieldGrid { grid-template-columns: 1fr; gap: 10px; }
   .field { gap: 5px; }
   .field select { min-height: 44px; font-size: 16px; }
@@ -326,6 +350,7 @@
 }
 
 @media (max-width: 720px) and (max-height: 700px) {
+  .routeChoices .largeChoiceLabel { font-size: 14px; line-height: 1.25; }
   .mobileStep .body { padding-top: 10px; }
   .mobileStep .heading h3 { font-size: 24px; }
   .mobileStep .heading { margin-bottom: 10px; }
@@ -337,7 +362,5 @@
   .outletChoices { gap: 6px; }
   .outletChoices .choice { display: grid; min-height: 48px; gap: 0; padding: 4px 2px; font-size: 12px; line-height: 1.2; }
   .outletChoices .choice img { width: 22px; height: 22px; }
-  .routeChoice { min-height: 110px; font-size: 13px; line-height: 1.25; }
-  .routeChoice img { height: 80px; }
   .footer { padding-top: 8px; }
 }

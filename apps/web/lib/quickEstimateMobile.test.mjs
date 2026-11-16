@@ -28,3 +28,30 @@ test("only step transitions align the mobile wizard below the measured site head
   assert.match(component, /getBoundingClientRect\(\)\.top - headerHeight - 8/);
   assert.match(component, /cancelAnimationFrame\(frame\)/);
 });
+
+test("large square choices adapt to the measured space with an accessible scroll fallback", () => {
+  assert.match(css, /\.largeChoices \.choice \{[^}]*aspect-ratio: 1/);
+  assert.match(component, /window.visualViewport\?\.height \?\? window.innerHeight/);
+  assert.match(component, /new ResizeObserver\(measure\)/);
+  assert.match(component, /Math.max\(164, Math.min\(choices.clientWidth/);
+  assert.match(component, /observer.disconnect\(\)/);
+  assert.match(component, /<span className=\{styles.largeChoiceLabel\}>\{choice.label\}<\/span>/);
+});
+
+test("route selection collapses into a reversible summary without discarding answers", () => {
+  assert.match(component, /setRoute\(choice.id\); setChoosingRoute\(false\)/);
+  assert.match(component, /aria-label="Выбранный маршрут"/);
+  assert.match(component, /onClick=\{\(\) => setChoosingRoute\(true\)\}>Изменить/);
+  assert.match(component, /!choosingRoute && route === "ceiling"/);
+  assert.match(component, /!choosingRoute && route === "wall"/);
+  assert.match(component, /Boolean\(route\) && !choosingRoute/);
+  assert.match(component, /\[step, route, choosingRoute\]/);
+});
+
+test("both selected route assets are PNGs with an alpha channel", () => {
+  for (const filename of ["route-through-roof-icon.png", "route-along-facade-icon.png"]) {
+    const data = readFileSync(new URL(`../public/images/home/quick-estimate/${filename}`, import.meta.url));
+    assert.equal(data.subarray(1, 4).toString(), "PNG");
+    assert.equal(data[25], 6, "PNG must use RGBA rather than an opaque JPEG background");
+  }
+});

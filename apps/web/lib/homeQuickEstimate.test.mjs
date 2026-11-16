@@ -107,7 +107,7 @@ test("route-specific parameters share the route step with a fixed wall-distance 
   assert.match(component, /isQuickEstimateLead\(saved.lead\)/);
 });
 
-test("mobile object choices use two full-width rows", () => {
+test("mobile object choices use two vertically stacked square cards", () => {
   const styles = readFileSync(new URL("../components/HomeQuickEstimate.module.css", import.meta.url), "utf8");
   assert.match(component, /styles\.objectChoices/);
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.objectChoices \{ grid-template-columns: 1fr; \}/);
@@ -120,9 +120,9 @@ test("quick result remains explicitly preliminary without a fixed accuracy promi
   assert.doesNotMatch(component, /CompactChimneyScheme/);
 });
 
-test("route choices use raster renders and existing measurement icons", () => {
-  assert.match(component, /route-through-roof\.webp/);
-  assert.match(component, /route-along-facade\.webp/);
+test("route choices use transparent icons and existing object icons", () => {
+  assert.match(component, /route-through-roof-icon\.png/);
+  assert.match(component, /route-along-facade-icon\.png/);
   assert.match(component, /object-bathhouse\.webp/);
   assert.doesNotMatch(component, /\.svg/);
 });

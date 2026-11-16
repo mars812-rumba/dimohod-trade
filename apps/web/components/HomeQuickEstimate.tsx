@@ -95,8 +95,8 @@ const outletChoices = [
 ];
 
 const routeChoices = [
-  { id: "ceiling" as const, label: "Через перекрытия и кровлю", image: "/images/home/quick-estimate/route-through-roof.webp" },
-  { id: "wall" as const, label: "Через стену и вверх по фасаду", image: "/images/home/quick-estimate/route-along-facade.webp" },
+  { id: "ceiling" as const, label: "Через перекрытия и кровлю", image: "/images/home/quick-estimate/route-through-roof-icon.png" },
+  { id: "wall" as const, label: "Через стену и вверх по фасаду", image: "/images/home/quick-estimate/route-along-facade-icon.png" },
 ];
 
 const diameterOptions = CONFIGURATOR_DIAMETERS_MM;
@@ -240,6 +240,8 @@ export function HomeQuickEstimate({
   const firstStep: Step = fixedObjectType ? 1 : 0;
   const restoringQuickEstimate = useRef(false);
   const quizRef = useRef<HTMLDivElement>(null);
+  const largeChoicesRef = useRef<HTMLDivElement>(null);
+  const routeSummaryRef = useRef<HTMLDivElement>(null);
   const previousStep = useRef<Step>(firstStep);
   const [step, setStep] = useState<Step>(firstStep);
   const [objectType, setObjectType] = useState<QuickEstimateObject | null>(fixedObjectType ?? null);
@@ -250,6 +252,7 @@ export function HomeQuickEstimate({
   const [outlet, setOutlet] = useState<QuickEstimateOutlet | null>(null);
   const [diameter, setDiameter] = useState<string>("unknown");
   const [route, setRoute] = useState<QuickEstimateRoute | null>(null);
+  const [choosingRoute, setChoosingRoute] = useState(true);
   const [floors, setFloors] = useState(1);
   const [hasAttic, setHasAttic] = useState(false);
   const [outdoorHeight, setOutdoorHeight] = useState("");
@@ -281,6 +284,56 @@ export function HomeQuickEstimate({
     });
     return () => window.cancelAnimationFrame(frame);
   }, [step]);
+
+  useEffect(() => {
+    const quiz = quizRef.current;
+    const choices = largeChoicesRef.current;
+    if (!quiz || !choices || (step !== 0 && step !== 2)) return;
+    const heading = quiz.querySelector<HTMLElement>(`.${styles.heading}`);
+    const topbar = quiz.querySelector<HTMLElement>(`.${styles.topbar}`);
+    const body = quiz.querySelector<HTMLElement>(`.${styles.body}`);
+    const footer = quiz.querySelector<HTMLElement>(`.${styles.footer}`);
+    const header = document.querySelector<HTMLElement>(".site-header");
+    if (!heading || !topbar || !body || !footer) return;
+    let frame = 0;
+    const measure = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        if (!window.matchMedia("(max-width: 720px)").matches) return;
+        const headerHeight = header?.getBoundingClientRect().height ?? 72;
+        quiz.style.setProperty("--quick-header-height", `${headerHeight}px`);
+        const bodyStyle = window.getComputedStyle(body);
+        const headingStyle = window.getComputedStyle(heading);
+        const gap = parseFloat(window.getComputedStyle(choices).rowGap) || 12;
+        const available = (window.visualViewport?.height ?? window.innerHeight) - headerHeight - 18
+          - topbar.offsetHeight - heading.offsetHeight - parseFloat(headingStyle.marginBottom)
+          - parseFloat(bodyStyle.paddingTop) - parseFloat(bodyStyle.paddingBottom) - footer.offsetHeight;
+        // A lower bound preserves readable labels; insufficient height falls back to page scrolling.
+        const size = Math.floor(Math.max(164, Math.min(choices.clientWidth, (available - gap) / 2)));
+        choices.style.setProperty("--quick-choice-size", `${size}px`);
+      });
+    };
+    const observer = new ResizeObserver(measure);
+    for (const element of [heading, topbar, footer, choices, ...(header ? [header] : [])]) observer.observe(element);
+    window.addEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    measure();
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, [step, choosingRoute]);
+
+  useEffect(() => {
+    if (step !== 2 || !route) return;
+    if (choosingRoute) {
+      largeChoicesRef.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus({ preventScroll: true });
+    } else {
+      routeSummaryRef.current?.focus({ preventScroll: true });
+    }
+  }, [step, route, choosingRoute]);
 
   useEffect(() => {
     const raw = window.sessionStorage.getItem(QUICK_ESTIMATE_RETURN_KEY);
@@ -431,7 +484,7 @@ export function HomeQuickEstimate({
 
   const canContinue = step === 0 ? Boolean(objectType)
     : step === 1 ? Boolean(equipmentStatus && outlet)
-    : step === 2 ? Boolean(route) && (route === "ceiling" || Number(outdoorHeight) > 0)
+    : step === 2 ? Boolean(route) && !choosingRoute && (route === "ceiling" || Number(outdoorHeight) > 0)
     : false;
 
   function restart() {
@@ -443,6 +496,7 @@ export function HomeQuickEstimate({
     setOutlet(null);
     setDiameter("unknown");
     setRoute(null);
+    setChoosingRoute(true);
     setFloors(1);
     setHasAttic(false);
     setOutdoorHeight("");
@@ -528,14 +582,14 @@ export function HomeQuickEstimate({
           <div className={styles.body} aria-live="polite">
             {step === 0 ? <>
               <div className={styles.heading}><small>Объект</small><h3>Где нужен дымоход?</h3></div>
-              <div className={`${styles.choices} ${styles.objectChoices}`}>
+              <div className={`${styles.choices} ${styles.objectChoices} ${styles.largeChoices}`} ref={largeChoicesRef}>
                 {objectChoices.map((choice) => <button className={`${styles.choice} ${objectType === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => {
                   setObjectType(choice.id);
                   if (choice.id === "banya") setEquipmentType("bania");
                   trackSolutionsCalculator("start",{first_field:"objectType",source:leadSource});
                 }} type="button" aria-pressed={objectType === choice.id}>
                   <Image alt="" aria-hidden height={96} src={withBase(choice.icon, assetBasePath)} unoptimized width={96} />
-                  {choice.label}
+                  <span className={styles.largeChoiceLabel}>{choice.label}</span>
                 </button>)}
               </div>
             </> : null}
@@ -583,12 +637,17 @@ export function HomeQuickEstimate({
 
             {step === 2 ? <>
               <div className={styles.heading}><small>Маршрут</small><h3>Как пойдёт дымоход?</h3></div>
-              <div className={styles.choices}>
-                {routeChoices.map((choice) => <button className={`${styles.choice} ${styles.routeChoice} ${route === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => setRoute(choice.id)} type="button" aria-pressed={route === choice.id}>
-                  <Image alt="" aria-hidden height={826} src={withBase(choice.image, assetBasePath)} unoptimized width={1100} />{choice.label}
+              {choosingRoute || !route ? <div className={`${styles.choices} ${styles.largeChoices} ${styles.routeChoices}`} ref={largeChoicesRef}>
+                {routeChoices.map((choice) => <button className={`${styles.choice} ${route === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => { setRoute(choice.id); setChoosingRoute(false); }} type="button" aria-pressed={route === choice.id}>
+                  <Image alt="" aria-hidden height={1254} src={withBase(choice.image, assetBasePath)} unoptimized width={1254} />
+                  <span className={styles.largeChoiceLabel}>{choice.label}</span>
                 </button>)}
-              </div>
-            {route === "ceiling" ? <div className={styles.routeParameters}>
+              </div> : <div className={styles.routeSummary} ref={routeSummaryRef} role="group" aria-label="Выбранный маршрут" tabIndex={-1}>
+                <Image alt="" aria-hidden height={56} src={withBase(routeChoices.find(choice => choice.id === route)!.image, assetBasePath)} unoptimized width={56} />
+                <div><small>Выбранный маршрут</small><strong>{routeChoices.find(choice => choice.id === route)!.label}</strong></div>
+                <button type="button" onClick={() => setChoosingRoute(true)}>Изменить</button>
+              </div>}
+            {!choosingRoute && route === "ceiling" ? <div className={styles.routeParameters}>
               <div className={styles.heading}>
                 <h4>{objectType === "banya" ? "Сколько уровней проходит трасса?" : "Сколько этажей?"}</h4>
                 <p>Для предварительного расчёта используем типовые допущения. Точные высоты и проходы проверим по замерам.</p>
@@ -603,7 +662,7 @@ export function HomeQuickEstimate({
               </div>
             </div> : null}
 
-            {route === "wall" ? <div className={styles.routeParameters}>
+            {!choosingRoute && route === "wall" ? <div className={styles.routeParameters}>
               <div className={styles.heading}><h4>Высота наружного участка</h4><p id="quick-outdoor-height-help">От выхода через стену до верхней точки дымохода.</p></div>
               <div className={styles.fieldGrid}>
                 <label className={styles.field}>Высота наружного дымохода
