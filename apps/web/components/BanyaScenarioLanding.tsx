@@ -118,7 +118,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               <p className={styles.eyebrow}>Дымоход для банной печи</p>
               <h1>Дымоход для банной печи: подбор комплекта</h1>
               <p className={styles.heroText}>
-                Укажите данные печи и маршрут. Сразу покажем предварительную схему, состав комплекта, реальные товары и ориентировочную стоимость — без отправки контактов.
+                Укажите данные печи и маршрут, оставьте телефон или Telegram — покажем предварительную схему, состав комплекта, реальные товары и ориентировочную стоимость.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#quick-estimate">
@@ -143,7 +143,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
 
         <section className={styles.resultStrip} aria-label="Результат быстрого расчёта">
           <div className={styles.shell}>
-            <div><strong>Стоимость, состав и схема</strong><span>без отправки контактов</span></div>
+            <div><strong>Стоимость, состав и схема</strong><span>по телефону или Telegram, без имени</span></div>
             <div><strong>Товарный состав</strong><span>с количеством и ценами</span></div>
             <div><strong>Проверка менеджером</strong><span>перед оформлением заказа</span></div>
           </div>

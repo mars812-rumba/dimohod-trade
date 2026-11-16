@@ -35,7 +35,9 @@ test("business goals use reachGoal at the confirmed conversion points", () => {
   assert.match(estimateDialog, /reachMetrikaGoal\(metrikaGoal/);
   assert.match(leadForm, /if \(!response\.ok\) throw/);
   assert.match(leadForm, /reachMetrikaGoal\(METRIKA_GOALS\.leadSubmitted/);
-  assert.match(quickEstimate, /metrikaGoal=\{METRIKA_GOALS\.quickEstimateContactSent\}/);
+  const contactForm = readFileSync(new URL("../components/QuickEstimateContactForm.tsx", import.meta.url), "utf8");
+  assert.match(quickEstimate, /<QuickEstimateContactForm/);
+  assert.match(contactForm, /reachMetrikaGoal\(METRIKA_GOALS\.quickEstimateContactSent/);
   assert.match(component, /a\[href\^=\"tel:\"\]/);
 });
 

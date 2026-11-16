@@ -1,3 +1,4 @@
+import fcntl
 import json
 import logging
 import re
@@ -6,7 +7,7 @@ import shutil
 import uuid
 from asyncio import to_thread
 from datetime import UTC, datetime
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
@@ -31,8 +32,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
-from app.db.session import get_db
 from app.db.price_section_attributes import outer_pipe_attributes
+from app.db.session import get_db
 from app.modules.admin.auth import ADMIN_SESSION_COOKIE, valid_admin_session
 from app.modules.leads.customers import sync_customer_estimate, upsert_customer
 from app.modules.leads.email import send_customer_confirmation_email, send_lead_email
@@ -46,9 +47,8 @@ from app.modules.leads.schemas import (
     ManagerRevision,
 )
 from app.modules.products.models import SKU, Product
-from app.modules.products.service import contour_group
 from app.modules.products.router import primary_product_image, primary_visual_sku_image
-
+from app.modules.products.service import contour_group
 
 logger = logging.getLogger(__name__)
 
@@ -753,7 +753,7 @@ async def restore_manager_line(
 def validate_contact(method: str, contact: str) -> str:
     normalized = contact.strip()
     if method in {"phone", "whatsapp"}:
-        if not re.fullmatch(r"[+\d\s()\-]{7,40}", normalized):
+        if not re.fullmatch(r"[+\d\s()\-]{7,40}", normalized) or not 7 <= len(re.sub(r"\D", "", normalized)) <= 15:
             raise HTTPException(status_code=422, detail="Проверьте номер телефона")
     elif method == "telegram":
         if not re.fullmatch(r"@?[A-Za-z0-9_]{5,32}", normalized):
@@ -767,7 +767,8 @@ def validate_contact(method: str, contact: str) -> str:
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_lead(
-    name: str = Form(..., min_length=2, max_length=100),
+    response: Response,
+    name: str = Form("", max_length=100),
     phone: str = Form("", max_length=40),
     contact_method: str = Form("phone", max_length=20),
     contact: str = Form("", max_length=160),
@@ -778,8 +779,10 @@ async def create_lead(
     personal_data_consent: bool = Form(...),
     consent_version: str = Form(..., max_length=20),
     website: str = Form("", max_length=200),
+    intent: Literal["manager_review", "estimate_access"] = Form("manager_review"),
     attachment: UploadFile | None = File(None),  # noqa: B008 - FastAPI dependency declaration.
 ) -> dict[str, str]:
+    response.headers["Cache-Control"] = "no-store"
     if website.strip():
         return {"id": "", "status": "accepted", "email_status": "filtered"}
     normalized_method = contact_method.strip().lower()
@@ -790,6 +793,10 @@ async def create_lead(
         raise HTTPException(status_code=422, detail="Необходимо согласие на обработку персональных данных")
     if consent_version != CURRENT_CONSENT_VERSION:
         raise HTTPException(status_code=422, detail="Обновите страницу и подтвердите актуальную версию согласия")
+    if intent != "estimate_access" and len(name.strip()) < 2:
+        raise HTTPException(status_code=422, detail="Укажите имя")
+    if intent == "estimate_access" and normalized_method not in {"phone", "telegram"}:
+        raise HTTPException(status_code=422, detail="Укажите телефон или Telegram")
 
     estimate: LeadEstimate | None = None
     if estimate_json:
@@ -798,9 +805,12 @@ async def create_lead(
         except ValidationError as error:
             logger.warning("Rejected structured lead estimate: %s", error.errors(include_input=False))
             raise HTTPException(status_code=422, detail="Некорректная структура BOM") from error
+    if intent == "estimate_access" and estimate is None:
+        raise HTTPException(status_code=422, detail="Для получения расчёта необходимо сохранить смету")
 
     lead_id = uuid.uuid4().hex
     manager_token = secrets.token_urlsafe(32) if estimate else None
+    callback_token = secrets.token_urlsafe(32) if intent == "estimate_access" else None
     manager_url = (
         f"{settings.lead_manager_base_url.rstrip('/')}/{lead_id}"
         f"#token={quote(manager_token)}"
@@ -831,6 +841,8 @@ async def create_lead(
         "contact": normalized_contact,
         "comment": comment.strip(),
         "source": source,
+        "intent": intent,
+        "callback_access": {"token_sha256": sha256(callback_token.encode()).hexdigest()} if callback_token else None,
         "configuration": configuration,
         "estimate": "estimate.json" if estimate else None,
         "manager_access": {
@@ -850,7 +862,7 @@ async def create_lead(
         estimate_record = {
             "schema_version": 1,
             "lead_id": lead_id,
-            "status": "submitted",
+            "status": "estimate_received" if intent == "estimate_access" else "submitted",
             "revision": 1,
             "removed_lines": [],
             "customer": {
@@ -919,4 +931,52 @@ async def create_lead(
         "status": "accepted",
         "email_status": email_status,
         "customer_email_status": customer_email_status,
+        **({"callback_token": callback_token} if callback_token else {}),
     }
+
+
+@router.post("/{lead_id}/callback")
+async def request_lead_callback(
+    lead_id: str,
+    response: Response,
+    callback_token: str | None = Header(None, alias="X-Lead-Callback-Token"),
+) -> dict[str, str]:
+    """A customer capability can request contact, but never read/edit a manager BOM."""
+    lead_dir, _ = read_private_lead(lead_id)
+    # Persist the intent before SMTP. Concurrent/retried clicks must not create
+    # another lead, duplicate notifications, or change manager BOM revisions.
+    with (lead_dir / 'callback.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        _, record = read_private_lead(lead_id)
+        access = record.get("callback_access")
+        expected = access.get("token_sha256") if isinstance(access, dict) else None
+        supplied = sha256((callback_token or "").encode()).hexdigest()
+        if not isinstance(expected, str) or not secrets.compare_digest(expected, supplied):
+            raise manager_access_error()
+        response.headers["Cache-Control"] = "no-store"
+        if record.get("callback_requested_at"):
+            return {"id": lead_id, "status": "callback_requested", "requested_at": record["callback_requested_at"]}
+        requested_at = datetime.now(UTC).isoformat()
+        envelope = read_estimate_record(lead_dir, record)
+        record["callback_requested_at"] = requested_at
+        envelope["callback_requested_at"] = requested_at
+        envelope["status"] = "callback_requested"
+        write_lead_record(lead_dir, record)
+        save_manager_estimate(lead_dir, record, envelope)
+    try:
+        sent = await to_thread(
+            send_lead_email,
+            {**record, "_estimate": envelope["estimate"]},
+            None,
+            f"{settings.lead_manager_base_url.rstrip('/')}/{lead_id}#admin=1",
+        )
+        email_status = "sent" if sent else "not_configured"
+    except Exception:  # noqa: BLE001 - the contact request has already been saved.
+        email_status = "failed"
+    # Re-read instead of overwriting concurrent changes after asynchronous SMTP.
+    with (lead_dir / 'callback.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        _, latest = read_private_lead(lead_id)
+        latest["callback_email_status"] = email_status
+        write_lead_record(lead_dir, latest)
+    return {"id": lead_id, "status": "callback_requested", "requested_at": requested_at}

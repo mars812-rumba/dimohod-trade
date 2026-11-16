@@ -617,3 +617,5 @@
     padding: 24px 20px;
   }
 }
+.callbackRequested { display: inline-block; width: fit-content; padding: 6px 10px; border-radius: 6px; color: #852b0c; background: #ffdec9; font-size: 12px; font-weight: 800; }
+.estimateReceived { display: inline-block; width: fit-content; padding: 6px 10px; border-radius: 6px; color: #355868; background: #edf3f6; font-size: 12px; font-weight: 700; }

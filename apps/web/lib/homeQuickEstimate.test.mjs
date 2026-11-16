@@ -53,29 +53,28 @@ test("quick estimate uses the existing catalog and keeps the public result self-
   assert.doesNotMatch(component, /\/zamery/);
 });
 
-test("price and BOM are public, contacts submit a calculation for review", () => {
+test("saved contact unlocks the result and callback updates the same lead below BOM", () => {
   assert.match(component, /estimate\.lines\.map/);
   assert.match(component, /Цена по запросу/);
   assert.match(component, /primary_image/);
   assert.match(component, /quickEstimateProductHref/);
   assert.match(component, /Открыть товар/);
-  assert.match(component, /!leadSubmitted/);
-  assert.match(component, /buttonLabel="Отправить расчёт на проверку"/);
-  assert.doesNotMatch(component, /Показать схему и состав|heading="Откройте схему и состав"/);
-  assert.match(component, /<EstimateLeadDialog/);
-  assert.match(component, /\) : null\}[\s\S]*<QuickEstimateScheme[\s\S]*estimate\.lines\.map/);
+  assert.match(component, /!lead && estimate && calculation \? <QuickEstimateContactForm/);
+  assert.match(component, /lead && estimate && calculation \? <>/);
+  assert.match(component, /Связаться со мной/);
+  assert.doesNotMatch(component, /Отправить расчёт на проверку|без отправки контактов/);
   assert.match(component, /leadSource = "chimney-quick-estimate"/);
   assert.match(component, /source=\{leadSource\}/);
-  assert.match(component, /METRIKA_GOALS\.quickEstimateContactSent/);
-  assert.match(component, /onSubmitted=\{\(customer\) => \{/);
-  assert.match(component, /setLeadCustomer\(customer\)/);
+  assert.match(component, /onSubmitted=\{setLead\}/);
+  assert.match(component, /X-Lead-Callback-Token/);
+  assert.match(component, /\/api\/v1\/leads\/\$\{lead.id\}\/callback/);
   assert.match(component, /estimate\.lines\.length\} позиций · \{estimate\.totalUnits\} изделий/);
   assert.ok(
-    component.indexOf("styles.resultOverview") < component.indexOf("!leadSubmitted"),
-    "price summary must be rendered before the contact gate",
+    component.indexOf("estimate.lines.map") < component.indexOf("styles.resultOverview")
+      && component.indexOf("styles.resultOverview") < component.indexOf("styles.reviewRequest"),
+    "price, assumptions and callback must follow the complete BOM",
   );
-  assert.match(component, /Схема, состав и стоимость доступны без отправки контактов/);
-  assert.match(component, /Расчёт отправлен на проверку/);
+  assert.match(component, /Запрос отправлен/);
   assert.match(component, /Офис работает по будням с 9:00 до 17:00/);
   assert.match(component, /href=\{operator\.phoneHref\}/);
   assert.match(component, /downloadChimneyEstimatePdf/);
@@ -83,8 +82,8 @@ test("price and BOM are public, contacts submit a calculation for review", () =>
   assert.match(component, /Скачать смету PDF/);
 });
 
-test("public SVG reuses the professional renderer without a contact gate", () => {
-  assert.match(component, /\) : null\}[\s\S]*\{answers && schemeCalculation \? \(/);
+test("unlocked SVG reuses the professional renderer", () => {
+  assert.match(component, /lead && estimate && calculation[\s\S]*\{answers && schemeCalculation \? \(/);
   assert.match(quickScheme, /Предварительная схема дымохода/);
   assert.match(quickScheme, /GeneratedChimneyScheme/);
   assert.match(quickScheme, /variant=\{calculation\.selectedVariant\}/);
@@ -103,8 +102,9 @@ test("route-specific parameters share the route step with a fixed wall-distance 
   assert.doesNotMatch(component, /setStep\(3\)|step === 3|setWallDistance|Выберите расстояние/);
   assert.match(component, /wallDistanceM: route === "wall" \? QUICK_ESTIMATE_WALL_DISTANCE_M : null/);
   assert.match(component, /route === "ceiling" \|\| Number\(outdoorHeight\) > 0/);
-  assert.match(component, /version: 2/);
-  assert.match(component, /saved\.version !== 2/);
+  assert.match(component, /version: 3/);
+  assert.match(component, /saved\.version !== 3/);
+  assert.match(component, /isQuickEstimateLead\(saved.lead\)/);
 });
 
 test("mobile object choices use two full-width rows", () => {

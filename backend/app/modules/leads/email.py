@@ -222,7 +222,12 @@ def send_lead_email(
         return False
 
     message = EmailMessage()
-    message["Subject"] = f"Новая заявка с сайта — {record['name']}"
+    action = (
+        "Клиент просит связаться" if record.get("callback_requested_at")
+        else "Получен контакт для расчёта" if record.get("intent") == "estimate_access"
+        else "Новая заявка с сайта"
+    )
+    message["Subject"] = f"{action} — {record.get('name') or record.get('contact') or 'Без имени'}"
     message["From"] = settings.lead_from_email
     message["To"] = settings.lead_recipient_email
     contact_method = record.get("contact_method", "phone")
@@ -231,6 +236,7 @@ def send_lead_email(
     if not isinstance(estimate, dict):
         estimate = None
     header_lines = (
+        f"Действие: {action}",
         f"Заявка: {record['id']}",
         f"Дата: {record['created_at']}",
         f"Источник: {record['source']}",
@@ -264,7 +270,7 @@ def send_lead_email(
             <!doctype html>
             <html lang="ru"><body style="margin:0;padding:24px;background:#ffffff;font-family:Arial,sans-serif;color:#374151">
               <main style="max-width:920px;margin:0 auto">
-                <h1 style="margin:0 0 18px;font-size:22px;line-height:1.3;color:#111827">Новая заявка — {escape(str(record["name"]))}</h1>
+                <h1 style="margin:0 0 18px;font-size:22px;line-height:1.3;color:#111827">{escape(action)} — {escape(str(record.get("name") or contact))}</h1>
                 <table role="presentation" style="font-size:14px;line-height:1.65;border-collapse:collapse">
                   <tr><td style="padding-right:16px;color:#6b7280">Контакт</td><td><strong>{escape(str(contact))}</strong></td></tr>
                   <tr><td style="padding-right:16px;color:#6b7280">Способ связи</td><td>{escape(CONTACT_METHOD_LABELS.get(contact_method, contact_method))}</td></tr>

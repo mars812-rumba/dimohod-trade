@@ -28,6 +28,7 @@ type CustomerEstimate = {
   quotation_number?: string;
   profile_name: string;
   status: string;
+  callback_requested_at?: string | null;
   created_at: string;
   updated_at: string;
   known_total_rub: number;
@@ -80,6 +81,16 @@ function estimateLabel(count: number): string {
     return "расчёта";
   }
   return "расчётов";
+}
+
+function EstimateIntent({ estimate }: { estimate: CustomerEstimate }) {
+  if (estimate.status === "callback_requested" || estimate.callback_requested_at) {
+    return <span className={styles.callbackRequested}>Просит связаться{estimate.callback_requested_at ? ` · ${formatDate(estimate.callback_requested_at)}` : ""}</span>;
+  }
+  if (estimate.status === "estimate_received") {
+    return <span className={styles.estimateReceived}>Получил расчёт</span>;
+  }
+  return null;
 }
 
 function contactHref(contact: CustomerContact): string {
@@ -231,6 +242,7 @@ export function AdminCustomerManager() {
                 <>
                   <div className={styles.estimateOverview}>
                     <strong className={styles.estimateProfile}>{latestEstimate.profile_name}</strong>
+                    <EstimateIntent estimate={latestEstimate} />
                     {latestEstimate.quotation_number ? (
                       <span className={styles.quotationNumber}>КП №{latestEstimate.quotation_number}</span>
                     ) : null}
@@ -278,6 +290,7 @@ export function AdminCustomerManager() {
                     >
                       <span className={styles.compactEstimateIdentity}>
                         <strong>{estimate.profile_name}</strong>
+                        <EstimateIntent estimate={estimate} />
                         {estimate.quotation_number ? (
                           <small className={styles.compactQuotationNumber}>КП №{estimate.quotation_number}</small>
                         ) : null}

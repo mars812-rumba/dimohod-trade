@@ -280,7 +280,7 @@ export function BoilerScenarioLanding({
         <section className={styles.resultStrip} aria-label="Результат быстрого расчёта">
           <div className={styles.shell}>
             <div><strong>Предварительный результат</strong><span>после нескольких вопросов</span></div>
-            <div><strong>Стоимость, состав и схема</strong><span>без отправки контактов</span></div>
+            <div><strong>Стоимость, состав и схема</strong><span>по телефону или Telegram, без имени</span></div>
             <div><strong>Проверка менеджером</strong><span>перед оформлением заказа</span></div>
           </div>
         </section>

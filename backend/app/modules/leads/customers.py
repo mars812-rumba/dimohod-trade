@@ -42,6 +42,7 @@ def estimate_summary(lead_id: str, created_at: str, envelope: dict[str, Any]) ->
         "quotation_number": envelope.get("quotation_number", ""),
         "profile_name": estimate.get("profile_name") or "Без названия",
         "status": envelope.get("status", "submitted"),
+        "callback_requested_at": envelope.get("callback_requested_at"),
         "created_at": created_at,
         "updated_at": datetime.now(UTC).isoformat(),
         "known_total_rub": estimate.get("total_after_discount_rub", estimate.get("known_subtotal_rub", 0)),
@@ -75,7 +76,8 @@ def upsert_customer(
     customer.setdefault("created_at", created_at)
     customer.setdefault("contacts", [])
     customer.setdefault("estimates", [])
-    customer["name"] = name
+    if name or not customer.get("name"):
+        customer["name"] = name
     customer["updated_at"] = now
     if not any(
         item.get("method") == contact_method and item.get("value") == contact

@@ -129,7 +129,7 @@
 
 .fieldGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .field { display: grid; gap: 8px; color: #344950; font-size: 13px; font-weight: 750; }
-.field select {
+.field select, .field input {
   width: 100%;
   min-height: 48px;
   padding: 0 40px 0 13px;
@@ -139,6 +139,7 @@
   background: #fff;
   font: inherit;
 }
+.field input { padding: 12px 13px; font-size: 16px; }
 .subheading { margin: 26px 0 12px; color: #173d4c; font-size: 13px; font-weight: 800; }
 .routeParameters { margin-top: 28px; padding-top: 24px; border-top: 1px solid #cbd4d6; }
 .heading h4 { margin: 0; color: #173d4c; font-family: var(--font-heading); font-size: 24px; line-height: 1.2; }
@@ -175,7 +176,8 @@
 .next:disabled { opacity: .4; cursor: not-allowed; }
 .back:focus-visible, .choice:focus-visible, .field select:focus-visible, .next:focus-visible, .editButton:focus-visible, .restartButton:focus-visible, .pdfButton:focus-visible, .mobilePhone:focus-visible { outline: 3px solid rgba(237, 91, 42, .35); outline-offset: 3px; }
 
-.resultOverview { display: block; }
+.resultOverview { display: block; margin-top: 24px; }
+.formError { color: #a52b20 !important; font-weight: 700; }
 .priceCard { padding: 24px; color: #fff; border-radius: 14px; background: #173d4c; }
 .priceCard small { color: #bdd0d6; font-size: 12px; }
 .priceCard strong { display: block; margin-top: 10px; font-size: clamp(30px, 5vw, 48px); line-height: 1; }

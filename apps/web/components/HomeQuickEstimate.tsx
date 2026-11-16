@@ -20,7 +20,6 @@ import {
   buildChimneyEstimate,
   formatRub,
   type CatalogEstimateMatch,
-  type ChimneyEstimateCustomer,
 } from "@/lib/chimneyEstimate";
 import { CHIMNEY_ENGINEERING_RULES } from "@/lib/configuratorEngineeringRules";
 import {
@@ -28,7 +27,7 @@ import {
   type EquipmentStatus,
 } from "@/lib/configuratorDraft";
 import { downloadChimneyEstimatePdf } from "@/lib/chimneyEstimatePdf";
-import { METRIKA_GOALS } from "@/lib/metrika";
+import { isQuickEstimateLead, type QuickEstimateLead } from "@/lib/quickEstimateLead";
 import { operator } from "@/lib/privacy";
 import { productSelectionPath } from "@/lib/productUrls";
 import {
@@ -45,7 +44,7 @@ import {
   type QuickEstimateRoute,
 } from "@/lib/homeQuickEstimate";
 import styles from "./HomeQuickEstimate.module.css";
-import { EstimateLeadDialog } from "./EstimateLeadDialog";
+import { QuickEstimateContactForm } from "./QuickEstimateContactForm";
 import { QuickEstimateScheme } from "./QuickEstimateScheme";
 
 type Step = 0 | 1 | 2 | 4;
@@ -54,7 +53,7 @@ type MatchStatus = "idle" | "loading" | "ready" | "error";
 const QUICK_ESTIMATE_RETURN_KEY = "dimohod-trade:quick-estimate-return";
 
 type QuickEstimateReturnState = {
-  version: 2;
+  version: 3;
   savedAt: number;
   objectType: QuickEstimateObject;
   equipmentStatus: EquipmentStatus;
@@ -67,7 +66,7 @@ type QuickEstimateReturnState = {
   outdoorHeight: string;
   matches: Record<string, CatalogEstimateMatch>;
   matchStatus: "ready" | "error";
-  leadSubmitted: boolean;
+  lead: QuickEstimateLead | null;
 };
 
 const objectChoices = [
@@ -254,8 +253,11 @@ export function HomeQuickEstimate({
   const [outdoorHeight, setOutdoorHeight] = useState("");
   const [matches, setMatches] = useState<Record<string, CatalogEstimateMatch>>({});
   const [matchStatus, setMatchStatus] = useState<MatchStatus>("idle");
-  const [leadSubmitted, setLeadSubmitted] = useState(false);
-  const [leadCustomer, setLeadCustomer] = useState<ChimneyEstimateCustomer | null>(null);
+  const [lead, setLead] = useState<QuickEstimateLead | null>(null);
+  const leadSubmitted = Boolean(lead?.callbackRequested);
+  const leadCustomer = lead?.customer ?? null;
+  const [callbackStatus, setCallbackStatus] = useState<"idle" | "sending" | "error">("idle");
+  const [callbackError, setCallbackError] = useState("");
   const [pdfStatus, setPdfStatus] = useState<"idle" | "generating" | "error">("idle");
   const availableHeaterChoices = fixedEquipmentType
     ? heaterChoices.filter((choice) => choice.id === fixedEquipmentType)
@@ -270,7 +272,7 @@ export function HomeQuickEstimate({
     try {
       const saved = JSON.parse(raw) as Partial<QuickEstimateReturnState>;
       if (
-        saved.version !== 2 ||
+        saved.version !== 3 ||
         typeof saved.savedAt !== "number" ||
         Date.now() - saved.savedAt > 24 * 60 * 60 * 1000 ||
         !saved.objectType ||
@@ -294,7 +296,7 @@ export function HomeQuickEstimate({
         setMatches(saved.matches);
         setMatchStatus(saved.matchStatus);
       }
-      setLeadSubmitted(saved.leadSubmitted ?? false);
+      setLead(isQuickEstimateLead(saved.lead) ? saved.lead : null);
       setStep(4);
     } catch {
       // Ignore an invalid or outdated return snapshot.
@@ -387,7 +389,11 @@ export function HomeQuickEstimate({
       restoringQuickEstimate.current = false;
       return;
     }
-    if (step !== 4) setLeadSubmitted(false);
+    if (step !== 4) {
+      setLead(null);
+      setCallbackStatus("idle");
+      setCallbackError("");
+    }
   }, [step]);
 
   const estimate = useMemo(() => calculation && answers ? buildChimneyEstimate({
@@ -425,15 +431,16 @@ export function HomeQuickEstimate({
     setOutdoorHeight("");
     setMatches({});
     setMatchStatus("idle");
-    setLeadSubmitted(false);
-    setLeadCustomer(null);
+    setLead(null);
+    setCallbackStatus("idle");
+    setCallbackError("");
     setPdfStatus("idle");
   }
 
   function rememberQuickEstimate() {
     if (!objectType || !equipmentStatus || !outlet || !route) return;
     const snapshot: QuickEstimateReturnState = {
-      version: 2,
+      version: 3,
       savedAt: Date.now(),
       objectType,
       equipmentStatus,
@@ -446,16 +453,39 @@ export function HomeQuickEstimate({
       outdoorHeight,
       matches,
       matchStatus: matchStatus === "error" ? "error" : "ready",
-      leadSubmitted,
+      lead,
     };
     window.sessionStorage.setItem(QUICK_ESTIMATE_RETURN_KEY, JSON.stringify(snapshot));
   }
 
   useEffect(() => {
-    if (step === 4 && matchStatus === "ready" && estimate?.lines.length && calculation && !calculation.errors.length) {
+    if (step === 4 && matchStatus === "ready" && lead && estimate?.lines.length && calculation && !calculation.errors.length) {
       trackSolutionsCalculator("result", { scenario: answers?.objectType ?? "quick", source: leadSource });
     }
-  }, [step, matchStatus, estimate, calculation, answers?.objectType, leadSource]);
+  }, [step, matchStatus, lead, estimate, calculation, answers?.objectType, leadSource]);
+
+  async function requestCallback() {
+    if (!lead || lead.callbackRequested || callbackStatus === "sending") return;
+    setCallbackStatus("sending");
+    setCallbackError("");
+    try {
+      const response = await fetch(`${assetBasePath}/api/v1/leads/${lead.id}/callback`, {
+        method: "POST",
+        headers: { "X-Lead-Callback-Token": lead.callbackToken },
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || payload?.status !== "callback_requested") {
+        throw new Error("Не удалось отправить запрос. Попробуйте ещё раз.");
+      }
+      // Ignore completion if the visitor has already started a different calculation.
+      setLead(current => current?.id === lead.id ? { ...current, callbackRequested: true } : current);
+      setCallbackStatus("idle");
+      trackSolutionsCalculator("submit", { source: leadSource });
+    } catch (error) {
+      setCallbackStatus("error");
+      setCallbackError(error instanceof Error ? error.message : "Не удалось отправить запрос.");
+    }
+  }
 
   return (
     <section className={`${styles.section}${fixedObjectType ? ` ${styles.scenarioSection}` : ""}`} id="quick-estimate" aria-labelledby="quick-estimate-title">
@@ -563,43 +593,19 @@ export function HomeQuickEstimate({
 
             {step === 4 ? <>
               <div className={styles.heading}>
-                <h3>Предварительный расчёт готов</h3>
-                <p>Схема, состав и стоимость доступны без отправки контактов. Перед заказом менеджер проверит комплект по вашим замерам.</p>
+                <h3>{lead ? "Предварительный расчёт готов" : "Получить расчёт"}</h3>
+                <p>{lead ? "Перед заказом менеджер проверит комплект по вашим замерам." : "Оставьте телефон или Telegram, чтобы увидеть состав комплекта и предварительную стоимость. Имя не требуется."}</p>
               </div>
               {matchStatus === "loading" ? <p className={styles.status} role="status">Подбираем изделия каталога и считаем стоимость…</p> : null}
               {matchStatus === "error" ? <p className={styles.status} role="status">Каталог временно не ответил. Предварительный состав комплекта рассчитан, стоимость уточним после замеров.</p> : null}
-              {estimate && calculation ? <>
-                <div className={styles.resultOverview}>
-                  <div>
-                    <div className={styles.priceCard}>
-                      <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций" : "Ориентировочная стоимость"}</small>
-                      <strong>{matchStatus === "loading" ? "…" : formatRub(estimate.knownSubtotalRub)}</strong>
-                      <p>{estimate.lines.length} позиций · {estimate.totalUnits} изделий{estimate.unpricedLineCount ? ` · без цены: ${estimate.unpricedLineCount}` : ""}</p>
-                    </div>
-                    {answers ? <div className={styles.assumptions}><strong>Что приняли в расчёте</strong><ul>{quickEstimateAssumptions(answers).map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
-                  </div>
-                </div>
-                {!leadSubmitted ? (
-                  <div className={styles.reviewRequest}>
-                    <EstimateLeadDialog
-                      buttonLabel="Отправить расчёт на проверку"
-                      description="Оставьте контакты — менеджер проверит схему и состав, уточнит размеры и свяжется с вами. Текущий расчёт приложим автоматически."
-                      disabled={matchStatus !== "ready" && matchStatus !== "error"}
-                      estimate={estimate}
-                      heading="Проверим расчёт и свяжемся с вами"
-                      reviewMode
-                      triggerClassName={styles.reviewButton}
-                      metrikaGoal={METRIKA_GOALS.quickEstimateContactSent}
-                      onSubmitted={(customer) => {
-                        setLeadCustomer(customer);
-                        setLeadSubmitted(true);
-                      }}
-                      source={leadSource}
-                      submitLabel="Отправить на проверку"
-                    />
-                    <p>Менеджер проверит схему и состав, уточнит размеры и свяжется с вами.</p>
-                  </div>
-                ) : null}
+              {!lead && estimate && calculation ? <QuickEstimateContactForm
+                apiBaseUrl={assetBasePath}
+                disabled={matchStatus !== "ready" && matchStatus !== "error"}
+                estimate={estimate}
+                onSubmitted={setLead}
+                source={leadSource}
+              /> : null}
+              {lead && estimate && calculation ? <>
                 {answers && schemeCalculation ? (
                   <QuickEstimateScheme answers={answers} calculation={schemeCalculation} />
                 ) : null}
@@ -646,12 +652,30 @@ export function HomeQuickEstimate({
                   </ul>
                 </details>
 
+                <div className={styles.resultOverview}>
+                  <div className={styles.priceCard}>
+                    <small>{estimate.unpricedLineCount ? "Стоимость найденных позиций" : "Ориентировочная стоимость"}</small>
+                    <strong>{matchStatus === "loading" ? "…" : formatRub(estimate.knownSubtotalRub)}</strong>
+                    <p>{estimate.lines.length} позиций · {estimate.totalUnits} изделий{estimate.unpricedLineCount ? ` · без цены: ${estimate.unpricedLineCount}` : ""}</p>
+                  </div>
+                  {answers ? <div className={styles.assumptions}><strong>Что приняли в расчёте</strong><ul>{quickEstimateAssumptions(answers).map((item) => <li key={item}>{item}</li>)}</ul></div> : null}
+                </div>
+                <div className={styles.reviewRequest}>
+                  {leadSubmitted ? <p role="status"><strong>Запрос отправлен.</strong> Менеджер свяжется с вами по указанному контакту.</p> : <>
+                    <button className={styles.reviewButton} disabled={callbackStatus === "sending"} onClick={requestCallback} type="button">
+                      {callbackStatus === "sending" ? "Отправляем запрос…" : "Связаться со мной"}
+                    </button>
+                    <p>Менеджер свяжется с вами, уточнит детали и поможет оформить заказ. Контакт и расчёт уже сохранены.</p>
+                  </>}
+                  {callbackStatus === "error" ? <p className={styles.formError} role="alert">{callbackError}</p> : null}
+                </div>
+
                 <p className={styles.precisionNotice}><strong>Это предварительный расчёт.</strong> Менеджер проверит размеры, совместимость и позиции без цены перед заказом.</p>
                 <section className={styles.received} aria-labelledby="quick-estimate-received-title">
                   <div>
-                    <h4 id="quick-estimate-received-title">{leadSubmitted ? "Расчёт отправлен на проверку" : "Сохраните предварительную смету"}</h4>
+                    <h4 id="quick-estimate-received-title">Сохраните предварительную смету</h4>
                     <p>
-                      {leadSubmitted ? "Менеджер свяжется с вами по указанным контактам. " : "PDF содержит текущий состав и допущения расчёта. "}
+                      PDF содержит текущий состав и допущения расчёта.{" "}
                       Офис работает по будням с 9:00 до 17:00. Вы можете позвонить нам в рабочее время:{" "}
                       <a className={styles.mobilePhone} href={operator.phoneHref}>{operator.phone}</a>
                       <span className={styles.desktopPhone}>{operator.phone}</span>.
@@ -676,7 +700,7 @@ export function HomeQuickEstimate({
             </> : null}
 
             {step < 4 ? <div className={styles.footer}>
-              <button className={styles.next} disabled={!canContinue} onClick={() => setStep(step === 2 ? 4 : (step + 1) as Step)} type="button">{step === 2 ? "Показать расчёт" : "Продолжить"} <ArrowRight aria-hidden size={18} /></button>
+              <button className={styles.next} disabled={!canContinue} onClick={() => setStep(step === 2 ? 4 : (step + 1) as Step)} type="button">Продолжить <ArrowRight aria-hidden size={18} /></button>
             </div> : null}
           </div>
         </div>
