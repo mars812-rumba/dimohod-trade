@@ -239,6 +239,8 @@ export function HomeQuickEstimate({
 }: HomeQuickEstimateProps) {
   const firstStep: Step = fixedObjectType ? 1 : 0;
   const restoringQuickEstimate = useRef(false);
+  const quizRef = useRef<HTMLDivElement>(null);
+  const previousStep = useRef<Step>(firstStep);
   const [step, setStep] = useState<Step>(firstStep);
   const [objectType, setObjectType] = useState<QuickEstimateObject | null>(fixedObjectType ?? null);
   const [equipmentStatus, setEquipmentStatus] = useState<EquipmentStatus | null>("installed");
@@ -264,6 +266,21 @@ export function HomeQuickEstimate({
     : objectType === "banya"
       ? heaterChoices.filter((choice) => choice.id === "bania")
       : heaterChoices;
+
+  useEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    if (!window.matchMedia("(max-width: 720px)").matches) return;
+    const frame = window.requestAnimationFrame(() => {
+      const quiz = quizRef.current;
+      if (!quiz) return;
+      const header = document.querySelector(".site-header");
+      const headerHeight = header?.getBoundingClientRect().height ?? 72;
+      quiz.style.setProperty("--quick-header-height", `${headerHeight}px`);
+      window.scrollTo({ top: window.scrollY + quiz.getBoundingClientRect().top - headerHeight - 8, behavior: "instant" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [step]);
 
   useEffect(() => {
     const raw = window.sessionStorage.getItem(QUICK_ESTIMATE_RETURN_KEY);
@@ -498,7 +515,7 @@ export function HomeQuickEstimate({
           <p>{introDescription}</p>
         </div>
 
-        <div className={styles.quiz}>
+        <div className={`${styles.quiz}${step !== 4 || !lead ? ` ${styles.mobileStep}` : ""}`} ref={quizRef}>
           <div className={styles.topbar}>
             <button className={styles.back} disabled={step === firstStep} onClick={() => setStep(step === 4 ? 2 : (step - 1) as Step)} type="button">Назад</button>
             <div className={styles.progress}>
@@ -524,11 +541,20 @@ export function HomeQuickEstimate({
             </> : null}
 
             {step === 1 ? <>
-              <div className={styles.heading}><small>Отопитель</small><h3>Что уже известно?</h3><p>Если модель ещё не выбрана, оставьте тип пустым. Точные параметры уточним позже.</p></div>
+              <div className={`${styles.heading} ${styles.equipmentHeading}`}><small>Отопитель</small><h3>Что уже известно?</h3><p>Если модель ещё не выбрана, оставьте тип пустым. Точные параметры уточним позже.</p></div>
+              <label className={`${styles.field} ${styles.mobileEquipmentStatus}`}>
+                <span>Статус отопителя</span>
+                <select value={equipmentStatus ?? "installed"} onChange={(event) => {
+                  setEquipmentStatus(event.target.value as EquipmentStatus);
+                  trackSolutionsCalculator("start", { first_field: "equipmentStatus", source: leadSource });
+                }}>
+                  {statusChoices.map((choice) => <option key={choice.id} value={choice.id}>{choice.label}</option>)}
+                </select>
+              </label>
               <div className={styles.compactChoices}>
                 {statusChoices.map((choice) => <button className={`${styles.choice} ${equipmentStatus === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => {setEquipmentStatus(choice.id);trackSolutionsCalculator("start",{first_field:"equipmentStatus",source:leadSource})}} type="button" aria-pressed={equipmentStatus === choice.id}>{choice.label}</button>)}
               </div>
-              <p className={styles.subheading}>Тип отопителя</p>
+              <p className={styles.subheading}>Тип отопителя <span className={styles.optionalHint}>(необязательно)</span></p>
               <div className={`${styles.choices} ${styles.heaterChoices}`}>
                 {availableHeaterChoices.map((choice) => <button className={`${styles.choice} ${equipmentType === choice.id ? styles.selected : ""}`} disabled={Boolean(fixedEquipmentType)} key={choice.id} onClick={() => {
                   if (!fixedEquipmentType) setEquipmentType(equipmentType === choice.id ? "" : choice.id);
@@ -537,10 +563,10 @@ export function HomeQuickEstimate({
                   <Image alt="" aria-hidden height={64} src={withBase(choice.icon, assetBasePath)} unoptimized width={64} />{choice.label}
                 </button>)}
               </div>
-              <div className={styles.fieldGrid} style={{ marginTop: 18 }}>
+              <div className={`${styles.fieldGrid} ${styles.equipmentFields}`}>
                 <div>
                   <p className={styles.subheading}>Выход патрубка</p>
-                  <div className={styles.choices}>
+                  <div className={`${styles.choices} ${styles.outletChoices}`}>
                     {outletChoices.map((choice) => <button className={`${styles.choice} ${outlet === choice.id ? styles.selected : ""}`} key={choice.id} onClick={() => {setOutlet(choice.id);trackSolutionsCalculator("start",{first_field:"outlet",source:leadSource})}} type="button" aria-pressed={outlet === choice.id}>
                       <Image alt="" aria-hidden height={72} src={withBase(choice.icon, assetBasePath)} unoptimized width={72} />{choice.label}
                     </button>)}
