@@ -13,6 +13,7 @@ BASE = f"/leads/{LEAD}/manager"
 HEADERS = {"X-Lead-Manager-Token": TOKEN}
 PDF = b"%PDF-1.7\nestimate\n%%EOF"
 SPEC = b"%PDF-1.7\nspecification\n%%EOF"
+INVOICE = b"%PDF-1.7\ndelivery note\n%%EOF"
 
 
 @pytest.fixture
@@ -37,11 +38,67 @@ def set_number(client, number="2026-07/81", revision=1):
     return client.patch(BASE + "/document", headers=HEADERS, json={"revision": revision, "quotationNumber": number})
 
 
-def upload(client, revision=2, specification=SPEC):
-    return client.post(BASE + "/pdf", headers=HEADERS, data={"revision": revision}, files={
+def upload(client, revision=2, specification=SPEC, invoice=None):
+    files = {
         "pdf_file": ("estimate.pdf", PDF, "application/pdf"),
         "specification_file": ("spec.pdf", specification, "application/pdf"),
+    }
+    if invoice is not None:
+        files["invoice_file"] = ("invoice.pdf", invoice, "application/pdf")
+    return client.post(BASE + "/pdf", headers=HEADERS, data={"revision": revision}, files=files)
+
+
+def test_three_pdfs_share_number_revision_and_private_storage(fixture):
+    client, directory, _ = fixture
+    set_number(client)
+    response = upload(client, invoice=INVOICE)
+    assert response.status_code == 201
+    assert response.json()["invoice_filename"] == "invoice-r2.pdf"
+    assert response.json()["invoice_download_url"].endswith("?document=invoice")
+    assert response.json()["quotation_number"] == "2026-07/81"
+    assert (directory / "invoice-r2.pdf").read_bytes() == INVOICE
+    result = client.get(BASE + "/pdf?document=invoice", headers=HEADERS)
+    assert result.content == INVOICE
+    assert result.headers["cache-control"] == "no-store"
+    assert "application/pdf" in result.headers["content-type"]
+    assert client.get(BASE + "/pdf?document=invoice").status_code == 404
+    assert client.get(BASE + "/pdf?document=specification", headers=HEADERS).content == SPEC
+    assert client.get(BASE + "/pdf", headers=HEADERS).content == PDF
+    set_number(client, "changed", revision=2)
+    assert client.get(BASE + "/pdf?document=invoice", headers=HEADERS).status_code == 404
+
+
+def test_invalid_invoice_is_rejected_before_any_bundle_file_is_written(fixture, monkeypatch):
+    client, directory, _ = fixture
+    assert upload(client, revision=1, invoice=INVOICE).status_code == 422
+    set_number(client)
+    assert upload(client, revision=1, invoice=INVOICE).status_code == 409
+    assert upload(client, invoice=b"not PDF").status_code == 422
+    invalid_type = client.post(BASE + "/pdf", headers=HEADERS, data={"revision": 2}, files={
+        "pdf_file": ("estimate.pdf", PDF, "application/pdf"),
+        "invoice_file": ("invoice.txt", INVOICE, "text/plain"),
     })
+    assert invalid_type.status_code == 415
+    monkeypatch.setattr("app.modules.leads.router.MAX_MANAGER_PDF_SIZE", 100)
+    assert upload(client, invoice=b"%PDF-" + b"x" * 100).status_code == 413
+    assert not (directory / "manager-estimate.pdf").exists()
+    assert not list(directory.glob("invoice-*.pdf"))
+    assert not list(directory.glob("specification-*.pdf"))
+
+
+def test_old_bundle_without_invoice_and_changed_line_do_not_expose_stale_invoice(fixture):
+    client, directory, _ = fixture
+    set_number(client)
+    assert upload(client).status_code == 201
+    assert client.get(BASE + "/pdf?document=invoice", headers=HEADERS).status_code == 404
+    assert upload(client, invoice=INVOICE).status_code == 201
+    before = (directory / "invoice-r2.pdf").read_bytes()
+    metadata = (directory / "lead.json").read_bytes()
+    assert upload(client, invoice=b"invalid").status_code == 422
+    assert (directory / "invoice-r2.pdf").read_bytes() == before
+    assert (directory / "lead.json").read_bytes() == metadata
+    assert client.patch(BASE + "/items/line", headers=HEADERS, json={"revision": 2, "quantity": 3}).status_code == 200
+    assert client.get(BASE + "/pdf?document=invoice", headers=HEADERS).status_code == 404
 
 
 def test_number_is_private_persisted_and_revision_checked(fixture):

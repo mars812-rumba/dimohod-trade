@@ -458,6 +458,7 @@ async def save_manager_lead_pdf(
     revision: int = Form(..., ge=1),
     pdf_file: UploadFile = File(...),
     specification_file: UploadFile | None = File(None),
+    invoice_file: UploadFile | None = File(None),
     manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
     admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
     admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
@@ -469,10 +470,13 @@ async def save_manager_lead_pdf(
     check_revision(estimate, revision)
     content = await read_manager_pdf_upload(pdf_file)
     specification_content = None
+    invoice_content = None
+    if (specification_file is not None or invoice_file is not None) and not estimate.get("quotation_number"):
+        raise HTTPException(status_code=422, detail="Укажите номер КП")
     if specification_file is not None:
-        if not estimate.get("quotation_number"):
-            raise HTTPException(status_code=422, detail="Укажите номер КП")
         specification_content = await read_manager_pdf_upload(specification_file)
+    if invoice_file is not None:
+        invoice_content = await read_manager_pdf_upload(invoice_file)
 
     save_estimate_snapshot(lead_dir, record, estimate)
     versioned_filename = f"estimate-r{revision}.pdf"
@@ -491,6 +495,13 @@ async def save_manager_lead_pdf(
         temporary.write_bytes(specification_content)
         temporary.replace(lead_dir / specification_filename)
 
+    invoice_filename = None
+    if invoice_content is not None:
+        invoice_filename = f"invoice-r{revision}.pdf"
+        temporary = lead_dir / f"{invoice_filename}.tmp"
+        temporary.write_bytes(invoice_content)
+        temporary.replace(lead_dir / invoice_filename)
+
     generated_at = datetime.now(UTC).isoformat()
     metadata = {
         "revision": revision,
@@ -503,6 +514,11 @@ async def save_manager_lead_pdf(
             f"/api/v1/leads/{lead_id}/manager/pdf?document=specification"
             if specification_filename else None
         ),
+        "invoice_filename": invoice_filename,
+        "invoice_download_url": (
+            f"/api/v1/leads/{lead_id}/manager/pdf?document=invoice"
+            if invoice_filename else None
+        ),
     }
     record["manager_pdf"] = metadata
     write_lead_record(lead_dir, record)
@@ -512,7 +528,7 @@ async def save_manager_lead_pdf(
 @router.get("/{lead_id}/manager/pdf", response_class=FileResponse)
 async def download_manager_lead_pdf(
     lead_id: str,
-    document: Literal["estimate", "specification"] = "estimate",
+    document: Literal["estimate", "specification", "invoice"] = "estimate",
     manager_token: str | None = Header(default=None, alias="X-Lead-Manager-Token"),
     admin_token: str | None = Header(default=None, alias="X-BOM-Admin-Token"),
     admin_session: str | None = Cookie(default=None, alias=ADMIN_SESSION_COOKIE),
@@ -521,22 +537,23 @@ async def download_manager_lead_pdf(
         lead_id, manager_token, admin_token, admin_session
     )
     pdf_path = lead_dir / "manager-estimate.pdf"
-    if document == "specification":
+    if document in {"specification", "invoice"}:
         estimate = read_estimate_record(lead_dir, record)
         metadata = record.get("manager_pdf") or {}
         revision = estimate.get("revision", 1)
-        expected = f"specification-r{revision}.pdf"
+        expected = f"{document}-r{revision}.pdf"
         if (metadata.get("revision") != revision
             or metadata.get("quotation_number") != estimate.get("quotation_number")
-            or metadata.get("specification_filename") != expected):
-            raise HTTPException(status_code=404, detail="Сформируйте спецификацию для текущей редакции сметы")
+            or metadata.get(f"{document}_filename") != expected):
+            label = "товарную накладную" if document == "invoice" else "спецификацию"
+            raise HTTPException(status_code=404, detail=f"Сформируйте {label} для текущей редакции сметы")
         pdf_path = lead_dir / expected
     if not pdf_path.is_file():
         raise HTTPException(status_code=404, detail="PDF для этой сметы ещё не сформирован")
     return FileResponse(
         pdf_path,
         media_type="application/pdf",
-        filename=f"{'specification' if document == 'specification' else 'smeta'}-{lead_id[:8].upper()}.pdf",
+        filename=f"{document if document != 'estimate' else 'smeta'}-{lead_id[:8].upper()}.pdf",
         headers={"Cache-Control": "no-store"},
     )
 
