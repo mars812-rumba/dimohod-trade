@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { estimateVariantFields, estimateVariantOptions, estimateVariantValue, selectEstimateVariant, isSandwichProduct, estimateGeometryVariants } from "./estimateSkuVariants.ts";
+import { estimateVariantFields, estimateVariantOptions, estimateVariantValue, selectEstimateVariant, isSandwichProduct, isSingleWallProduct, estimateGeometryVariants } from "./estimateSkuVariants.ts";
 
 // Synthetic selector fixtures, not catalog specifications or installation recommendations.
 const sku = (id, inner, outer, length=1000, thickness="0.8", outerThickness="0.5") => ({
@@ -103,4 +103,49 @@ test("material selection stays within current geometry including angle, insulati
   const wrongBranch={...base,id:"wrong-branch",attributes:{...base.attributes,branch_diameter_mm:150}};
   const list=[base,otherMaterial,wrongDiameter,wrongAngle,wrongInsulation,wrongBranch];
   assert.deepEqual(estimateGeometryVariants(list,base).map(s=>s.id),[base.id,"new-material"]);
+});
+
+test("single-wall fittings including dampers, cleanouts and terminals are enabled without a pipe-only name", () => {
+  for (const category of ["shibery", "revizii", "kondensatootvody", "ogolovki-i-deflektory", "uzly-prohoda-sten-i-perekrytiy", "homuty-i-krepezh"]) {
+    assert.ok(isSingleWallProduct({ category: { slug: category }, contour: "одностенный", skus: [] }), category);
+  }
+  assert.ok(isSingleWallProduct({ category: { slug: "odnokonturnye-otvody" }, contour: null, skus: [] }));
+  assert.ok(isSingleWallProduct({ category: { slug: "shibery" }, contour: null, skus: [{ contour: "одноконтурный" }] }));
+  assert.equal(isSingleWallProduct({ category: { slug: "sendvich-shibery" }, contour: "сэндвич", skus: [{ contour: "сэндвич" }] }), false);
+  assert.equal(isSingleWallProduct({ category: { slug: "flantsy" }, contour: null, skus: [] }), false);
+  assert.equal(isSingleWallProduct({ category: { slug: "uzly-prohoda-krovli" }, contour: null, skus: [] }), false);
+});
+
+function single(id, grade = "AISI 304", thickness = "0.8", length = null, diameter = 150) {
+  return { ...sku(id, grade, null, length, thickness), diameter_mm: diameter, outer_diameter_mm: null,
+    contour: "одностенный", angle_deg: null, insulation_mm: null, attributes: {} };
+}
+
+test("single-wall damper selects existing steel/thickness while keeping diameter and execution", () => {
+  const current = single("304-08");
+  const list = [current, single("304-05", "AISI 304", "0.5"), single("321-08", "AISI 321"),
+    { ...single("321-wrong-execution", "AISI 321"), attributes: { execution: "Другой механизм" } },
+    single("321-wrong-diameter", "AISI 321", "0.8", null, 200)];
+  const available = estimateGeometryVariants(list, current);
+  assert.deepEqual(estimateVariantFields(available).map(f => f.label), ["Материал и марка стали", "Толщина"]);
+  assert.deepEqual(estimateVariantOptions(available, current, "inner"), ["AISI 304", "AISI 321"]);
+  assert.equal(selectEstimateVariant(available, current, "inner", "AISI 321").id, "321-08");
+  assert.equal(selectEstimateVariant(available, current, "innerThickness", "0.5").id, "304-05");
+  const grade321 = selectEstimateVariant(available, current, "inner", "AISI 321");
+  assert.deepEqual(estimateVariantOptions(available, grade321, "innerThickness"), ["0.8"]);
+  assert.equal(selectEstimateVariant(available, grade321, "innerThickness", "0.5"), null);
+});
+
+test("single-wall pipe preserves length where available and never creates absent galvanized thickness", () => {
+  const current = single("304-08-1000", "AISI 304", "0.8", 1000);
+  const short = single("321-05-500", "AISI 321", "0.5", 500);
+  const long = single("321-08-1000", "AISI 321", "0.8", 1000);
+  const galvanized = { ...single("galvanized", null, null, 1000), material: "оцинкованная сталь" };
+  const variants = estimateGeometryVariants([current, short, long, galvanized], current);
+  assert.equal(selectEstimateVariant(variants, current, "inner", "AISI 321").id, long.id);
+  assert.equal(selectEstimateVariant(variants, long, "length", "500"), null);
+  assert.equal(selectEstimateVariant(variants, long, "innerThickness", "0.5").id, short.id);
+  assert.equal(selectEstimateVariant(variants, current, "inner", "Оцинковка").id, galvanized.id);
+  assert.deepEqual(estimateVariantOptions(variants, galvanized, "innerThickness"), ["__none__"]);
+  assert.equal(selectEstimateVariant(variants, galvanized, "innerThickness", "0.8"), null);
 });

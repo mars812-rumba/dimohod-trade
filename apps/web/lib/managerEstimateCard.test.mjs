@@ -98,7 +98,15 @@ test("catalog BOM editing is constrained to exact catalog variants", () => {
   assert.match(componentSource, /replaceVariant/);
   assert.match(componentSource, /product_kind\?\.includes\("труб"\)/);
   assert.match(componentSource, /isSandwichProduct\(p\)/);
+  assert.match(componentSource, /isSingleWallProduct\(p\)/);
   assert.match(componentSource, /const available=estimateGeometryVariants\(variants,current\)/);
+});
+
+test("single-wall inline material edits retain dedicated flange and clamp controls", () => {
+  assert.match(componentSource, /hasMaterialVariants=Boolean\(p&&!isFlange&&\(isPipe\|\|isSingleWallProduct\(p\)\|\|isSandwichProduct\(p\)\)\)/);
+  assert.match(componentSource, /hasMaterialVariants&&p&&currentSku\?<PipeVariantControls/);
+  assert.match(componentSource, /<ClampDiameterControls[\s\S]*?isSingleWallProduct\(p\)\?<PipeVariantControls/);
+  assert.match(componentSource, /\/catalog\/items\/\$\{line\.id\}.*skuId:nextSku.id,quantity:line.quantity,note:line.note/);
 });
 
 test("flange rows expose the verified base size as an inline SKU selector", () => {

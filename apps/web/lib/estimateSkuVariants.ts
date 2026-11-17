@@ -10,6 +10,13 @@ export function isSandwichProduct(product: Pick<Product, "category" | "contour" 
     || product.skus.some(sku => /сэндвич|двустен|sandwich/i.test(sku.contour ?? ""));
 }
 
+export function isSingleWallProduct(product: Pick<Product, "category" | "contour" | "skus">): boolean {
+  const singleWall = /одностен|одноконтур|single[-_ ]?wall/i;
+  return product.category.slug.startsWith("odnokonturnye-")
+    || singleWall.test(product.contour ?? "")
+    || product.skus.some(sku => singleWall.test(sku.contour ?? ""));
+}
+
 // Material changes must not silently change the object's diameter, angle or insulation.
 export function estimateGeometryVariants<T extends Pick<SKU, "diameter_mm" | "outer_diameter_mm" | "angle_deg" | "insulation_mm" | "attributes">>(variants: readonly T[], current: T): T[] {
   return variants.filter(sku => {
