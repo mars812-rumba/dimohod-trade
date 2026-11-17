@@ -20,7 +20,7 @@ test("contact and installation routes have their own canonical, social metadata 
 
 test("site call tracking number remains distinct from external listings and replaces legacy public calls", () => {
   const contacts = read("../app/contacts/page.tsx");
-  for (const target of ["tel:+79643424565", "tel:+78126424545", "mailto:office@dimohod-trade.pro"]) {
+  for (const target of ["tel:+79643424565", "tel:+78126424565", "mailto:office@dimohod-trade.pro"]) {
     assert.ok(contacts.includes(`href="${target}"`));
   }
   function checkDirectory(directory) {
@@ -28,7 +28,7 @@ test("site call tracking number remains distinct from external listings and repl
       const path = new URL(entry.name, `${directory.href}/`);
       if (entry.isDirectory()) checkDirectory(path);
       else if (/\.tsx?$/.test(entry.name)) {
-        assert.doesNotMatch(readFileSync(path, "utf8"), /79650756555|965\) 075-65-55|965 075-65-55/, path.pathname);
+        assert.doesNotMatch(readFileSync(path, "utf8"), /79650756555|965\) 075-65-55|965 075-65-55|78126424545|642-45-45/, path.pathname);
       }
     }
   }

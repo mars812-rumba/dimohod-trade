@@ -1007,7 +1007,7 @@ export default async function HomePage() {
             </div>
             <LeadForm source="homepage-materials" compact />
             <p>{workingHoursText}</p>
-            <div className={styles.contactAlternatives}><a href="tel:+79643424565"><Phone aria-hidden size={16} /> +7 (964) 342-45-65</a><a href="tel:+78126424545"><Phone aria-hidden size={16} /> +7 (812) 642-45-45</a><a href="mailto:office@dimohod-trade.pro"><Mail aria-hidden size={16} /> office@dimohod-trade.pro</a></div>
+            <div className={styles.contactAlternatives}><a href="tel:+79643424565"><Phone aria-hidden size={16} /> +7 (964) 342-45-65</a><a href="tel:+78126424565"><Phone aria-hidden size={16} /> +7 (812) 642-45-65</a><a href="mailto:office@dimohod-trade.pro"><Mail aria-hidden size={16} /> office@dimohod-trade.pro</a></div>
           </div>
         </div>
       </section>

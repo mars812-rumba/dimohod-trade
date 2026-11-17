@@ -71,9 +71,9 @@ export function SiteFooter() {
               <Phone aria-hidden size={15} />
               <span>+7 (964) 342-45-65</span>
             </a>
-            <a className={styles.contactLink} href="tel:+78126424545">
+            <a className={styles.contactLink} href="tel:+78126424565">
               <Phone aria-hidden size={15} />
-              <span>+7 (812) 642-45-45</span>
+              <span>+7 (812) 642-45-65</span>
             </a>
             <a className={styles.contactLink} href="mailto:office@dimohod-trade.pro">
               <Mail aria-hidden size={15} />

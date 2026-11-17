@@ -14,9 +14,17 @@ test("call button uses the new mobile number in its target and accessible label"
 test("footer, mobile menu and homepage expose both phones and the existing public email", () => {
   for (const path of ["../components/SiteHeader.tsx", "../components/SiteFooter.tsx", "../app/page.tsx"]) {
     const source = read(path);
-    for (const target of ["tel:+79643424565", "tel:+78126424545", "mailto:office@dimohod-trade.pro"]) {
+    for (const target of ["tel:+79643424565", "tel:+78126424565", "mailto:office@dimohod-trade.pro"]) {
       assert.ok(source.includes(`href="${target}"`), `${path}: ${target}`);
     }
     assert.doesNotMatch(source, /79650756555/);
+  }
+});
+
+test("all public landline links display the updated city number", () => {
+  for (const path of ["../components/SiteHeader.tsx", "../components/SiteFooter.tsx", "../app/page.tsx", "../app/contacts/page.tsx"]) {
+    const source = read(path);
+    assert.match(source, /<a\b[^>]*href="tel:\+78126424565"[^>]*>[\s\S]*?\+7 \(812\) 642-45-65[\s\S]*?<\/a>/, path);
+    assert.doesNotMatch(source, /78126424545|642-45-45/, path);
   }
 });

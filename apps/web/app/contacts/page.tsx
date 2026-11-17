@@ -27,7 +27,7 @@ export default function ContactsPage() {
             <h2 id="contact-title">Связаться с нами</h2>
             <dl className={styles.details}>
               <div><dt>Телефон сайта</dt><dd><a href="tel:+79643424565">+7 (964) 342-45-65</a></dd></div>
-              <div><dt>Дополнительный телефон</dt><dd><a href="tel:+78126424545">+7 (812) 642-45-45</a></dd></div>
+              <div><dt>Дополнительный телефон</dt><dd><a href="tel:+78126424565">+7 (812) 642-45-65</a></dd></div>
               <div><dt>Электронная почта</dt><dd><a href="mailto:office@dimohod-trade.pro">office@dimohod-trade.pro</a></dd></div>
             </dl>
             <p>Для подбора сообщите модель отопителя, населённый пункт и предполагаемый маршрут дымохода. Неизвестные параметры уточним вместе.</p>
