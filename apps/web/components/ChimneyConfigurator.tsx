@@ -1950,6 +1950,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
         }
       }
       if (line.nominalLengthMm) params.set("length_mm", String(line.nominalLengthMm));
+      if (line.preferredWallThicknessMm !== undefined) params.set("wall_thickness_mm", String(line.preferredWallThicknessMm));
       if (line.contour) params.set("contour", line.contour);
       if (line.insulationMm !== undefined) params.set("insulation_mm", String(line.insulationMm));
       if (line.productKind === "отвод" || line.productKind === "тройник") params.set("angle_deg", "90");

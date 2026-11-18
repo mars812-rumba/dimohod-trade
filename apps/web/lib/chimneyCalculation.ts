@@ -85,6 +85,7 @@ export type ChimneyBomLine = {
   materialPreference?: "stainless-standard" | "catalog-default";
   thicknessProfile?: ChimneyThicknessProfile;
   preferredSteelGrade?: string;
+  preferredWallThicknessMm?: number;
   preferredOuterSteelGrade?: string;
   catalogBaseSize?: string;
   catalogExecution?: string;
@@ -837,6 +838,8 @@ function addRouteNodes(
         requiresSku: true,
         catalogCategorySlug: "homuty-i-krepezh",
         catalogSearch: "Хомут силовой для консоли",
+        preferredSteelGrade: "AISI 430",
+        preferredWallThicknessMm: 0.8,
         catalogDiameterMode: "sandwich-outer-exact",
         quantityNote: "По одному на каждую рассчитанную фасадную консоль.",
       });
@@ -941,6 +944,8 @@ function addRouteNodes(
         requiresSku: true,
         catalogCategorySlug: "homuty-i-krepezh",
         catalogSearch: "Хомут силовой для консоли",
+        preferredSteelGrade: "AISI 430",
+        preferredWallThicknessMm: 0.8,
         catalogDiameterMode: "sandwich-outer-exact",
         quantityNote: "Количество равно количеству универсальных консолей.",
       });

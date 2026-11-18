@@ -1,15 +1,33 @@
 import type { Product, SKU } from "./api";
 
+export function isPowerClampProduct(product: Pick<Product, "slug">): boolean {
+  return product.slug === "odnostennyi-krepezh-homut-silovoi";
+}
+
+export function estimateCatalogVariants(product: Pick<Product, "slug" | "skus">): SKU[] {
+  return product.skus.filter(sku => !isPowerClampProduct(product)
+    || !sku.article?.startsWith("RECOVERY-TEMP-POWER-CLAMP-"));
+}
+
+/** Default only within an already exact diameter match; never guess another size/execution. */
+export function defaultEstimateVariant(product: Pick<Product, "slug">, variants: readonly SKU[]): SKU | null {
+  if (!isPowerClampProduct(product)) return variants[0] ?? null;
+  return variants.find(sku => text(sku.steel_grade) === "aisi 430"
+    && dimension(sku.wall_thickness_mm) === 0.8
+    && !sku.article?.startsWith("RECOVERY-TEMP-POWER-CLAMP-")) ?? null;
+}
+
 export function estimatePickerVariants(
   product: Product | null,
   picker: { diameter: number | null; outer: number | null } | null,
 ): SKU[] {
   if (!product) return [];
-  if (!picker || picker.diameter === null) return product.skus;
+  const variants = estimateCatalogVariants(product);
+  if (!picker || picker.diameter === null) return variants;
   if (isDiameterClampProduct(product)) {
-    return product.skus.filter(sku => sku.diameter_mm === (picker.outer ?? picker.diameter));
+    return variants.filter(sku => sku.diameter_mm === (picker.outer ?? picker.diameter));
   }
-  return product.skus.filter(sku => {
+  return variants.filter(sku => {
     const minimum = dimension(sku.attributes.diameter_min_mm as number | string | null);
     const maximum = dimension(sku.attributes.diameter_max_mm as number | string | null);
     if (minimum !== null && maximum !== null) {

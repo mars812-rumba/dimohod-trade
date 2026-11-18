@@ -138,7 +138,7 @@ async function matchBomLine({
   const exactOuter = line.catalogDiameterMode === "sandwich-outer-exact";
   const rangeOuter = line.catalogDiameterMode === "sandwich-outer-range";
   const exactByFields = exactDiameter || exactOuter || rangeOuter;
-  if (exactDiameter) {
+  if (exactDiameter || exactOuter) {
     const outerDiameter = line.insulationMm === undefined ? null : diameter + line.insulationMm * 2;
     params.set("diameter", exactOuter ? `${diameter + 100}:` : `${diameter}:${outerDiameter ?? ""}`);
   }
@@ -167,6 +167,7 @@ async function matchBomLine({
     }
   }
   if (line.nominalLengthMm) params.set("length_mm", String(line.nominalLengthMm));
+  if (line.preferredWallThicknessMm !== undefined) params.set("wall_thickness_mm", String(line.preferredWallThicknessMm));
   if (line.contour) params.set("contour", line.contour);
   if (line.insulationMm !== undefined) params.set("insulation_mm", String(line.insulationMm));
   if (line.productKind === "отвод" || line.productKind === "тройник") params.set("angle_deg", "90");

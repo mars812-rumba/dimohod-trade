@@ -27,7 +27,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -244,7 +244,7 @@ def find_line(lines: list[object], item_id: str) -> dict[str, object]:
     return line
 
 
-async def catalog_skus(session: AsyncSession, sku_ids: list[uuid.UUID]) -> dict[str, SKU]:
+async def catalog_skus(session: AsyncSession, sku_ids: list[uuid.UUID], *, include_inactive: bool = False) -> dict[str, SKU]:
     if not sku_ids:
         return {}
     result = await session.execute(
@@ -254,7 +254,8 @@ async def catalog_skus(session: AsyncSession, sku_ids: list[uuid.UUID]) -> dict[
             selectinload(SKU.product).selectinload(Product.category),
             selectinload(SKU.product).selectinload(Product.skus),
         )
-        .where(SKU.id.in_(sku_ids), SKU.is_active.is_(True), Product.is_active.is_(True))
+        .where(SKU.id.in_(sku_ids), Product.is_active.is_(True),
+               true() if include_inactive else SKU.is_active.is_(True))
     )
     return {str(sku.id): sku for sku in result.scalars().unique()}
 
@@ -570,7 +571,7 @@ async def read_manager_catalog_metadata(
 ) -> dict[str, object]:
     authorized_manager_lead(lead_id, manager_token, admin_token, admin_session)
     unique_ids = list(dict.fromkeys(payload.sku_ids))
-    found = await catalog_skus(session, unique_ids)
+    found = await catalog_skus(session, unique_ids, include_inactive=True)
     response.headers["Cache-Control"] = "no-store"
     return {"items": [catalog_sku_metadata(found[str(sku_id)]) for sku_id in unique_ids if str(sku_id) in found]}
 
@@ -631,10 +632,10 @@ async def replace_manager_catalog_line(
             lookup_ids.append(uuid.UUID(str(current_sku_id)))
     except ValueError as error:
         raise HTTPException(status_code=409, detail="Исходный SKU отсутствует в каталоге") from error
-    found = await catalog_skus(session, lookup_ids)
+    found = await catalog_skus(session, lookup_ids, include_inactive=True)
     replacement = found.get(str(payload.sku_id))
     current = found.get(str(current_sku_id)) if current_sku_id else None
-    if replacement is None:
+    if replacement is None or not replacement.is_active:
         raise HTTPException(status_code=404, detail="Активный SKU не найден в каталоге")
     if current is None:
         raise HTTPException(status_code=409, detail="Ручную позицию нельзя заменить как каталожную")

@@ -237,10 +237,10 @@ def test_forced_catalog_selection_keeps_real_sku_and_persists_warning(fixture, m
     sku = SimpleNamespace(id=sid, article="LOCAL-CLAMP-D250", name="Хомут Ø250",
         diameter_mm=250, outer_diameter_mm=None, steel_grade="AISI 430", material="нержавеющая сталь",
         wall_thickness_mm=Decimal("0.50"), length_mm=None, angle_deg=None, insulation_mm=None,
-        price_rub=Decimal("1234.50"), attributes={})
+        price_rub=Decimal("1234.50"), attributes={}, is_active=True)
     sku.product = SimpleNamespace(id=sid, slug="local-clamp", name="Широкий хомут", product_kind="крепеж", category_id=sid,
         skus=[sku], extra_attributes={}, category=SimpleNamespace(id=sid, slug="homuty-i-krepezh", name="Хомуты"))
-    async def lookup(session, ids):
+    async def lookup(session, ids, *, include_inactive=False):
         return {str(sid): sku} if sid in ids else {}
     monkeypatch.setattr("app.modules.leads.router.catalog_skus", lookup)
     monkeypatch.setattr("app.modules.leads.router.primary_visual_sku_image", lambda *args: None)
@@ -263,4 +263,47 @@ def test_forced_catalog_selection_keeps_real_sku_and_persists_warning(fixture, m
     updated = client.patch(BASE+"/catalog/items/"+line["id"], headers=HEADERS, json={**body,"revision":2,"forceAdd":False})
     assert updated.status_code == 200
     assert updated.json()["estimate"]["lines"][-1]["selection_warning"] is None
+    client.app.dependency_overrides.clear()
+
+
+def test_inactive_recovery_line_is_readable_and_replaceable_but_not_selectable(fixture, monkeypatch):
+    from decimal import Decimal
+    from types import SimpleNamespace
+    from uuid import UUID
+    from app.db.session import get_db
+
+    client, directory, envelope = fixture
+    old_id, new_id = UUID(int=215), UUID(int=250)
+    old = SimpleNamespace(id=old_id, article="RECOVERY-TEMP-POWER-CLAMP-D215", name="[ТЕСТ] Хомут",
+                          is_active=False, diameter_mm=215, outer_diameter_mm=None, steel_grade=None,
+                          material=None, wall_thickness_mm=None, length_mm=None, angle_deg=None,
+                          insulation_mm=None, price_rub=Decimal("100"), attributes={})
+    real = SimpleNamespace(**{**vars(old), "id":new_id,"article":"REAL-CLAMP-D250","name":"Хомут Ø250",
+                             "is_active":True,"diameter_mm":250,"steel_grade":"AISI 430",
+                             "material":"нержавеющая сталь","wall_thickness_mm":Decimal("0.8"),
+                             "price_rub":Decimal("1000.62")})
+    product = SimpleNamespace(id=new_id,slug="odnostennyi-krepezh-homut-silovoi",name="Хомут силовой для консоли",
+                              product_kind="крепеж",category_id=new_id,skus=[old,real],extra_attributes={},
+                              category=SimpleNamespace(id=new_id,slug="homuty-i-krepezh",name="Хомуты"))
+    old.product = real.product = product
+    envelope["estimate"]["lines"][0].update(sku_id=str(old_id),unit_price_rub=100,line_total_rub=200)
+    (directory/"estimate.json").write_text(json.dumps(envelope))
+    async def lookup(session, ids, *, include_inactive=False):
+        return {str(s.id):s for s in (old,real) if s.id in ids and (s.is_active or include_inactive)}
+    monkeypatch.setattr("app.modules.leads.router.catalog_skus",lookup)
+    monkeypatch.setattr("app.modules.leads.router.primary_visual_sku_image",lambda *args:None)
+    monkeypatch.setattr("app.modules.leads.router.primary_product_image",lambda *args:None)
+    client.app.dependency_overrides[get_db] = lambda:None
+    assert client.get(BASE,headers=HEADERS).json()["estimate"]["lines"][0]["unit_price_rub"]==100
+    metadata=client.post(BASE+"/catalog/metadata",headers=HEADERS,json={"skuIds":[str(old_id)]})
+    assert metadata.status_code==200 and metadata.json()["items"][0]["sku_id"]==str(old_id)
+    body={"revision":1,"skuId":str(old_id),"quantity":2,"note":"keep"}
+    assert client.post(BASE+"/catalog/items",headers=HEADERS,json=body).status_code==404
+    assert client.patch(BASE+"/catalog/items/line",headers=HEADERS,json=body).status_code==404
+    assert client.get(BASE,headers=HEADERS).json()["revision"]==1
+    replaced=client.patch(BASE+"/catalog/items/line",headers=HEADERS,json={**body,"skuId":str(new_id),"forceAdd":True})
+    assert replaced.status_code==200
+    line=replaced.json()["estimate"]["lines"][0]
+    assert line["sku_id"]==str(new_id) and line["unit_price_rub"]==1000.62
+    assert line["line_total_rub"]==2001.24 and line["quantity"]==2 and line["note"]=="keep"
     client.app.dependency_overrides.clear()
