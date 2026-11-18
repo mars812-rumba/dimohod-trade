@@ -22,18 +22,66 @@ RUNTIME = Path('/home/dimohod-production-runtime')
 def run(*args, cwd=None, env=None, **kwargs):
     return subprocess.run(args, cwd=cwd, env=env, check=True, **kwargs)
 
-def ready():
-    deadline = time.monotonic() + 45
+READINESS_URLS = (
+    'http://127.0.0.1:8102/api/v1/health',
+    'http://127.0.0.1:8102/api/v1/products?limit=1',
+    'http://localhost:3102/catalog',
+)
+
+
+def ready(timeout_seconds=90, request_timeout=5, poll_interval=1):
+    deadline = time.monotonic() + timeout_seconds
+    failures = {}
+    last_report = None
     while time.monotonic() < deadline:
-        try:
-            for url in ['http://127.0.0.1:8102/api/v1/products?limit=1', 'http://127.0.0.1:3102/catalog']:
-                with urlopen(url, timeout=5) as response:
+        for url in READINESS_URLS:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            try:
+                with urlopen(url, timeout=min(request_timeout, remaining)) as response:
                     if response.status != 200:
-                        raise RuntimeError('Health check failed')
+                        raise RuntimeError(f'HTTP {response.status}')
+                    # A healthy process alone is insufficient: exercise the DB
+                    # catalog and real SSR page before switching is accepted.
+                    if ':8102/' in url:
+                        body = json.loads(response.read(65536))
+                        if url.endswith('/health'):
+                            if body.get('status') != 'ok':
+                                raise RuntimeError('Invalid health response')
+                        elif not isinstance(body.get('items'), list):
+                            raise RuntimeError('Invalid catalog response')
+                failures.pop(url, None)
+            except Exception as exc:
+                failures[url] = f'{type(exc).__name__}: {str(exc)[:160]}'
+                report = f'Readiness waiting: {url}: {failures[url]}'
+                if report != last_report:
+                    print(report, flush=True)
+                    last_report = report
+                # Do not render pages repeatedly while their API is unavailable.
+                break
+        else:
+            print('Production readiness: API, catalog and web returned HTTP 200.', flush=True)
             return
-        except Exception:
-            time.sleep(1)
-    raise RuntimeError('Production readiness check timed out')
+        remaining = deadline - time.monotonic()
+        if remaining > 0:
+            time.sleep(min(poll_interval, remaining))
+    details = '; '.join(f'{url}: {error}' for url, error in failures.items()) or 'deadline exhausted during probes'
+    raise RuntimeError(f'Production readiness check timed out after {timeout_seconds}s. {details}')
+
+
+def report_service_states():
+    """Useful failure diagnostics without dumping env, unit secrets or CRM logs."""
+    for name in ('dimohod-api.service', 'dimohod-web.service', 'dimohod-postgres.service'):
+        try:
+            result = subprocess.run(
+                ['systemctl', 'show', name, '-p', 'ActiveState', '-p', 'SubState',
+                 '-p', 'ExecMainStatus', '-p', 'NRestarts'],
+                capture_output=True, text=True, timeout=5, check=False,
+            )
+            print(f'Readiness service state: {name}: {result.stdout.strip()}', flush=True)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            print(f'Cannot read state for {name}: {type(exc).__name__}', flush=True)
 
 def main():
     if os.geteuid() != 0:
@@ -110,6 +158,7 @@ def main():
         run('systemctl', 'restart', 'dimohod-api.service', 'dimohod-web.service')
         ready()
     except Exception:
+        report_service_states()
         if switched:
             pending = BASE/'current.rollback'
             pending.unlink(missing_ok=True)

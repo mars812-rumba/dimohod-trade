@@ -17,7 +17,12 @@ SOURCE = Path('/home/dimohod-recovery')
 
 
 def run(args, **kwargs):
-    return subprocess.run(args, check=True, **kwargs)
+    try:
+        return subprocess.run(args, check=True, **kwargs)
+    except subprocess.CalledProcessError as exc:
+        # stdout/stderr already contain the remote readiness diagnostics. Avoid
+        # burying them under a traceback containing the entire quoted SSH script.
+        raise SystemExit(f'{args[0]} failed (exit {exc.returncode}); see command output above.') from None
 
 
 def main():
