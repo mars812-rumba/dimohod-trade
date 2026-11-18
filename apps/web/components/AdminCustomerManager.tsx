@@ -13,10 +13,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./AdminCustomerManager.module.css";
 import { LeadNotes } from "./LeadNotes";
 import { CustomerNameEditor } from "./CustomerNameEditor";
+import { CustomerDeleteButton } from "./CustomerDeleteButton";
 
 type CustomerContact = {
   method: "phone" | "whatsapp" | "telegram" | "email";
@@ -114,6 +115,35 @@ export function AdminCustomerManager() {
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [message, setMessage] = useState("");
+  const [deleted, setDeleted] = useState<{ id: string; name: string } | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const restoreSending = useRef(false);
+
+  function customerDeleted(customer: CustomerRecord, deletionId: string) {
+    setCustomers(current => current.filter(item => item.id !== customer.id));
+    setTotal(current => Math.max(0, current - 1));
+    setDeleted({ id: deletionId, name: customer.name || "Без имени" });
+    setMessage("Клиент и связанные сметы перемещены в закрытую корзину.");
+  }
+
+  async function restoreDeleted() {
+    if (!deleted || restoreSending.current) return;
+    const deletionId = deleted.id;
+    restoreSending.current = true; setRestoring(true); setMessage("");
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/v1/admin/customers/trash/${deletionId}/restore`, {
+        method: "POST", credentials: "include", cache: "no-store",
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(response.status === 401 ? "Сессия истекла. Войдите заново."
+        : typeof data?.detail === "string" ? data.detail : "Не удалось восстановить клиента.");
+      if (data?.status !== "restored") throw new Error("Обновите список, чтобы проверить восстановление.");
+      setDeleted(current => current?.id === deletionId ? null : current);
+      await loadCustomers(query);
+      setMessage("Клиент и сметы восстановлены.");
+    } catch (e) { setMessage(e instanceof Error ? e.message : "Ошибка восстановления"); }
+    finally { restoreSending.current = false; setRestoring(false); }
+  }
 
   async function loadCustomers(search = "") {
     setStatus("loading");
@@ -208,6 +238,11 @@ export function AdminCustomerManager() {
       <p aria-live="polite" className={styles.statusMessage}>
         {status === "loading" ? "Загружаем клиентов…" : message}
       </p>
+      {deleted ? <div className={styles.undoDeletion}>
+        <span>Удалена карточка: {deleted.name}</span>
+        <button disabled={restoring} type="button" onClick={() => void restoreDeleted()}>
+          {restoring ? "Восстанавливаем…" : "Восстановить клиента и сметы"}</button>
+      </div> : null}
 
       {status === "ready" && customers.length === 0 ? (
         <section className={styles.emptyState}>
@@ -279,6 +314,8 @@ export function AdminCustomerManager() {
               ) : null}
             </div>
 
+            <CustomerDeleteButton customerId={customer.id} name={customer.name}
+              onDeleted={deletionId => customerDeleted(customer, deletionId)} />
             {latestEstimate && previousEstimates.length ? (
               <details className={styles.previousEstimates}>
                 <summary>

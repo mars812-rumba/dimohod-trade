@@ -152,6 +152,10 @@ def _sync_customer_estimate(
     if not path.is_file():
         return
     customer = json.loads(path.read_text(encoding="utf-8"))
+    # A late in-flight update must not reattach a deleted lead to a newly
+    # created customer with the same contact-derived ID.
+    if not any(item.get("lead_id") == lead_record["id"] for item in customer.get("estimates", [])):
+        return
     summary = estimate_summary(lead_record["id"], lead_record["created_at"], envelope)
     customer["estimates"] = [
         item for item in customer.get("estimates", []) if item.get("lead_id") != lead_record["id"]

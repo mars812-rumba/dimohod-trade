@@ -2,6 +2,7 @@
 import json
 import re
 from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
@@ -14,6 +15,9 @@ from app.modules.leads.customers import (
     update_customer_name,
 )
 from app.modules.leads.notes import NotesConflictError, write_notes
+from app.modules.leads.customer_deletion import (
+    CustomerDeletionConflict, delete_customer, deletion_preview, restore_customer,
+)
 
 router = APIRouter(dependencies=[Depends(require_bom_admin)])
 
@@ -28,6 +32,50 @@ class CustomerNameUpdate(BaseModel):
     name: str = Field(max_length=100)
     expected_name: str = Field(max_length=100)
     model_config = ConfigDict(extra="forbid")
+
+
+class CustomerDeleteRequest(BaseModel):
+    expected_version: str = Field(pattern=r"^[a-f0-9]{64}$")
+    confirmation: Literal["delete_customer_with_estimates"]
+    model_config = ConfigDict(extra="forbid")
+
+
+def deletion_error(exc: Exception) -> HTTPException:
+    if isinstance(exc, FileNotFoundError):
+        return HTTPException(status_code=404, detail="Клиент или архив не найден")
+    if isinstance(exc, CustomerDeletionConflict):
+        return HTTPException(status_code=409, detail="Данные изменились или связаны с другой карточкой. Обновите список и подтвердите действие заново.")
+    return HTTPException(status_code=503, detail="Не удалось завершить действие с архивом. Обновите список перед повторной попыткой.")
+
+
+@router.get("/{customer_id}/deletion-preview")
+def preview_customer_deletion(customer_id: str, response: Response) -> dict:
+    try:
+        result = deletion_preview(settings.media_storage_dir, customer_id)
+    except (FileNotFoundError, CustomerDeletionConflict, OSError) as exc:
+        raise deletion_error(exc) from exc
+    response.headers["Cache-Control"] = "no-store"
+    return result
+
+
+@router.delete("/{customer_id}")
+def remove_customer(customer_id: str, payload: CustomerDeleteRequest, response: Response) -> dict:
+    try:
+        result = delete_customer(settings.media_storage_dir, customer_id, payload.expected_version)
+    except (FileNotFoundError, CustomerDeletionConflict, OSError) as exc:
+        raise deletion_error(exc) from exc
+    response.headers["Cache-Control"] = "no-store"
+    return result
+
+
+@router.post("/trash/{deletion_id}/restore")
+def undo_customer_deletion(deletion_id: str, response: Response) -> dict:
+    try:
+        result = restore_customer(settings.media_storage_dir, deletion_id)
+    except (FileNotFoundError, CustomerDeletionConflict, OSError) as exc:
+        raise deletion_error(exc) from exc
+    response.headers["Cache-Control"] = "no-store"
+    return result
 
 
 @router.patch("/{customer_id}/name")
