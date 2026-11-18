@@ -48,14 +48,24 @@ test("customer manager exposes status feedback", () => {
   assert.match(componentSource, /Загружаем клиентов/);
 });
 
-test("latest estimate and note buttons share a two-column row with matching heights", () => {
+test("latest note, estimate and icon-only deletion actions share one row", () => {
   const notes=fs.readFileSync(path.join(here,"../components/LeadNotes.tsx"),"utf8");
   const css=fs.readFileSync(path.join(here,"../components/AdminCustomerManager.module.css"),"utf8");
   assert.match(componentSource, /onSaved=\{notes => updateNotes\(customer.id, latestEstimate.lead_id, notes\)\}>/);
-  assert.match(componentSource, /Открыть смету[\s\S]*?<\/Link>\s*<\/LeadNotes>/);
+  assert.match(componentSource, /Открыть смету[\s\S]*?<\/Link>\s*<CustomerDeleteButton[^>]*?compact[\s\S]*?<\/LeadNotes>/);
   assert.match(notes, /styles.leadActionButtons/);
-  assert.match(css, /\.leadActionButtons \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(css, /min-height: 52px; box-sizing: border-box/);
+  assert.match(css, /\.leadActionButtons \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\) 44px/);
+  assert.match(css, /min-height: 44px; box-sizing: border-box/);
+  assert.match(css, /\.customerDeletionCompact > \.deleteConfirmation[^}]*grid-column: 1 \/ -1/);
+  assert.match(notes, /disabled=\{editing\}/);
+});
+
+test("quotation numbers are part of latest and previous titles, without separate badges or invented numbers", () => {
+  assert.match(componentSource, /estimate\.quotation_number \? `\$\{name\} КП №\$\{estimate\.quotation_number\}` : name/);
+  assert.match(componentSource, /\? "Быстрый расчёт" : estimate.profile_name/);
+  assert.match(componentSource, /\{estimateTitle\(latestEstimate\)\}/);
+  assert.match(componentSource, /\{estimateTitle\(estimate\)\}/);
+  assert.doesNotMatch(componentSource, /styles\.(quotationNumber|compactQuotationNumber)/);
 });
 
 test("internal notes are shown before opening both latest and previous estimates", () => {

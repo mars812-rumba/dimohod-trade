@@ -43,14 +43,11 @@ export function LeadNotes({ customerId, leadId, notes = "", onSaved, children }:
         <button type="submit" disabled={saving}>{saving ? "Сохраняем…" : "Сохранить заметку"}</button>
         <button type="button" disabled={saving} onClick={() => { setEditing(false); setError(""); }}>Отмена</button>
       </div>
-    </form> : <>
-      {notes ? <p className={styles.noteText}>{notes}</p> : null}
+    </form> : <>{notes ? <p className={styles.noteText}>{notes}</p> : null}</>}
       <div className={children ? styles.leadActionButtons : undefined}>
-      <button type="button" onClick={() => { setDraft(notes); setMessage(""); setEditing(true); }}>{notes ? "Редактировать заметку" : "Добавить заметку"}</button>
+      <button type="button" disabled={editing} onClick={() => { setDraft(notes); setMessage(""); setEditing(true); }}>{notes ? "Редактировать заметку" : "Добавить заметку"}</button>
       {children}
       </div>
-    </>}
-    {editing ? children : null}
     <span role="status">{message}</span>
   </div>;
 }

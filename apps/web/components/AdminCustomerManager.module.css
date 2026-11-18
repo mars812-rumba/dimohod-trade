@@ -175,7 +175,7 @@
 
 .customerSummary {
   display: grid;
-  grid-template-columns: minmax(240px, 1.1fr) minmax(250px, 0.9fr) minmax(220px, .9fr);
+  grid-template-columns: minmax(210px, 1fr) minmax(230px, 1fr) minmax(300px, 1fr);
   align-items: center;
   gap: 28px;
   padding: 20px;
@@ -255,27 +255,10 @@
 }
 
 .estimateProfile {
-  overflow: hidden;
   color: #203f47;
   font-size: 16px;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.quotationNumber {
-  width: fit-content;
-  max-width: 100%;
-  overflow: hidden;
-  padding: 4px 8px;
-  border-radius: 6px;
-  color: #9d431b;
-  background: #fff3eb;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .estimateStats {
@@ -340,17 +323,17 @@
 .leadActions { display: grid; gap: 12px; min-width: 0; }
 .leadActionButtons {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)) 44px;
   align-items: stretch;
   gap: 8px;
 }
 .leadActionButtons > button, .leadActionButtons > a {
-  min-width: 0; width: 100%; min-height: 52px; box-sizing: border-box;
-  padding: 8px 10px; white-space: normal; line-height: 1.3;
+  min-width: 0; width: 100%; min-height: 44px; box-sizing: border-box;
+  padding: 8px 6px; white-space: normal; overflow-wrap: anywhere; line-height: 1.3;
 }
 .leadActionButtons > a svg { flex-shrink: 0; }
 .leadNotes { min-width: 0; color: #244f59; font-size: 13px; }
-.leadNotes form { display: grid; gap: 8px; }
+.leadNotes form { display: grid; gap: 8px; margin-bottom: 12px; }
 .leadNotes label { font-weight: 700; }
 .leadNotes textarea {
   width: 100%; min-width: 0; box-sizing: border-box; resize: vertical;
@@ -440,20 +423,13 @@
 }
 
 .compactEstimateIdentity strong {
-  overflow: hidden;
   font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .compactEstimateIdentity small {
   color: #7b8a8e;
   font-size: 11px;
-}
-
-.compactEstimateIdentity .compactQuotationNumber {
-  color: #9d431b;
-  font-weight: 750;
 }
 
 .compactEstimateStats {
@@ -569,7 +545,7 @@
 
   .leadActions {
     grid-column: 1 / -1;
-    justify-self: start;
+    justify-self: stretch;
   }
 
   .compactEstimateRow {
@@ -622,6 +598,10 @@
     width: 100%;
   }
 
+  .leadActionButtons { gap: 6px; }
+  .leadActionButtons > button, .leadActionButtons > a { font-size: 12px; padding: 8px 6px; }
+  .leadActionButtons > a svg { display: none; }
+
   .estimateStats {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 18px;
@@ -659,4 +639,7 @@
 .deleteActions, .undoDeletion { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .undoDeletion { margin-bottom: 16px; padding: 12px; border-radius: 8px; background: #edf3f6; overflow-wrap: anywhere; }
 .customerDeletion [role="alert"] { color: #a52f23; font-size: 13px; overflow-wrap: anywhere; }
+.customerDeletionCompact { display: contents; }
+.customerDeletionCompact > .deleteButton { grid-column: 3; grid-row: 1; width: 44px; min-height: 44px; padding: 0; justify-content: center; }
+.customerDeletionCompact > .deleteConfirmation, .customerDeletionCompact > [role="alert"] { grid-column: 1 / -1; min-width: 0; }
 .estimateReceived { display: inline-block; width: fit-content; padding: 6px 10px; border-radius: 6px; color: #355868; background: #edf3f6; font-size: 12px; font-weight: 700; }

@@ -6,10 +6,11 @@ import styles from "./AdminCustomerManager.module.css";
 
 type Preview = { customer_id: string; version: string; lead_count: number; estimate_count: number };
 
-export function CustomerDeleteButton({ customerId, name, onDeleted }: {
+export function CustomerDeleteButton({ customerId, name, onDeleted, compact = false }: {
   customerId: string;
   name: string;
   onDeleted: (deletionId: string) => void;
+  compact?: boolean;
 }) {
   const id = useId();
   const sending = useRef(false);
@@ -61,10 +62,13 @@ export function CustomerDeleteButton({ customerId, name, onDeleted }: {
     finally { sending.current = false; setBusy(false); }
   }
 
-  return <div className={styles.customerDeletion}>
-    {!preview ? <button className={styles.deleteButton} disabled={busy} type="button"
-      onClick={() => void requestPreview()}><Trash2 aria-hidden size={16} />
-      {busy ? "Проверяем…" : "Удалить клиента и сметы"}</button> :
+  return <div className={`${styles.customerDeletion}${compact ? ` ${styles.customerDeletionCompact}` : ""}`}>
+    {compact || !preview ? <button className={styles.deleteButton} disabled={busy || !!preview} type="button"
+      aria-label={compact ? "Удалить клиента и все его сметы" : undefined}
+      title={compact ? "Удалить клиента и все его сметы" : undefined}
+      aria-busy={busy} onClick={() => void requestPreview()}><Trash2 aria-hidden size={compact ? 18 : 16} />
+      {compact ? null : busy ? "Проверяем…" : "Удалить клиента и сметы"}</button> : null}
+    {preview ?
       <div className={styles.deleteConfirmation} role="dialog" aria-labelledby={`${id}-title`} aria-busy={busy}
         onKeyDown={e => { if (e.key === "Escape" && !busy) { setPreview(null); setError(""); } }}>
         <strong id={`${id}-title`}>Удалить клиента «{name || "Без имени"}»?</strong>
@@ -78,7 +82,7 @@ export function CustomerDeleteButton({ customerId, name, onDeleted }: {
           <button className={styles.deleteButton} disabled={busy || !confirmed} type="button"
             onClick={() => void remove()}>{busy ? "Удаляем…" : "Подтвердить удаление"}</button>
         </div>
-      </div>}
+      </div> : null}
     {error ? <p role="alert">{error}</p> : null}
   </div>;
 }

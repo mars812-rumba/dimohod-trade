@@ -36,3 +36,12 @@ test("successful deletion updates the list and provides authenticated recovery w
   assert.match(manager, /Восстановить клиента и сметы/);
   assert.match(manager, /if \(!deleted \|\| restoreSending.current\) return/);
 });
+
+test("compact trash keeps an accessible name, tooltip and explicit confirmation", () => {
+  assert.match(button, /compact\?: boolean/);
+  assert.match(button, /aria-label=\{compact \? "Удалить клиента и все его сметы"/);
+  assert.match(button, /title=\{compact \? "Удалить клиента и все его сметы"/);
+  assert.match(button, /compact \? null : busy \? "Проверяем…"/);
+  assert.match(button, /Удалить всю карточку и все связанные сметы/);
+  assert.match(css, /\.customerDeletionCompact > \.deleteButton[^}]*width: 44px; min-height: 44px/);
+});

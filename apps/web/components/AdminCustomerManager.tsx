@@ -85,6 +85,12 @@ function estimateLabel(count: number): string {
   return "расчётов";
 }
 
+function estimateTitle(estimate: CustomerEstimate): string {
+  const name = estimate.profile_name === "Быстрый предварительный расчёт"
+    ? "Быстрый расчёт" : estimate.profile_name;
+  return estimate.quotation_number ? `${name} КП №${estimate.quotation_number}` : name;
+}
+
 function EstimateIntent({ estimate }: { estimate: CustomerEstimate }) {
   if (estimate.status === "callback_requested" || estimate.callback_requested_at) {
     return <span className={styles.callbackRequested}>Просит связаться{estimate.callback_requested_at ? ` · ${formatDate(estimate.callback_requested_at)}` : ""}</span>;
@@ -283,11 +289,8 @@ export function AdminCustomerManager() {
               {latestEstimate ? (
                 <>
                   <div className={styles.estimateOverview}>
-                    <strong className={styles.estimateProfile}>{latestEstimate.profile_name}</strong>
+                    <strong className={styles.estimateProfile}>{estimateTitle(latestEstimate)}</strong>
                     <EstimateIntent estimate={latestEstimate} />
-                    {latestEstimate.quotation_number ? (
-                      <span className={styles.quotationNumber}>КП №{latestEstimate.quotation_number}</span>
-                    ) : null}
                     <dl className={styles.estimateStats}>
                       <div>
                         <dt>Позиций</dt>
@@ -308,14 +311,16 @@ export function AdminCustomerManager() {
                   >
                     Открыть смету <ExternalLink aria-hidden size={16} />
                   </Link>
+                  <CustomerDeleteButton customerId={customer.id} name={customer.name} compact
+                    onDeleted={deletionId => customerDeleted(customer, deletionId)} />
                   </LeadNotes>
                   </div>
                 </>
               ) : null}
             </div>
 
-            <CustomerDeleteButton customerId={customer.id} name={customer.name}
-              onDeleted={deletionId => customerDeleted(customer, deletionId)} />
+            {!latestEstimate ? <CustomerDeleteButton customerId={customer.id} name={customer.name}
+              onDeleted={deletionId => customerDeleted(customer, deletionId)} /> : null}
             {latestEstimate && previousEstimates.length ? (
               <details className={styles.previousEstimates}>
                 <summary>
@@ -333,11 +338,8 @@ export function AdminCustomerManager() {
                       key={estimate.lead_id}
                     >
                       <span className={styles.compactEstimateIdentity}>
-                        <strong>{estimate.profile_name}</strong>
+                        <strong>{estimateTitle(estimate)}</strong>
                         <EstimateIntent estimate={estimate} />
-                        {estimate.quotation_number ? (
-                          <small className={styles.compactQuotationNumber}>КП №{estimate.quotation_number}</small>
-                        ) : null}
                         <small>{formatDate(estimate.created_at)}</small>
                       </span>
                       <span className={styles.compactEstimateStats}>
