@@ -14,10 +14,28 @@ const fs = require("node:fs");
   });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, serviceWorkers: "block" });
+    await context.addInitScript(() => localStorage.setItem("dimohod_analytics_consent_v1", "declined"));
     await context.route("**/*", route => {
       const url = new URL(route.request().url());
       return ["127.0.0.1", "localhost"].includes(url.hostname) || !url.protocol.startsWith("http") ? route.continue() : route.abort();
     });
+    if (process.env.READY_KITS_LIVE_MEDIA === "1") {
+      const photos = new Map();
+      // Optional read-only proxy for visual checks against actual public catalogue photos.
+      await context.route("**/media/catalog/**", async route => {
+        const path = new URL(route.request().url());
+        const key = path.pathname + path.search;
+        if (!photos.has(key)) photos.set(key, (async () => {
+          try {
+            const response = await context.request.get(`https://dimohod-trade.pro${key}`, { timeout: 10000 });
+            const contentType = response.headers()["content-type"] || "";
+            if (!response.ok() || !contentType.startsWith("image/")) return { status: 404, body: "" };
+            return { status: 200, contentType, body: await response.body() };
+          } catch { return { status: 404, body: "" }; }
+        })());
+        await route.fulfill(await photos.get(key));
+      });
+    }
     const page = await context.newPage(), errors = [];
     const marker = await context.request.get(`${base}/api/v1/ready-kits-test-preview`);
     assert.equal((await marker.json()).isolated_ready_kits_preview, true, "Only isolated preview may run this test");
@@ -28,6 +46,13 @@ const fs = require("node:fs");
     if (await analyticsDecline.isVisible()) await analyticsDecline.click();
     assert.equal(await page.locator('.top-nav > a[href="/komplekty"]').isVisible(), true);
     assert.equal(await page.locator("tbody tr").count(), 11);
+    const rows = page.locator("#bom tbody tr");
+    assert.equal(await rows.first().locator('[data-spec-group="inner"]').count(), 0);
+    const sandwich = rows.nth(3);
+    for (const kind of ["inner", "insulation", "outer"]) assert.equal(await sandwich.locator(`[data-spec-group="${kind}"]`).count(), 1);
+    assert.match(await sandwich.locator('[data-spec-group="inner"]').innerText(), /AISI 304/);
+    assert.match(await sandwich.locator('[data-spec-group="outer"]').innerText(), /AISI 430/);
+    assert.ok(await sandwich.locator("svg").count() >= 3);
     assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://dimohod-trade.pro/komplekty/cherez-perekrytie-4m-d115");
     assert.equal(await page.getByLabel("Диаметр комплекта").locator("option").count(), 3);
     await page.screenshot({ path: `${artifacts}/desktop-roof.png`, fullPage: true });
@@ -50,6 +75,32 @@ const fs = require("node:fs");
     assert.ok(box.scroll <= box.inner + 1, JSON.stringify(box));
     await page.screenshot({ path: `${artifacts}/mobile-wall.png`, fullPage: true });
     await page.screenshot({ path: `${artifacts}/mobile-wall-first-screen.png` });
+    await page.locator("#bom").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `${artifacts}/mobile-specification.png` });
+    const firstThumb = page.locator("#bom tbody tr").first().locator("img");
+    if (await firstThumb.count()) {
+      await page.locator("#bom tbody tr").first().scrollIntoViewIfNeeded();
+      await firstThumb.evaluate(img => { img.src = "/media/catalog/test-missing-image.png"; });
+      await page.locator("#bom tbody tr").first().getByText("Фото уточняется", { exact: true }).waitFor();
+    }
+    const downloadEvent = page.waitForEvent("download", { timeout: 60000 });
+    await page.getByRole("button", { name: "Скачать спецификацию PDF", exact: true }).click();
+    const pdf = await downloadEvent;
+    const pdfPath = `${artifacts}/kit-specification.pdf`;
+    await pdf.saveAs(pdfPath);
+    const bytes = fs.readFileSync(pdfPath);
+    assert.equal(bytes.subarray(0, 5).toString(), "%PDF-");
+    assert.ok(bytes.length > 10000);
+    const sample = page.locator("#bom tbody tr").nth(3);
+    await sample.scrollIntoViewIfNeeded();
+    if (process.env.READY_KITS_LIVE_MEDIA === "1") {
+      await page.waitForFunction(() => {
+        const image = document.querySelector("#bom tbody tr:nth-child(4) img");
+        return image && image.complete && image.naturalWidth > 0;
+      }, null, { timeout: 15000 });
+    }
+    await sample.screenshot({ path: `${artifacts}/mobile-sandwich-row.png` });
+    console.log("SKU thumbnails, layer groups, broken-image placeholder and actual PDF download OK");
     await page.getByRole("button", { name: "Открыть меню", exact: true }).click();
     const mobileKitLink = page.locator('.mobile-menu-nav > a[href="/komplekty"]');
     assert.equal(await mobileKitLink.isVisible(), true);
@@ -152,6 +203,9 @@ const fs = require("node:fs");
     await ssr.goto(`${base}/komplekty/cherez-perekrytie-4m-d115`);
     assert.equal(await ssr.locator("tbody tr").count(), 11);
     assert.match(await ssr.locator("h1").innerText(), /Ø115/);
+    assert.ok(await ssr.locator('[data-spec-group="inner"]').count() > 0);
+    assert.ok(await ssr.locator('[data-spec-group="outer"]').count() > 0);
+    assert.ok(await ssr.locator("#bom tbody img").count() > 0);
     console.log("No browser runtime errors; BOM and H1 visible without JavaScript");
   } finally {
     await browser.close();

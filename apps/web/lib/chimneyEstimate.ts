@@ -1,5 +1,6 @@
 import type { MediaItem, ProductListItem } from "./api";
 import type { ChimneyBomLine } from "./chimneyCalculation";
+import type { SpecificationGroup } from "./estimateSpecification";
 
 export type CatalogEstimateMatch = {
   item: ProductListItem;
@@ -14,6 +15,7 @@ export type EstimateMeasurement = {
 };
 
 export type ChimneyEstimateLine = {
+  characteristicGroups?: SpecificationGroup[];
   image?: MediaItem | null;
   key: string;
   skuId: string | null;

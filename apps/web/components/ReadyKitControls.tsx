@@ -3,13 +3,36 @@
 import { type FormEvent, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReadyKit } from "@/lib/readyKits";
-import { kitPath } from "@/lib/readyKits";
+import { kitPath, readyKitEstimate } from "@/lib/readyKits";
+import { Download } from "lucide-react";
 import { quickEstimateContact } from "@/lib/quickEstimateLead";
 import { METRIKA_GOALS, reachMetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
 import styles from "./ReadyKit.module.css";
 
 type Option = Pick<ReadyKit, "slug" | "route" | "height_m" | "diameter_mm">;
+
+export function ReadyKitPdf({ kit }: { kit: ReadyKit }) {
+  const busy = useRef(false);
+  const [status, setStatus] = useState<"idle" | "working" | "error">("idle");
+  async function download() {
+    if (busy.current) return;
+    busy.current = true;
+    setStatus("working");
+    try {
+      const { downloadChimneyEstimatePdf } = await import("@/lib/chimneyEstimatePdf");
+      await downloadChimneyEstimatePdf(readyKitEstimate(kit));
+      setStatus("idle");
+    } catch { setStatus("error"); }
+    finally { busy.current = false; }
+  }
+  return <div className={styles.pdfDownload}>
+    <button className={styles.secondary} type="button" disabled={status === "working"} onClick={() => void download()}>
+      <Download aria-hidden size={17} />{status === "working" ? "Готовим PDF…" : "Скачать спецификацию PDF"}
+    </button>
+    {status === "error" ? <p role="alert">Не удалось подготовить PDF. Попробуйте ещё раз.</p> : null}
+  </div>;
+}
 
 export function ReadyKitSelectors({ kit, variants }: { kit: Option; variants: Option[] }) {
   const router = useRouter();

@@ -1,8 +1,13 @@
+import type { MediaItem } from "./api";
+import type { ChimneyEstimate } from "./chimneyEstimate";
+import type { SpecificationGroup } from "./estimateSpecification";
+
 export type ReadyKitLine = {
   sku_id: string; label: string; sku_name: string; article: string; quantity: number;
   product_slug: string; diameter_mm: number | null; outer_diameter_mm: number | null;
   length_mm: number | null; characteristics: string[];
   unit_price_rub: string | null; line_total_rub: string | null;
+  primary_image: MediaItem | null; characteristic_groups: SpecificationGroup[];
 };
 
 export type ReadyKit = {
@@ -12,6 +17,25 @@ export type ReadyKit = {
 };
 
 export const kitPath = (slug: string) => `/komplekty/${slug}`;
+
+export function readyKitEstimate(kit: ReadyKit): ChimneyEstimate {
+  return {
+    profileName: kit.name, reference: kit.slug, generatedAt: new Date(), measurements: [],
+    lines: kit.lines.map((line, index) => ({
+      key: `${kit.slug}:${index}`, skuId: line.sku_id, label: line.label,
+      skuName: line.sku_name, article: line.article, image: line.primary_image,
+      characteristicGroups: line.characteristic_groups,
+      characteristics: line.characteristics, quantity: line.quantity,
+      unitPriceRub: line.unit_price_rub === null ? null : Number(line.unit_price_rub),
+      lineTotalRub: line.line_total_rub === null ? null : Number(line.line_total_rub),
+      note: "", matchStatus: "exact",
+    })),
+    knownSubtotalRub: Number(kit.known_subtotal_rub),
+    pricedLineCount: kit.lines.length - kit.unpriced_count, unpricedLineCount: kit.unpriced_count,
+    totalUnits: kit.lines.reduce((sum, line) => sum + line.quantity, 0),
+    removedLabels: [], reviewItems: kit.limitations, calculationErrors: [],
+  };
+}
 export const kitRub = (price: string | null) => price === null ? "Цена уточняется" : new Intl.NumberFormat("ru-RU", {
   style: "currency", currency: "RUB", maximumFractionDigits: 2,
 }).format(Number(price));

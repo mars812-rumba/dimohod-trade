@@ -119,6 +119,23 @@ def test_prices_are_live_and_decimal_totals_are_not_snapshot_prices(client, cata
     assert Decimal(after["total_rub"]) == sum(Decimal(l["line_total_rub"]) for l in after["lines"])
 
 
+def test_kit_media_prefers_exact_sku_then_applicable_family_and_never_other_variants(client, catalog):
+    target = next(iter(catalog.values()))
+    target.product.extra_attributes = {"media": [
+        {"url": "/media/catalog/general.jpg", "role": "general"},
+        {"url": "/media/catalog/wrong-length.jpg", "role": "general", "lengths_mm": [250]},
+    ]}
+    path = "/api/v1/ready-kits/cherez-perekrytie-4m-d115"
+    line = client.get(path).json()["kit"]["lines"][0]
+    assert line["primary_image"]["url"] == "/media/catalog/general.jpg"
+    assert line["characteristic_groups"][0]["kind"] == "general"
+    target.attributes = {"sku_media": [{"url": "/media/catalog/exact.jpg", "role": "general"}]}
+    assert client.get(path).json()["kit"]["lines"][0]["primary_image"]["url"] == "/media/catalog/exact.jpg"
+    target.attributes = {}
+    target.product.extra_attributes["media"] = [{"url": "/media/catalog/other.jpg", "role": "general", "diameter_keys": ["999"]}]
+    assert client.get(path).json()["kit"]["lines"][0]["primary_image"] is None
+
+
 @pytest.mark.parametrize("price", [None, Decimal(0), Decimal(-1), Decimal("NaN")])
 def test_absent_or_invalid_price_is_not_silently_zero(client, catalog, price):
     next(iter(catalog.values())).price_rub = price

@@ -13,6 +13,8 @@ from sqlalchemy.orm import joinedload
 from app.core.config import settings
 from app.modules.leads.schemas import LeadEstimate
 from app.modules.products.models import SKU
+from app.modules.products.router import primary_product_image, primary_sku_image
+from app.modules.products.specification import specification_groups
 from app.modules.ready_kits.schemas import KitDefinition, KitLine, KitUpdate
 
 ROUTES = {"roof": "через перекрытие", "wall": "через стену"}
@@ -153,12 +155,17 @@ def public_view(kit: KitDefinition, skus: dict[str, SKU]) -> dict:
             unpriced += 1
         else:
             subtotal += amount
+        image = primary_sku_image(sku.attributes) or primary_product_image(
+            getattr(sku.product, "extra_attributes", None), sku
+        )
         lines.append({
             "sku_id": str(sku.id), "label": line.label or sku.product.name,
             "sku_name": sku.name, "article": sku.article, "quantity": line.quantity,
             "product_slug": sku.product.slug, "diameter_mm": sku.diameter_mm,
             "outer_diameter_mm": sku.outer_diameter_mm, "length_mm": sku.length_mm,
             "characteristics": characteristics(sku),
+            "characteristic_groups": specification_groups(sku),
+            "primary_image": image.model_dump(mode="json") if image else None,
             "unit_price_rub": str(price) if price is not None else None,
             "line_total_rub": str(amount) if amount is not None else None,
         })

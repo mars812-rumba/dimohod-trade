@@ -49,6 +49,7 @@ from app.modules.leads.schemas import (
 from app.modules.products.models import SKU, Product
 from app.modules.products.router import primary_product_image, primary_visual_sku_image
 from app.modules.products.service import contour_group
+from app.modules.products.specification import specification_groups
 
 logger = logging.getLogger(__name__)
 
@@ -277,6 +278,7 @@ def catalog_sku_metadata(sku: SKU) -> dict[str, object]:
         "sku_name": sku.name,
         **estimate_pipe_names(sku),
         "estimate_characteristics": catalog_characteristics(sku) if has_outer_contour(sku) else None,
+        "characteristic_groups": specification_groups(sku),
         "steel_grade": sku.steel_grade,
         "wall_thickness_mm": float(sku.wall_thickness_mm)
         if sku.wall_thickness_mm is not None
@@ -370,7 +372,7 @@ def catalog_line(sku: SKU, *, quantity: int, note: str, line_id: str | None = No
         "note": note,
         "match_status": "candidate" if force_add else "exact",
         "selection_warning": "Требует проверки: товар добавлен принудительно, без совпадения с диаметром сметы." if force_add else None,
-        **{key: value for key, value in metadata.items() if key not in {"sku_id", "article", "sku_name", "unit_price_rub", "estimate_characteristics"}},
+        **{key: value for key, value in metadata.items() if key not in {"sku_id", "article", "sku_name", "unit_price_rub", "estimate_characteristics", "characteristic_groups"}},
     }
 
 

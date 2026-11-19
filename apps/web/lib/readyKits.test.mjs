@@ -5,7 +5,7 @@ import ts from "typescript";
 
 const source = await readFile(new URL("./readyKits.ts", import.meta.url), "utf8");
 const executable = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText.replace(/\bexport\s+/g, "");
-const { kitMetadata, kitPath, kitRub } = new Function(`${executable}; return {kitMetadata,kitPath,kitRub};`)();
+const { kitMetadata, kitPath, kitRub, readyKitEstimate } = new Function(`${executable}; return {kitMetadata,kitPath,kitRub,readyKitEstimate};`)();
 
 test("all twelve variants have distinct human-readable canonical, title and description", () => {
   const titles = new Set(), descriptions = new Set(), canonicals = new Set();
@@ -61,4 +61,41 @@ test("ready kits is a top-level desktop and mobile navigation entry", async () =
   assert.match(header, /<\/details>\s*<Link href="\/komplekty">Готовые комплекты<\/Link>/);
   assert.match(header, /<\/details>\s*<Link href="\/komplekty" onClick=\{closeMenu\}>Готовые комплекты<\/Link>/);
   assert.equal((header.match(/href="\/komplekty"/g) ?? []).length, 2);
+});
+
+test("kit PDF retains server prices, images, structured groups and distinct repeated SKU rows", () => {
+  const line = { sku_id: "same-sku", label: "Позиция", article: "REAL", sku_name: "Каталог", quantity: 2,
+    unit_price_rub: "123.45", line_total_rub: "246.90", characteristics: ["Сохранённый текст"],
+    primary_image: { url: "/media/catalog/photo.jpg" },
+    characteristic_groups: [{ kind: "inner", title: "Внутренняя труба", fields: [{ key: "steel", label: "Сталь", value: "AISI 304" }] }] };
+  const kit = { name: "Комплект", slug: "kit", lines: [line, { ...line, quantity: 1, line_total_rub: "123.45" }],
+    known_subtotal_rub: "370.35", unpriced_count: 0, limitations: ["Условия"] };
+  const estimate = readyKitEstimate(kit);
+  assert.equal(estimate.knownSubtotalRub, 370.35);
+  assert.equal(estimate.lines[0].unitPriceRub, 123.45);
+  assert.deepEqual(estimate.lines[0].image, line.primary_image);
+  assert.deepEqual(estimate.lines[0].characteristicGroups, line.characteristic_groups);
+  assert.deepEqual(estimate.lines[0].characteristics, line.characteristics);
+  assert.notEqual(estimate.lines[0].key, estimate.lines[1].key);
+  assert.equal(estimate.totalUnits, 3);
+  const unpriced = readyKitEstimate({ ...kit, unpriced_count: 1, lines: [{ ...line, unit_price_rub: null, line_total_rub: null }] });
+  assert.equal(unpriced.lines[0].unitPriceRub, null);
+});
+
+test("manager PDF uses layer groups only where canonical catalogue characteristics already applied", async () => {
+  const source = await readFile(new URL("../components/ManagerEstimateCard.tsx", import.meta.url), "utf8");
+  const fn = source.split("\n").find(line => line.startsWith("function estimateForPdf("));
+  assert.ok(fn);
+  const code = ts.transpileModule(fn, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const forPdf = new Function(`${code}; return estimateForPdf;`)();
+  const line = { key: "line", sku_id: "sku", label: "Позиция", characteristics: ["Правка менеджера"], note: "Примечание", quantity: 1 };
+  const payload = { lead_id: "0123456789abcdef", revision: 2, customer: {}, removed_lines: [],
+    estimate: { lines: [line], measurements: [], review_items: [], calculation_errors: [] } };
+  const groups = [{ kind: "inner", title: "Внутренняя труба", fields: [{ label: "Сталь", value: "AISI 304" }] }];
+  const metadata = { sku: { characteristic_groups: groups } };
+  assert.equal(forPdf(payload, metadata).lines[0].characteristicGroups, undefined);
+  metadata.sku.estimate_characteristics = ["Каноническая внутренняя и наружная труба"];
+  const rendered = forPdf(payload, metadata).lines[0];
+  assert.deepEqual(rendered.characteristicGroups, groups);
+  assert.equal(rendered.note, "Примечание");
 });

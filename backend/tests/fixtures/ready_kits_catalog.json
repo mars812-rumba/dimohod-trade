@@ -23,7 +23,23 @@
       "name": "Консоль универсальная",
       "slug": "konsol-universalnaya",
       "product_kind": "консоль",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Консоль универсальная — общий вид",
+            "url": "/media/catalog/categories/konsol-universalnaya/photo-1.png?v=1785927224246112619",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Консоль универсальная — вид сверху",
+            "url": "/media/catalog/categories/konsol-universalnaya/photo-2.png?v=1785927231829160705",
+            "role": "top",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -50,7 +66,23 @@
       "name": "Фланец декоративный",
       "slug": "flanets-dekorativnyy",
       "product_kind": "фланец",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Фланец декоративный — общий вид",
+            "url": "/media/catalog/categories/flanets-dekorativnyy/photo-1.png?v=1785920527878125440",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Фланец декоративный — вид сверху",
+            "url": "/media/catalog/categories/flanets-dekorativnyy/photo-2.png?v=1785920096673320111",
+            "role": "top",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -77,7 +109,39 @@
       "name": "Хомут в перекрытие",
       "slug": "homut-v-perekrytie",
       "product_kind": "крепеж",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Хомут в перекрытие — общий вид",
+            "url": "/media/catalog/categories/homut-v-perekrytie/photo-1-3805a57a.webp?v=1794562343559440656",
+            "role": "general",
+            "scope": "family",
+            "width": 1200,
+            "height": 903,
+            "media_id": "3805a57a-d951-41db-8d17-f8f6d47a85bd",
+            "lengths_mm": [],
+            "sku_specific": false,
+            "diameter_keys": [],
+            "thumbnail_url": "/media/catalog/categories/homut-v-perekrytie/photo-1-3805a57a.thumb.webp?v=1794562343559440656",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Хомут в перекрытие — вид сверху",
+            "url": "/media/catalog/categories/homut-v-perekrytie/photo-2-cf5caf5c.webp?v=1794562348513514671",
+            "role": "top",
+            "scope": "family",
+            "width": 1200,
+            "height": 903,
+            "media_id": "cf5caf5c-88e6-40db-943b-50c8c9ed9583",
+            "lengths_mm": [],
+            "sku_specific": false,
+            "diameter_keys": [],
+            "thumbnail_url": "/media/catalog/categories/homut-v-perekrytie/photo-2-cf5caf5c.thumb.webp?v=1794562348513514671",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -101,7 +165,29 @@
       "name": "Хомут силовой для консоли",
       "slug": "odnostennyi-krepezh-homut-silovoi",
       "product_kind": "крепеж",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Хомут силовой для консоли — общий вид",
+            "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-1.png?v=1785845000554115406",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Хомут силовой для консоли — вид сверху",
+            "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-2.png?v=1785845034888326899",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Хомут силовой для консоли — порты / присоединение",
+            "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-3.png?v=1785845049820418882",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -129,7 +215,29 @@
       "name": "Хомут силовой для консоли",
       "slug": "odnostennyi-krepezh-homut-silovoi",
       "product_kind": "крепеж",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Хомут силовой для консоли — общий вид",
+            "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-1.png?v=1785845000554115406",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Хомут силовой для консоли — вид сверху",
+            "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-2.png?v=1785845034888326899",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Хомут силовой для консоли — порты / присоединение",
+            "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-3.png?v=1785845049820418882",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -157,7 +265,29 @@
       "name": "Хомут силовой для консоли",
       "slug": "odnostennyi-krepezh-homut-silovoi",
       "product_kind": "крепеж",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Хомут силовой для консоли — общий вид",
+            "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-1.png?v=1785845000554115406",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Хомут силовой для консоли — вид сверху",
+            "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-2.png?v=1785845034888326899",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Хомут силовой для консоли — порты / присоединение",
+            "url": "/media/catalog/categories/odnostennyi-krepezh-homut-silovoi/photo-3.png?v=1785845049820418882",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -185,7 +315,29 @@
       "name": "Одноконтурная труба",
       "slug": "odnostennyi-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Одноконтурная труба — общий вид",
+            "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-1.png?v=1785840552771441980",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурная труба — вид сверху",
+            "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-2.png?v=1785840560661488105",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурная труба — порты / присоединение",
+            "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-3.png?v=1785840563625505440",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -213,7 +365,29 @@
       "name": "Одноконтурная труба",
       "slug": "odnostennyi-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Одноконтурная труба — общий вид",
+            "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-1.png?v=1785840552771441980",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурная труба — вид сверху",
+            "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-2.png?v=1785840560661488105",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурная труба — порты / присоединение",
+            "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-3.png?v=1785840563625505440",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -241,7 +415,29 @@
       "name": "Одноконтурная труба",
       "slug": "odnostennyi-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Одноконтурная труба — общий вид",
+            "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-1.png?v=1785840552771441980",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурная труба — вид сверху",
+            "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-2.png?v=1785840560661488105",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурная труба — порты / присоединение",
+            "url": "/media/catalog/categories/odnostennyi-truba-truba/photo-3.png?v=1785840563625505440",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -269,7 +465,29 @@
       "name": "Одноконтурный шибер поворотный",
       "slug": "odnostennyi-shiber-povorotnyi",
       "product_kind": "шибер",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Одноконтурный шибер поворотный — общий вид",
+            "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-1.png?v=1785834562496217947",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурный шибер поворотный — вид сверху",
+            "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-2.png?v=1785763603871928000",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурный шибер поворотный — порты / присоединение",
+            "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-3.png?v=1785763608495984315",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -297,7 +515,29 @@
       "name": "Одноконтурный шибер поворотный",
       "slug": "odnostennyi-shiber-povorotnyi",
       "product_kind": "шибер",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Одноконтурный шибер поворотный — общий вид",
+            "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-1.png?v=1785834562496217947",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурный шибер поворотный — вид сверху",
+            "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-2.png?v=1785763603871928000",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурный шибер поворотный — порты / присоединение",
+            "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-3.png?v=1785763608495984315",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -325,7 +565,29 @@
       "name": "Одноконтурный шибер поворотный",
       "slug": "odnostennyi-shiber-povorotnyi",
       "product_kind": "шибер",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Одноконтурный шибер поворотный — общий вид",
+            "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-1.png?v=1785834562496217947",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурный шибер поворотный — вид сверху",
+            "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-2.png?v=1785763603871928000",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Одноконтурный шибер поворотный — порты / присоединение",
+            "url": "/media/catalog/categories/odnostennyi-shiber-shiber-povorotnyi/photo-3.png?v=1785763608495984315",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -349,7 +611,39 @@
       "name": "Мастер-флеш",
       "slug": "master-flesh",
       "product_kind": "проходной_узел",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Мастер-флеш — общий вид",
+            "url": "/media/catalog/categories/master-flesh/photo-1-8e1a2b4e.webp?v=1794561671466396998",
+            "role": "general",
+            "scope": "family",
+            "width": 800,
+            "height": 1200,
+            "media_id": "8e1a2b4e-5a16-4233-9f38-bb1bf78531f1",
+            "lengths_mm": [],
+            "sku_specific": false,
+            "diameter_keys": [],
+            "thumbnail_url": "/media/catalog/categories/master-flesh/photo-1-8e1a2b4e.thumb.webp?v=1794561671467397013",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Мастер-флеш — вид сверху",
+            "url": "/media/catalog/categories/master-flesh/photo-2-b25d62d6.webp?v=1794561707802940183",
+            "role": "top",
+            "scope": "family",
+            "width": 800,
+            "height": 1200,
+            "media_id": "b25d62d6-469a-478f-9d7a-73d0263858e1",
+            "lengths_mm": [],
+            "sku_specific": false,
+            "diameter_keys": [],
+            "thumbnail_url": "/media/catalog/categories/master-flesh/photo-2-b25d62d6.thumb.webp?v=1794561707802940183",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -378,7 +672,25 @@
       "name": "Проходной стакан",
       "slug": "prohodnoy-stakan",
       "product_kind": "проходной_узел",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Проходной стакан — общий вид",
+            "url": "/media/catalog/categories/prohodnoy-stakan/photo-1-f69b24c2.webp?v=1794562307087895753",
+            "role": "general",
+            "scope": "family",
+            "width": 800,
+            "height": 1200,
+            "media_id": "f69b24c2-766a-4694-9270-e6cac81a6fea",
+            "lengths_mm": [],
+            "sku_specific": false,
+            "diameter_keys": [],
+            "thumbnail_url": "/media/catalog/categories/prohodnoy-stakan/photo-1-f69b24c2.thumb.webp?v=1794562307087895753",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -402,7 +714,25 @@
       "name": "Комплект ваты для проходного стакана",
       "slug": "komplekt-vaty-dlya-prohodnogo-stakana",
       "product_kind": "изоляция",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Комплект ваты для проходного стакана — общий вид",
+            "url": "/media/catalog/categories/komplekt-vaty-dlya-prohodnogo-stakana/photo-1-8294d9f7.webp?v=1794562064485270901",
+            "role": "general",
+            "scope": "family",
+            "width": 800,
+            "height": 1200,
+            "media_id": "8294d9f7-7709-43b6-81b1-96225058c36d",
+            "lengths_mm": [],
+            "sku_specific": false,
+            "diameter_keys": [],
+            "thumbnail_url": "/media/catalog/categories/komplekt-vaty-dlya-prohodnogo-stakana/photo-1-8294d9f7.thumb.webp?v=1794562064485270901",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -430,7 +760,29 @@
       "name": "Сэндвич-опорная площадка",
       "slug": "sendvich-opornaya-ploschadka",
       "product_kind": "опорная_площадка",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-опорная площадка — общий вид",
+            "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-1.png?v=1785862947150573711",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-опорная площадка — вид сверху",
+            "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-2.png?v=1785862955164627947",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-опорная площадка — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-3.png?v=1785862963243682622",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -458,7 +810,29 @@
       "name": "Сэндвич-опорная площадка",
       "slug": "sendvich-opornaya-ploschadka",
       "product_kind": "опорная_площадка",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-опорная площадка — общий вид",
+            "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-1.png?v=1785862947150573711",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-опорная площадка — вид сверху",
+            "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-2.png?v=1785862955164627947",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-опорная площадка — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-3.png?v=1785862963243682622",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -486,7 +860,29 @@
       "name": "Сэндвич-опорная площадка",
       "slug": "sendvich-opornaya-ploschadka",
       "product_kind": "опорная_площадка",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-опорная площадка — общий вид",
+            "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-1.png?v=1785862947150573711",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-опорная площадка — вид сверху",
+            "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-2.png?v=1785862955164627947",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-опорная площадка — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-opornaya-ploschadka/photo-3.png?v=1785862963243682622",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -514,7 +910,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -542,7 +975,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -570,7 +1040,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -598,7 +1105,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -626,7 +1170,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -654,7 +1235,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -682,7 +1300,23 @@
       "name": "Сэндвич-дефлектор-конус",
       "slug": "sendvich-ogolovok-deflektor-konus",
       "product_kind": "оголовок",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-1.png?v=1785593147936412466",
+            "role": "general"
+          },
+          {
+            "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-2.png?v=1785593197708696111",
+            "role": "top"
+          },
+          {
+            "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-3.png?v=1785593231943891336",
+            "role": "connection"
+          }
+        ]
+      }
     }
   },
   {
@@ -710,7 +1344,23 @@
       "name": "Сэндвич-дефлектор-конус",
       "slug": "sendvich-ogolovok-deflektor-konus",
       "product_kind": "оголовок",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-1.png?v=1785593147936412466",
+            "role": "general"
+          },
+          {
+            "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-2.png?v=1785593197708696111",
+            "role": "top"
+          },
+          {
+            "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-3.png?v=1785593231943891336",
+            "role": "connection"
+          }
+        ]
+      }
     }
   },
   {
@@ -738,7 +1388,23 @@
       "name": "Сэндвич-дефлектор-конус",
       "slug": "sendvich-ogolovok-deflektor-konus",
       "product_kind": "оголовок",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-1.png?v=1785593147936412466",
+            "role": "general"
+          },
+          {
+            "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-2.png?v=1785593197708696111",
+            "role": "top"
+          },
+          {
+            "url": "/media/catalog/categories/sendvich-ogolovok-deflektor-konus/photo-3.png?v=1785593231943891336",
+            "role": "connection"
+          }
+        ]
+      }
     }
   },
   {
@@ -766,7 +1432,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -794,7 +1497,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -822,7 +1562,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -850,7 +1627,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -878,7 +1692,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -906,7 +1757,44 @@
       "name": "Сэндвич-труба",
       "slug": "sendvich-truba",
       "product_kind": "труба",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-труба — общий вид",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-1.png?v=1785832001373373601",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              1000
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — вид сверху",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-2.png?v=1785761053018589848",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              150,
+              250,
+              350
+            ],
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-труба — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-truba-truba/photo-3.png?v=1785761064838663517",
+            "role": "general",
+            "scope": "variant",
+            "lengths_mm": [
+              500,
+              750
+            ],
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -934,7 +1822,29 @@
       "name": "Сэндвич-тройник с К/О 90°",
       "slug": "sendvich-troi-nik-s-k-o-90gr",
       "product_kind": "тройник",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-тройник с К/О 90° — общий вид",
+            "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-1.png?v=1785933704637510506",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-тройник с К/О 90° — вид сверху",
+            "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-2.png?v=1785933718619603908",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-тройник с К/О 90° — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-3.png?v=1785933721724624629",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -962,7 +1872,29 @@
       "name": "Сэндвич-тройник с К/О 90°",
       "slug": "sendvich-troi-nik-s-k-o-90gr",
       "product_kind": "тройник",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-тройник с К/О 90° — общий вид",
+            "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-1.png?v=1785933704637510506",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-тройник с К/О 90° — вид сверху",
+            "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-2.png?v=1785933718619603908",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-тройник с К/О 90° — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-3.png?v=1785933721724624629",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -990,7 +1922,29 @@
       "name": "Сэндвич-тройник с К/О 90°",
       "slug": "sendvich-troi-nik-s-k-o-90gr",
       "product_kind": "тройник",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-тройник с К/О 90° — общий вид",
+            "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-1.png?v=1785933704637510506",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-тройник с К/О 90° — вид сверху",
+            "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-2.png?v=1785933718619603908",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-тройник с К/О 90° — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-troi-nik-troi-nik-s-k-o-90gr/photo-3.png?v=1785933721724624629",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -1018,7 +1972,29 @@
       "name": "Сэндвич-заглушка опорная",
       "slug": "sendvich-zaglushka-opornaya",
       "product_kind": "заглушка",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-заглушка опорная — общий вид",
+            "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-1.png?v=1785858686084778410",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-заглушка опорная — вид сверху",
+            "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-2.png?v=1785858689717801525",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-заглушка опорная — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-3.png?v=1785860043040180270",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -1046,7 +2022,29 @@
       "name": "Сэндвич-заглушка опорная",
       "slug": "sendvich-zaglushka-opornaya",
       "product_kind": "заглушка",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-заглушка опорная — общий вид",
+            "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-1.png?v=1785858686084778410",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-заглушка опорная — вид сверху",
+            "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-2.png?v=1785858689717801525",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-заглушка опорная — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-3.png?v=1785860043040180270",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   },
   {
@@ -1074,7 +2072,29 @@
       "name": "Сэндвич-заглушка опорная",
       "slug": "sendvich-zaglushka-opornaya",
       "product_kind": "заглушка",
-      "is_active": true
+      "is_active": true,
+      "extra_attributes": {
+        "media": [
+          {
+            "alt": "Сэндвич-заглушка опорная — общий вид",
+            "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-1.png?v=1785858686084778410",
+            "role": "general",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-заглушка опорная — вид сверху",
+            "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-2.png?v=1785858689717801525",
+            "role": "top",
+            "diameter_specific": false
+          },
+          {
+            "alt": "Сэндвич-заглушка опорная — порты / присоединение",
+            "url": "/media/catalog/categories/sendvich-zaglushka-opornaya/photo-3.png?v=1785860043040180270",
+            "role": "connection",
+            "diameter_specific": false
+          }
+        ]
+      }
     }
   }
 ]

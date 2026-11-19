@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { getReadyKit, kitMetadata, kitPath, kitRub } from "@/lib/readyKits";
-import { productSelectionPath } from "@/lib/productUrls";
-import { ReadyKitInquiry, ReadyKitSelectors } from "@/components/ReadyKitControls";
+import { Boxes, BadgeRussianRuble } from "lucide-react";
+import { ReadyKitInquiry, ReadyKitPdf, ReadyKitSelectors } from "@/components/ReadyKitControls";
+import { ReadyKitLineDetails } from "@/components/ReadyKitLineDetails";
 import { ReadyKitCard } from "@/components/ReadyKitCard";
 import styles from "@/components/ReadyKit.module.css";
 
@@ -63,11 +64,14 @@ export default async function ReadyKitPage({ params }: Props) {
         <div className={styles.tableScroll}><table className={styles.table}>
           <thead><tr><th scope="col">Изделие и характеристики</th><th scope="col">Кол-во</th><th scope="col">Цена</th><th scope="col">Сумма</th></tr></thead>
           <tbody>{kit.lines.map((line, index) => <tr key={`${line.sku_id}-${index}`}>
-            <td><Link href={productSelectionPath(line.product_slug, line, line.article)}>{line.label}</Link><small>{line.sku_name}</small><small>Арт. {line.article}</small><small>{line.characteristics.join(" · ")}</small></td>
-            <td data-label="Количество">{line.quantity} шт.</td><td data-label="Цена за шт.">{kitRub(line.unit_price_rub)}</td><td data-label="Сумма">{kitRub(line.line_total_rub)}</td>
+            <td><ReadyKitLineDetails line={line} /></td>
+            <td data-label="Количество"><span className={styles.moneyLabel}><Boxes aria-hidden size={13} />Количество</span>{line.quantity} шт.</td>
+            <td data-label="Цена за шт."><span className={styles.moneyLabel}><BadgeRussianRuble aria-hidden size={13} />Цена за шт.</span>{kitRub(line.unit_price_rub)}</td>
+            <td data-label="Сумма"><span className={styles.moneyLabel}><BadgeRussianRuble aria-hidden size={13} />Сумма</span>{kitRub(line.line_total_rub)}</td>
           </tr>)}</tbody>
         </table></div>
         <div className={styles.total}><span>Итого за комплект</span><strong>{kitRub(kit.total_rub)}</strong></div>
+        <ReadyKitPdf kit={kit} />
       </section>
       <aside>
         <section id="application" className={styles.panel}><h2>Применение и маршрут</h2><p>{kit.description}</p><p>Для выбора по объекту и отопителю:</p><ul><li><Link href="/solutions/banya">Дымоход для бани →</Link></li><li><Link href="/solutions/dom">Дымоход для дома →</Link></li><li><Link href="/solutions/pech">Подбор дымохода к печи →</Link></li></ul><p className={styles.muted}>Сценарные страницы помогают уточнить задачу; ссылка не означает универсальную совместимость этого комплекта с любым отопителем.</p></section>
