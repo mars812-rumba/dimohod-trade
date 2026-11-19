@@ -10,17 +10,23 @@ const fieldIcons: Record<string, typeof Ruler> = { diameter: Circle, length: Rul
 
 export function ReadyKitLineDetails({ line }: { line: ReadyKitLine }) {
   const href = productSelectionPath(line.product_slug, line, line.article);
+  const groups = (line.characteristic_groups ?? []).filter(group => group.fields.length);
+  const brief = line.characteristics.length ? line.characteristics.join(" · ")
+    : groups.flatMap(group => group.fields.map(field => `${field.label}: ${field.value}`)).join(" · ");
   return <div className={styles.item}>
     <div className={styles.itemHead}>
       <ReadyKitThumbnail key={line.sku_id} image={line.primary_image} href={href} name={line.label} />
       <div className={styles.itemName}>
         <Link href={href}>{line.label}</Link>
-        <small>{line.sku_name}</small>
         <small className={styles.article}><Hash aria-hidden size={13} /><span>Арт. {line.article}</span></small>
+        {brief ? <p className={styles.itemSummary} data-spec-summary>{brief}</p> : null}
       </div>
     </div>
-    <div className={styles.itemGroups}>
-      {(line.characteristic_groups ?? []).map(group => {
+    <details className={styles.itemDisclosure}>
+      <summary>Все характеристики<span className={styles.srOnly}>: {line.label}, арт. {line.article}</span></summary>
+      {line.sku_name ? <p className={styles.itemFullName}>{line.sku_name}</p> : null}
+      <div className={styles.itemGroups}>
+      {groups.map(group => {
         const Icon = groupIcons[group.kind];
         return <section key={group.kind} className={styles.itemGroup} data-spec-group={group.kind} aria-label={group.title}>
           <h3><Icon aria-hidden size={15} />{group.title}</h3>
@@ -30,6 +36,8 @@ export function ReadyKitLineDetails({ line }: { line: ReadyKitLine }) {
           })}</dl>
         </section>;
       })}
-    </div>
+      </div>
+      {line.characteristics.length ? <p className={styles.itemFullName}>{line.characteristics.join(" · ")}</p> : null}
+    </details>
   </div>;
 }

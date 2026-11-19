@@ -50,9 +50,17 @@ const fs = require("node:fs");
     assert.equal(await rows.first().locator('[data-spec-group="inner"]').count(), 0);
     const sandwich = rows.nth(3);
     for (const kind of ["inner", "insulation", "outer"]) assert.equal(await sandwich.locator(`[data-spec-group="${kind}"]`).count(), 1);
+    assert.equal(await sandwich.locator("details").getAttribute("open"), null);
+    assert.equal(await sandwich.locator('[data-spec-group="inner"]').isVisible(), false);
+    const amounts = await sandwich.locator("td[data-label]").allTextContents();
+    await sandwich.locator("summary").click();
+    assert.equal(await sandwich.locator('[data-spec-group="inner"]').isVisible(), true);
     assert.match(await sandwich.locator('[data-spec-group="inner"]').innerText(), /AISI 304/);
     assert.match(await sandwich.locator('[data-spec-group="outer"]').innerText(), /AISI 430/);
+    assert.deepEqual(await sandwich.locator("td[data-label]").allTextContents(), amounts);
     assert.ok(await sandwich.locator("svg").count() >= 3);
+    await sandwich.locator("summary").click();
+    await sandwich.screenshot({ path: `${artifacts}/desktop-sandwich-row.png` });
     assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://dimohod-trade.pro/komplekty/cherez-perekrytie-4m-d115");
     assert.equal(await page.getByLabel("Диаметр комплекта").locator("option").count(), 3);
     await page.screenshot({ path: `${artifacts}/desktop-roof.png`, fullPage: true });
@@ -71,6 +79,13 @@ const fs = require("node:fs");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${base}/komplekty/cherez-stenu-3m-d115`);
     assert.equal(await page.locator("tbody tr").count(), 14);
+    for (const width of [320, 360, 390, 430, 768]) {
+      await page.setViewportSize({ width, height: 844 });
+      const size = await page.evaluate(() => ({ width: innerWidth, scroll: document.documentElement.scrollWidth }));
+      assert.ok(size.scroll <= size.width + 1, JSON.stringify(size));
+      assert.equal(await page.locator("#bom details[open]").count(), 0);
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
     const box = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, inner: innerWidth }));
     assert.ok(box.scroll <= box.inner + 1, JSON.stringify(box));
     await page.screenshot({ path: `${artifacts}/mobile-wall.png`, fullPage: true });
@@ -100,7 +115,21 @@ const fs = require("node:fs");
       }, null, { timeout: 15000 });
     }
     await sample.screenshot({ path: `${artifacts}/mobile-sandwich-row.png` });
-    console.log("SKU thumbnails, layer groups, broken-image placeholder and actual PDF download OK");
+    const compact = await sample.boundingBox();
+    assert.ok(compact.height < 250, `Compact row height ${compact.height}`);
+    const briefBox = await sample.locator("[data-spec-summary]").evaluate(element => ({
+      height: element.getBoundingClientRect().height, line: parseFloat(getComputedStyle(element).lineHeight),
+    }));
+    assert.ok(briefBox.height <= briefBox.line * 2 + 1, JSON.stringify(briefBox));
+    assert.equal(await sample.locator('[data-spec-group="inner"]').isVisible(), false);
+    await sample.locator("summary").click();
+    assert.equal(await sample.locator('[data-spec-group="inner"]').isVisible(), true);
+    await sample.screenshot({ path: `${artifacts}/mobile-sandwich-expanded.png` });
+    const expanded = await sample.boundingBox();
+    assert.ok(expanded.height > compact.height);
+    await sample.locator("summary").press("Enter");
+    assert.equal(await sample.locator('[data-spec-group="inner"]').isVisible(), false);
+    console.log(`Compact mobile row ${Math.round(compact.height)} px; full details ${Math.round(expanded.height)} px; photos and actual PDF download OK`);
     await page.getByRole("button", { name: "Открыть меню", exact: true }).click();
     const mobileKitLink = page.locator('.mobile-menu-nav > a[href="/komplekty"]');
     assert.equal(await mobileKitLink.isVisible(), true);
@@ -206,7 +235,11 @@ const fs = require("node:fs");
     assert.ok(await ssr.locator('[data-spec-group="inner"]').count() > 0);
     assert.ok(await ssr.locator('[data-spec-group="outer"]').count() > 0);
     assert.ok(await ssr.locator("#bom tbody img").count() > 0);
-    console.log("No browser runtime errors; BOM and H1 visible without JavaScript");
+    const noJsRow = ssr.locator("#bom tbody tr").nth(3);
+    assert.equal(await noJsRow.locator('[data-spec-group="inner"]').isVisible(), false);
+    await noJsRow.locator("summary").click();
+    assert.equal(await noJsRow.locator('[data-spec-group="inner"]').isVisible(), true);
+    console.log("No browser runtime errors; BOM and native disclosure work without JavaScript");
   } finally {
     await browser.close();
   }

@@ -1,5 +1,5 @@
 import type { Content, TableCell, TDocumentDefinitions } from "pdfmake/interfaces";
-import type { ChimneyEstimate, ChimneyEstimateLine } from "./chimneyEstimate";
+import type { ChimneyEstimate } from "./chimneyEstimate";
 import { loadEstimatePdfImages } from "./estimatePdfImages";
 import { workingHoursText } from "./contactLinks";
 import { METRIKA_GOALS, reachMetrikaGoal } from "./metrika";
@@ -55,20 +55,6 @@ function pdfDate(date: Date): string {
   }).format(date);
 }
 
-function pdfCharacteristics(line: ChimneyEstimateLine): Content {
-  const groups = line.characteristicGroups?.filter(group => group.fields.length);
-  if (line.characteristicGroups !== undefined && !groups?.length) return { text: "" };
-  if (!groups?.length) return line.characteristics.length
-    ? { text: line.characteristics.join(" · "), fontSize: 8, color: "#4f6066" }
-    : { text: "Характеристики требуют уточнения", fontSize: 8, color: "#a04428" };
-  return { stack: groups.map(group => ({
-    stack: [
-      { text: group.title, bold: true, color: "#173d4c", fontSize: 8, margin: [0, 4, 0, 3] },
-      ...group.fields.map(field => ({ text: [{ text: `${field.label}: `, color: "#607075" }, { text: field.value }], fontSize: 7.5 })),
-    ], margin: [0, 0, 0, 3],
-  })) };
-}
-
 async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
   const [pdfMakeModule, fontsModule, brandLogo, thumbnails] = await Promise.all([
     import("pdfmake/build/pdfmake"),
@@ -94,16 +80,12 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
     { text: String(index + 1), alignment: "center" },
     {
       columns: [
-        ...(rowImages[index] ? [{ image: rowImages[index]!, fit: [36, 42] as [number, number], width: 36, margin: [0, 2, 0, 0] as [number, number, number, number] }]
-          : line.characteristicGroups !== undefined ? [{ width: 36, stack: [
-            { canvas: [{ type: "rect" as const, x: 0, y: 0, w: 34, h: 32, lineColor: "#cad3d5", color: "#f3f6f5" }] },
-            { text: "Фото уточняется", fontSize: 5.5, color: "#607075", margin: [0, 3, 0, 0] as [number, number, number, number] },
-          ] }] : []),
+        ...(rowImages[index] ? [{ image: rowImages[index]!, fit: [36, 42] as [number, number], width: 36, margin: [0, 2, 0, 0] as [number, number, number, number] }] : []),
         { width: "*", stack: [
         { text: line.label, bold: true },
         line.skuName ? { text: line.skuName, fontSize: 8, color: "#4f6066", margin: [0, 2, 0, 0] } : { text: "Каталожная позиция не найдена", fontSize: 8, color: "#a04428", margin: [0, 2, 0, 0] },
         line.article ? { text: `Арт. ${line.article}`, fontSize: 8, color: "#4f6066" } : { text: "Артикул требует уточнения", fontSize: 8, color: "#a04428" },
-        pdfCharacteristics(line),
+        line.characteristics.length ? { text: line.characteristics.join(" · "), fontSize: 8, color: "#4f6066" } : { text: "Характеристики требуют уточнения", fontSize: 8, color: "#a04428" },
         { text: MATCH_LABELS[line.matchStatus], fontSize: 8, color: line.matchStatus === "exact" ? "#2c6f55" : "#a04428" },
         line.note ? { text: line.note, fontSize: 7, color: "#66767b", margin: [0, 2, 0, 0] } : { text: "" },
         ] },
@@ -165,7 +147,6 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
     {
       table: {
         headerRows: 1,
-        dontBreakRows: estimate.lines.every(line => line.characteristicGroups !== undefined),
         widths: [18, "*", 30, 62, 70],
         body: [
           [
