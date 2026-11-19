@@ -181,6 +181,7 @@ export function SiteHeader() {
             </summary>
             <div className="desktop-nav-dropdown desktop-nav-dropdown-catalog" onClick={handleDesktopDropdownClick}>
               <Link className="desktop-nav-all" href="/catalog">Все категории</Link>
+              <Link className="desktop-nav-all" href="/komplekty">Готовые комплекты</Link>
               {categories.length ? <DesktopCategoryLinks categories={categories} /> : null}
             </div>
           </details>
@@ -290,6 +291,7 @@ export function SiteHeader() {
               </summary>
               <div className="mobile-menu-catalog-body">
                 <Link href="/catalog" onClick={closeMenu}>Все категории</Link>
+                <Link href="/komplekty" onClick={closeMenu}>Готовые комплекты</Link>
                 {categories.length ? (
                   <CategoryLinks categories={categories} closeMenu={closeMenu} />
                 ) : null}

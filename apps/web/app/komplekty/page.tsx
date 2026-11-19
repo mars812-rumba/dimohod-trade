@@ -1,0 +1,22 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { getReadyKits } from "@/lib/readyKits";
+import { ReadyKitCard } from "@/components/ReadyKitCard";
+import styles from "@/components/ReadyKit.module.css";
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Готовые комплекты дымоходов — состав и цены | Дымоход Трейд",
+  description: "Комплекты дымоходов через перекрытие и через стену. Сравните опубликованные составы, диаметры и стоимость изделий по актуальным ценам каталога.",
+  alternates: { canonical: "/komplekty" },
+};
+
+export default async function ReadyKitsPage() {
+  const kits = await getReadyKits();
+  return <main className={styles.page}>
+    <nav className={styles.breadcrumbs} aria-label="Хлебные крошки"><Link href="/">Главная</Link> / <span>Готовые комплекты</span></nav>
+    <header className={styles.heading}><p className="eyebrow">Каталог комплектов</p><h1>Готовые комплекты дымоходов</h1><p>Выберите маршрут и откройте полный состав с текущей стоимостью изделий. Условия монтажа проверяются для конкретного объекта.</p></header>
+    {kits.length ? <div className={styles.cards}>{kits.map(kit => <ReadyKitCard key={kit.slug} kit={kit} />)}</div> : <p>Согласованные комплекты пока не опубликованы.</p>}
+    <p><Link href="/catalog">Каталог отдельных изделий →</Link></p>
+  </main>;
+}

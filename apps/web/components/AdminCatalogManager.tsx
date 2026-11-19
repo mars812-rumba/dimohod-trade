@@ -1924,6 +1924,7 @@ export default function AdminCatalogManager() {
         <div>
           <div className={styles.adminLinks}>
             <Link className={styles.customerLink} href="/admin/customers">Клиенты и замеры</Link>
+            <Link className={styles.customerLink} href="/admin/ready-kits">Готовые комплекты</Link>
             <button className={styles.logoutButton} onClick={() => void logoutAdmin()} type="button">
               <LogOut aria-hidden size={15} /> Выйти
             </button>

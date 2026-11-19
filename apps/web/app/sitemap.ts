@@ -5,6 +5,7 @@ import { scenarioPages } from "@/lib/scenarioPages";
 import { guideArticles } from "@/lib/guideArticles";
 import { stovePageCount, stovePagePath } from "@/lib/stoves";
 import { catalogSeoPagePath, catalogSeoPages } from "@/lib/catalogSeoPages";
+import { getReadyKits, kitPath } from "@/lib/readyKits";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,9 @@ const lastModified = {
 } as const;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const readyKits = await getReadyKits().catch(() => []);
   const staticPages: MetadataRoute.Sitemap = [
+    ...(readyKits.length ? [sitemapEntry("/komplekty"), ...readyKits.map(kit => sitemapEntry(kitPath(kit.slug)))] : []),
     { url: absoluteUrl("/"), lastModified: lastModified.home },
     { url: absoluteUrl("/catalog"), lastModified: lastModified.catalog },
     ...Array.from({ length: stovePageCount }, (_, index) => ({

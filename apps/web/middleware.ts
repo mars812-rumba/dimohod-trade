@@ -33,6 +33,19 @@ async function productExists(request: NextRequest) {
 }
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.endsWith("/komplekty")) return NextResponse.next();
+  if (request.nextUrl.pathname.includes("/komplekty/")) {
+    const slug = request.nextUrl.pathname.split("/").filter(Boolean).at(-1) ?? "";
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/v1/ready-kits/${encodeURIComponent(slug)}`, { cache: "no-store" });
+      if (response.status === 404 || response.status === 422) {
+        const url = request.nextUrl.clone();
+        url.pathname = `${request.nextUrl.basePath}/_not-found`; url.search = "";
+        return NextResponse.rewrite(url, { status: 404 });
+      }
+    } catch { /* A transient API outage is handled by the page error boundary. */ }
+    return NextResponse.next();
+  }
   if (request.nextUrl.pathname.includes("/product/")) {
     if (await productExists(request)) return NextResponse.next();
     const notFoundUrl = request.nextUrl.clone();
@@ -52,6 +65,8 @@ export const config = {
     "/admin",
     "/admin/catalog/:path*",
     "/admin/customers/:path*",
+    "/admin/ready-kits/:path*",
     "/product/:path*",
+    "/komplekty/:path*",
   ],
 };

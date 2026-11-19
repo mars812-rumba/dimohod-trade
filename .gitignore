@@ -28,6 +28,7 @@ graphify-out/
 # Live CRM, credentials and PostgreSQL backups are never repository content.
 /storage/leads/
 /storage/customers/
+/storage/ready-kits/
 *.dump
 *.backup
 *.pem

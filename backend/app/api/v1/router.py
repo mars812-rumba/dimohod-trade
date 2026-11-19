@@ -9,6 +9,8 @@ from app.modules.compatibility.router import router as compatibility_router
 from app.modules.leads.customer_router import router as customers_router
 from app.modules.leads.router import router as leads_router
 from app.modules.products.router import router as products_router
+from app.modules.ready_kits.router import admin_router as admin_ready_kits_router
+from app.modules.ready_kits.router import router as ready_kits_router
 from app.modules.seo.router import router as yandex_seo_router
 
 api_router = APIRouter()
@@ -38,3 +40,5 @@ api_router.include_router(compatibility_router, prefix="/compatibility", tags=["
 api_router.include_router(leads_router, prefix="/leads", tags=["leads"])
 api_router.include_router(customers_router, prefix="/admin/customers", tags=["admin-customers"])
 api_router.include_router(products_router, prefix="/products", tags=["products"])
+api_router.include_router(ready_kits_router, prefix="/ready-kits", tags=["ready-kits"])
+api_router.include_router(admin_ready_kits_router, prefix="/admin/ready-kits", tags=["admin-ready-kits"])

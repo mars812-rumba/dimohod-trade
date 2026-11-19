@@ -1,0 +1,399 @@
+[
+  {
+    "id": "4db26cb3-8511-5999-955b-4c8268d4d0a6",
+    "article": "DT-FLOOR-CLAMP-UP-TO-D300",
+    "name": "Хомут в перекрытие, до D300",
+    "material": null,
+    "steel_grade": null,
+    "wall_thickness_mm": null,
+    "diameter_mm": null,
+    "outer_diameter_mm": null,
+    "length_mm": null,
+    "insulation_mm": null,
+    "price_rub": "1760.00",
+    "is_active": true,
+    "attributes": {
+      "diameter_range": "до D300"
+    },
+    "product": {
+      "name": "Хомут в перекрытие",
+      "slug": "homut-v-perekrytie",
+      "product_kind": "крепеж",
+      "is_active": true
+    }
+  },
+  {
+    "id": "2a1a062b-4088-5551-8a7d-32f425d0d9eb",
+    "article": "DT-FLANGE-430-STRAIGHT-600X600",
+    "name": "Фланец декоративный 600×600 мм, прямой, AISI 430",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 430",
+    "wall_thickness_mm": null,
+    "diameter_mm": null,
+    "outer_diameter_mm": null,
+    "length_mm": null,
+    "insulation_mm": null,
+    "price_rub": "1672.00",
+    "is_active": true,
+    "attributes": {
+      "base_size": "600×600 мм",
+      "execution": "Прямой"
+    },
+    "product": {
+      "name": "Фланец декоративный",
+      "slug": "flanets-dekorativnyy",
+      "product_kind": "фланец",
+      "is_active": true
+    }
+  },
+  {
+    "id": "dfa8701a-9fa2-5e9c-89b0-49873ad669cf",
+    "article": "DT-CONSOLE-UNIVERSAL-930-D350",
+    "name": "Консоль универсальная до 930 мм, до D350",
+    "material": null,
+    "steel_grade": null,
+    "wall_thickness_mm": null,
+    "diameter_mm": null,
+    "outer_diameter_mm": null,
+    "length_mm": null,
+    "insulation_mm": null,
+    "price_rub": "3000.00",
+    "is_active": true,
+    "attributes": {
+      "diameter_range": "до D350"
+    },
+    "product": {
+      "name": "Консоль универсальная",
+      "slug": "konsol-universalnaya",
+      "product_kind": "консоль",
+      "is_active": true
+    }
+  },
+  {
+    "id": "a226d61b-94c1-428a-9af8-1cdf0e89894f",
+    "article": "DT-GOLYE-05-14-D215",
+    "name": "Хомут силовой, Ø215, AISI 430, 0.8 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 430",
+    "wall_thickness_mm": "0.80",
+    "diameter_mm": 215,
+    "outer_diameter_mm": null,
+    "length_mm": null,
+    "insulation_mm": null,
+    "price_rub": "899.00",
+    "is_active": true,
+    "attributes": {},
+    "product": {
+      "name": "Хомут силовой для консоли",
+      "slug": "odnostennyi-krepezh-homut-silovoi",
+      "product_kind": "крепеж",
+      "is_active": true
+    }
+  },
+  {
+    "id": "c73b887d-06e9-5151-99cd-5a8103d20a00",
+    "article": "DT-MASTER-FLASH-2",
+    "name": "Мастер-флеш №2",
+    "material": null,
+    "steel_grade": null,
+    "wall_thickness_mm": null,
+    "diameter_mm": null,
+    "outer_diameter_mm": null,
+    "length_mm": null,
+    "insulation_mm": null,
+    "price_rub": "2500.00",
+    "is_active": true,
+    "attributes": {},
+    "product": {
+      "name": "Мастер-флеш",
+      "slug": "master-flesh",
+      "product_kind": "проходной_узел",
+      "is_active": true
+    }
+  },
+  {
+    "id": "a929f1cf-3a65-4d2d-b4cb-3c99ea235f9b",
+    "article": "DT-GOLYE-09-00-D115",
+    "name": "ТрубаL=1000 мм, Ø115, AISI 304, 0.8 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.80",
+    "diameter_mm": 115,
+    "outer_diameter_mm": null,
+    "length_mm": 1000,
+    "insulation_mm": null,
+    "price_rub": "1992.38",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": null,
+      "outer_wall_thickness_mm": null
+    },
+    "product": {
+      "name": "Одноконтурная труба",
+      "slug": "odnostennyi-truba",
+      "product_kind": "труба",
+      "is_active": true
+    }
+  },
+  {
+    "id": "767e3b91-c393-5e51-932c-cd5ed853c70e",
+    "article": "DT-PASSAGE-GLASS-GALV-D100-200",
+    "name": "Проходной стакан 500×500 мм, гильза Ø400 мм, труба Ø100–200 мм, оцинковка",
+    "material": "Оцинкованная сталь",
+    "steel_grade": null,
+    "wall_thickness_mm": null,
+    "diameter_mm": null,
+    "outer_diameter_mm": null,
+    "length_mm": null,
+    "insulation_mm": null,
+    "price_rub": "1760.00",
+    "is_active": true,
+    "attributes": {
+      "base_size": "500×500 мм",
+      "diameter_range": "100–200 мм"
+    },
+    "product": {
+      "name": "Проходной стакан",
+      "slug": "prohodnoy-stakan",
+      "product_kind": "проходной_узел",
+      "is_active": true
+    }
+  },
+  {
+    "id": "d9596156-0786-4fe8-8366-6e941d09c312",
+    "article": "DT-SW50-17-15-D115-215",
+    "name": "Дефлектор-конус, Ø115/215, AISI 304, 0.5 мм, изоляция 50 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.50",
+    "diameter_mm": 115,
+    "outer_diameter_mm": 215,
+    "length_mm": null,
+    "insulation_mm": 50,
+    "price_rub": "2913.30",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": "AISI 430",
+      "outer_wall_thickness_mm": "0.5"
+    },
+    "product": {
+      "name": "Сэндвич-дефлектор-конус",
+      "slug": "sendvich-ogolovok-deflektor-konus",
+      "product_kind": "оголовок",
+      "is_active": true
+    }
+  },
+  {
+    "id": "047ec56f-4ba1-4a4f-b39c-c32c20ace222",
+    "article": "DT-SW50-19-11-D115-215",
+    "name": "Заглушка опорная, Ø115/215, AISI 304, 0.8 мм, изоляция 50 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.80",
+    "diameter_mm": 115,
+    "outer_diameter_mm": 215,
+    "length_mm": null,
+    "insulation_mm": 50,
+    "price_rub": "1644.50",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": "AISI 430",
+      "outer_wall_thickness_mm": "0.5"
+    },
+    "product": {
+      "name": "Сэндвич-заглушка опорная",
+      "slug": "sendvich-zaglushka-opornaya",
+      "product_kind": "заглушка",
+      "is_active": true
+    }
+  },
+  {
+    "id": "7600882e-22c9-49ea-bf76-a11703698ccf",
+    "article": "DT-SW50-19-08-D115-215",
+    "name": "Тройник с К/О 90°, Ø115/215, AISI 304, 0.8 мм, изоляция 50 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.80",
+    "diameter_mm": 115,
+    "outer_diameter_mm": 215,
+    "length_mm": null,
+    "insulation_mm": 50,
+    "price_rub": "6536.26",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": "AISI 430",
+      "outer_wall_thickness_mm": "0.5"
+    },
+    "product": {
+      "name": "Сэндвич-тройник с К/О 90°",
+      "slug": "sendvich-troi-nik-s-k-o-90gr",
+      "product_kind": "тройник",
+      "is_active": true
+    }
+  },
+  {
+    "id": "20bd5396-4029-4e6a-b1d3-1f445f1ed7c3",
+    "article": "DT-SW50-17-00-D115-215",
+    "name": "Труба L=1000мм, Ø115/215, AISI 304, 0.5 мм, изоляция 50 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.50",
+    "diameter_mm": 115,
+    "outer_diameter_mm": 215,
+    "length_mm": 1000,
+    "insulation_mm": 50,
+    "price_rub": "3798.80",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": "AISI 430",
+      "outer_wall_thickness_mm": "0.5"
+    },
+    "product": {
+      "name": "Сэндвич-труба",
+      "slug": "sendvich-truba",
+      "product_kind": "труба",
+      "is_active": true
+    }
+  },
+  {
+    "id": "72be50f5-da1b-4df7-83a0-0c2de102ad8e",
+    "article": "DT-SW50-17-04-D115-215",
+    "name": "Труба L=250 мм, Ø115/215, AISI 304, 0.5 мм, изоляция 50 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.50",
+    "diameter_mm": 115,
+    "outer_diameter_mm": 215,
+    "length_mm": 250,
+    "insulation_mm": 50,
+    "price_rub": "1850.70",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": "AISI 430",
+      "outer_wall_thickness_mm": "0.5"
+    },
+    "product": {
+      "name": "Сэндвич-труба",
+      "slug": "sendvich-truba",
+      "product_kind": "труба",
+      "is_active": true
+    }
+  },
+  {
+    "id": "2d6f081b-698c-4918-b6bd-3bfc438b9276",
+    "article": "DT-SW50-19-00-D115-215",
+    "name": "Труба L=1000мм, Ø115/215, AISI 304, 0.8 мм, изоляция 50 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.80",
+    "diameter_mm": 115,
+    "outer_diameter_mm": 215,
+    "length_mm": 1000,
+    "insulation_mm": 50,
+    "price_rub": "4680.50",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": "AISI 430",
+      "outer_wall_thickness_mm": "0.5"
+    },
+    "product": {
+      "name": "Сэндвич-труба",
+      "slug": "sendvich-truba",
+      "product_kind": "труба",
+      "is_active": true
+    }
+  },
+  {
+    "id": "57a4eff5-1d1c-4a6e-bee7-7bc97b410156",
+    "article": "DT-SW50-19-01-D115-215",
+    "name": "Труба L=750 мм, Ø115/215, AISI 304, 0.8 мм, изоляция 50 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.80",
+    "diameter_mm": 115,
+    "outer_diameter_mm": 215,
+    "length_mm": 750,
+    "insulation_mm": 50,
+    "price_rub": "4048.00",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": "AISI 430",
+      "outer_wall_thickness_mm": "0.5"
+    },
+    "product": {
+      "name": "Сэндвич-труба",
+      "slug": "sendvich-truba",
+      "product_kind": "труба",
+      "is_active": true
+    }
+  },
+  {
+    "id": "ebe5ab1c-a25f-422a-879a-197c69606c3f",
+    "article": "DT-GOLYE-09-11-D115",
+    "name": "Шибер поворотный, Ø115, AISI 304, 0.8 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.80",
+    "diameter_mm": 115,
+    "outer_diameter_mm": null,
+    "length_mm": null,
+    "insulation_mm": null,
+    "price_rub": "2120.14",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": null,
+      "outer_wall_thickness_mm": null
+    },
+    "product": {
+      "name": "Одноконтурный шибер поворотный",
+      "slug": "odnostennyi-shiber-povorotnyi",
+      "product_kind": "шибер",
+      "is_active": true
+    }
+  },
+  {
+    "id": "7b0814ee-b434-5d8e-98f9-f43d90a561c4",
+    "article": "DT-PASSAGE-WOOL-KIT",
+    "name": "Комплект ваты для проходного стакана",
+    "material": null,
+    "steel_grade": null,
+    "wall_thickness_mm": null,
+    "diameter_mm": null,
+    "outer_diameter_mm": null,
+    "length_mm": null,
+    "insulation_mm": null,
+    "price_rub": "1300.00",
+    "is_active": true,
+    "attributes": {},
+    "product": {
+      "name": "Комплект ваты для проходного стакана",
+      "slug": "komplekt-vaty-dlya-prohodnogo-stakana",
+      "product_kind": "изоляция",
+      "is_active": true
+    }
+  },
+  {
+    "id": "4c2aa180-6af5-4e74-bbd5-f1c67bf34b5c",
+    "article": "DT-SUPPORT-PLATFORM-304-430-D115-215",
+    "name": "Сэндвич-опорная площадка Ø115/215, AISI 304 0.5 мм / AISI 430 0.8 мм",
+    "material": "нержавеющая сталь",
+    "steel_grade": "AISI 304",
+    "wall_thickness_mm": "0.50",
+    "diameter_mm": 115,
+    "outer_diameter_mm": 215,
+    "length_mm": null,
+    "insulation_mm": 50,
+    "price_rub": "3438.00",
+    "is_active": true,
+    "attributes": {
+      "outer_steel_grade": "AISI 430",
+      "outer_wall_thickness_mm": "0.8"
+    },
+    "product": {
+      "name": "Сэндвич-опорная площадка",
+      "slug": "sendvich-opornaya-ploschadka",
+      "product_kind": "опорная_площадка",
+      "is_active": true
+    }
+  }
+]
