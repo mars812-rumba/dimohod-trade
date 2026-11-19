@@ -800,6 +800,12 @@ ul {
   outline-offset: 2px;
 }
 
+/* Keep the expanded top-level navigation from overflowing narrow laptops. */
+@media (min-width: 1025px) and (max-width: 1279px) {
+  .top-nav { display: none; }
+  .mobile-menu-trigger { display: inline-flex; }
+}
+
 @media (min-width: 1025px) and (max-width: 1640px) {
   .site-header {
     gap: 14px;

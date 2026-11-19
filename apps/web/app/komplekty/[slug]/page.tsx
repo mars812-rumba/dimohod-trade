@@ -28,8 +28,6 @@ export default async function ReadyKitPage({ params }: Props) {
   const { kit, variants } = data;
   const route = kit.route === "roof" ? "Через перекрытие и кровлю" : "Через стену";
   const related = variants.filter(item => item.slug !== kit.slug);
-  const specification = kit.lines.map((line, index) => `${index + 1}. ${line.label} (${line.article}) — ${line.quantity} шт. × ${kitRub(line.unit_price_rub)} = ${kitRub(line.line_total_rub)}`).join("\n");
-  const configuration = `${kit.name}\n${absolute(kitPath(kit.slug))}\n\n${specification}\nИтого: ${kitRub(kit.total_rub)}\nЦены на момент заявки; итоговые условия подтверждает менеджер.`;
   const schema = [
     { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
       { "@type": "ListItem", position: 1, name: "Главная", item: absolute("/") },
@@ -54,7 +52,7 @@ export default async function ReadyKitPage({ params }: Props) {
         <ReadyKitSelectors kit={kit} variants={variants} />
         <div className={styles.price}><small>Стоимость изделий по каталогу</small><strong>{kitRub(kit.total_rub)}</strong></div>
         {kit.unpriced_count > 0 ? <p role="status">Есть позиции без цены. Полную стоимость уточнит менеджер.</p> : null}
-        <ReadyKitInquiry name={kit.name} configuration={configuration} priced={kit.total_rub !== null} />
+        <ReadyKitInquiry name={kit.name} slug={kit.slug} priced={kit.total_rub !== null} />
         <p className={styles.muted}>Без монтажа и доставки. Наличие и условия заказа уточняет менеджер.</p>
       </div>
     </section>

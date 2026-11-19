@@ -26,6 +26,8 @@ class KitDefinition(BaseModel):
     source_revision: int | None = None
     source_sha256: str | None = None
     approved_at: str | None = None
+    preparation_basis: str | None = None
+    approval_notes: list[Annotated[str, Field(max_length=1200)]] = Field(default_factory=list, max_length=20)
 
 
 class KitUpdate(BaseModel):
@@ -36,3 +38,13 @@ class KitUpdate(BaseModel):
     limitations: list[Annotated[str, Field(max_length=1200)]] = Field(max_length=20)
     approved: bool
     published: bool
+
+
+class KitInquiry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    contact_method: Literal["phone", "telegram"]
+    contact: str = Field(min_length=1, max_length=160)
+    personal_data_consent: bool
+    consent_version: str = Field(max_length=20)
+    intent: Literal["order", "consultation"]
+    website: str = Field(default="", max_length=200)

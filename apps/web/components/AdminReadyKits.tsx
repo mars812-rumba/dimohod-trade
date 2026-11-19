@@ -10,6 +10,7 @@ type Definition = {
   slug: string; route: string; height_m: number; diameter_mm: number; revision: number;
   status: "draft" | "approved"; published: boolean; source_revision: number | null;
   description: string; limitations: string[]; lines: { sku_id: string; quantity: number; label: string }[];
+  preparation_basis: string | null; approval_notes: string[];
 };
 type Entry = { definition: Definition; name: string; problems: string[]; preview: ReadyKit };
 const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -42,7 +43,8 @@ function KitEditor({ entry, onSaved }: { entry: Entry; onSaved: (next: Entry) =>
   return <details className={styles.entry}>
     <summary><strong>{entry.name}</strong><span>{d.status === "approved" ? "СОГЛАСОВАН" : "НЕ СОГЛАСОВАН"} · {d.published && !entry.problems.length ? "Опубликован" : "Не опубликован"}</span><span>{kitRub(entry.preview.total_rub)} · редакция {d.revision}</span></summary>
     <div className={styles.editor}>
-      <p>{d.source_revision ? `Основа: очищенный снимок согласованной сметы, редакция ${d.source_revision}.` : "Собственный состав этого варианта ещё необходимо согласовать. Подбор по соседнему диаметру автоматически не выполняется."}</p>
+      <p>{d.source_revision ? `Основа: очищенный снимок согласованной сметы, редакция ${d.source_revision}.` : d.preparation_basis ? `Подготовлен по составу ${d.preparation_basis}: сохранены количества и исполнения, диаметрозависимые позиции заменены точными SKU каталога. ${d.status === "approved" ? "Этот диаметр согласован владельцем; проходной стакан, фланцы 600×600 и мастер-флеш оставлены как в Ø115." : "Требуется согласование этого диаметра."}` : "Собственный состав этого варианта ещё необходимо согласовать."}</p>
+      {d.status === "draft" && d.approval_notes.length ? <section><h3>Что проверить перед согласованием</h3><ul>{d.approval_notes.map((note, index) => <li key={index}>{note}</li>)}</ul></section> : null}
       {entry.problems.length ? <ul role="status">{entry.problems.map((text, index) => <li key={index}>{text}</li>)}</ul> : null}
       {entry.preview.lines.length ? <div className={styles.preview}>{entry.preview.lines.map((line, index) => <p key={index}><strong>{line.quantity} × {line.label}</strong><br />{line.article} · {line.characteristics.join(" · ")}<br />{kitRub(line.unit_price_rub)} / шт. → {kitRub(line.line_total_rub)}</p>)}<strong>Итого по текущим ценам: {kitRub(entry.preview.total_rub)}</strong></div> : null}
       <label>Состав BOM — конкретные SKU и количества

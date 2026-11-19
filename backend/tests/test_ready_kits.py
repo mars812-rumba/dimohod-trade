@@ -57,36 +57,55 @@ def update_payload(kit, **changes):
     return KitUpdate(**values)
 
 
-def test_matrix_contains_only_four_explicitly_approved_specs(catalog):
+def test_matrix_contains_twelve_owner_approved_specs(catalog):
     kits = list(service.definitions().values())
     assert len(kits) == 12
     assert {k.diameter_mm for k in kits} == {115, 120, 150}
-    assert sum(k.published and k.status == "approved" for k in kits) == 4
-    assert all(not k.lines and not k.published for k in kits if k.diameter_mm != 115)
+    assert all(k.lines and k.published and k.status == "approved" and k.approved_at for k in kits)
+    assert all(not k.approval_notes for k in kits)
     roof4 = next(k for k in kits if k.route == "roof" and k.height_m == 4 and k.diameter_mm == 115)
     roof6 = next(k for k in kits if k.route == "roof" and k.height_m == 6 and k.diameter_mm == 115)
     assert [line.quantity for line in roof4.lines[:5]] == [1, 1, 1, 1, 2]
     assert [line.quantity for line in roof6.lines[:5]] == [1, 1, 1, 1, 5]
-    assert all(k.source_revision == 7 and k.source_sha256 for k in kits if k.published)
+    assert all(k.source_revision == 7 and k.source_sha256 for k in kits if k.diameter_mm == 115)
+    assert all(k.preparation_basis for k in kits if k.diameter_mm != 115)
 
 
 def test_public_only_returns_approved_active_specs_without_private_provenance(client):
     response = client.get("/api/v1/ready-kits")
     assert response.status_code == 200
     items = response.json()["items"]
-    assert len(items) == 4 and all(k["diameter_mm"] == 115 for k in items)
+    assert len(items) == 12 and {k["diameter_mm"] for k in items} == {115, 120, 150}
     assert response.headers["cache-control"] == "no-store"
     text = response.text
-    for private in ("source_sha256", "source_revision", "contact", "customer", "lead_id", "approved_at"):
+    for private in ("source_sha256", "source_revision", "contact", "customer", "lead_id", "approved_at", "preparation_basis", "approval_notes"):
         assert private not in text
 
 
-def test_drafts_are_404_and_never_appear_in_variant_links(client):
+async def test_drafts_are_404_and_never_appear_in_variant_links(client):
+    kit = service.get_definition("cherez-perekrytie-4m-d120")
+    await service.save_kit(None, kit.slug, update_payload(kit, approved=False, published=False))
     assert client.get("/api/v1/ready-kits/cherez-perekrytie-4m-d120").status_code == 404
     assert client.get("/api/v1/ready-kits/unknown").status_code == 404
     data = client.get("/api/v1/ready-kits/cherez-perekrytie-4m-d115").json()
-    assert len(data["variants"]) == 4
-    assert all(k["diameter_mm"] == 115 for k in data["variants"])
+    assert len(data["variants"]) == 11
+    assert all(k["slug"] != kit.slug for k in data["variants"])
+
+
+def test_prepared_specs_without_explicit_owner_approval_stay_private(client, monkeypatch):
+    path = Path(service.__file__).with_name("prepared.json")
+    data = json.loads(path.read_text())
+    data["roof-4-d120"].pop("approval")
+    read_text = Path.read_text
+
+    def read(self, *args, **kwargs):
+        return json.dumps(data) if self == path else read_text(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read)
+    kit = service.get_definition("cherez-perekrytie-4m-d120")
+    assert kit.lines and kit.status == "draft" and not kit.published and kit.approved_at is None
+    assert kit.approval_notes
+    assert client.get(f"/api/v1/ready-kits/{kit.slug}").status_code == 404
 
 
 def test_prices_are_live_and_decimal_totals_are_not_snapshot_prices(client, catalog):
@@ -136,7 +155,7 @@ def test_admin_routes_require_authentication(client):
 async def test_approval_is_explicit_and_overrides_survive_seed_reload(catalog):
     draft = service.get_definition("cherez-perekrytie-4m-d120")
     with pytest.raises(HTTPException) as error:
-        await service.save_kit(None, draft.slug, update_payload(draft))
+        await service.save_kit(None, draft.slug, update_payload(draft, lines=[]))
     assert error.value.status_code == 422
     sku = next(iter(catalog.values()))
     sku.product.product_kind = "труба"
@@ -145,6 +164,7 @@ async def test_approval_is_explicit_and_overrides_survive_seed_reload(catalog):
     saved = await service.save_kit(None, draft.slug, update_payload(draft, lines=[line]))
     assert saved["definition"]["revision"] == 2
     assert saved["definition"]["status"] == "approved"
+    assert saved["definition"]["preparation_basis"] is None
     assert service.get_definition(draft.slug).lines == [line]
     assert draft.slug in [k["slug"] for k in await service.public_kits(None)]
     with pytest.raises(HTTPException) as error:
@@ -172,6 +192,13 @@ def test_corrupt_override_never_republishes_seed(catalog):
     assert error.value.status_code == 503
 
 
+async def test_existing_runtime_draft_is_not_overwritten_by_new_prepared_seed(catalog):
+    draft = service.get_definition("cherez-perekrytie-4m-d120")
+    await service.save_kit(None, draft.slug, update_payload(draft, lines=[], approved=False, published=False))
+    assert service.get_definition(draft.slug).lines == []
+    assert service.get_definition(draft.slug).revision == 2
+
+
 async def test_private_media_block(tmp_path):
     from app.main import PublicMediaFiles
     directory = tmp_path / "ready-kits"
@@ -180,3 +207,134 @@ async def test_private_media_block(tmp_path):
     files = PublicMediaFiles(directory=tmp_path)
     response = await files.get_response("ready-kits/spec.json", {"type": "http", "method": "GET", "headers": []})
     assert response.status_code == 404
+
+
+def test_prepared_diameters_use_exact_catalog_variants_and_preserve_approved_quantities(catalog):
+    rows = json.loads(Path(__file__).with_name("fixtures").joinpath("ready_kits_catalog.json").read_text())
+    actual = {item["id"]: item for item in rows}
+    seeds = json.loads(Path(service.__file__).with_name("approved.json").read_text())
+    prepared = json.loads(Path(service.__file__).with_name("prepared.json").read_text())
+    for scheme, seed in seeds.items():
+        for diameter in (120, 150):
+            draft = prepared[f"{scheme}-d{diameter}"]
+            assert draft["source_sha256"] == seed["sha256"]
+            assert len(draft["lines"]) == len(seed["lines"])
+            for original, replacement in zip(seed["lines"], draft["lines"], strict=True):
+                assert replacement["quantity"] == original["quantity"]
+                assert replacement["label"] == original["label"]
+                old, new = actual[original["sku_id"]], actual[replacement["sku_id"]]
+                assert new["is_active"] and new["product"]["is_active"]
+                assert old["product"]["id"] == new["product"]["id"]
+                for field in ("material", "steel_grade", "wall_thickness_mm", "length_mm", "angle_deg", "contour", "insulation_mm"):
+                    assert old[field] == new[field], (scheme, diameter, field)
+                for field in ("outer_material", "outer_steel_grade", "outer_wall_thickness_mm"):
+                    assert old["attributes"].get(field) == new["attributes"].get(field)
+                if old["diameter_mm"] == 115:
+                    assert new["diameter_mm"] == diameter
+                    if old["outer_diameter_mm"]:
+                        assert new["outer_diameter_mm"] == diameter + 100
+                elif old["diameter_mm"] == 215:
+                    assert new["diameter_mm"] == diameter + 100
+                    assert new["steel_grade"] == "AISI 430" and Decimal(new["wall_thickness_mm"]) == Decimal("0.8")
+                else:
+                    assert new["id"] == old["id"]
+
+
+def inquiry_payload(**changes):
+    return {"contact_method": "phone", "contact": "+7 999 123-45-67", "intent": "order",
+            "personal_data_consent": True, "consent_version": "2026-08-11", **changes}
+
+
+@pytest.mark.parametrize("intent,method,contact", [
+    ("order", "phone", "+7 999 123-45-67"), ("order", "telegram", "@kit_buyer"),
+    ("consultation", "phone", "+7 999 123-45-67"), ("consultation", "telegram", "@kit_buyer"),
+])
+def test_inquiry_creates_named_kit_estimate_in_crm_without_customer_name(client, catalog, monkeypatch, intent, method, contact):
+    delivered = []
+    monkeypatch.setattr("app.modules.leads.router.send_lead_email", lambda *args: delivered.append(args) or True)
+    slug = "cherez-stenu-3m-d115"
+    # Re-read price on POST, rather than accepting the previously displayed one.
+    first = service.get_definition(slug).lines[0]
+    catalog[str(first.sku_id)].price_rub = Decimal("321.45")
+    response = client.post(f"/api/v1/ready-kits/{slug}/inquiry", json=inquiry_payload(intent=intent, contact_method=method, contact=contact))
+    assert response.status_code == 201, response.text
+    assert response.json()["email_status"] == "sent"
+    assert response.headers["cache-control"] == "no-store"
+    assert set(response.json()) == {"id", "status", "email_status"}
+    lead_dir = Path(settings.media_storage_dir) / "leads" / response.json()["id"]
+    lead = json.loads((lead_dir / "lead.json").read_text())
+    envelope = json.loads((lead_dir / "estimate.json").read_text())
+    estimate = envelope["estimate"]
+    assert lead["name"] == "" and lead["contact"] == contact and lead["contact_method"] == method
+    assert lead["source"] == f"ready-kit-{intent}" and lead["intent"] == f"ready_kit_{intent}"
+    assert lead["personal_data_consent"] and lead["consented_at"]
+    assert envelope["status"] == "submitted" and envelope["customer"]["name"] == ""
+    assert estimate["profile_name"] == "Комплект дымохода через стену, 3 м, Ø115 мм"
+    assert len(estimate["lines"]) == 14
+    assert len({line["key"] for line in estimate["lines"]}) == 14  # Same console SKU in two rows.
+    assert estimate["lines"][0]["unit_price_rub"] == 321.45
+    customer = json.loads((Path(settings.media_storage_dir) / "customers" / f"{lead['customer_id']}.json").read_text())
+    assert customer["name"] == "" and estimate["profile_name"] in json.dumps(customer, ensure_ascii=False)
+    assert delivered[0][0]["_estimate"]["profile_name"] == estimate["profile_name"]
+    assert delivered[0][2]  # Manager link is included in the notification.
+    crm = client.get("/api/v1/admin/customers", headers={"X-BOM-Admin-Token": "ready-kits-test-only"})
+    assert crm.status_code == 200 and estimate["profile_name"] in crm.text
+
+
+@pytest.mark.parametrize("changes", [
+    {"personal_data_consent": False}, {"consent_version": "old"}, {"contact": "bad"},
+    {"contact_method": "email", "contact": "buyer@example.com"}, {"intent": "bogus"},
+    {"name": "Not requested"}, {"lines": []}, {"total_rub": "1"},
+])
+def test_invalid_inquiry_has_no_side_effects(client, changes):
+    response = client.post("/api/v1/ready-kits/cherez-stenu-3m-d115/inquiry", json=inquiry_payload(**changes))
+    assert response.status_code == 422
+    assert not (Path(settings.media_storage_dir) / "leads").exists()
+
+
+async def test_drafts_and_unavailable_skus_cannot_be_ordered(client, catalog):
+    for slug in ("cherez-stenu-3m-d120", "cherez-stenu-6m-d150"):
+        kit = service.get_definition(slug)
+        await service.save_kit(None, kit.slug, update_payload(kit, approved=False, published=False))
+    for slug in ("unknown", "cherez-stenu-3m-d120", "cherez-stenu-6m-d150"):
+        assert client.post(f"/api/v1/ready-kits/{slug}/inquiry", json=inquiry_payload()).status_code == 404
+    first = service.get_definition("cherez-stenu-3m-d115").lines[0]
+    catalog[str(first.sku_id)].is_active = False
+    assert client.post("/api/v1/ready-kits/cherez-stenu-3m-d115/inquiry", json=inquiry_payload()).status_code == 404
+    assert not (Path(settings.media_storage_dir) / "leads").exists()
+
+
+def test_owner_approval_keeps_same_passage_skus_for_all_diameters(catalog):
+    seeds = json.loads(Path(service.__file__).with_name("approved.json").read_text())
+    prepared = json.loads(Path(service.__file__).with_name("prepared.json").read_text())
+    shared = {"767e3b91-c393-5e51-932c-cd5ed853c70e",  # Passage cup
+              "2a1a062b-4088-5551-8a7d-32f425d0d9eb",  # Flange 600x600
+              "c73b887d-06e9-5151-99cd-5a8103d20a00"}  # Master flash (Roof only)
+    for key, item in prepared.items():
+        assert item["approval"]["approved"] is True
+        assert item["approval"]["approved_at"] == "2026-11-19T10:19:14Z"
+        assert "600на 600" in item["approval"]["source"]
+        base = seeds[key.rsplit("-d", 1)[0]]
+        originals = [line for line in base["lines"] if line["sku_id"] in shared]
+        selected = [line for line in item["lines"] if line["sku_id"] in shared]
+        assert selected == originals
+        assert len(selected) == (3 if key.startswith("roof-") else 2)
+
+
+def test_unpriced_kit_can_only_request_consultation_and_smtp_failure_keeps_crm(client, catalog, monkeypatch):
+    first = service.get_definition("cherez-stenu-3m-d115").lines[0]
+    catalog[str(first.sku_id)].price_rub = None
+    path = "/api/v1/ready-kits/cherez-stenu-3m-d115/inquiry"
+    assert client.post(path, json=inquiry_payload()).status_code == 409
+    assert not (Path(settings.media_storage_dir) / "leads").exists()
+
+    def smtp_failure(*_args):
+        raise RuntimeError("isolated test SMTP failure")
+
+    monkeypatch.setattr("app.modules.leads.router.send_lead_email", smtp_failure)
+    response = client.post(path, json=inquiry_payload(intent="consultation"))
+    assert response.status_code == 201 and response.json()["email_status"] == "failed"
+    directory = Path(settings.media_storage_dir) / "leads" / response.json()["id"]
+    estimate = json.loads((directory / "estimate.json").read_text())["estimate"]
+    assert estimate["lines"][0]["unit_price_rub"] is None and estimate["unpriced_line_count"] == 1
+    assert len(list((Path(settings.media_storage_dir) / "customers").glob("*.json"))) == 1

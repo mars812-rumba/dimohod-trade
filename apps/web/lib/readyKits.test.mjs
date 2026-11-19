@@ -42,3 +42,23 @@ test("BOM and metadata are server-rendered and selectors do not invent unavailab
   assert.match(sitemap, /getReadyKits\(\)/);
   assert.match(sitemap, /kitPath\(kit\.slug\)/);
 });
+
+test("ready-kit order collects one contact with consent, not a customer name or client-side BOM", async () => {
+  const controls = await readFile(new URL("../components/ReadyKitControls.tsx", import.meta.url), "utf8");
+  assert.match(controls, /quickEstimateContact\(String\(data\.get\("contact"\)/);
+  assert.match(controls, /<PersonalDataConsent\s*\/>/);
+  assert.match(controls, /data\.get\("personal_data_consent"\) !== "true"/);
+  assert.match(controls, /ready-kits\/\$\{encodeURIComponent\(slug\)\}\/inquiry/);
+  assert.match(controls, /sending\.current/);
+  assert.ok(!controls.includes('<LeadForm'));
+  assert.ok(!controls.includes('name="name"'));
+  assert.ok(!controls.includes('estimate_json'));
+  assert.ok(!controls.includes('solutionsCalcSubmit'));
+});
+
+test("ready kits is a top-level desktop and mobile navigation entry", async () => {
+  const header = await readFile(new URL("../components/SiteHeader.tsx", import.meta.url), "utf8");
+  assert.match(header, /<\/details>\s*<Link href="\/komplekty">Готовые комплекты<\/Link>/);
+  assert.match(header, /<\/details>\s*<Link href="\/komplekty" onClick=\{closeMenu\}>Готовые комплекты<\/Link>/);
+  assert.equal((header.match(/href="\/komplekty"/g) ?? []).length, 2);
+});

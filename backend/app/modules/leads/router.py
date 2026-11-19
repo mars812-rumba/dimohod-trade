@@ -797,7 +797,7 @@ async def create_lead(
     personal_data_consent: bool = Form(...),
     consent_version: str = Form(..., max_length=20),
     website: str = Form("", max_length=200),
-    intent: Literal["manager_review", "estimate_access"] = Form("manager_review"),
+    intent: Literal["manager_review", "estimate_access", "ready_kit_order", "ready_kit_consultation"] = Form("manager_review"),
     attachment: UploadFile | None = File(None),  # noqa: B008 - FastAPI dependency declaration.
 ) -> dict[str, str]:
     response.headers["Cache-Control"] = "no-store"
@@ -811,9 +811,10 @@ async def create_lead(
         raise HTTPException(status_code=422, detail="Необходимо согласие на обработку персональных данных")
     if consent_version != CURRENT_CONSENT_VERSION:
         raise HTTPException(status_code=422, detail="Обновите страницу и подтвердите актуальную версию согласия")
-    if intent != "estimate_access" and len(name.strip()) < 2:
+    contact_only = intent in {"estimate_access", "ready_kit_order", "ready_kit_consultation"}
+    if not contact_only and len(name.strip()) < 2:
         raise HTTPException(status_code=422, detail="Укажите имя")
-    if intent == "estimate_access" and normalized_method not in {"phone", "telegram"}:
+    if contact_only and normalized_method not in {"phone", "telegram"}:
         raise HTTPException(status_code=422, detail="Укажите телефон или Telegram")
 
     estimate: LeadEstimate | None = None
@@ -823,7 +824,7 @@ async def create_lead(
         except ValidationError as error:
             logger.warning("Rejected structured lead estimate: %s", error.errors(include_input=False))
             raise HTTPException(status_code=422, detail="Некорректная структура BOM") from error
-    if intent == "estimate_access" and estimate is None:
+    if contact_only and estimate is None:
         raise HTTPException(status_code=422, detail="Для получения расчёта необходимо сохранить смету")
 
     lead_id = uuid.uuid4().hex

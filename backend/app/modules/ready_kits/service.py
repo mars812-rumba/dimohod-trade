@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.core.config import settings
+from app.modules.leads.schemas import LeadEstimate
 from app.modules.products.models import SKU
 from app.modules.ready_kits.schemas import KitDefinition, KitLine, KitUpdate
 
@@ -28,8 +29,9 @@ def kit_name(kit: KitDefinition) -> str:
 
 
 def definitions() -> dict[str, KitDefinition]:
-    """Seed contains only sanitized owner-approved snapshots, never live CRM records."""
+    """Explicit compositions and owner approvals, never live CRM records."""
     seeds = json.loads(Path(__file__).with_name("approved.json").read_text(encoding="utf-8"))
+    prepared = json.loads(Path(__file__).with_name("prepared.json").read_text(encoding="utf-8"))
     result = {}
     for route, heights in (("roof", (4, 6)), ("wall", (3, 6))):
         for height in heights:
@@ -37,10 +39,13 @@ def definitions() -> dict[str, KitDefinition]:
                 scheme = f"{route}-{height}"
                 slug = f"cherez-{'perekrytie' if route == 'roof' else 'stenu'}-{height}m-d{diameter}"
                 seed = seeds.get(scheme) if diameter == 115 else None
+                draft = prepared.get(f"{scheme}-d{diameter}")
+                approval = draft.get("approval", {}) if draft else {}
+                approved = bool(seed) or approval.get("approved") is True
                 kit = KitDefinition(
                     slug=slug, route=route, height_m=height, diameter_mm=diameter,
-                    status="approved" if seed else "draft", published=bool(seed),
-                    lines=[KitLine.model_validate(line) for line in seed["lines"]] if seed else [],
+                    status="approved" if approved else "draft", published=approved,
+                    lines=[KitLine.model_validate(line) for line in (seed or draft or {}).get("lines", [])],
                     description=(
                         f"Готовый комплект для маршрута {ROUTES[route]}. "
                         "Ниже приведены конкретные исполнения изделий и их количества. "
@@ -50,7 +55,14 @@ def definitions() -> dict[str, KitDefinition]:
                     limitations=LIMITATIONS,
                     source_revision=7 if seed else None,
                     source_sha256=seed["sha256"] if seed else None,
-                    approved_at="2026-11-19" if seed else None,
+                    approved_at="2026-11-19" if seed else approval.get("approved_at") if approved else None,
+                    preparation_basis=draft["basis"] if draft else None,
+                    approval_notes=[
+                        "SKU и количества сопоставлены с согласованным Ø115; техническую пригодность всего нового диаметра ещё нужно подтвердить.",
+                        "Проходной стакан оставлен из исходного состава: основание 500×500 мм, диапазон в каталоге 100–200 мм. Уточнить, к какому контуру относится диапазон и применим ли стакан к новой трубе.",
+                        "Размер отверстия фланца в данных SKU не указан. Подтвердить выбранный фланец для нового диаметра; по картинке совместимость не устанавливалась.",
+                        *(["Допустимый диапазон мастер-флеша №2 в данных SKU не указан. Подтвердить применимость к новому диаметру."] if route == "roof" else []),
+                    ] if draft and not approved else [],
                 )
                 path = Path(settings.media_storage_dir) / "ready-kits" / f"{slug}.json"
                 if path.exists():
@@ -167,6 +179,27 @@ async def public_kits(session: AsyncSession) -> list[dict]:
     return [public_view(k, skus) for k in kits if not problems(k, skus)]
 
 
+def inquiry_estimate(kit: dict) -> LeadEstimate:
+    """Use the freshly loaded catalogue, never prices/lines posted by the browser."""
+    return LeadEstimate(
+        schema_version=1, profile_name=kit["name"], generated_at=datetime.now(UTC),
+        source_url=f"https://dimohod-trade.pro/komplekty/{kit['slug']}",
+        measurements=[{"label": "Комплект", "value": kit["name"]}],
+        lines=[{
+            "key": f"{kit['slug']}:{index}", "sku_id": line["sku_id"],
+            "label": line["label"], "article": line["article"], "sku_name": line["sku_name"],
+            "quantity": line["quantity"], "unit_price_rub": line["unit_price_rub"],
+            "line_total_rub": line["line_total_rub"], "characteristics": line["characteristics"],
+            "match_status": "exact",
+        } for index, line in enumerate(kit["lines"])],
+        known_subtotal_rub=kit["known_subtotal_rub"],
+        priced_line_count=len(kit["lines"]) - kit["unpriced_count"],
+        unpriced_line_count=kit["unpriced_count"],
+        total_units=sum(line["quantity"] for line in kit["lines"]),
+        review_items=kit["limitations"],
+    )
+
+
 async def admin_kits(session: AsyncSession) -> list[dict]:
     kits = list(definitions().values())
     skus = await load_skus(session, kits)
@@ -184,6 +217,7 @@ async def save_kit(session: AsyncSession, slug: str, payload: KitUpdate) -> dict
         "approved_at": datetime.now(UTC).isoformat() if payload.approved else None,
         "source_revision": current.source_revision if payload.lines == current.lines else None,
         "source_sha256": current.source_sha256 if payload.lines == current.lines else None,
+        "preparation_basis": current.preparation_basis if payload.lines == current.lines else None,
     })
     if payload.published and not payload.approved:
         raise HTTPException(422, "Для публикации требуется согласование состава")
