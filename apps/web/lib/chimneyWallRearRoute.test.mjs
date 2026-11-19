@@ -236,7 +236,9 @@ test("rear outlet through a ceiling keeps the confirmed warm transition order", 
   assert.equal(calculation.bom.find((line) => line.key === "single-pipe-1000").catalogLengthMode, "exact");
   assert.equal(calculation.bom.find((line) => line.key === "roof-passage").preferredSteelGrade, "AISI 430");
   assert.ok(calculation.bom.filter((line) => line.productKind === "фланец").every((line) => line.preferredSteelGrade === "AISI 430"));
-  assert.equal(calculation.bom.find((line) => line.key === "roof-master-flash").priceOnRequest, true);
+  const masterFlash = calculation.bom.find((line) => line.key === "roof-master-flash");
+  assert.equal(masterFlash.priceOnRequest, undefined);
+  assert.equal(masterFlash.fixedUnitPriceRub, undefined);
 });
 
 test("BOM separates first sandwich 0.8 mm from upper and outdoor 0.5 mm pipes", () => {

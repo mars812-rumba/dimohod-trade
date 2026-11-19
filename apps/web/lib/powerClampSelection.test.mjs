@@ -24,6 +24,16 @@ test("new manual selection defaults to real 430/0.8 at the exact outer diameter,
   assert.ok(!estimateCatalogVariants(product).includes(testSku));
 });
 
+test("a confirmed real 215 clamp is selectable without substituting 220 or reviving a test SKU", () => {
+  const real215 = { ...standard, id: "real-215", article: "DT-GOLYE-05-14-D215", diameter_mm: 215, price_rub: "899.00" };
+  const real220 = { ...standard, id: "real-220", article: "DT-GOLYE-05-14-D220", diameter_mm: 220, price_rub: "899.00" };
+  const current = { ...product, skus: [testSku, real220, real215, standard] };
+  const options = estimatePickerVariants(current, { diameter: 115, outer: 215 });
+  assert.deepEqual(options, [real215]);
+  assert.equal(defaultEstimateVariant(current, options), real215);
+  assert.equal(defaultEstimateVariant(current, options).price_rub, "899.00");
+});
+
 test("admin can change steel at fixed geometry and price follows the actual SKU", () => {
   const options=estimateGeometryVariants(estimateCatalogVariants(product),standard);
   assert.deepEqual(estimateVariantOptions(options,standard,"inner"),["Оцинковка","AISI 304","AISI 430"]);

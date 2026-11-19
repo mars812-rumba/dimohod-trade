@@ -758,7 +758,6 @@ function addRouteNodes(
       requiresSku: true,
       catalogCategorySlug: "uzly-prohoda-krovli",
       catalogSearch: "Мастер-флеш",
-      priceOnRequest: true,
     });
     bom.push({
       key: "roof-passage",
