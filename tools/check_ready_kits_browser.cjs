@@ -40,6 +40,35 @@ const fs = require("node:fs");
     const marker = await context.request.get(`${base}/api/v1/ready-kits-test-preview`);
     assert.equal((await marker.json()).isolated_ready_kits_preview, true, "Only isolated preview may run this test");
     page.on("pageerror", error => errors.push(error.message));
+    const indexKits = (await (await context.request.get(`${base}/api/v1/ready-kits`)).json()).items;
+    await page.goto(`${base}/komplekty`);
+    assert.equal(await page.locator("[data-kit-group]").count(), 4);
+    for (const key of ["roof-4", "roof-6", "wall-3", "wall-6"]) {
+      const card = page.locator(`[data-kit-group="${key}"]`);
+      const variants = indexKits.filter(kit => `${kit.route}-${kit.height_m}` === key);
+      assert.equal(await card.locator("nav a").count(), 3);
+      assert.match(await card.locator("nav a[aria-current=true]").innerText(), /115/);
+      for (const diameter of [120, 150, 115]) {
+        const kit = variants.find(kit => kit.diameter_mm === diameter);
+        await card.locator(`nav a[href="/komplekty/${kit.slug}"]`).click();
+        assert.equal(new URL(page.url()).pathname, "/komplekty", "diameter changes in-place");
+        assert.equal(await card.locator("[data-kit-open]").getAttribute("href"), `/komplekty/${kit.slug}`);
+        assert.equal(await card.locator("[data-kit-count]").innerText(), `${kit.lines.length} позиций в составе`);
+        const expectedPrice = kit.total_rub === null ? "Цена уточняется" : new Intl.NumberFormat("ru-RU", {
+          style: "currency", currency: "RUB", maximumFractionDigits: 2,
+        }).format(Number(kit.total_rub));
+        assert.equal(await card.locator("[data-kit-price]").textContent(), expectedPrice);
+      }
+    }
+    await page.screenshot({ path: `${artifacts}/grouped-index-desktop.png`, fullPage: true });
+    for (const width of [320, 390, 768]) {
+      await page.setViewportSize({ width, height: 844 });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: `${artifacts}/grouped-index-mobile.png`, fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    console.log("Four grouped cards: all diameter links, default 115, prices/counts/URLs and mobile widths OK");
     let response = await page.goto(`${base}/komplekty/cherez-perekrytie-4m-d115`);
     assert.equal(response.status(), 200);
     const analyticsDecline = page.getByRole("button", { name: "Отключить аналитику", exact: true });
@@ -187,6 +216,9 @@ const fs = require("node:fs");
       response = await page.goto(`${base}/komplekty/${slug}`);
       assert.equal(response.status(), 404, slug);
     }
+    await page.goto(`${base}/komplekty`);
+    assert.equal(await page.locator('[data-kit-group="roof-4"] nav a').count(), 2);
+    assert.equal(await page.locator(`[data-kit-group] a[href="/komplekty/${unpublished.slug}"]`).count(), 0);
     const xml = await (await context.request.get(`${base}/sitemap.xml`)).text();
     assert.ok(xml.includes("/komplekty/cherez-perekrytie-4m-d115"));
     assert.ok(!xml.includes("/komplekty/cherez-perekrytie-4m-d120"));
@@ -215,6 +247,7 @@ const fs = require("node:fs");
     }
     const publicMatrix = await (await context.request.get(`${base}/api/v1/ready-kits`)).json();
     assert.equal(publicMatrix.items.length, 12);
+    assert.deepEqual(publicMatrix.items, indexKits, "catalogue/BOM/prices stay identical after UI checks");
     await page.goto(`${base}/komplekty/cherez-stenu-3m-d115`);
     assert.equal(await page.getByLabel("Диаметр комплекта").locator("option").count(), 3);
     for (const diameter of [120, 150]) {
@@ -229,6 +262,14 @@ const fs = require("node:fs");
     assert.deepEqual(errors, []);
     const noJs = await browser.newContext({ javaScriptEnabled: false, serviceWorkers: "block" });
     const ssr = await noJs.newPage();
+    await ssr.goto(`${base}/komplekty`);
+    assert.equal(await ssr.locator("[data-kit-group]").count(), 4);
+    assert.equal(await ssr.locator("[data-kit-group] nav a").count(), 12);
+    assert.equal(await ssr.locator('[data-kit-group] nav a[aria-current="true"]').count(), 4);
+    for (const kit of indexKits) assert.equal(await ssr.locator(`[data-kit-group] nav a[href="/komplekty/${kit.slug}"]`).count(), 1);
+    await ssr.locator('[data-kit-group="roof-4"] nav a[href$="d150"]').click();
+    await ssr.waitForURL("**/cherez-perekrytie-4m-d150");
+    assert.match(await ssr.locator("h1").innerText(), /Ø150/);
     await ssr.goto(`${base}/komplekty/cherez-perekrytie-4m-d115`);
     assert.equal(await ssr.locator("tbody tr").count(), 11);
     assert.match(await ssr.locator("h1").innerText(), /Ø115/);

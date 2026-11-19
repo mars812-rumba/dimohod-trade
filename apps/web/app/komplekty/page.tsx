@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getReadyKits } from "@/lib/readyKits";
-import { ReadyKitCard } from "@/components/ReadyKitCard";
+import { groupReadyKits } from "@/lib/readyKitGroups";
+import { ReadyKitGroupCard } from "@/components/ReadyKitGroupCard";
 import styles from "@/components/ReadyKit.module.css";
+import groupStyles from "@/components/ReadyKitGroups.module.css";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -13,10 +15,11 @@ export const metadata: Metadata = {
 
 export default async function ReadyKitsPage() {
   const kits = await getReadyKits();
+  const groups = groupReadyKits(kits);
   return <main className={styles.page}>
     <nav className={styles.breadcrumbs} aria-label="Хлебные крошки"><Link href="/">Главная</Link> / <span>Готовые комплекты</span></nav>
     <header className={styles.heading}><p className="eyebrow">Каталог комплектов</p><h1>Готовые комплекты дымоходов</h1><p>Выберите маршрут и откройте полный состав с текущей стоимостью изделий. Условия монтажа проверяются для конкретного объекта.</p></header>
-    {kits.length ? <div className={styles.cards}>{kits.map(kit => <ReadyKitCard key={kit.slug} kit={kit} />)}</div> : <p>Согласованные комплекты пока не опубликованы.</p>}
+    {kits.length ? <div className={groupStyles.cards}>{groups.map(group => <ReadyKitGroupCard key={group.key} group={group} />)}</div> : <p>Согласованные комплекты пока не опубликованы.</p>}
     <p><Link href="/catalog">Каталог отдельных изделий →</Link></p>
   </main>;
 }
