@@ -3,10 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { getReadyKit, kitMetadata, kitPath, kitRub } from "@/lib/readyKits";
-import { Boxes, BadgeRussianRuble } from "lucide-react";
+import { Boxes, BadgeRussianRuble, Camera, ClipboardList, Ruler } from "lucide-react";
+import { kitApplicationSections, kitChecklistIcon } from "@/lib/readyKitPresentation";
+import { readyKitScheme } from "@/lib/readyKitScheme";
 import { ReadyKitInquiry, ReadyKitPdf, ReadyKitSelectors } from "@/components/ReadyKitControls";
 import { ReadyKitLineDetails } from "@/components/ReadyKitLineDetails";
 import { ReadyKitCard } from "@/components/ReadyKitCard";
+import { ReadyKitTabs } from "@/components/ReadyKitTabs";
+import { RouteImageViewer } from "@/components/RouteImageViewer";
 import styles from "@/components/ReadyKit.module.css";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +34,8 @@ export default async function ReadyKitPage({ params }: Props) {
   const content = kit.content;
   const route = kit.route === "roof" ? "Через перекрытие и кровлю" : "Через стену";
   const related = variants.filter(item => item.slug !== kit.slug);
+  const scheme = readyKitScheme(kit.route, kit.height_m);
+  const application = kitApplicationSections(content?.application_description || kit.description, kit.route, kit.height_m);
   const schema = [
     { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
       { "@type": "ListItem", position: 1, name: "Главная", item: absolute("/") },
@@ -58,10 +64,11 @@ export default async function ReadyKitPage({ params }: Props) {
         <p className={styles.muted}>Без монтажа и доставки. Наличие и условия заказа уточняет менеджер.</p>
       </div>
     </section>
-    <nav className={styles.tabs} aria-label="Разделы комплекта"><a href="#bom">Состав комплекта</a><a href="#application">Применение</a><a href="#conditions">Что важно уточнить</a><a href="#related">Похожие комплекты</a></nav>
-    <div className={styles.details}>
-      <section id="bom" className={styles.panel}>
+    <ReadyKitTabs key={kit.slug} panels={{
+      bom: <section id="bom" className={styles.panel}>
         <h2>Полная спецификация комплекта</h2>
+        {scheme ? <RouteImageViewer key={scheme} src={`${base}${scheme}`} alt={`Схема комплекта: ${route.toLowerCase()}, ${kit.height_m} м`}
+          title={`${route} · ${kit.height_m} м`} previewLabel={`Посмотреть схему комплекта · ${kit.height_m} м`} previewSizes="48px" quality={88} /> : null}
         {content?.composition_description ? <p className={styles.muted}>{content.composition_description}</p> : null}
         <div className={styles.tableScroll}><table className={styles.table}>
           <thead><tr><th scope="col">Изделие и характеристики</th><th scope="col">Кол-во</th><th scope="col">Цена</th><th scope="col">Сумма</th></tr></thead>
@@ -74,18 +81,25 @@ export default async function ReadyKitPage({ params }: Props) {
         </table></div>
         <div className={styles.total}><span>Итого за комплект</span><strong>{kitRub(kit.total_rub)}</strong></div>
         <ReadyKitPdf kit={kit} />
-      </section>
-      <aside>
-        <section id="application" className={styles.panel}><h2>Применение и маршрут</h2>{(content?.application_description || kit.description).split(/\n\s*\n/).map((text, index) => <p key={index}>{text}</p>)}<p>Для выбора по объекту и отопителю:</p><ul><li><Link href="/solutions/banya">Дымоход для бани →</Link></li><li><Link href="/solutions/dom">Дымоход для дома →</Link></li><li><Link href="/solutions/pech">Подбор дымохода к печи →</Link></li></ul><p className={styles.muted}>Сценарные страницы помогают уточнить задачу; ссылка не означает универсальную совместимость этого комплекта с любым отопителем.</p></section>
-        <section id="conditions" className={styles.panel}><h2>Важные условия и ограничения</h2><ul>{kit.limitations.map((text, index) => <li key={index}>{text}</li>)}</ul>{content?.selection_checklist.length ? <><h3>Что подготовить перед заказом</h3><ul>{content.selection_checklist.map((text, index) => <li key={index}>{text}</li>)}</ul></> : null}<Link href="/contacts">Связаться со специалистом →</Link></section>
-      </aside>
-    </div>
+      </section>,
+      application: <section id="application" className={`${styles.panel} ${styles.reading}`}><h2>Применение и маршрут</h2>
+        {application.map((section, index) => <section className={styles.readingSection} key={index}><h3>{section.title}</h3>{section.paragraphs.map((text, i) => <p key={i}>{text}</p>)}</section>)}
+        <p>Для выбора по объекту и отопителю:</p><ul><li><Link href="/solutions/banya">Дымоход для бани →</Link></li><li><Link href="/solutions/dom">Дымоход для дома →</Link></li><li><Link href="/solutions/pech">Подбор дымохода к печи →</Link></li></ul><p className={styles.muted}>Сценарные страницы помогают уточнить задачу; ссылка не означает универсальную совместимость этого комплекта с любым отопителем.</p>
+      </section>,
+      conditions: <section id="conditions" className={`${styles.panel} ${styles.reading}`}><h2>Важные условия и ограничения</h2>
+        <ul>{kit.limitations.map((text, index) => <li key={index}>{text}</li>)}</ul>
+        {content?.selection_checklist.length ? <><h3>Что подготовить перед заказом</h3><ul className={styles.actionList}>{content.selection_checklist.map((text, index) => {
+          const Icon = { camera: Camera, ruler: Ruler, clipboard: ClipboardList }[kitChecklistIcon(text)];
+          return <li key={index}><Icon aria-hidden size={20} /><span>{text}</span></li>;
+        })}</ul></> : null}<Link href="/contacts">Связаться со специалистом →</Link>
+      </section>,
+      related: <section id="related" className={styles.panel}><h2>Похожие комплекты</h2><div className={styles.cards}>{related.map(item => <ReadyKitCard key={item.slug} kit={item} />)}</div></section>,
+    }} />
     {content?.faq.length ? <section id="faq" className={styles.panel}>
       <h2>Вопросы и ответы</h2>
       {content.faq.map((item, index) => <details key={index} className={styles.faqItem}>
         <summary>{item.question}</summary><p>{item.answer}</p>
       </details>)}
     </section> : null}
-    <section id="related" className={styles.heading}><h2>Похожие комплекты</h2><div className={styles.cards}>{related.map(item => <ReadyKitCard key={item.slug} kit={item} />)}</div></section>
   </main>;
 }

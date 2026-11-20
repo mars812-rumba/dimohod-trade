@@ -53,7 +53,8 @@ const fs = require("node:fs");
         await card.locator(`nav a[href="/komplekty/${kit.slug}"]`).click();
         assert.equal(new URL(page.url()).pathname, "/komplekty", "diameter changes in-place");
         assert.equal(await card.locator("[data-kit-open]").getAttribute("href"), `/komplekty/${kit.slug}`);
-        assert.equal(await card.locator("[data-kit-count]").innerText(), `${kit.lines.length} позиций в составе`);
+        assert.equal(await card.locator("[data-kit-price-caption]").innerText(), `за комплект Ø${diameter}`);
+        assert.ok((await card.locator("[data-kit-description]").innerText()).length > 20);
         const expectedPrice = kit.total_rub === null ? "Цена уточняется" : new Intl.NumberFormat("ru-RU", {
           style: "currency", currency: "RUB", maximumFractionDigits: 2,
         }).format(Number(kit.total_rub));

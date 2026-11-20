@@ -29,7 +29,7 @@ test("12 published variants form four ordered groups without changing any source
   const shuffled = [...kits].reverse(), before = structuredClone(shuffled);
   const groups = groupReadyKits(shuffled);
   assert.deepEqual(groups.map(group => group.key), ["roof-4", "roof-6", "wall-3", "wall-6"]);
-  assert.deepEqual(groups.map(group => group.name), ["Через перекрытие — 4 м", "Через перекрытие — 6 м", "Через стену — 3 м", "Через стену — 6 м"]);
+  assert.deepEqual(groups.map(group => group.name), ["Через перекрытие и кровлю · 4 м", "Через перекрытие и кровлю · 6 м", "Через стену · 3 м вверх", "Через стену · 6 м вверх"]);
   for (const group of groups) {
     assert.deepEqual(group.variants.map(variant => variant.diameter_mm), [115, 120, 150]);
     for (const variant of group.variants) {
@@ -53,6 +53,9 @@ test("server HTML contains all 12 ordinary diameter links and selects 115 by def
     assert.match(nav, /href="[^"]*115"[^>]*aria-current="true"/u);
     assert.match(html, /data-kit-open="true" href="[^"]*115"/u);
     assert.ok(html.includes(rub(group.variants[0].total_rub)));
+    assert.ok(html.includes("за комплект Ø115"));
+    assert.ok(html.includes("Схема и состав →"));
+    assert.ok(!html.includes("позиций в составе"));
     assert.ok(!nav.includes("nofollow"));
   }
 });
@@ -74,4 +77,37 @@ test("unknown price stays unknown in the grouped card", () => {
   const [group] = groupReadyKits([{ ...kits[0], total_rub: null }]);
   assert.equal(group.variants[0].total_rub, null);
   assert.ok(render(group).includes("Цена уточняется"));
+});
+
+const steelGroup = (kind, value) => ({ kind, fields: [{ key: "steel", value }] });
+const pipe = (length_mm, quantity, inner = "AISI 304", outer = "AISI 430") => ({ length_mm, quantity,
+  characteristic_groups: [steelGroup("inner", inner), steelGroup("outer", outer)] });
+
+test("all four approved summaries follow verified pipe/passages/console counts in each diameter", () => {
+  for (const route of ["roof", "wall"]) for (const height_m of route === "roof" ? [4, 6] : [3, 6]) for (const diameter_mm of [115, 120, 150]) {
+    const kit = { ...kits[0], route, height_m, diameter_mm, lines: [pipe(1000, route === "roof" && height_m === 4 ? 3 : height_m),
+      ...(route === "roof" ? [
+        { length_mm: 1000, quantity: 1, characteristic_groups: [] },
+        { article: "DT-PASSAGE-GLASS-GALV-D100-200", quantity: height_m === 4 ? 1 : 2 },
+      ] : [pipe(750, 1), { label: "Консоль универсальная фасадная", quantity: height_m === 6 ? 2 : 1 }]),
+    ] };
+    const [group] = groupReadyKits([kit]);
+    const variant = group.variants[0];
+    assert.deepEqual(variant.sandwich_steel, { inner: "AISI 304", outer: "AISI 430" });
+    assert.ok(variant.description.includes(route === "roof" ? "одностенная" : "750 мм"));
+    if (route === "wall" && height_m === 6) assert.ok(variant.description.includes("двумя фасадными консолями"));
+    const html = render(group);
+    assert.ok(html.includes(`за комплект Ø${diameter_mm}`));
+    assert.ok(html.includes("внутри AISI 304, снаружи AISI 430."));
+  }
+});
+
+test("summary never keeps stale counts; steel comes from every selected sandwich pipe", () => {
+  const kit = { ...kits[0], route: "wall", height_m: 6,
+    lines: [pipe(1000, 6, "AISI 316"), pipe(750, 1, "AISI 316"), { label: "Консоль универсальная фасадная", quantity: 2 }] };
+  assert.equal(groupReadyKits([kit])[0].variants[0].sandwich_steel.inner, "AISI 316");
+  kit.lines[0].quantity = 7;
+  assert.equal(groupReadyKits([kit])[0].variants[0].description, "Полный состав выбранного диаметра — в спецификации комплекта.");
+  kit.lines[1].characteristic_groups = [steelGroup("inner", "AISI 316")];
+  assert.equal(groupReadyKits([kit])[0].variants[0].sandwich_steel, null);
 });

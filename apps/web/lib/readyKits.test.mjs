@@ -45,7 +45,7 @@ test("kit content and FAQ stay server-rendered and admin-editable", async () => 
   const page = await readFile(new URL("../app/komplekty/[slug]/page.tsx", import.meta.url), "utf8");
   assert.match(page, /content\?\.faq\.length/);
   assert.match(page, /<details[^>]*className=\{styles\.faqItem\}/);
-  assert.match(page, /content\?\.application_description \|\| kit\.description/);
+  assert.match(page, /kitApplicationSections\(content\?\.application_description \|\| kit\.description/);
   const admin = await readFile(new URL("../components/AdminReadyKits.tsx", import.meta.url), "utf8");
   for (const field of ["short_description", "application_description", "composition_description", "selection_checklist", "faq", "seo_description"]) {
     assert.ok(admin.includes(field), field);

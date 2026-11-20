@@ -34,7 +34,7 @@ const fs = require("node:fs");
       assert.equal(await ssr.locator("#faq details").count(), 6);
       assert.equal(await ssr.locator("#faq details[open]").count(), 0);
       assert.equal(await ssr.locator("#faq details p").first().textContent(), kit.content.faq[0].answer);
-      assert.equal(await ssr.locator("#application p").first().textContent(), kit.content.application_description);
+      assert.equal((await ssr.locator("#application section p").allTextContents()).join(" "), kit.content.application_description);
       assert.ok(await ssr.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       descriptions.add(kit.content.seo_description);
     }
