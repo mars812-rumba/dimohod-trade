@@ -15,7 +15,7 @@ from app.modules.leads.schemas import LeadEstimate
 from app.modules.products.models import SKU
 from app.modules.products.router import primary_product_image, primary_sku_image
 from app.modules.products.specification import specification_groups
-from app.modules.ready_kits.schemas import KitDefinition, KitLine, KitUpdate
+from app.modules.ready_kits.schemas import KitContent, KitDefinition, KitLine, KitUpdate
 
 ROUTES = {"roof": "через перекрытие", "wall": "через стену"}
 LIMITATIONS = [
@@ -34,6 +34,7 @@ def definitions() -> dict[str, KitDefinition]:
     """Explicit compositions and owner approvals, never live CRM records."""
     seeds = json.loads(Path(__file__).with_name("approved.json").read_text(encoding="utf-8"))
     prepared = json.loads(Path(__file__).with_name("prepared.json").read_text(encoding="utf-8"))
+    content = json.loads(Path(__file__).with_name("content.json").read_text(encoding="utf-8"))
     result = {}
     for route, heights in (("roof", (4, 6)), ("wall", (3, 6))):
         for height in heights:
@@ -55,6 +56,7 @@ def definitions() -> dict[str, KitDefinition]:
                         "параметры подключения и проходов проверяются для вашего объекта."
                     ),
                     limitations=LIMITATIONS,
+                    content=KitContent.model_validate(content[scheme]),
                     source_revision=7 if seed else None,
                     source_sha256=seed["sha256"] if seed else None,
                     approved_at="2026-11-19" if seed else approval.get("approved_at") if approved else None,
@@ -74,6 +76,15 @@ def definitions() -> dict[str, KitDefinition]:
                             kit.slug, kit.route, kit.height_m, kit.diameter_mm
                         ):
                             raise ValueError("Variant identity changed")
+                        if "content" not in stored.model_fields_set and stored.lines == kit.lines:
+                            # Upgrade old files in memory only, preserving manual descriptions.
+                            inherited = kit.content
+                            if inherited is not None and stored.description != kit.description:
+                                inherited = inherited.model_copy(update={
+                                    "short_description": stored.description if len(stored.description) <= 1200 else "",
+                                    "application_description": stored.description,
+                                })
+                            stored = stored.model_copy(update={"content": inherited})
                         kit = stored
                     except (ValueError, OSError, ValidationError) as exc:
                         # Never fall back to a published seed after an unreadable unpublish/edit.
@@ -174,6 +185,9 @@ def public_view(kit: KitDefinition, skus: dict[str, SKU]) -> dict:
         "height_m": kit.height_m, "diameter_mm": kit.diameter_mm,
         "image_path": f"/images/ready-kits/{kit.route}-title.webp",
         "description": kit.description, "limitations": kit.limitations,
+        "content": ({**kit.content.model_dump(mode="json"),
+                     "seo_description": kit.content.seo_description.replace("{diameter}", str(kit.diameter_mm))}
+                    if kit.content is not None else None),
         "lines": lines, "known_subtotal_rub": str(subtotal),
         "total_rub": None if unpriced or not kit.lines else str(subtotal),
         "unpriced_count": unpriced,
@@ -226,6 +240,13 @@ async def save_kit(session: AsyncSession, slug: str, payload: KitUpdate) -> dict
         "source_sha256": current.source_sha256 if payload.lines == current.lines else None,
         "preparation_basis": current.preparation_basis if payload.lines == current.lines else None,
     })
+    if "content" in payload.model_fields_set:
+        updated.content = payload.content
+    elif payload.lines != current.lines:
+        # Old clients changing the BOM must not inherit now-stale composition copy.
+        updated.content = None
+    elif payload.description != current.description and updated.content is not None:
+        updated.content = updated.content.model_copy(update={"application_description": payload.description})
     if payload.published and not payload.approved:
         raise HTTPException(422, "Для публикации требуется согласование состава")
     skus = await load_skus(session, [updated])

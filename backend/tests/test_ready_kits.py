@@ -11,7 +11,7 @@ from app.core.config import settings
 from app.db.session import get_db
 from app.main import app
 from app.modules.ready_kits import service
-from app.modules.ready_kits.schemas import KitLine, KitUpdate
+from app.modules.ready_kits.schemas import KitContent, KitLine, KitUpdate
 
 
 @pytest.fixture
@@ -69,6 +69,116 @@ def test_matrix_contains_twelve_owner_approved_specs(catalog):
     assert [line.quantity for line in roof6.lines[:5]] == [1, 1, 1, 1, 5]
     assert all(k.source_revision == 7 and k.source_sha256 for k in kits if k.diameter_mm == 115)
     assert all(k.preparation_basis for k in kits if k.diameter_mm != 115)
+
+
+def test_all_twelve_kits_have_content_without_mutating_saved_boms(client, catalog):
+    seed_dir = Path(service.__file__).parent
+    approved = json.loads((seed_dir / "approved.json").read_text())
+    prepared = json.loads((seed_dir / "prepared.json").read_text())
+    descriptions = set()
+    for kit in service.definitions().values():
+        scheme = f"{kit.route}-{kit.height_m}"
+        seed = approved[scheme] if kit.diameter_mm == 115 else prepared[f"{scheme}-d{kit.diameter_mm}"]
+        assert [line.model_dump(mode="json") for line in kit.lines] == seed["lines"]
+        assert kit.content and len(kit.content.faq) == 6
+        assert len(kit.content.selection_checklist) == 6
+        response = client.get(f"/api/v1/ready-kits/{kit.slug}").json()["kit"]
+        content = response["content"]
+        assert all(content[field] for field in ("short_description", "application_description", "composition_description"))
+        assert f"Ø{kit.diameter_mm} мм" in content["seo_description"]
+        assert "{diameter}" not in content["seo_description"]
+        assert "Редактору:" not in json.dumps(content, ensure_ascii=False)
+        descriptions.add(content["seo_description"])
+    assert len(descriptions) == 12
+    assert not (Path(settings.media_storage_dir) / "ready-kits").exists()
+
+
+@pytest.mark.parametrize("custom", [None, "Текст менеджера", "Д" * 1500])
+def test_legacy_content_inheritance_preserves_manual_text_without_writing(catalog, custom):
+    kit = service.get_definition("cherez-perekrytie-4m-d115")
+    legacy = kit.model_dump(mode="json", exclude={"content"})
+    if custom is not None:
+        legacy["description"] = custom
+    directory = Path(settings.media_storage_dir) / "ready-kits"
+    directory.mkdir()
+    path = directory / f"{kit.slug}.json"
+    original = json.dumps(legacy, ensure_ascii=False)
+    path.write_text(original)
+    loaded = service.get_definition(kit.slug)
+    assert loaded.content and len(loaded.content.faq) == 6
+    if custom is not None:
+        assert loaded.description == custom and loaded.content.application_description == custom
+        assert loaded.content.short_description == (custom if len(custom) <= 1200 else "")
+    assert path.read_text() == original
+
+
+def test_legacy_changed_bom_does_not_inherit_composition_text(catalog):
+    kit = service.get_definition("cherez-perekrytie-4m-d115")
+    legacy = kit.model_dump(mode="json", exclude={"content"})
+    legacy["lines"][0]["quantity"] += 1
+    directory = Path(settings.media_storage_dir) / "ready-kits"
+    directory.mkdir()
+    (directory / f"{kit.slug}.json").write_text(json.dumps(legacy))
+    assert service.get_definition(kit.slug).content is None
+
+
+async def test_content_edits_persist_with_history_and_leave_prices_bom_and_approval_unchanged(client, catalog):
+    kit = service.get_definition("cherez-perekrytie-4m-d115")
+    before = client.get(f"/api/v1/ready-kits/{kit.slug}").json()["kit"]
+    content = kit.content.model_copy(update={
+        "short_description": "Короткий текст редактора",
+        "application_description": "Основной текст редактора",
+        "seo_description": "Комплект Ø{diameter} мм — описание редактора",
+        "faq": [],
+    })
+    await service.save_kit(None, kit.slug, update_payload(kit, content=content, description=content.application_description))
+    loaded = service.get_definition(kit.slug)
+    assert loaded.content == content
+    assert loaded.lines == kit.lines and loaded.status == kit.status and loaded.published == kit.published
+    assert loaded.source_sha256 == kit.source_sha256
+    after = client.get(f"/api/v1/ready-kits/{kit.slug}").json()["kit"]
+    assert before["lines"] == after["lines"] and before["total_rub"] == after["total_rub"]
+    assert after["content"]["faq"] == []
+    assert "Ø115 мм" in after["content"]["seo_description"]
+    history = Path(settings.media_storage_dir) / "ready-kits" / "history" / kit.slug / "revision-1.json"
+    assert json.loads(history.read_text())["content"] == kit.content.model_dump(mode="json")
+    await service.save_kit(None, kit.slug, update_payload(loaded, content=None))
+    assert service.get_definition(kit.slug).content is None
+
+
+async def test_legacy_editor_preserves_content_but_changed_bom_clears_it(catalog):
+    kit = service.get_definition("cherez-perekrytie-4m-d115")
+    await service.save_kit(None, kit.slug, update_payload(kit))
+    unchanged = service.get_definition(kit.slug)
+    assert unchanged.content == kit.content
+    await service.save_kit(None, kit.slug, update_payload(unchanged, description="Правка старого редактора"))
+    edited = service.get_definition(kit.slug)
+    assert edited.content.application_description == "Правка старого редактора"
+    lines = [line.model_copy() for line in edited.lines]
+    lines[0].quantity += 1
+    await service.save_kit(None, kit.slug, update_payload(edited, lines=lines))
+    assert service.get_definition(kit.slug).content is None
+
+
+@pytest.mark.parametrize("content", [
+    {"faq": [{"question": " ", "answer": "Ответ"}]},
+    {"faq": [{"question": "Вопрос", "answer": ""}]},
+    {"short_description": "А" * 1201}, {"seo_description": "А" * 321},
+    {"selection_checklist": [""]}, {"unexpected": "нельзя"},
+])
+def test_admin_content_validation(client, content):
+    kit = service.get_definition("cherez-perekrytie-4m-d115")
+    payload = update_payload(kit).model_dump(mode="json")
+    payload["content"] = content
+    response = client.put(f"/api/v1/admin/ready-kits/{kit.slug}", json=payload,
+                          headers={"X-BOM-Admin-Token": "ready-kits-test-only"})
+    assert response.status_code == 422
+
+
+def test_content_fields_trim_whitespace():
+    content = KitContent(short_description=" текст ", faq=[{"question": " Вопрос ", "answer": " Ответ "}])
+    assert content.short_description == "текст"
+    assert content.faq[0].question == "Вопрос" and content.faq[0].answer == "Ответ"
 
 
 def test_public_only_returns_approved_active_specs_without_private_provenance(client):

@@ -14,6 +14,12 @@ export type ReadyKit = {
   slug: string; name: string; route: "roof" | "wall"; height_m: number; diameter_mm: number;
   image_path: string; description: string; limitations: string[]; lines: ReadyKitLine[];
   total_rub: string | null; known_subtotal_rub: string; unpriced_count: number;
+  content?: ReadyKitContent | null;
+};
+
+export type ReadyKitContent = {
+  short_description: string; application_description: string; composition_description: string;
+  selection_checklist: string[]; faq: { question: string; answer: string }[]; seo_description: string;
 };
 
 export const kitPath = (slug: string) => `/komplekty/${slug}`;
@@ -40,11 +46,11 @@ export const kitRub = (price: string | null) => price === null ? "Цена ут�
   style: "currency", currency: "RUB", maximumFractionDigits: 2,
 }).format(Number(price));
 
-export function kitMetadata(kit: Pick<ReadyKit, "name" | "route" | "height_m" | "diameter_mm" | "slug">) {
+export function kitMetadata(kit: Pick<ReadyKit, "name" | "route" | "height_m" | "diameter_mm" | "slug" | "content">) {
   const route = kit.route === "roof" ? "через перекрытие" : "через стену";
   return {
     title: `${kit.name} | Дымоход Трейд`,
-    description: `Комплект ${route}, ${kit.height_m} м, диаметр ${kit.diameter_mm} мм: состав с артикулами, количествами и актуальными ценами. Закажите комплект или обсудите подбор со специалистом.`,
+    description: kit.content?.seo_description?.trim() || `Комплект ${route}, ${kit.height_m} м, диаметр ${kit.diameter_mm} мм: состав с артикулами, количествами и актуальными ценами. Закажите комплект или обсудите подбор со специалистом.`,
     alternates: { canonical: kitPath(kit.slug) },
   };
 }

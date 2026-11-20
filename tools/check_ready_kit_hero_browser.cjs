@@ -33,7 +33,7 @@ const fs = require("node:fs");
         price: await box(hero.locator("strong").first()),
         order: await box(hero.getByRole("button", { name: "Заказать комплект", exact: true })),
         consultation: await box(hero.getByRole("button", { name: "Проконсультироваться", exact: true })),
-        description: await box(hero.getByText(kit.description, { exact: true })),
+        description: await box(hero.getByText(kit.content?.short_description || kit.description, { exact: true })),
         selectors: await box(hero.getByLabel("Высота комплекта", { exact: true })),
       };
     }

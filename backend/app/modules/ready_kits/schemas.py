@@ -11,6 +11,22 @@ class KitLine(BaseModel):
     label: str = Field(default="", max_length=240)
 
 
+class KitFAQ(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    question: str = Field(min_length=1, max_length=240)
+    answer: str = Field(min_length=1, max_length=2400)
+
+
+class KitContent(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    short_description: str = Field(default="", max_length=1200)
+    application_description: str = Field(default="", max_length=4000)
+    composition_description: str = Field(default="", max_length=2400)
+    selection_checklist: list[Annotated[str, Field(min_length=1, max_length=1200)]] = Field(default_factory=list, max_length=20)
+    faq: list[KitFAQ] = Field(default_factory=list, max_length=20)
+    seo_description: str = Field(default="", max_length=320)
+
+
 class KitDefinition(BaseModel):
     model_config = ConfigDict(extra="forbid")
     slug: str
@@ -22,6 +38,7 @@ class KitDefinition(BaseModel):
     published: bool = False
     lines: list[KitLine] = Field(default_factory=list, max_length=100)
     description: str = Field(default="", max_length=4000)
+    content: KitContent | None = None
     limitations: list[Annotated[str, Field(max_length=1200)]] = Field(default_factory=list, max_length=20)
     source_revision: int | None = None
     source_sha256: str | None = None
@@ -35,6 +52,7 @@ class KitUpdate(BaseModel):
     revision: int = Field(ge=1)
     lines: list[KitLine] = Field(max_length=100)
     description: str = Field(max_length=4000)
+    content: KitContent | None = None
     limitations: list[Annotated[str, Field(max_length=1200)]] = Field(max_length=20)
     approved: bool
     published: bool

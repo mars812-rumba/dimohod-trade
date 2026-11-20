@@ -30,6 +30,30 @@ test("missing price is not formatted as free and kopecks are retained", () => {
   assert.match(kitRub("1234.56"), /1\D234,56/);
 });
 
+test("editable kit SEO overrides legacy description without changing title or canonical", () => {
+  const kit = { slug: "cherez-perekrytie-4m-d120", route: "roof", height_m: 4, diameter_mm: 120,
+    name: "Комплект дымохода через перекрытие, 4 м, Ø120 мм" };
+  const original = kitMetadata(kit);
+  const edited = kitMetadata({ ...kit, content: { seo_description: "Новое описание Ø120 мм" } });
+  assert.equal(edited.description, "Новое описание Ø120 мм");
+  assert.equal(edited.title, original.title);
+  assert.deepEqual(edited.alternates, original.alternates);
+  assert.equal(kitMetadata({ ...kit, content: { seo_description: "  " } }).description, original.description);
+});
+
+test("kit content and FAQ stay server-rendered and admin-editable", async () => {
+  const page = await readFile(new URL("../app/komplekty/[slug]/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /content\?\.faq\.length/);
+  assert.match(page, /<details[^>]*className=\{styles\.faqItem\}/);
+  assert.match(page, /content\?\.application_description \|\| kit\.description/);
+  const admin = await readFile(new URL("../components/AdminReadyKits.tsx", import.meta.url), "utf8");
+  for (const field of ["short_description", "application_description", "composition_description", "selection_checklist", "faq", "seo_description"]) {
+    assert.ok(admin.includes(field), field);
+  }
+  assert.match(admin, /Добавить вопрос/);
+  assert.match(admin, /Удалить вопрос/);
+});
+
 test("BOM and metadata are server-rendered and selectors do not invent unavailable variants", async () => {
   const page = await readFile(new URL("../app/komplekty/[slug]/page.tsx", import.meta.url), "utf8");
   assert.ok(!page.includes('"use client"'));

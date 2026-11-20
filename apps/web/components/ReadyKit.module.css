@@ -33,6 +33,11 @@
 .panel p, .panel li { line-height: 1.65; }
 .panel ul { padding-left: 20px; }
 .panel li + li { margin-top: 12px; }
+.faqItem { border-bottom: 1px solid var(--line); }
+.faqItem:last-child { border-bottom: 0; }
+.faqItem summary { min-height: 44px; padding: 12px 0; cursor: pointer; font-weight: 650; line-height: 1.5; }
+.faqItem summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.faqItem p { margin: 0 0 18px; }
 .tableScroll { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
 .table th { background: var(--surface-muted); padding: 12px 9px; font-weight: 650; }
