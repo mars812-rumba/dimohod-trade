@@ -8,7 +8,7 @@ import { kitApplicationSections, kitChecklistIcon } from "@/lib/readyKitPresenta
 import { readyKitScheme } from "@/lib/readyKitScheme";
 import { ReadyKitInquiry, ReadyKitPdf, ReadyKitSelectors } from "@/components/ReadyKitControls";
 import { ReadyKitLineDetails } from "@/components/ReadyKitLineDetails";
-import { ReadyKitCard } from "@/components/ReadyKitCard";
+import { ReadyKitRecommendations } from "@/components/ReadyKitRecommendations";
 import { ReadyKitTabs } from "@/components/ReadyKitTabs";
 import { RouteImageViewer } from "@/components/RouteImageViewer";
 import styles from "@/components/ReadyKit.module.css";
@@ -33,7 +33,6 @@ export default async function ReadyKitPage({ params }: Props) {
   const { kit, variants } = data;
   const content = kit.content;
   const route = kit.route === "roof" ? "Через перекрытие и кровлю" : "Через стену";
-  const related = variants.filter(item => item.slug !== kit.slug);
   const scheme = readyKitScheme(kit.route, kit.height_m);
   const application = kitApplicationSections(content?.application_description || kit.description, kit.route, kit.height_m);
   const schema = [
@@ -93,7 +92,6 @@ export default async function ReadyKitPage({ params }: Props) {
           return <li key={index}><Icon aria-hidden size={20} /><span>{text}</span></li>;
         })}</ul></> : null}<Link href="/contacts">Связаться со специалистом →</Link>
       </section>,
-      related: <section id="related" className={styles.panel}><h2>Похожие комплекты</h2><div className={styles.cards}>{related.map(item => <ReadyKitCard key={item.slug} kit={item} />)}</div></section>,
     }} />
     {content?.faq.length ? <section id="faq" className={styles.panel}>
       <h2>Вопросы и ответы</h2>
@@ -101,5 +99,6 @@ export default async function ReadyKitPage({ params }: Props) {
         <summary>{item.question}</summary><p>{item.answer}</p>
       </details>)}
     </section> : null}
+    <ReadyKitRecommendations kit={kit} variants={variants} />
   </main>;
 }

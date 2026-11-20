@@ -26,23 +26,23 @@ const fs = require("node:fs");
     const before = (await (await ctx.request.get(`${base}/api/v1/ready-kits`)).json()).items;
     assert.equal(before.length, 12);
     const page = await ctx.newPage(), errors = [];
-    page.on("pageerror", error => errors.push(error.message));
+    page.on("pageerror", error => errors.push(`${page.url()}: ${error.message}`));
     for (const kit of before) {
       const path = `/komplekty/${kit.slug}`;
       // A normal HTTP response, no browser JS. Strip scripts so RSC payload cannot pass this assertion.
       const response = await ctx.request.get(`${base}${path}`);
       assert.ok(response.ok());
-      const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
-      for (const text of ["Применение и маршрут", "Важные условия и ограничения", "Похожие комплекты",
+      const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "").replace(/<!--[\s\S]*?-->/g, "");
+      for (const text of ["Применение и маршрут", "Важные условия и ограничения", `Другие комплекты Ø${kit.diameter_mm} мм`,
         kit.content.selection_checklist[0], ...kit.lines.map(line => line.article)]) assert.ok(html.includes(text), `${kit.slug}: ${text}`);
-      for (const href of ["/solutions/banya", "/solutions/dom", "/solutions/pech", `/komplekty/${before.find(item => item.slug !== kit.slug).slug}`]) {
+      for (const href of ["/solutions/banya", "/solutions/dom", "/solutions/pech", `/komplekty/${before.find(item => item.slug !== kit.slug && item.diameter_mm === kit.diameter_mm).slug}`]) {
         assert.ok(html.includes(`href="${href}"`), `${kit.slug}: real HTML link ${href}`);
       }
       assert.ok(/href="\/(?:catalog|product)\//.test(html), "Product links are in markup");
       assert.ok(!html.includes('role="tabpanel" hidden=""'), "Unenhanced panels readable sequentially");
       await page.goto(`${base}${path}`);
       await page.locator('[data-kit-tabs][data-enhanced="true"]').waitFor();
-      assert.equal(await page.locator("[data-kit-panel]").count(), 4);
+      assert.equal(await page.locator("[data-kit-panel]").count(), 3);
       assert.equal(await page.locator("[data-kit-panel]:visible").count(), 1);
       assert.ok(await page.locator("#bom").isVisible());
       assert.equal(await page.locator("#bom tbody tr").count(), kit.lines.length);
@@ -64,7 +64,7 @@ const fs = require("node:fs");
       await page.evaluate(() => { window.__kitTabsNoReload = 42; });
       const initial = await tabs.boundingBox(), scroll = await page.evaluate(() => scrollY), url = page.url();
       const bomHeight = (await page.locator('[data-kit-panel="bom"]').boundingBox()).height;
-      for (const label of ["Применение", "Что важно уточнить", "Похожие комплекты", "Состав комплекта"]) {
+      for (const label of ["Применение", "Что важно уточнить", "Состав комплекта"]) {
         await page.getByRole("tab", { name: label, exact: true }).click();
         const after = await tabs.boundingBox();
         assert.ok(Math.abs(after.y - initial.y) <= 2, `${size.width}/${label}: tab bar must not jump (${initial.y} → ${after.y})`);
@@ -72,7 +72,8 @@ const fs = require("node:fs");
         assert.equal(page.url(), url);
         assert.equal(await page.evaluate(() => window.__kitTabsNoReload), 42);
         assert.equal(await page.locator('[role="tab"][aria-selected="true"]').count(), 1);
-        assert.equal(await page.locator("[data-kit-panel]").count(), 4);
+        assert.equal(await page.locator("[data-kit-panel]").count(), 3);
+        assert.ok(await page.locator("#related").isVisible());
         if (label === "Применение") {
           assert.ok((await page.locator('[data-kit-panel="application"]').boundingBox()).height < bomHeight * .8, "Short section has natural height");
           assert.ok(await page.locator("#application h3").count() >= 3);
@@ -89,7 +90,7 @@ const fs = require("node:fs");
       assert.equal(await page.getByRole("tab", { name: "Применение", exact: true }).getAttribute("aria-selected"), "true");
       assert.ok(await page.getByRole("tab", { name: "Применение", exact: true }).evaluate(node => node === document.activeElement && getComputedStyle(node).outlineStyle !== "none"));
       await page.keyboard.press("End");
-      assert.equal(await page.getByRole("tab", { name: "Похожие комплекты", exact: true }).getAttribute("aria-selected"), "true");
+      assert.equal(await page.getByRole("tab", { name: "Что важно уточнить", exact: true }).getAttribute("aria-selected"), "true");
       await page.keyboard.press("Home");
       assert.ok(await page.locator("#bom").isVisible());
     }

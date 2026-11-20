@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardList, Layers, Package, Route } from "lucide-react";
+import { ClipboardList, Package, Route } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import styles from "./ReadyKitTabs.module.css";
 
@@ -8,7 +8,6 @@ const tabs = [
   { id: "bom", label: "Состав комплекта", Icon: Package },
   { id: "application", label: "Применение", Icon: Route },
   { id: "conditions", label: "Что важно уточнить", Icon: ClipboardList },
-  { id: "related", label: "Похожие комплекты", Icon: Layers },
 ] as const;
 type TabId = typeof tabs[number]["id"];
 

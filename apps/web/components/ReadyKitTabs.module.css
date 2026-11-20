@@ -1,5 +1,5 @@
 .sections { min-width: 0; overflow-anchor: none; }
-.tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin: 24px 0 20px; border-bottom: 1px solid var(--line); }
+.tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 24px 0 20px; border-bottom: 1px solid var(--line); }
 .tabs[hidden], .panel[hidden] { display: none; }
 .tabs button { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; min-height: 56px; padding: 12px 8px; border: 0; border-bottom: 3px solid transparent; color: var(--text); background: transparent; font: inherit; font-size: 14px; line-height: 1.4; font-weight: 650; cursor: pointer; }
 .tabs svg { flex-shrink: 0; }
