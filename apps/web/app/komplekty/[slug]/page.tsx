@@ -40,7 +40,7 @@ export default async function ReadyKitPage({ params }: Props) {
       ...(kit.total_rub !== null ? { offers: { "@type": "Offer", url: absolute(kitPath(kit.slug)), priceCurrency: "RUB", price: kit.total_rub } } : {}),
     },
   ];
-  return <main className={styles.page}>
+  return <main className={`${styles.page} ${styles.kitPage}`}>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }} />
     <nav aria-label="Хлебные крошки" className={styles.breadcrumbs}><Link href="/">Главная</Link> / <Link href="/komplekty">Готовые комплекты</Link> / <span>{kit.height_m} м, Ø{kit.diameter_mm} мм</span></nav>
     <section className={styles.hero}>
