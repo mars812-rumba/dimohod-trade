@@ -25,3 +25,12 @@ test("calculator and specialist request have distinct existing workflows and ret
   assert.match(form, /data\.set\("source", source\)/);
   assert.match(form, /reachMetrikaGoal\(METRIKA_GOALS\.leadSubmitted/);
 });
+
+test("detail template reuses the same block once, after recommendations, outside the tabs and first screen", async () => {
+  const detail = await readFile(new URL("../app/komplekty/[slug]/page.tsx", import.meta.url), "utf8");
+  assert.equal((detail.match(/<ReadyKitCustomRequest \/>/g) || []).length, 1);
+  assert.match(detail, /<ReadyKitRecommendations kit=\{kit\} variants=\{variants\} \/>\s*<ReadyKitCustomRequest \/>\s*<\/main>/);
+  const hero = detail.slice(detail.indexOf('<section className={styles.hero}>'), detail.indexOf('<ReadyKitTabs'));
+  assert.ok(!hero.includes("ReadyKitCustomRequest"));
+  assert.ok(hero.includes("<ReadyKitInquiry"));
+});

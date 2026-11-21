@@ -33,14 +33,30 @@ const fs = require("node:fs");
     });
     const page = await ctx.newPage(), errors = [];
     page.on("pageerror", error => errors.push(error.message));
-    for (const width of [1440, 390, 320]) {
+    const kits = (await (await ctx.request.get(`${base}/api/v1/ready-kits`)).json()).items;
+    assert.equal(kits.length, 12);
+    for (const kit of kits) {
+      const response = await ctx.request.get(`${base}/komplekty/${kit.slug}`);
+      assert.ok(response.ok());
+      const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+      assert.equal((html.match(/data-kit-custom-request="true"/g) || []).length, 1);
+      assert.ok(html.indexOf('data-kit-custom-request="true"') > html.indexOf('data-kit-recommendations="true"'));
+    }
+    console.log("All 12 detail HTML responses: exactly one custom-request block after recommendations");
+    const paths = ["/komplekty", "/komplekty/cherez-perekrytie-4m-d115", "/komplekty/cherez-stenu-6m-d150"];
+    for (const width of [1440, 390, 320]) for (const path of paths) {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto(`${base}/komplekty`);
+      await page.goto(`${base}${path}`);
       const block = page.locator("[data-kit-custom-request]");
       assert.equal(await block.count(), 1);
-      assert.equal(await page.locator("[data-kit-group]").count(), 4);
+      const list = path === "/komplekty";
+      if (list) assert.equal(await page.locator("[data-kit-group]").count(), 4);
+      else {
+        assert.equal(await page.locator("[data-kit-recommendations]").count(), 1);
+        assert.ok(await block.evaluate(node => !node.closest("[data-kit-panel]")));
+      }
       await block.scrollIntoViewIfNeeded();
-      const box = await block.boundingBox(), last = await page.locator("[data-kit-group]").last().boundingBox();
+      const box = await block.boundingBox(), last = await page.locator(list ? "[data-kit-group]" : "[data-kit-recommendations]").last().boundingBox();
       assert.ok(box.y >= last.y + last.height);
       assert.equal(await block.locator(":scope > div > h2").innerText(), "Нужен другой диаметр, высота или маршрут?");
       assert.equal(await block.locator(":scope > div > p").innerText(), "Рассчитайте комплект под свою печь или передайте размеры специалисту");
@@ -73,9 +89,9 @@ const fs = require("node:fs");
       await calculator.click();
       await page.waitForURL("**/bystryy-raschet");
       await page.getByRole("heading", { name: "Где нужен дымоход?", exact: true }).waitFor();
-      console.log(`${width}px: block follows four cards, calculator opens, form works with source, Esc/X/focus and mobile width OK`);
+      console.log(`${width}px ${path}: block position, calculator, form/source, Esc/X/focus and mobile width OK`);
     }
-    assert.equal(submitted, 3);
+    assert.equal(submitted, 9);
     assert.deepEqual(errors, []);
     console.log("All lead requests were intercepted locally; no production applications or emails created");
   } finally { await browser.close(); }

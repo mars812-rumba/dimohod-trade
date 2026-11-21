@@ -9,6 +9,7 @@ import { readyKitScheme } from "@/lib/readyKitScheme";
 import { ReadyKitInquiry, ReadyKitPdf, ReadyKitSelectors } from "@/components/ReadyKitControls";
 import { ReadyKitLineDetails } from "@/components/ReadyKitLineDetails";
 import { ReadyKitRecommendations } from "@/components/ReadyKitRecommendations";
+import { ReadyKitCustomRequest } from "@/components/ReadyKitCustomRequest";
 import { ReadyKitTabs } from "@/components/ReadyKitTabs";
 import { RouteImageViewer } from "@/components/RouteImageViewer";
 import styles from "@/components/ReadyKit.module.css";
@@ -100,5 +101,6 @@ export default async function ReadyKitPage({ params }: Props) {
       </details>)}
     </section> : null}
     <ReadyKitRecommendations kit={kit} variants={variants} />
+    <ReadyKitCustomRequest />
   </main>;
 }
