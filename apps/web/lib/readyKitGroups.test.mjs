@@ -28,12 +28,12 @@ const kits = [ ["roof", 4], ["roof", 6], ["wall", 3], ["wall", 6] ].flatMap(([ro
   })));
 const render = group => renderToStaticMarkup(React.createElement(Card, { group }));
 
-test("normal release shows the new view on exactly one group and keeps all twelve variant links", () => {
+test("normal release shows the new view on all four groups and keeps all twelve variant links", () => {
   const html = groupReadyKits(kits).map(group => renderToStaticMarkup(React.createElement(Card, {
     group, catalogPreview: readyKitCatalogPilot(group.route, group.height_m),
   }))).join("");
-  assert.equal((html.match(/data-catalog-pilot="true"/g) || []).length, 1);
-  assert.match(html, /data-kit-group="roof-4" data-catalog-pilot="true"/);
+  assert.equal((html.match(/data-catalog-pilot="true"/g) || []).length, 4);
+  for (const key of ["roof-4", "roof-6", "wall-3", "wall-6"]) assert.ok(html.includes(`data-kit-group="${key}" data-catalog-pilot="true"`));
   for (const kit of kits) assert.ok(html.includes(`href="${path(kit.slug)}"`));
 });
 

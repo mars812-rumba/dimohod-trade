@@ -38,6 +38,14 @@
 .actionList li { display: flex; align-items: flex-start; gap: 10px; }
 .actionList li + li { margin-top: 0; }
 .actionList svg { flex-shrink: 0; margin-top: 3px; color: var(--accent-strong); }
+.panel .scenarioLinks { display: grid; gap: 4px; padding: 0; margin: 12px 0 28px; list-style: none; }
+.scenarioLinks li + li { margin-top: 0; }
+.panel .scenarioNote { margin: 0; }
+.panel .accentLink { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; color: var(--accent-strong); font-weight: 650; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.panel .accentLink:hover { color: var(--accent-strong); text-decoration-thickness: 2px; }
+.accentLink:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 4px; }
+.checklistHeading { margin: 36px 0 16px; font-size: 20px; line-height: 1.35; }
+.specialistLink { margin-top: 8px; }
 .faqItem { border-bottom: 1px solid var(--line); }
 .faqItem:last-child { border-bottom: 0; }
 .faqItem summary { min-height: 44px; padding: 12px 0; cursor: pointer; font-weight: 650; line-height: 1.5; }
@@ -132,7 +140,7 @@
   .card { grid-template-columns: 95px minmax(0,1fr); }
 }
 
-/* Local catalog-style trial. Everything below the first screen stays intact. */
+/* Catalog presentation shared by all published ready kits. */
 .catalogPilot .hero { gap: 28px; padding: 0; border: 0; border-radius: 0; background: transparent; }
 .catalogPilot .visual { padding: 20px; border: 1px solid var(--line); border-radius: 2px; background: white; }
 .catalogPilot .visual img { max-height: 520px; border-radius: 0; }

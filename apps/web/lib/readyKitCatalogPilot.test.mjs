@@ -7,15 +7,14 @@ const source = await readFile(new URL("./readyKitCatalogPilot.ts", import.meta.u
 const code = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText.replace(/\bexport\s+/g, "");
 const load = value => new Function("process", `${code};return readyKitCatalogPilot;`)({ env: { READY_KITS_CATALOG_PREVIEW: value } });
 
-test("normal release enables the approved preview without any environment flag", () => {
+test("normal release enables all approved groups without any environment flag", () => {
   for (const value of [undefined, "", "0", "1", "true"]) {
-    assert.equal(load(value)("roof", 4), true);
+    for (const [route, height] of [["roof", 4], ["roof", 6], ["wall", 3], ["wall", 6]]) assert.equal(load(value)(route, height), true);
   }
 });
-test("preview remains limited to the roof 4m family, shared by its three diameters", () => {
+test("catalog presentation does not opt unknown groups in", () => {
   const enabled = load(undefined);
-  assert.equal(enabled("roof", 4), true);
-  for (const [route, height] of [["roof", 6], ["wall", 3], ["wall", 6]]) assert.equal(enabled(route, height), false);
+  for (const [route, height] of [["roof", 3], ["wall", 4], ["roof", 8], ["other", 4]]) assert.equal(enabled(route, height), false);
 });
 test("pilot leaves metadata and BOM/PDF/actions on their existing paths", async () => {
   const detail = await readFile(new URL("../app/komplekty/[slug]/page.tsx", import.meta.url), "utf8");

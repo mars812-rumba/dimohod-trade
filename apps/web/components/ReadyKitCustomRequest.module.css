@@ -1,9 +1,10 @@
-.section { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px; margin-top: 24px; padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.section { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px; margin-top: 32px; padding: 28px; border: 1px solid var(--accent-strong); border-radius: 2px; background: white; }
 .section > div { min-width: 0; }
 .section h2 { margin: 0 0 8px; font-size: 21px; line-height: 1.35; }
 .section p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
-.calculate { text-align: center; white-space: normal; }
+.actions .calculate { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 14px 20px; border: 1px solid var(--accent-strong); border-radius: 2px; background: var(--accent-strong); color: white; font-weight: 700; line-height: 1.4; text-align: center; white-space: normal; }
+.actions .calculate:hover { background: var(--steel); border-color: var(--steel); }
 .request { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 0; background: transparent; color: var(--accent-strong); font: inherit; font-size: 14px; line-height: 1.5; text-align: left; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .request:focus-visible, .calculate:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 @media (max-width: 700px) {

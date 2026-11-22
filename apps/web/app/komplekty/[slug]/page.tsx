@@ -86,14 +86,14 @@ export default async function ReadyKitPage({ params }: Props) {
       </section>,
       application: <section id="application" className={`${styles.panel} ${styles.reading}`}><h2>Применение и маршрут</h2>
         {application.map((section, index) => <section className={styles.readingSection} key={index}><h3>{section.title}</h3>{section.paragraphs.map((text, i) => <p key={i}>{text}</p>)}</section>)}
-        <p>Для выбора по объекту и отопителю:</p><ul><li><Link href="/solutions/banya">Дымоход для бани →</Link></li><li><Link href="/solutions/dom">Дымоход для дома →</Link></li><li><Link href="/solutions/pech">Подбор дымохода к печи →</Link></li></ul><p className={styles.muted}>Сценарные страницы помогают уточнить задачу; ссылка не означает универсальную совместимость этого комплекта с любым отопителем.</p>
+        <p>Для выбора по объекту и отопителю:</p><ul className={styles.scenarioLinks}><li><Link className={styles.accentLink} href="/solutions/banya">Дымоход для бани →</Link></li><li><Link className={styles.accentLink} href="/solutions/dom">Дымоход для дома →</Link></li><li><Link className={styles.accentLink} href="/solutions/pech">Подбор дымохода к печи →</Link></li></ul><p className={`${styles.muted} ${styles.scenarioNote}`}>Сценарные страницы помогают уточнить задачу; ссылка не означает универсальную совместимость этого комплекта с любым отопителем.</p>
       </section>,
       conditions: <section id="conditions" className={`${styles.panel} ${styles.reading}`}><h2>Важные условия и ограничения</h2>
         <ul>{kit.limitations.map((text, index) => <li key={index}>{text}</li>)}</ul>
-        {content?.selection_checklist.length ? <><h3>Что подготовить перед заказом</h3><ul className={styles.actionList}>{content.selection_checklist.map((text, index) => {
+        {content?.selection_checklist.length ? <><h3 className={styles.checklistHeading}>Что подготовить перед заказом</h3><ul className={styles.actionList}>{content.selection_checklist.map((text, index) => {
           const Icon = { camera: Camera, ruler: Ruler, clipboard: ClipboardList }[kitChecklistIcon(text)];
           return <li key={index}><Icon aria-hidden size={20} /><span>{text}</span></li>;
-        })}</ul></> : null}<Link href="/contacts">Связаться со специалистом →</Link>
+        })}</ul></> : null}<Link className={`${styles.accentLink} ${styles.specialistLink}`} href="/contacts">Связаться со специалистом →</Link>
       </section>,
     }} />
     {content?.faq.length ? <section id="faq" className={styles.panel}>

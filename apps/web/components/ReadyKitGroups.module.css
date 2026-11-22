@@ -21,7 +21,7 @@
 @media (max-width: 900px) { .cards { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .top { grid-template-columns: 90px minmax(0,1fr); gap: 12px; } .card { padding: 16px; } .body h2 { font-size: 17px; } }
 
-/* Owner-review pilot: catalog geometry and existing type/color roles. */
+/* Shared catalog geometry and existing type/color roles. */
 .catalogCard { gap: 0; padding: 0; border-radius: 2px; }
 .catalogCard .top { grid-template-columns: 36% minmax(0,1fr); gap: 0; align-items: stretch; }
 .catalogCard .media { display: flex; align-items: center; padding: 12px; border-right: 1px solid var(--line); }
@@ -39,8 +39,8 @@
 .catalogCard .diameters a[aria-current="true"] { position: relative; }
 .catalogCard .price { padding: 18px 0; }
 .catalogCard .price strong { font-family: var(--font-heading); font-size: 32px; font-weight: 650; font-variant-numeric: tabular-nums; }
-.catalogCard .open { width: 100%; margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--line); color: var(--steel); font-size: 13px; letter-spacing: 0.035em; text-transform: uppercase; }
-.catalogCard .open:hover { color: var(--accent-strong); }
+.catalogCard .open { justify-content: flex-end; width: 100%; margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--line); color: var(--accent-strong); font-size: 13px; letter-spacing: 0.035em; text-align: right; text-transform: uppercase; }
+.catalogCard .open:hover { color: var(--accent-strong); text-decoration: underline; text-underline-offset: 4px; }
 .catalogCard .media:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
 @media (max-width: 700px) {
   .catalogCard { padding: 0; }
