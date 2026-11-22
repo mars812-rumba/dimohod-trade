@@ -5,7 +5,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from fastapi import HTTPException
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -15,7 +15,9 @@ from app.modules.leads.schemas import LeadEstimate
 from app.modules.products.models import SKU
 from app.modules.products.router import primary_product_image, primary_sku_image
 from app.modules.products.specification import specification_groups
-from app.modules.ready_kits.schemas import KitContent, KitDefinition, KitLine, KitUpdate
+from app.modules.ready_kits.schemas import KitContent, KitDefinition, KitLine, KitUpdate, KitVariant
+
+LINEUP_PATH = Path(__file__).with_name("lineup.json")
 
 ROUTES = {"roof": "через перекрытие", "wall": "через стену"}
 LIMITATIONS = [
@@ -36,60 +38,69 @@ def definitions() -> dict[str, KitDefinition]:
     prepared = json.loads(Path(__file__).with_name("prepared.json").read_text(encoding="utf-8"))
     content = json.loads(Path(__file__).with_name("content.json").read_text(encoding="utf-8"))
     result = {}
-    for route, heights in (("roof", (4, 6)), ("wall", (3, 6))):
-        for height in heights:
-            for diameter in (115, 120, 150):
-                scheme = f"{route}-{height}"
-                slug = f"cherez-{'perekrytie' if route == 'roof' else 'stenu'}-{height}m-d{diameter}"
-                seed = seeds.get(scheme) if diameter == 115 else None
-                draft = prepared.get(f"{scheme}-d{diameter}")
-                approval = draft.get("approval", {}) if draft else {}
-                approved = bool(seed) or approval.get("approved") is True
-                kit = KitDefinition(
-                    slug=slug, route=route, height_m=height, diameter_mm=diameter,
-                    status="approved" if approved else "draft", published=approved,
-                    lines=[KitLine.model_validate(line) for line in (seed or draft or {}).get("lines", [])],
-                    description=(
-                        f"Готовый комплект для маршрута {ROUTES[route]}. "
-                        "Ниже приведены конкретные исполнения изделий и их количества. "
-                        "Стоимость рассчитывается по текущим ценам каталога; "
-                        "параметры подключения и проходов проверяются для вашего объекта."
-                    ),
-                    limitations=LIMITATIONS,
-                    content=KitContent.model_validate(content[scheme]),
-                    source_revision=7 if seed else None,
-                    source_sha256=seed["sha256"] if seed else None,
-                    approved_at="2026-11-19" if seed else approval.get("approved_at") if approved else None,
-                    preparation_basis=draft["basis"] if draft else None,
-                    approval_notes=[
-                        "SKU и количества сопоставлены с согласованным Ø115; техническую пригодность всего нового диаметра ещё нужно подтвердить.",
-                        "Проходной стакан оставлен из исходного состава: основание 500×500 мм, диапазон в каталоге 100–200 мм. Уточнить, к какому контуру относится диапазон и применим ли стакан к новой трубе.",
-                        "Размер отверстия фланца в данных SKU не указан. Подтвердить выбранный фланец для нового диаметра; по картинке совместимость не устанавливалась.",
-                        *(["Допустимый диапазон мастер-флеша №2 в данных SKU не указан. Подтвердить применимость к новому диаметру."] if route == "roof" else []),
-                    ] if draft and not approved else [],
-                )
-                path = Path(settings.media_storage_dir) / "ready-kits" / f"{slug}.json"
-                if path.exists():
-                    try:
-                        stored = KitDefinition.model_validate_json(path.read_text(encoding="utf-8"))
-                        if (stored.slug, stored.route, stored.height_m, stored.diameter_mm) != (
-                            kit.slug, kit.route, kit.height_m, kit.diameter_mm
-                        ):
-                            raise ValueError("Variant identity changed")
-                        if "content" not in stored.model_fields_set and stored.lines == kit.lines:
-                            # Upgrade old files in memory only, preserving manual descriptions.
-                            inherited = kit.content
-                            if inherited is not None and stored.description != kit.description:
-                                inherited = inherited.model_copy(update={
-                                    "short_description": stored.description if len(stored.description) <= 1200 else "",
-                                    "application_description": stored.description,
-                                })
-                            stored = stored.model_copy(update={"content": inherited})
-                        kit = stored
-                    except (ValueError, OSError, ValidationError) as exc:
-                        # Never fall back to a published seed after an unreadable unpublish/edit.
-                        raise HTTPException(503, "Не удалось прочитать спецификацию комплекта") from exc
-                result[slug] = kit
+    try:
+        variants = TypeAdapter(list[KitVariant]).validate_json(LINEUP_PATH.read_text(encoding="utf-8"))
+        if len({variant.slug for variant in variants}) != len(variants):
+            raise ValueError("Duplicate kit slug")
+    except (ValueError, OSError, ValidationError) as exc:
+        raise HTTPException(503, "Не удалось прочитать линейку комплектов") from exc
+    for variant in variants:
+        route, height, diameter = variant.route, variant.height_m, variant.diameter_mm
+        slug = variant.slug
+        scheme = f"{route}-{height}"
+        # Historical approvals belong to those exact variants. A new model with
+        # the same route/height/diameter must start as its own unpublished draft.
+        legacy_slug = f"cherez-{'perekrytie' if route == 'roof' else 'stenu'}-{height}m-d{diameter}"
+        uses_legacy_data = slug == legacy_slug
+        seed = seeds.get(scheme) if diameter == 115 and uses_legacy_data else None
+        draft = prepared.get(f"{scheme}-d{diameter}") if uses_legacy_data else None
+        approval = draft.get("approval", {}) if draft else {}
+        approved = bool(seed) or approval.get("approved") is True
+        kit = KitDefinition(
+            slug=slug, route=route, height_m=height, diameter_mm=diameter,
+            status="approved" if approved else "draft", published=approved,
+            lines=[KitLine.model_validate(line) for line in (seed or draft or {}).get("lines", [])],
+            description=(
+                f"Готовый комплект для маршрута {ROUTES[route]}. "
+                "Ниже приведены конкретные исполнения изделий и их количества. "
+                "Стоимость рассчитывается по текущим ценам каталога; "
+                "параметры подключения и проходов проверяются для вашего объекта."
+            ),
+            limitations=LIMITATIONS,
+            content=KitContent.model_validate(content[scheme]) if uses_legacy_data and scheme in content else None,
+            source_revision=7 if seed else None,
+            source_sha256=seed["sha256"] if seed else None,
+            approved_at="2026-11-19" if seed else approval.get("approved_at") if approved else None,
+            preparation_basis=draft["basis"] if draft else None,
+            approval_notes=[
+                "SKU и количества сопоставлены с согласованным Ø115; техническую пригодность всего нового диаметра ещё нужно подтвердить.",
+                "Проходной стакан оставлен из исходного состава: основание 500×500 мм, диапазон в каталоге 100–200 мм. Уточнить, к какому контуру относится диапазон и применим ли стакан к новой трубе.",
+                "Размер отверстия фланца в данных SKU не указан. Подтвердить выбранный фланец для нового диаметра; по картинке совместимость не устанавливалась.",
+                *(["Допустимый диапазон мастер-флеша №2 в данных SKU не указан. Подтвердить применимость к новому диаметру."] if route == "roof" else []),
+            ] if draft and not approved else [],
+        )
+        path = Path(settings.media_storage_dir) / "ready-kits" / f"{slug}.json"
+        if path.exists():
+            try:
+                stored = KitDefinition.model_validate_json(path.read_text(encoding="utf-8"))
+                if (stored.slug, stored.route, stored.height_m, stored.diameter_mm) != (
+                    kit.slug, kit.route, kit.height_m, kit.diameter_mm
+                ):
+                    raise ValueError("Variant identity changed")
+                if "content" not in stored.model_fields_set and stored.lines == kit.lines:
+                    # Upgrade old files in memory only, preserving manual descriptions.
+                    inherited = kit.content
+                    if inherited is not None and stored.description != kit.description:
+                        inherited = inherited.model_copy(update={
+                            "short_description": stored.description if len(stored.description) <= 1200 else "",
+                            "application_description": stored.description,
+                        })
+                    stored = stored.model_copy(update={"content": inherited})
+                kit = stored
+            except (ValueError, OSError, ValidationError) as exc:
+                # Never fall back to a published seed after an unreadable unpublish/edit.
+                raise HTTPException(503, "Не удалось прочитать спецификацию комплекта") from exc
+        result[slug] = kit
     return result
 
 

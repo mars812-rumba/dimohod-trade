@@ -18,12 +18,23 @@ const kits = [115, 120, 150, 200].flatMap(diameter_mm => [3, 6].map(height_m => 
   lines: [{ sku_id: "shared-component-without-diameter" }, { sku_id: `exact-${diameter_mm}` }, { sku_id: `exact-${diameter_mm}` }],
 })));
 
-test("one component can occur in every published diameter; limit is applied only to kit diameter", () => {
+test("one component can occur in every published diameter, including future diameters", () => {
   const memberships = productReadyKitMemberships(kits);
   const links = productReadyKitLinks(memberships, "shared-component-without-diameter");
-  assert.equal(links.length, 6);
-  assert.deepEqual(links.map(item => item.href), kits.filter(k => k.diameter_mm !== 200).map(k => `/komplekty/${k.slug}`));
+  assert.equal(links.length, kits.length);
+  assert.deepEqual(links.map(item => item.href), kits.map(k => `/komplekty/${k.slug}`));
   assert.ok(links.some(item => item.label === "Через стену · 3 м вверх · Ø150 мм →"));
+});
+test("expanding the published lineup beyond twelve needs no membership code changes", () => {
+  const expanded = [...kits, ...[8, 9, 10, 11, 12, 13, 14].map(height_m => ({
+    slug: `new-roof-${height_m}-d180`, route: "roof", height_m, diameter_mm: 180,
+    lines: [{ sku_id: "shared-component-without-diameter" }],
+  }))];
+  const links = productReadyKitLinks(productReadyKitMemberships(expanded), "shared-component-without-diameter");
+  assert.ok(expanded.length > 12);
+  assert.equal(links.length, expanded.length);
+  assert.equal(links.at(-1).label, "Через перекрытие · 14 м · Ø180 мм →");
+  assert.equal(links.at(-1).href, "/komplekty/new-roof-14-d180");
 });
 test("exact IDs only, with no diameter, article or family fallback; variant changes update/hide the list", () => {
   const memberships = productReadyKitMemberships(kits);

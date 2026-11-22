@@ -71,6 +71,67 @@ def test_matrix_contains_twelve_owner_approved_specs(catalog):
     assert all(k.preparation_basis for k in kits if k.diameter_mm != 115)
 
 
+@pytest.mark.asyncio
+async def test_lineup_can_expand_without_changing_code_or_auto_publishing(client, catalog, tmp_path, monkeypatch):
+    variants = json.loads(service.LINEUP_PATH.read_text())
+    extra = {"slug": "cherez-stenu-8m-d180", "route": "wall", "height_m": 8, "diameter_mm": 180}
+    lineup = tmp_path / "lineup.json"
+    lineup.write_text(json.dumps([*variants, extra]))
+    monkeypatch.setattr(service, "LINEUP_PATH", lineup)
+    kit = service.get_definition(extra["slug"])
+    assert kit.height_m == 8 and kit.diameter_mm == 180
+    assert not kit.lines and kit.content is None and not kit.published and kit.status == "draft"
+    assert client.get(f"/api/v1/ready-kits/{kit.slug}").status_code == 404
+    admin = client.get("/api/v1/admin/ready-kits", headers={"X-BOM-Admin-Token": "ready-kits-test-only"}).json()
+    assert len(admin["items"]) == len(variants) + 1
+    # A shared component is allowed in a new diameter, but still needs an explicit
+    # reviewed composition and publication through the existing editor workflow.
+    line = service.get_definition(variants[0]["slug"]).lines[0]
+    await service.save_kit(None, kit.slug, update_payload(kit, lines=[line]))
+    response = client.get(f"/api/v1/ready-kits/{kit.slug}")
+    assert response.status_code == 200
+    data = response.json()["kit"]
+    assert data["slug"] == extra["slug"] and data["diameter_mm"] == 180 and data["height_m"] == 8
+    assert data["lines"][0]["sku_id"] == str(line.sku_id)
+    assert len(client.get("/api/v1/ready-kits").json()["items"]) == len(variants) + 1
+
+
+@pytest.mark.parametrize("invalid", [
+    [{"slug": "../private", "route": "wall", "height_m": 8, "diameter_mm": 180}],
+    [{"slug": "new-kit", "route": "wall", "height_m": 0, "diameter_mm": 180}],
+    [{"slug": "new-kit", "route": "wall", "height_m": 8, "diameter_mm": 0}],
+    "broken-json",
+])
+def test_invalid_lineup_fails_closed(catalog, tmp_path, monkeypatch, invalid):
+    lineup = tmp_path / "lineup.json"
+    lineup.write_text(invalid if isinstance(invalid, str) else json.dumps(invalid))
+    monkeypatch.setattr(service, "LINEUP_PATH", lineup)
+    with pytest.raises(HTTPException) as error:
+        service.definitions()
+    assert error.value.status_code == 503
+
+
+def test_duplicate_lineup_slug_fails_closed(catalog, tmp_path, monkeypatch):
+    variants = json.loads(service.LINEUP_PATH.read_text())
+    lineup = tmp_path / "lineup.json"
+    lineup.write_text(json.dumps([*variants, variants[0]]))
+    monkeypatch.setattr(service, "LINEUP_PATH", lineup)
+    with pytest.raises(HTTPException) as error:
+        service.definitions()
+    assert error.value.status_code == 503
+
+
+def test_new_model_does_not_inherit_approval_from_same_dimensions(catalog, tmp_path, monkeypatch):
+    variants = json.loads(service.LINEUP_PATH.read_text())
+    extra = {**variants[0], "slug": "other-roof-model-4m-d115"}
+    lineup = tmp_path / "lineup.json"
+    lineup.write_text(json.dumps([*variants, extra]))
+    monkeypatch.setattr(service, "LINEUP_PATH", lineup)
+    kit = service.get_definition(extra["slug"])
+    assert kit.status == "draft" and not kit.published and not kit.lines
+    assert kit.approved_at is None and kit.source_sha256 is None and kit.content is None
+
+
 def test_all_twelve_kits_have_content_without_mutating_saved_boms(client, catalog):
     seed_dir = Path(service.__file__).parent
     approved = json.loads((seed_dir / "approved.json").read_text())

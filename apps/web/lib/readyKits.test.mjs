@@ -7,6 +7,23 @@ const source = await readFile(new URL("./readyKits.ts", import.meta.url), "utf8"
 const executable = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText.replace(/\bexport\s+/g, "");
 const { kitMetadata, kitPath, kitRub, readyKitEstimate } = new Function(`${executable}; return {kitMetadata,kitPath,kitRub,readyKitEstimate};`)();
 
+test("detail loading accepts future lineup slugs and leaves publication checks to the API", async () => {
+  const requests = [];
+  const getReadyKit = new Function("fetch", `${executable}; return getReadyKit;`)(async (url, options) => {
+    requests.push({ url, options });
+    return { ok: true, status: 200, json: async () => ({ kit: { slug: "cherez-stenu-8m-d180" }, variants: [] }) };
+  });
+  assert.equal((await getReadyKit("cherez-stenu-8m-d180")).kit.slug, "cherez-stenu-8m-d180");
+  assert.ok(requests[0].url.endsWith("/api/v1/ready-kits/cherez-stenu-8m-d180"));
+  assert.equal(requests[0].options.cache, "no-store");
+  for (const invalid of ["", "../private", "a/b", "a?x=1", "a#b", "%2e%2e", "a".repeat(161)]) {
+    assert.equal(await getReadyKit(invalid), null);
+  }
+  assert.equal(requests.length, 1);
+  const missing = new Function("fetch", `${executable}; return getReadyKit;`)(async () => ({ status: 404 }));
+  assert.equal(await missing("unpublished-new-variant"), null);
+});
+
 test("all twelve variants have distinct human-readable canonical, title and description", () => {
   const titles = new Set(), descriptions = new Set(), canonicals = new Set();
   for (const [route, heights] of [["roof", [4, 6]], ["wall", [3, 6]]]) {

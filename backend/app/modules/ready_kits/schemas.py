@@ -27,12 +27,15 @@ class KitContent(BaseModel):
     seo_description: str = Field(default="", max_length=320)
 
 
-class KitDefinition(BaseModel):
+class KitVariant(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    slug: str
+    slug: str = Field(max_length=160, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
     route: Literal["roof", "wall"]
-    height_m: Literal[3, 4, 6]
-    diameter_mm: Literal[115, 120, 150]
+    height_m: int = Field(gt=0)
+    diameter_mm: int = Field(gt=0)
+
+
+class KitDefinition(KitVariant):
     revision: int = Field(default=1, ge=1)
     status: Literal["draft", "approved"] = "draft"
     published: bool = False

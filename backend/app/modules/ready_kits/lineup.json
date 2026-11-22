@@ -1,0 +1,74 @@
+[
+  {
+    "slug": "cherez-perekrytie-4m-d115",
+    "route": "roof",
+    "height_m": 4,
+    "diameter_mm": 115
+  },
+  {
+    "slug": "cherez-perekrytie-4m-d120",
+    "route": "roof",
+    "height_m": 4,
+    "diameter_mm": 120
+  },
+  {
+    "slug": "cherez-perekrytie-4m-d150",
+    "route": "roof",
+    "height_m": 4,
+    "diameter_mm": 150
+  },
+  {
+    "slug": "cherez-perekrytie-6m-d115",
+    "route": "roof",
+    "height_m": 6,
+    "diameter_mm": 115
+  },
+  {
+    "slug": "cherez-perekrytie-6m-d120",
+    "route": "roof",
+    "height_m": 6,
+    "diameter_mm": 120
+  },
+  {
+    "slug": "cherez-perekrytie-6m-d150",
+    "route": "roof",
+    "height_m": 6,
+    "diameter_mm": 150
+  },
+  {
+    "slug": "cherez-stenu-3m-d115",
+    "route": "wall",
+    "height_m": 3,
+    "diameter_mm": 115
+  },
+  {
+    "slug": "cherez-stenu-3m-d120",
+    "route": "wall",
+    "height_m": 3,
+    "diameter_mm": 120
+  },
+  {
+    "slug": "cherez-stenu-3m-d150",
+    "route": "wall",
+    "height_m": 3,
+    "diameter_mm": 150
+  },
+  {
+    "slug": "cherez-stenu-6m-d115",
+    "route": "wall",
+    "height_m": 6,
+    "diameter_mm": 115
+  },
+  {
+    "slug": "cherez-stenu-6m-d120",
+    "route": "wall",
+    "height_m": 6,
+    "diameter_mm": 120
+  },
+  {
+    "slug": "cherez-stenu-6m-d150",
+    "route": "wall",
+    "height_m": 6,
+    "diameter_mm": 150
+  }
+]

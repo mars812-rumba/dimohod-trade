@@ -67,7 +67,7 @@ export async function getReadyKits(): Promise<ReadyKit[]> {
   return (await request<{ items: ReadyKit[] }>(""))?.items ?? [];
 }
 export async function getReadyKit(slug: string) {
-  // Only fixed human-readable paths are forwarded to the API.
-  if (!/^cherez-(perekrytie|stenu)-(3|4|6)m-d(115|120|150)$/.test(slug)) return null;
+  // The public API decides which variants exist; allow future readable slugs.
+  if (slug.length > 160 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return null;
   return request<{ kit: ReadyKit; variants: ReadyKit[] }>(`/${encodeURIComponent(slug)}`);
 }

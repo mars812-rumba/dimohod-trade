@@ -9,11 +9,11 @@ type PublishedSpecification = Pick<ReadyKit, "slug" | "route" | "height_m" | "di
 };
 
 // Input comes from the public, current specifications, never from seed definitions.
-// The diameter limit belongs to the KIT; components may have any/no diameter.
+// Every published variant is eligible; neither kit count nor diameters are fixed here.
 export function productReadyKitMemberships(kits: readonly PublishedSpecification[]): ProductReadyKitMembership[] {
   const seen = new Set<string>();
   return kits.filter(kit => {
-    if (![115, 120, 150].includes(kit.diameter_mm) || seen.has(kit.slug)) return false;
+    if (seen.has(kit.slug)) return false;
     seen.add(kit.slug);
     return true;
   }).map(kit => ({
