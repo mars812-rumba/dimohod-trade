@@ -12,7 +12,6 @@ import { ReadyKitLineDetails } from "@/components/ReadyKitLineDetails";
 import { ReadyKitRecommendations } from "@/components/ReadyKitRecommendations";
 import { ReadyKitCustomRequest } from "@/components/ReadyKitCustomRequest";
 import { ReadyKitTabs } from "@/components/ReadyKitTabs";
-import { RouteImageViewer } from "@/components/RouteImageViewer";
 import styles from "@/components/ReadyKit.module.css";
 
 export const dynamic = "force-dynamic";
@@ -69,8 +68,10 @@ export default async function ReadyKitPage({ params }: Props) {
     <ReadyKitTabs key={kit.slug} panels={{
       bom: <section id="bom" className={styles.panel}>
         <h2>Полная спецификация комплекта</h2>
-        {scheme ? <RouteImageViewer key={scheme} src={`${base}${scheme}`} alt={`Схема комплекта: ${route.toLowerCase()}, ${kit.height_m} м`}
-          title={`${route} · ${kit.height_m} м`} previewLabel={`Посмотреть схему комплекта · ${kit.height_m} м`} previewSizes="48px" quality={88} /> : null}
+        {scheme ? <figure className={styles.scheme} data-kit-scheme>
+          <img src={`${base}${scheme}`} alt={`Схема комплекта: ${route.toLowerCase()}, ${kit.height_m} м`} width={853} height={1280} loading="lazy" />
+          <figcaption>Схема комплекта · {kit.height_m} м</figcaption>
+        </figure> : null}
         {content?.composition_description ? <p className={styles.muted}>{content.composition_description}</p> : null}
         <div className={styles.tableScroll}><table className={styles.table}>
           <thead><tr><th scope="col">Изделие и характеристики</th><th scope="col">Кол-во</th><th scope="col">Цена</th><th scope="col">Сумма</th></tr></thead>
