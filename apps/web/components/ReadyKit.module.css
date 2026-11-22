@@ -131,3 +131,40 @@
   .cards { grid-template-columns: 1fr; }
   .card { grid-template-columns: 95px minmax(0,1fr); }
 }
+
+/* Local catalog-style trial. Everything below the first screen stays intact. */
+.catalogPilot .hero { gap: 28px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.catalogPilot .visual { padding: 20px; border: 1px solid var(--line); border-radius: 2px; background: white; }
+.catalogPilot .visual img { max-height: 520px; border-radius: 0; }
+.catalogPilot .intro { padding: 24px; border: 1px solid var(--line); border-radius: 2px; background: white; }
+.catalogPilot .intro > :global(.eyebrow) { display: none; }
+.catalogPilot .intro h1 { margin: 0 0 18px; font-weight: 500; font-size: clamp(28px,3vw,38px); line-height: 1.08; letter-spacing: -0.025em; text-wrap: balance; }
+.catalogPilot .badges { gap: 0 16px; }
+.catalogPilot .badges span { padding: 0 0 10px; border-radius: 0; background: transparent; font-size: 13px; color: var(--steel); }
+.catalogPilot .badges span:last-child { display: none; }
+.catalogPilot .selectors label { color: var(--muted); font-family: var(--font-heading); font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.035em; }
+.catalogPilot .selectors select { border-radius: 2px; color: var(--text); font-family: var(--font-body); font-size: 15px; font-weight: 600; letter-spacing: normal; text-transform: none; }
+.catalogPilot .price { padding-top: 16px; border-top: 1px solid var(--line); }
+.catalogPilot .price strong { font-family: var(--font-heading); font-size: 40px; font-weight: 650; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+.catalogPilot .actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.catalogPilot .actions > button { border-radius: 2px; font-size: 14px; }
+.catalogPilot .actions > .secondary { border-color: var(--steel); color: var(--steel); }
+.catalogPilot .actions > button:focus-visible, .catalogPilot .selectors select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (min-width: 701px) and (max-width: 1050px) {
+  .catalogPilot .actions { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .catalogPilot .hero { gap: 10px; padding: 0; }
+  .catalogPilot .intro { border: 0; padding: 0; background: transparent; }
+  .catalogPilot .intro h1 { margin: 0; font-size: clamp(24px,6vw,28px); line-height: 1.1; }
+  .catalogPilot .badges { padding-bottom: 4px; }
+  .catalogPilot .badges span { padding-bottom: 0; font-size: 12px; }
+  .catalogPilot .visual { padding: 0; border: 0; }
+  .catalogPilot .visual img { height: clamp(140px,calc(100svh - 560px),230px); padding: 10px; border: 1px solid var(--line); border-radius: 2px; }
+  .catalogPilot .visual small { font-size: 10px; }
+  .catalogPilot .intro > .price { gap: 3px; padding: 0; border: 0; }
+  .catalogPilot .price small { font-size: 12px; }
+  .catalogPilot .price strong { font-size: 34px; }
+  .catalogPilot .intro > .actions { grid-template-columns: 1fr; gap: 8px; }
+  .catalogPilot .intro > .selectors { width: 100%; margin: 4px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
+}

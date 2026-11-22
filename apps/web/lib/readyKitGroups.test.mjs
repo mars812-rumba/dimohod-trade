@@ -14,8 +14,9 @@ const cardSource = await readFile(new URL("../components/ReadyKitGroupCard.tsx",
 const path = slug => `/komplekty/${slug}`;
 const rub = value => value === null ? "Цена уточняется" : `${value} ₽`;
 const styles = new Proxy({}, { get: (_, key) => String(key) });
-const Card = new Function("React", "Link", "useState", "kitPath", "kitRub", "cardStyles", "styles", `${compile(cardSource)};return ReadyKitGroupCard;`)(
-  React, ({ children, ...props }) => React.createElement("a", props, children), useState, path, rub, styles, styles,
+const Icon = props => React.createElement("svg", props);
+const Card = new Function("React", "Link", "useState", "kitPath", "kitRub", "cardStyles", "styles", "Circle", "Layers3", `${compile(cardSource)};return ReadyKitGroupCard;`)(
+  React, ({ children, ...props }) => React.createElement("a", props, children), useState, path, rub, styles, styles, Icon, Icon,
 );
 const kits = [ ["roof", 4], ["roof", 6], ["wall", 3], ["wall", 6] ].flatMap(([route, height_m]) =>
   [115, 120, 150].map(diameter_mm => ({ route, height_m, diameter_mm,
@@ -24,6 +25,16 @@ const kits = [ ["roof", 4], ["roof", 6], ["wall", 3], ["wall", 6] ].flatMap(([ro
     lines: Array.from({ length: diameter_mm === 150 ? 3 : 2 }, (_, index) => ({ sku_id: `${index}`, quantity: 1 })),
   })));
 const render = group => renderToStaticMarkup(React.createElement(Card, { group }));
+
+test("opt-in catalog card preserves variant links, text, image and price, adding only presentation", () => {
+  const [group] = groupReadyKits(kits);
+  const original = render(group), pilot = renderToStaticMarkup(React.createElement(Card, { group, catalogPreview: true }));
+  assert.ok(!original.includes('data-catalog-pilot="true"'));
+  assert.ok(pilot.includes('data-catalog-pilot="true"'));
+  assert.equal((pilot.match(/<svg/g) || []).length, 2);
+  assert.deepEqual([...pilot.matchAll(/href="([^"]+)"/g)].map(match => match[1]), [...original.matchAll(/href="([^"]+)"/g)].map(match => match[1]));
+  for (const text of [group.name, rub(group.variants[0].total_rub), "за комплект Ø115", group.variants[0].description]) assert.ok(pilot.includes(text));
+});
 
 test("12 published variants form four ordered groups without changing any source data", () => {
   const shuffled = [...kits].reverse(), before = structuredClone(shuffled);

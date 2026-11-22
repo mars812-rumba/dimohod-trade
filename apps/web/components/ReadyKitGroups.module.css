@@ -6,7 +6,8 @@
 .body h2 { margin: 0 0 10px; font-size: 18px; line-height: 1.35; overflow-wrap: anywhere; }
 .description { margin: 0; font-size: 14px; line-height: 1.6; }
 .steel { margin: 0; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
-.steel > span { font-weight: 650; }
+.steel > .label { margin: 0; font-weight: 650; }
+.steelValue { font-weight: 400; }
 .label { margin: 0 0 8px; font-size: 13px; font-weight: 650; }
 .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
 .price strong { font-size: clamp(27px,3vw,34px); line-height: 1.25; }
@@ -19,3 +20,35 @@
 .open { display: inline-flex; align-items: center; min-height: 44px; width: fit-content; margin-top: auto; font-size: 14px; font-weight: 650; color: var(--accent-strong); }
 @media (max-width: 900px) { .cards { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .top { grid-template-columns: 90px minmax(0,1fr); gap: 12px; } .card { padding: 16px; } .body h2 { font-size: 17px; } }
+
+/* Owner-review pilot: catalog geometry and existing type/color roles. */
+.catalogCard { gap: 0; padding: 0; border-radius: 2px; }
+.catalogCard .top { grid-template-columns: 36% minmax(0,1fr); gap: 0; align-items: stretch; }
+.catalogCard .media { display: flex; align-items: center; padding: 12px; border-right: 1px solid var(--line); }
+.catalogCard .media img { height: 100%; min-height: 160px; max-height: 240px; }
+.catalogCard .body { padding: 20px; }
+.catalogCard .body h2 { font: 500 clamp(22px,2.2vw,28px)/1.08 var(--font-heading); letter-spacing: -0.025em; margin-bottom: 12px; text-wrap: balance; }
+.catalogCard .description { color: #344950; font-size: 14px; line-height: 1.5; }
+.catalogCard .steel, .catalogCard .parameters, .catalogCard .price { margin: 0 20px; }
+.catalogCard .steel { display: grid; gap: 5px; padding: 16px 0; border-top: 1px solid var(--line); }
+.catalogCard .label { display: flex; align-items: center; gap: 6px; color: var(--muted); font-family: var(--font-heading); font-size: 13px; font-weight: 500; letter-spacing: 0.035em; text-transform: uppercase; }
+.catalogCard .label svg { flex-shrink: 0; color: var(--accent-strong); }
+.catalogCard .steelValue { font-size: 14px; line-height: 1.5; }
+.catalogCard .diameters { margin: 0; gap: 0; }
+.catalogCard .diameters a { min-width: 64px; border-radius: 2px; margin-right: -1px; font-size: 14px; }
+.catalogCard .diameters a[aria-current="true"] { position: relative; }
+.catalogCard .price { padding: 18px 0; }
+.catalogCard .price strong { font-family: var(--font-heading); font-size: 32px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.catalogCard .open { width: 100%; margin-top: auto; padding: 14px 20px; border-top: 1px solid var(--line); color: var(--steel); font-size: 13px; letter-spacing: 0.035em; text-transform: uppercase; }
+.catalogCard .open:hover { color: var(--accent-strong); }
+.catalogCard .media:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+@media (max-width: 700px) {
+  .catalogCard { padding: 0; }
+  .catalogCard .top { grid-template-columns: 38% minmax(0,1fr); gap: 0; }
+  .catalogCard .media { padding: 8px; }
+  .catalogCard .body { padding: 16px 12px; }
+  .catalogCard .body h2 { font-size: clamp(20px,5.4vw,24px); }
+  .catalogCard .description { font-size: 13px; }
+  .catalogCard .steel, .catalogCard .parameters, .catalogCard .price { margin-inline: 16px; }
+  .catalogCard .open { padding-inline: 16px; }
+}

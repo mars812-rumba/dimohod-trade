@@ -6,6 +6,7 @@ import { getReadyKit, kitMetadata, kitPath, kitRub } from "@/lib/readyKits";
 import { Boxes, BadgeRussianRuble, Camera, ClipboardList, Ruler } from "lucide-react";
 import { kitApplicationSections, kitChecklistIcon } from "@/lib/readyKitPresentation";
 import { readyKitScheme } from "@/lib/readyKitScheme";
+import { readyKitCatalogPilot } from "@/lib/readyKitCatalogPilot";
 import { ReadyKitInquiry, ReadyKitPdf, ReadyKitSelectors } from "@/components/ReadyKitControls";
 import { ReadyKitLineDetails } from "@/components/ReadyKitLineDetails";
 import { ReadyKitRecommendations } from "@/components/ReadyKitRecommendations";
@@ -33,6 +34,7 @@ export default async function ReadyKitPage({ params }: Props) {
   if (!data) notFound();
   const { kit, variants } = data;
   const content = kit.content;
+  const catalogPreview = readyKitCatalogPilot(kit.route, kit.height_m);
   const route = kit.route === "roof" ? "Через перекрытие и кровлю" : "Через стену";
   const scheme = readyKitScheme(kit.route, kit.height_m);
   const application = kitApplicationSections(content?.application_description || kit.description, kit.route, kit.height_m);
@@ -47,7 +49,7 @@ export default async function ReadyKitPage({ params }: Props) {
       ...(kit.total_rub !== null ? { offers: { "@type": "Offer", url: absolute(kitPath(kit.slug)), priceCurrency: "RUB", price: kit.total_rub } } : {}),
     },
   ];
-  return <main className={`${styles.page} ${styles.kitPage}`}>
+  return <main className={`${styles.page} ${styles.kitPage}${catalogPreview ? ` ${styles.catalogPilot}` : ""}`} data-catalog-pilot={catalogPreview || undefined}>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }} />
     <nav aria-label="Хлебные крошки" className={styles.breadcrumbs}><Link href="/">Главная</Link> / <Link href="/komplekty">Готовые комплекты</Link> / <span>{kit.height_m} м, Ø{kit.diameter_mm} мм</span></nav>
     <section className={styles.hero}>
