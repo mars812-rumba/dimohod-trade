@@ -13,7 +13,7 @@ test("product content has no route loading boundary that hides it until JavaScri
 });
 
 test("server passes existing selected-variant recommendations without caching their prices", () => {
-  assert.match(page, /await getCompatibleProducts\(product\.slug, initialSku\.id, \{ fresh: true \}\)/);
+  assert.match(page, /getCompatibleProducts\(product\.slug, initialSku\.id, \{ fresh: true \}\)/);
   assert.match(page, /compatible_products: compatibleProducts/);
   assert.match(page, /product=\{initialProduct\}/);
   assert.match(page, /\.catch\(\(\) => \{/);

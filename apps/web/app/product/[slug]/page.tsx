@@ -13,6 +13,8 @@ import {
 import { ensureDiameterInTitle, normalizeProductParameterSpacing } from "@/lib/productMetadata";
 import { productFaqItems } from "@/lib/productFaq";
 import { productOfferAvailability } from "@/lib/productAvailability";
+import { getReadyKits } from "@/lib/readyKits";
+import { productReadyKitMemberships } from "@/lib/productReadyKits";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -417,11 +419,17 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   // Render the selected variant's existing compatibility rules on the server.
   // Do not cache prices here or make a failed recommendations request hide the
   // main product; the client can retry through its existing loading mechanism.
-  const compatibleProducts = await getCompatibleProducts(product.slug, initialSku.id, { fresh: true })
+  const [compatibleProducts, readyKitMemberships] = await Promise.all([
+    getCompatibleProducts(product.slug, initialSku.id, { fresh: true })
     .catch(() => {
       console.warn("Product compatibility unavailable during server rendering");
       return [];
-    });
+    }),
+    getReadyKits().then(productReadyKitMemberships).catch(() => {
+      console.warn("Published ready-kit specifications unavailable during server rendering");
+      return [];
+    }),
+  ]);
   const initialProduct = { ...product, compatible_products: compatibleProducts };
 
   return (
@@ -433,6 +441,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
       <ProductExperience
         product={initialProduct}
         initialSkuKey={initialSku.id}
+        readyKitMemberships={readyKitMemberships}
         returnToQuickEstimate={fromQuickEstimate}
       />
     </>

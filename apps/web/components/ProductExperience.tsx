@@ -43,6 +43,8 @@ import {
   steelSelectionProfile,
 } from "@/lib/steelSelection";
 import { selectVariantCandidate, variantValueAvailable } from "@/lib/variantSelection";
+import { ProductReadyKits } from "@/components/ProductReadyKits";
+import { productReadyKitLinks, type ProductReadyKitMembership } from "@/lib/productReadyKits";
 
 type ProductPhotoItem = {
   kind?: "photo";
@@ -991,10 +993,12 @@ function seoConfiguratorCta(product: Product): { text: string; href: string } | 
 export function ProductExperience({
   product,
   initialSkuKey,
+  readyKitMemberships = [],
   returnToQuickEstimate = false,
 }: {
   product: Product;
   initialSkuKey?: string;
+  readyKitMemberships?: ProductReadyKitMembership[];
   returnToQuickEstimate?: boolean;
 }) {
   const initialSkus = useMemo(() => productSkus(product), [product]);
@@ -1022,6 +1026,7 @@ export function ProductExperience({
   const detailedSkuIds = useRef(new Set(initialSku ? [initialSku.id] : []));
   const skuDetailRequests = useRef(new Map<string, Promise<SKU>>());
   const activeSku = skus.find((sku) => sku.id === selectedSkuId) ?? skus[0] ?? null;
+  const readyKitLinks = productReadyKitLinks(readyKitMemberships, activeSku?.id);
   const faqItems = useMemo(() => productFaqItems(product, activeSku), [activeSku, product]);
   const skuH1 = productHeading(product, activeSku);
   const skuShortDescription = skuSeoText(activeSku, "short_description") ?? product.short_description;
@@ -1563,7 +1568,7 @@ export function ProductExperience({
             ) : null}
           </section>
 
-          {skuDescription || variantSummary.length ? (
+          {skuDescription || variantSummary.length || readyKitLinks.length ? (
             <section className="product-section">
               <h2 className="product-section-title product-section-title-with-icon">
                 <FileText aria-hidden="true" size={19} />
@@ -1585,6 +1590,7 @@ export function ProductExperience({
                   </dl>
                 </div>
               ) : null}
+              <ProductReadyKits links={readyKitLinks} />
               {configuratorCta ? (
                 <div className="product-configurator-block">
                   <ProductCopyHeading title="Расчёт комплекта" />
