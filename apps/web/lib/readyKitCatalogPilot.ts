@@ -1,4 +1,5 @@
-// Local design trial only. Keep production unchanged until the owner approves.
+// Owner-approved preview for one kit group and its three diameter variants.
+// Enabled by the normal release; other routes and heights keep their existing view.
 export function readyKitCatalogPilot(route: string, height: number) {
-  return process.env.READY_KITS_CATALOG_PREVIEW === "1" && route === "roof" && height === 4;
+  return route === "roof" && height === 4;
 }

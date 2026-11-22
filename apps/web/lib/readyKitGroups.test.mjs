@@ -10,6 +10,8 @@ const compile = source => ts.transpileModule(source, { compilerOptions: {
 } }).outputText.replace(/^import .*;\n/gmu, "").replace(/\bexport\s+/gu, "");
 const groupSource = await readFile(new URL("./readyKitGroups.ts", import.meta.url), "utf8");
 const groupReadyKits = new Function(`${compile(groupSource)};return groupReadyKits;`)();
+const pilotSource = await readFile(new URL("./readyKitCatalogPilot.ts", import.meta.url), "utf8");
+const readyKitCatalogPilot = new Function(`${compile(pilotSource)};return readyKitCatalogPilot;`)();
 const cardSource = await readFile(new URL("../components/ReadyKitGroupCard.tsx", import.meta.url), "utf8");
 const path = slug => `/komplekty/${slug}`;
 const rub = value => value === null ? "Цена уточняется" : `${value} ₽`;
@@ -25,6 +27,15 @@ const kits = [ ["roof", 4], ["roof", 6], ["wall", 3], ["wall", 6] ].flatMap(([ro
     lines: Array.from({ length: diameter_mm === 150 ? 3 : 2 }, (_, index) => ({ sku_id: `${index}`, quantity: 1 })),
   })));
 const render = group => renderToStaticMarkup(React.createElement(Card, { group }));
+
+test("normal release shows the new view on exactly one group and keeps all twelve variant links", () => {
+  const html = groupReadyKits(kits).map(group => renderToStaticMarkup(React.createElement(Card, {
+    group, catalogPreview: readyKitCatalogPilot(group.route, group.height_m),
+  }))).join("");
+  assert.equal((html.match(/data-catalog-pilot="true"/g) || []).length, 1);
+  assert.match(html, /data-kit-group="roof-4" data-catalog-pilot="true"/);
+  for (const kit of kits) assert.ok(html.includes(`href="${path(kit.slug)}"`));
+});
 
 test("opt-in catalog card preserves variant links, text, image and price, adding only presentation", () => {
   const [group] = groupReadyKits(kits);

@@ -7,13 +7,13 @@ const source = await readFile(new URL("./readyKitCatalogPilot.ts", import.meta.u
 const code = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText.replace(/\bexport\s+/g, "");
 const load = value => new Function("process", `${code};return readyKitCatalogPilot;`)({ env: { READY_KITS_CATALOG_PREVIEW: value } });
 
-test("catalog trial is off by default and cannot affect production without an explicit local flag", () => {
-  for (const value of [undefined, "", "0", "true"]) {
-    for (const route of ["roof", "wall"]) for (const height of [3, 4, 6]) assert.equal(load(value)(route, height), false);
+test("normal release enables the approved preview without any environment flag", () => {
+  for (const value of [undefined, "", "0", "1", "true"]) {
+    assert.equal(load(value)("roof", 4), true);
   }
 });
-test("explicit trial styles only the roof 4m family, shared by its three diameters", () => {
-  const enabled = load("1");
+test("preview remains limited to the roof 4m family, shared by its three diameters", () => {
+  const enabled = load(undefined);
   assert.equal(enabled("roof", 4), true);
   for (const [route, height] of [["roof", 6], ["wall", 3], ["wall", 6]]) assert.equal(enabled(route, height), false);
 });
