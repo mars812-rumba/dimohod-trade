@@ -165,6 +165,16 @@
   gap: 14px;
 }
 
+.inquiries { padding: 20px; border-top: 1px solid #d7e0e2; min-width: 0; }
+.inquiries h3 { margin: 0 0 18px; color: #183c45; font-size: 18px; }
+.inquiry { display: grid; gap: 12px; min-width: 0; }
+.inquiry + .inquiry { margin-top: 20px; padding-top: 20px; border-top: 1px solid #d7e0e2; }
+.inquiryHeader { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; color: #244f59; }
+.inquiryHeader time, .inquirySource { color: #496269; font-size: 12px; overflow-wrap: anywhere; }
+.inquiryText { margin: 0; color: #244f59; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.inquiry .leadActionButtons { display: flex; flex-wrap: wrap; }
+.inquiry .leadActionButtons > button, .inquiry .leadActionButtons > a { width: auto; padding: 8px 12px; }
+
 .customerCard {
   overflow: hidden;
   border: 1px solid #d7e0e2;

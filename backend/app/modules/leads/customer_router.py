@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.config import settings
@@ -98,6 +99,7 @@ def rename_customer(
     return result
 
 
+@router.patch("/{customer_id}/inquiries/{lead_id}/notes")
 @router.patch("/{customer_id}/estimates/{lead_id}/notes")
 async def update_customer_notes(
     customer_id: str, lead_id: str, payload: CustomerNotesUpdate, response: Response,
@@ -109,7 +111,7 @@ async def update_customer_notes(
     if not customer_path.is_file():
         raise HTTPException(status_code=404, detail="Клиент не найден")
     customer = json.loads(customer_path.read_text(encoding="utf-8"))
-    if not any(item.get("lead_id") == lead_id for item in customer.get("estimates", [])):
+    if not any(item.get("lead_id") == lead_id for item in customer.get("estimates", []) + customer.get("inquiries", [])):
         raise HTTPException(status_code=404, detail="Заявка не найдена")
     try:
         notes = write_notes(root, lead_id, payload.notes, payload.expected_notes)
@@ -119,6 +121,31 @@ async def update_customer_notes(
         raise HTTPException(status_code=409, detail="Заметка уже изменена. Обновите страницу.") from exc
     response.headers["Cache-Control"] = "no-store"
     return {"notes": notes}
+
+
+@router.get("/{customer_id}/inquiries/{lead_id}/attachment", response_class=FileResponse)
+def read_inquiry_attachment(customer_id: str, lead_id: str) -> FileResponse:
+    if not all(re.fullmatch(r"[a-f0-9]{32}", value) for value in (customer_id, lead_id)):
+        raise HTTPException(status_code=404, detail="Вложение не найдено")
+    root = Path(settings.media_storage_dir)
+    try:
+        customer = json.loads((root / "customers" / f"{customer_id}.json").read_text(encoding="utf-8"))
+        if not any(item.get("lead_id") == lead_id for item in customer.get("inquiries", [])):
+            raise FileNotFoundError
+        directory = root / "leads" / lead_id
+        if directory.is_symlink() or (directory / "lead.json").is_symlink():
+            raise FileNotFoundError
+        record = json.loads((directory / "lead.json").read_text(encoding="utf-8"))
+        filename = record.get("attachment")
+        if (not isinstance(filename, str) or not re.fullmatch(r"attachment\.(pdf|png|jpe?g|webp)", filename)
+                or record.get("customer_id") not in (None, customer_id)):
+            raise FileNotFoundError
+        path = directory / filename
+        if path.is_symlink() or not path.is_file():
+            raise FileNotFoundError
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=404, detail="Вложение не найдено") from exc
+    return FileResponse(path, filename=filename, headers={"Cache-Control": "no-store"})
 
 
 @router.get("")

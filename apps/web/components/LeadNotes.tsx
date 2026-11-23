@@ -4,8 +4,9 @@ import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import styles from "./AdminCustomerManager.module.css";
 
-export function LeadNotes({ customerId, leadId, notes = "", onSaved, children }: {
+export function LeadNotes({ customerId, leadId, kind = "estimate", notes = "", onSaved, children }: {
   customerId: string; leadId: string; notes?: string; onSaved: (notes: string) => void; children?: ReactNode;
+  kind?: "estimate" | "inquiry";
 }) {
   const id = useId();
   const [editing, setEditing] = useState(false);
@@ -19,7 +20,8 @@ export function LeadNotes({ customerId, leadId, notes = "", onSaved, children }:
     setSaving(true); setError(""); setMessage("");
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-      const response = await fetch(`${base}/api/v1/admin/customers/${customerId}/estimates/${leadId}/notes`, {
+      const resource = kind === "inquiry" ? "inquiries" : "estimates";
+      const response = await fetch(`${base}/api/v1/admin/customers/${customerId}/${resource}/${leadId}/notes`, {
         method: "PATCH", credentials: "include", cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: draft, expected_notes: notes }),

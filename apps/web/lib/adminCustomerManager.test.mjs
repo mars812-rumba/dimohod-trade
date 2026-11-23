@@ -23,7 +23,7 @@ test("customer manager uses the protected admin session", () => {
 
 test("customer manager supports search and links to editable estimates", () => {
   assert.match(componentSource, /role="search"/);
-  assert.match(componentSource, /Поиск клиента или замера/);
+  assert.match(componentSource, /Поиск клиента, заявки или замера/);
   assert.match(componentSource, /\/admin\/estimates\/\$\{estimate\.lead_id\}#admin=1/);
   assert.match(componentSource, /previousEstimates\.map/);
   assert.doesNotMatch(componentSource, /href="\/admin\/catalog"/);
@@ -70,7 +70,7 @@ test("quotation numbers are part of latest and previous titles, without separate
 
 test("internal notes are shown before opening both latest and previous estimates", () => {
   assert.match(componentSource, /notes\?: string/);
-  assert.equal(componentSource.match(/<LeadNotes /g)?.length,2);
+  assert.equal(componentSource.match(/<LeadNotes /g)?.length,3);
   assert.match(componentSource, /<LeadNotes[\s\S]*?className=\{styles.openEstimate\}/);
   const notes=fs.readFileSync(path.join(here,"../components/LeadNotes.tsx"),"utf8");
   assert.match(notes, /method: "PATCH", credentials: "include", cache: "no-store"/);

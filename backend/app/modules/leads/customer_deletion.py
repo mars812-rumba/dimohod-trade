@@ -38,9 +38,11 @@ def _record(path: Path) -> dict:
 
 def _lead_ids(customer: dict) -> set[str]:
     estimates = customer.get("estimates", [])
-    if not isinstance(estimates, list) or any(not isinstance(item, dict) for item in estimates):
-        raise CustomerDeletionConflict("Invalid estimates index")
-    ids = [item.get("lead_id") for item in estimates]
+    inquiries = customer.get("inquiries", [])
+    if (not isinstance(estimates, list) or not isinstance(inquiries, list)
+            or any(not isinstance(item, dict) for item in estimates + inquiries)):
+        raise CustomerDeletionConflict("Invalid lead index")
+    ids = [item.get("lead_id") for item in estimates + inquiries]
     if any(not isinstance(value, str) or not ID.fullmatch(value) for value in ids):
         raise CustomerDeletionConflict("Invalid lead reference")
     return set(ids)

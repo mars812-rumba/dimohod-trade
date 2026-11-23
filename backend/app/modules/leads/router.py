@@ -35,7 +35,7 @@ from app.core.config import settings
 from app.db.price_section_attributes import outer_pipe_attributes
 from app.db.session import get_db
 from app.modules.admin.auth import ADMIN_SESSION_COOKIE, valid_admin_session
-from app.modules.leads.customers import sync_customer_estimate, upsert_customer
+from app.modules.leads.customers import index_customer_inquiry, sync_customer_estimate, upsert_customer
 from app.modules.leads.email import send_customer_confirmation_email, send_lead_email
 from app.modules.leads.schemas import (
     LeadEstimate,
@@ -903,6 +903,10 @@ async def create_lead(
             json.dumps(estimate_record, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
+        record_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    else:
+        record["customer_id"] = index_customer_inquiry(settings.media_storage_dir, lead_id)
         record_path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
 
     email_status = "pending"

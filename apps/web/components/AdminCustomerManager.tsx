@@ -45,6 +45,17 @@ type CustomerRecord = {
   updated_at: string;
   contacts: CustomerContact[];
   estimates: CustomerEstimate[];
+  inquiries?: CustomerInquiry[];
+};
+
+type CustomerInquiry = {
+  lead_id: string;
+  created_at: string;
+  source: string;
+  comment: string;
+  configuration: string;
+  has_attachment: boolean;
+  notes?: string;
 };
 
 type CustomerResponse = {
@@ -199,6 +210,7 @@ export function AdminCustomerManager() {
   function updateNotes(customerId: string, leadId: string, notes: string) {
     setCustomers(current => current.map(customer => customer.id === customerId ? {
       ...customer, estimates: customer.estimates.map(estimate => estimate.lead_id === leadId ? { ...estimate, notes } : estimate),
+      inquiries: customer.inquiries?.map(inquiry => inquiry.lead_id === leadId ? { ...inquiry, notes } : inquiry),
     } : customer));
   }
 
@@ -217,7 +229,7 @@ export function AdminCustomerManager() {
         <div>
           <p className={styles.eyebrow}>Журнал замеров</p>
           <h1>Клиенты и сметы</h1>
-          <p>Контакты клиента и все сохранённые расчёты в одном месте.</p>
+          <p>Контакты клиента, заявки с сайта и сохранённые расчёты в одном месте.</p>
         </div>
         <div className={styles.counter} aria-label={`Всего клиентов: ${total}`}>
           <UserRound aria-hidden size={19} />
@@ -227,13 +239,13 @@ export function AdminCustomerManager() {
       </header>
 
       <form className={styles.searchBar} onSubmit={submitSearch} role="search">
-        <label htmlFor="customer-search">Поиск клиента или замера</label>
+        <label htmlFor="customer-search">Поиск клиента, заявки или замера</label>
         <div>
           <Search aria-hidden size={18} />
           <input
             id="customer-search"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Имя, телефон, почта или название замера"
+            placeholder="Имя, телефон, ID заявки или название замера"
             type="search"
             value={query}
           />
@@ -254,7 +266,7 @@ export function AdminCustomerManager() {
         <section className={styles.emptyState}>
           <ClipboardList aria-hidden size={28} />
           <h2>{query.trim() ? "Ничего не найдено" : "Клиентов пока нет"}</h2>
-          <p>{query.trim() ? "Попробуйте другой телефон, имя или название замера." : "Новые заявки со сметой появятся здесь автоматически."}</p>
+          <p>{query.trim() ? "Попробуйте другой телефон, имя или ID заявки." : "Заявки с сайта и сохранённые сметы появятся здесь автоматически."}</p>
         </section>
       ) : null}
 
@@ -281,6 +293,7 @@ export function AdminCustomerManager() {
                 </div>
                 <p className={styles.customerMeta}>
                   {customer.estimates.length} {estimateLabel(customer.estimates.length)}
+                  {customer.inquiries?.length ? ` · Заявок без расчёта: ${customer.inquiries.length}` : ""}
                   <span aria-hidden> · </span>
                   обновлено {formatDate(customer.updated_at)}
                 </p>
@@ -354,6 +367,25 @@ export function AdminCustomerManager() {
                 </div>
               </details>
             ) : null}
+            {customer.inquiries?.length ? <section className={styles.inquiries} aria-label="Заявки без расчёта">
+              <h3>Заявки без расчёта · {customer.inquiries.length}</h3>
+              {customer.inquiries.map(inquiry => <article className={styles.inquiry} key={inquiry.lead_id} data-inquiry={inquiry.lead_id}>
+                <div className={styles.inquiryHeader}>
+                  <strong>{inquiry.source === "homepage-materials" ? "Форма на главной" : "Заявка с сайта"}</strong>
+                  <time dateTime={inquiry.created_at}>{formatDate(inquiry.created_at)}</time>
+                </div>
+                <small className={styles.inquirySource}>ID: {inquiry.lead_id}{inquiry.source ? ` · ${inquiry.source}` : ""}</small>
+                {inquiry.comment ? <p className={styles.inquiryText}>{inquiry.comment}</p> : null}
+                {inquiry.configuration ? <p className={styles.inquiryText}>{inquiry.configuration}</p> : null}
+                <LeadNotes customerId={customer.id} leadId={inquiry.lead_id} kind="inquiry" notes={inquiry.notes}
+                  onSaved={notes => updateNotes(customer.id, inquiry.lead_id, notes)}>
+                  {inquiry.has_attachment ? <a className={styles.openEstimate}
+                    href={`${apiBaseUrl}/api/v1/admin/customers/${customer.id}/inquiries/${inquiry.lead_id}/attachment`}>
+                    Скачать вложение <ExternalLink aria-hidden size={16} />
+                  </a> : null}
+                </LeadNotes>
+              </article>)}
+            </section> : null}
           </article>
           );
         })}
