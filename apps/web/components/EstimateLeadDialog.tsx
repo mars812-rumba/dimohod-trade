@@ -13,9 +13,8 @@ import { chimneyEstimateLeadPayload, chimneyEstimateText } from "@/lib/chimneyEs
 import { createChimneyEstimatePdfBlob } from "@/lib/chimneyEstimatePdf";
 import { METRIKA_GOALS, reachMetrikaGoal, type MetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
-import { isQuickEstimateLead, type QuickEstimateLead } from "@/lib/quickEstimateLead";
-
-type ContactMethod = "phone" | "whatsapp" | "telegram" | "email";
+import { PhoneContactFields } from "./PhoneContactFields";
+import { isQuickEstimateLead, quickEstimateContact, type QuickEstimateLead } from "@/lib/quickEstimateLead";
 
 type EstimateLeadDialogProps = {
   buttonLabel?: string;
@@ -35,36 +34,6 @@ type EstimateLeadDialogProps = {
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 const PDF_ATTACHMENT_TIMEOUT_MS = 4000;
-
-const contactDetails: Record<
-  ContactMethod,
-  { label: string; placeholder: string; type: "email" | "tel" | "text"; autoComplete: string }
-> = {
-  phone: {
-    label: "Номер телефона",
-    placeholder: "+7 999 000-00-00",
-    type: "tel",
-    autoComplete: "tel",
-  },
-  whatsapp: {
-    label: "Номер WhatsApp",
-    placeholder: "+7 999 000-00-00",
-    type: "tel",
-    autoComplete: "tel",
-  },
-  telegram: {
-    label: "Имя пользователя Telegram",
-    placeholder: "@username",
-    type: "text",
-    autoComplete: "off",
-  },
-  email: {
-    label: "Электронная почта",
-    placeholder: "name@example.com",
-    type: "email",
-    autoComplete: "email",
-  },
-};
 
 function responseError(payload: unknown): string {
   if (!payload || typeof payload !== "object" || !("detail" in payload)) {
@@ -110,7 +79,6 @@ export function EstimateLeadDialog({
   const titleId = useId();
   const descriptionId = useId();
   const errorId = useId();
-  const [contactMethod, setContactMethod] = useState<ContactMethod>("phone");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "saved" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -132,10 +100,14 @@ export function EstimateLeadDialog({
 
     try {
       const data = new FormData(form);
+      const contact = quickEstimateContact(String(data.get("contact") ?? ""), data.get("contact_method"));
+      if (!contact) throw new Error("Проверьте номер телефона для выбранного способа связи.");
+      data.set("contact", contact.value);
+      data.set("contact_method", contact.method);
       const customer: ChimneyEstimateCustomer = {
         name: String(data.get("name") ?? "").trim(),
-        contactMethod,
-        contact: String(data.get("contact") ?? "").trim(),
+        contactMethod: contact.method,
+        contact: contact.value,
       };
       const currentEstimate = { ...estimate, customer, generatedAt: new Date() };
       data.set("source", source);
@@ -164,7 +136,6 @@ export function EstimateLeadDialog({
         throw new Error("Не удалось подтвердить сохранение контакта. Попробуйте ещё раз.");
       }
       form.reset();
-      setContactMethod("phone");
       const emailStatus = payload && typeof payload === "object" && "email_status" in payload
         ? payload.email_status
         : null;
@@ -178,8 +149,6 @@ export function EstimateLeadDialog({
       setMessage(error instanceof Error ? error.message : "Не удалось отправить расчёт.");
     }
   }
-
-  const contactDetail = contactDetails[contactMethod];
 
   if (inline) {
     if (status === "success" || status === "saved") {
@@ -203,24 +172,11 @@ export function EstimateLeadDialog({
           className="estimate-lead-form estimate-lead-form-inline"
           onSubmit={submit}
         >
-          <div className="estimate-lead-inline-fields">
-            <label>
-              <span>Имя</span>
-              <input autoComplete="name" maxLength={100} minLength={2} name="name" ref={nameRef} required />
-            </label>
-            <label>
-              <span>Телефон</span>
-              <input
-                autoComplete="tel"
-                maxLength={40}
-                name="contact"
-                placeholder="+7 999 000-00-00"
-                required
-                type="tel"
-              />
-            </label>
-          </div>
-          <input name="contact_method" type="hidden" value="phone" />
+          <label>
+            <span>Имя</span>
+            <input autoComplete="name" maxLength={100} minLength={2} name="name" ref={nameRef} required />
+          </label>
+          <PhoneContactFields describedBy={status === "error" ? errorId : undefined} disabled={status === "sending"} />
           <label aria-hidden="true" className="estimate-lead-honeypot">
             <span>Сайт</span>
             <input autoComplete="off" name="website" tabIndex={-1} />
@@ -311,32 +267,7 @@ export function EstimateLeadDialog({
                   <input autoComplete="name" maxLength={100} minLength={2} name="name" ref={nameRef} required />
                 </label>
 
-                <label>
-                  <span>Как с вами связаться?</span>
-                  <select
-                    name="contact_method"
-                    onChange={(event) => setContactMethod(event.target.value as ContactMethod)}
-                    value={contactMethod}
-                  >
-                    <option value="phone">Телефон</option>
-                    <option value="whatsapp">WhatsApp</option>
-                    <option value="telegram">Telegram</option>
-                    <option value="email">Email</option>
-                  </select>
-                </label>
-
-                <label>
-                  <span>{contactDetail.label}</span>
-                  <input
-                    autoComplete={contactDetail.autoComplete}
-                    key={contactMethod}
-                    maxLength={160}
-                    name="contact"
-                    placeholder={contactDetail.placeholder}
-                    required
-                    type={contactDetail.type}
-                  />
-                </label>
+                <PhoneContactFields describedBy={status === "error" ? errorId : undefined} disabled={status === "sending"} />
 
                 <label>
                   <span>Комментарий <small>необязательно</small></span>
@@ -365,7 +296,7 @@ export function EstimateLeadDialog({
                     {status === "sending" ? "Формируем и отправляем…" : submitLabel}
                   </button>
                   <small>
-                    PDF получит менеджер. При выборе email копия придёт и вам. Контакты компании — в{" "}
+                    PDF получит менеджер. Контакты компании — в{" "}
                     <Link href="/privacy" target="_blank">Политике</Link>.
                   </small>
                 </div>

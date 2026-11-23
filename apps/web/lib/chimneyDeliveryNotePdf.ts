@@ -42,7 +42,7 @@ export function deliveryNoteDocument(estimate: ChimneyEstimate, quotationNumber:
       { text: `${operator.name} · Санкт-Петербург, ул. 2-й Луч, д. 4, корп. 2 · +7 (812) 642-45-65`, fontSize: 8, margin: [0, 0, 0, 5] },
       { columns: [
         { text: `Покупатель: ${estimate.customer?.name?.trim() || "__________________"}`, width: "*" },
-        { text: `${estimate.customer?.contactMethod === "telegram" ? "Telegram" : estimate.customer?.contactMethod === "email" ? "Email" : "Телефон"}: ${estimate.customer?.contact || "__________________"}`, width: "auto" },
+        { text: `${estimate.customer?.contactMethod === "max" ? "MAX" : estimate.customer?.contactMethod === "whatsapp" ? "WhatsApp" : estimate.customer?.contactMethod === "telegram" ? "Telegram" : estimate.customer?.contactMethod === "email" ? "Email" : "Телефон"}: ${estimate.customer?.contact || "__________________"}`, width: "auto" },
       ], columnGap: 10, margin: [0, 0, 0, 5] },
       { text: `Основание: Коммерческое предложение №${number}`, margin: [0, 0, 0, 7] },
       { table: { headerRows: 1, widths: [17, "*", 30, 27, 57, 64], body: [

@@ -40,7 +40,7 @@ def contact_data(**changes):
     return {**data, **changes}
 
 
-@pytest.mark.parametrize("method,contact", [("phone", "+7 999 123-45-67"), ("telegram", "@test_user")])
+@pytest.mark.parametrize("method,contact", [(method, "+7 999 123-45-67") for method in ("phone", "max", "whatsapp")])
 def test_contact_without_name_saves_estimate_before_revealing_it(contact_client, method, contact):
     client, root, _ = contact_client
     response = client.post("/api/v1/leads", data=contact_data(contact_method=method, contact=contact))
@@ -52,6 +52,7 @@ def test_contact_without_name_saves_estimate_before_revealing_it(contact_client,
     envelope = json.loads((lead_dir / "estimate.json").read_text())
     assert record["name"] == ""
     assert record["contact"] == contact
+    assert record["contact_method"] == method and record["phone"] == contact
     assert record["personal_data_consent"] is True
     assert envelope["status"] == "estimate_received"
     assert result["callback_token"] not in (lead_dir / "lead.json").read_text()
@@ -67,7 +68,9 @@ def test_contact_without_name_saves_estimate_before_revealing_it(contact_client,
     {"personal_data_consent": "false"}, {"consent_version": "old"},
     {"estimate_json": ""}, {"estimate_json": "{}"},
     {"contact": "-------"}, {"contact": "invalid"},
-    {"contact_method": "telegram", "contact": "@ab"},
+    {"contact_method": "telegram", "contact": "@test_user"},
+    {"contact_method": "max", "contact": "@test_user"},
+    {"contact_method": "whatsapp", "contact": "https://t.me/test_user"},
     {"contact_method": "email", "contact": "test@example.com"},
     {"intent": "manager_review"},
 ])

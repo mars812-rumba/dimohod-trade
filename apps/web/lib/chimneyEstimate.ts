@@ -32,7 +32,7 @@ export type ChimneyEstimateLine = {
 
 export type ChimneyEstimateCustomer = {
   name: string;
-  contactMethod: "phone" | "whatsapp" | "telegram" | "email";
+  contactMethod: "phone" | "max" | "whatsapp" | "telegram" | "email";
   contact: string;
 };
 

@@ -434,8 +434,8 @@ def inquiry_payload(**changes):
 
 
 @pytest.mark.parametrize("intent,method,contact", [
-    ("order", "phone", "+7 999 123-45-67"), ("order", "telegram", "@kit_buyer"),
-    ("consultation", "phone", "+7 999 123-45-67"), ("consultation", "telegram", "@kit_buyer"),
+    (intent, method, "+7 999 123-45-67")
+    for intent in ("order", "consultation") for method in ("phone", "max", "whatsapp")
 ])
 def test_inquiry_creates_named_kit_estimate_in_crm_without_customer_name(client, catalog, monkeypatch, intent, method, contact):
     delivered = []
@@ -471,7 +471,10 @@ def test_inquiry_creates_named_kit_estimate_in_crm_without_customer_name(client,
 
 @pytest.mark.parametrize("changes", [
     {"personal_data_consent": False}, {"consent_version": "old"}, {"contact": "bad"},
-    {"contact_method": "email", "contact": "buyer@example.com"}, {"intent": "bogus"},
+    {"contact_method": "email", "contact": "buyer@example.com"},
+    {"contact_method": "telegram", "contact": "@kit_buyer"},
+    {"contact_method": "max", "contact": "@kit_buyer"},
+    {"contact_method": "whatsapp", "contact": "buyer@example.com"}, {"intent": "bogus"},
     {"name": "Not requested"}, {"lines": []}, {"total_rub": "1"},
 ])
 def test_invalid_inquiry_has_no_side_effects(client, changes):

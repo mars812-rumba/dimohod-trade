@@ -152,7 +152,7 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
 
         <section className={styles.resultStrip} aria-label="Результат быстрого расчёта">
           <div className={styles.shell}>
-            <div><strong>Стоимость, состав и схема</strong><span>по телефону или Telegram, без имени</span></div>
+            <div><strong>Стоимость, состав и схема</strong><span>по телефону, в MAX или WhatsApp, без имени</span></div>
             <div><strong>Товарный состав</strong><span>с количеством и ценами</span></div>
             <div><strong>Проверка менеджером</strong><span>перед оформлением заказа</span></div>
           </div>

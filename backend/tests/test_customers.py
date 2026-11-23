@@ -27,6 +27,7 @@ def estimate(profile_name: str, total: int, quotation_number: str = "") -> dict:
 def test_phone_and_whatsapp_contacts_use_one_customer_identity() -> None:
     assert canonical_contact("phone", "8 (999) 123-45-67") == "phone:79991234567"
     assert canonical_contact("whatsapp", "+7 999 123 45 67") == "phone:79991234567"
+    assert canonical_contact("max", "+7 (999) 123-45-67") == "phone:79991234567"
 
 
 def test_upsert_customer_collects_estimates_without_duplicates(tmp_path) -> None:

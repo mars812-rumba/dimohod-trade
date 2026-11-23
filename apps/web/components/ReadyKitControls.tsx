@@ -8,6 +8,7 @@ import { Download } from "lucide-react";
 import { quickEstimateContact } from "@/lib/quickEstimateLead";
 import { METRIKA_GOALS, reachMetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
+import { PhoneContactFields } from "./PhoneContactFields";
 import styles from "./ReadyKit.module.css";
 
 type Option = Pick<ReadyKit, "slug" | "route" | "height_m" | "diameter_mm">;
@@ -69,10 +70,10 @@ function ReadyKitContactForm({ slug, intent }: { slug: string; intent: "order" |
     event.preventDefault();
     if (sending.current) return;
     const data = new FormData(event.currentTarget);
-    const contact = quickEstimateContact(String(data.get("contact") ?? ""));
+    const contact = quickEstimateContact(String(data.get("contact") ?? ""), data.get("contact_method"));
     if (!contact) {
       setStatus("error");
-      setMessage("Укажите номер телефона или Telegram в формате @username.");
+      setMessage("Проверьте номер телефона для выбранного способа связи.");
       return;
     }
     if (data.get("personal_data_consent") !== "true") return;
@@ -104,10 +105,7 @@ function ReadyKitContactForm({ slug, intent }: { slug: string; intent: "order" |
     <div><strong>Заявка принята</strong><span>Менеджер свяжется с вами по указанному контакту и уточнит условия заказа.</span></div>
   </div>;
   return <form className="lead-form lead-form-compact" onSubmit={submit} aria-busy={status === "sending"}>
-    <label><span>Телефон или Telegram</span>
-      <input name="contact" type="text" autoComplete="off" required maxLength={160}
-        placeholder="+7 999 000-00-00 или @username" aria-describedby={status === "error" ? errorId : undefined} />
-    </label>
+    <PhoneContactFields describedBy={status === "error" ? errorId : undefined} disabled={status === "sending"} />
     <label aria-hidden="true" className="estimate-lead-honeypot">Сайт<input name="website" autoComplete="off" tabIndex={-1} /></label>
     <PersonalDataConsent />
     {status === "error" ? <p id={errorId} className="lead-form-error" role="alert">{message}</p> : null}

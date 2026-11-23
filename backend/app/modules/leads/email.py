@@ -11,6 +11,7 @@ from app.core.config import settings
 
 CONTACT_METHOD_LABELS = {
     "phone": "Телефон",
+    "max": "MAX",
     "whatsapp": "WhatsApp",
     "telegram": "Telegram",
     "email": "Email",

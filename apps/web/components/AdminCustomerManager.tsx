@@ -20,7 +20,7 @@ import { CustomerNameEditor } from "./CustomerNameEditor";
 import { CustomerDeleteButton } from "./CustomerDeleteButton";
 
 type CustomerContact = {
-  method: "phone" | "whatsapp" | "telegram" | "email";
+  method: "phone" | "max" | "whatsapp" | "telegram" | "email";
   value: string;
 };
 
@@ -110,7 +110,7 @@ function contactHref(contact: CustomerContact): string {
 
 function ContactIcon({ method }: { method: CustomerContact["method"] }) {
   if (method === "email") return <Mail aria-hidden size={17} />;
-  if (method === "telegram" || method === "whatsapp") return <MessageCircle aria-hidden size={17} />;
+  if (method === "telegram" || method === "whatsapp" || method === "max") return <MessageCircle aria-hidden size={17} />;
   return <Phone aria-hidden size={17} />;
 }
 
@@ -272,10 +272,10 @@ export function AdminCustomerManager() {
                     <a
                       href={contactHref(contact)}
                       key={`${contact.method}-${contact.value}`}
-                      rel={contact.method === "phone" ? undefined : "noreferrer"}
-                      target={contact.method === "phone" ? undefined : "_blank"}
+                      rel={contact.method === "phone" || contact.method === "max" ? undefined : "noreferrer"}
+                      target={contact.method === "phone" || contact.method === "max" ? undefined : "_blank"}
                     >
-                      <ContactIcon method={contact.method} /> {contact.value}
+                      <ContactIcon method={contact.method} /> {contact.method === "max" ? "MAX · " : ""}{contact.value}
                     </a>
                   ))}
                 </div>

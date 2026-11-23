@@ -63,7 +63,7 @@ class KitUpdate(BaseModel):
 
 class KitInquiry(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    contact_method: Literal["phone", "telegram"]
+    contact_method: Literal["phone", "max", "whatsapp"]
     contact: str = Field(min_length=1, max_length=160)
     personal_data_consent: bool
     consent_version: str = Field(max_length=20)

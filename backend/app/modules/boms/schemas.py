@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
 BomStatus = Literal["draft", "submitted", "in_review", "approved", "sent", "archived"]
-ContactMethod = Literal["phone", "whatsapp", "telegram", "email"]
+ContactMethod = Literal["phone", "max", "whatsapp", "telegram", "email"]
 MatchStatus = Literal["exact", "candidate", "nearest", "missing", "manual"]
 
 

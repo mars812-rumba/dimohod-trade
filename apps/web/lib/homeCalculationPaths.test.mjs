@@ -68,6 +68,6 @@ test("quick estimate is first in DOM order and has the primary cost action", () 
   assert.match(choicePage, /className=\{styles\.primaryAction\} href="\/bystryy-raschet">\s*Рассчитать стоимость/);
   assert.match(choicePage, /className=\{styles\.secondaryAction\} href="\/zamery\?edit=1"/);
   assert.match(choicePage, /Быстрый расчёт стоимости/);
-  assert.match(choicePage, /Результат после указания телефона или Telegram/);
+  assert.match(choicePage, /Результат после указания номера телефона/);
   assert.doesNotMatch(choicePage, /Прикинуть бюджет|перенесём автоматически/);
 });

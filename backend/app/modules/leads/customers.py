@@ -12,7 +12,7 @@ from app.modules.leads.notes import read_notes
 
 
 def canonical_contact(method: str, contact: str) -> str:
-    if method in {"phone", "whatsapp"}:
+    if method in {"phone", "max", "whatsapp"}:
         digits = re.sub(r"\D", "", contact)
         if len(digits) == 11 and digits.startswith("8"):
             digits = "7" + digits[1:]

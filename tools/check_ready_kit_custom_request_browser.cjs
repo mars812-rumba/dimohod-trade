@@ -24,7 +24,8 @@ const fs = require("node:fs");
       }).formData();
       assert.equal(form.get("source"), "Готовые комплекты");
       assert.equal(form.get("name"), "Тестовый клиент");
-      assert.equal(form.get("phone"), "+79990000000");
+      assert.equal(form.get("contact"), "+79990000000");
+      assert.equal(form.get("contact_method"), "phone");
       assert.equal(form.get("personal_data_consent"), "true");
       assert.ok(form.get("configuration").includes("/komplekty"));
       assert.equal(form.get("comment"), "Диаметр 150, высота 5 м");
@@ -80,7 +81,7 @@ const fs = require("node:fs");
       }
       await trigger.click();
       await dialog.locator('[name="name"]').fill("Тестовый клиент");
-      await dialog.locator('[name="phone"]').fill("+79990000000");
+      await dialog.locator('[name="contact"]').fill("+79990000000");
       await dialog.locator('[name="comment"]').fill("Диаметр 150, высота 5 м");
       await dialog.locator('[name="personal_data_consent"]').check();
       await dialog.getByRole("button", { name: "Заказать индивидуальный расчёт", exact: true }).click();

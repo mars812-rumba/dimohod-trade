@@ -6,6 +6,7 @@ import { chimneyEstimateLeadPayload, type ChimneyEstimate } from "@/lib/chimneyE
 import { METRIKA_GOALS, reachMetrikaGoal } from "@/lib/metrika";
 import { isQuickEstimateLead, quickEstimateContact, type QuickEstimateLead } from "@/lib/quickEstimateLead";
 import { PersonalDataConsent } from "./PersonalDataConsent";
+import { PhoneContactFields } from "./PhoneContactFields";
 import styles from "./HomeQuickEstimate.module.css";
 
 export function QuickEstimateContactForm({ estimate, source, apiBaseUrl, disabled, onSubmitted }: {
@@ -15,7 +16,6 @@ export function QuickEstimateContactForm({ estimate, source, apiBaseUrl, disable
   disabled: boolean;
   onSubmitted: (lead: QuickEstimateLead) => void;
 }) {
-  const contactId = useId();
   const errorId = useId();
   const mounted = useRef(true);
   const sending = useRef(false);
@@ -30,10 +30,10 @@ export function QuickEstimateContactForm({ estimate, source, apiBaseUrl, disable
     event.preventDefault();
     if (disabled || sending.current) return;
     const data = new FormData(event.currentTarget);
-    const contact = quickEstimateContact(String(data.get("contact") ?? ""));
+    const contact = quickEstimateContact(String(data.get("contact") ?? ""), data.get("contact_method"));
     if (!contact) {
       setStatus("error");
-      setMessage("Укажите номер телефона или Telegram в формате @username.");
+      setMessage("Проверьте номер телефона для выбранного способа связи.");
       return;
     }
     if (data.get("personal_data_consent") !== "true") return;
@@ -72,11 +72,7 @@ export function QuickEstimateContactForm({ estimate, source, apiBaseUrl, disable
   }
 
   return <form className={styles.leadGate} onSubmit={submit} aria-busy={status === "sending"}>
-    <label className={styles.field} htmlFor={contactId}>
-      Телефон или Telegram
-      <input aria-describedby={status === "error" ? errorId : undefined} autoComplete="off"
-        id={contactId} maxLength={160} name="contact" placeholder="+7 999 000-00-00 или @username" required type="text" />
-    </label>
+    <PhoneContactFields describedBy={status === "error" ? errorId : undefined} disabled={status === "sending"} />
     <label aria-hidden="true" className="estimate-lead-honeypot">
       Сайт<input autoComplete="off" name="website" tabIndex={-1} />
     </label>

@@ -50,7 +50,7 @@ export default function CalculationChoicePage() {
               <ul>
                 <li>Предварительная стоимость</li>
                 <li>Состав комплекта и схема</li>
-                <li>Результат после указания телефона или Telegram</li>
+                <li>Результат после указания номера телефона</li>
               </ul>
             </div>
             <Link className={styles.primaryAction} href="/bystryy-raschet">
@@ -85,7 +85,7 @@ export default function CalculationChoicePage() {
         </section>
 
         <p className={styles.footerNote}>
-          Быстрый расчёт покажет предварительную стоимость, состав и схему после указания телефона или Telegram.
+          Быстрый расчёт покажет предварительную стоимость, состав и схему после указания номера телефона.
           Если хотите обсудить заказ, нажмите «Связаться со мной» под сметой.
         </p>
       </div>

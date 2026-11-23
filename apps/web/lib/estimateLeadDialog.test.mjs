@@ -50,17 +50,15 @@ test("a stalled PDF never blocks the contact lead or protected result", () => {
 });
 
 test("the form collects a contact method, consent and a spam honeypot", () => {
-  for (const method of ["phone", "whatsapp", "telegram", "email"]) {
-    assert.match(componentSource, new RegExp(`value="${method}"`));
-  }
+  assert.match(componentSource, /<PhoneContactFields/);
+  assert.match(componentSource, /quickEstimateContact/);
   assert.match(componentSource, /<PersonalDataConsent/);
   assert.match(componentSource, /name="website"/);
 });
 
 test("inline gate collects name and phone before revealing an estimate", () => {
   assert.match(componentSource, /if \(inline\)/);
-  assert.match(componentSource, /name="contact"/);
-  assert.match(componentSource, /name="contact_method" type="hidden" value="phone"/);
+  assert.match(componentSource, /<PhoneContactFields/);
   assert.match(componentSource, /Показать стоимость и состав|предварительную стоимость и состав/);
 });
 

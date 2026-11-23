@@ -64,7 +64,7 @@ ALLOWED_CONTENT_TYPES = {
     "image/png",
     "image/webp",
 }
-CONTACT_METHODS = {"phone", "whatsapp", "telegram", "email"}
+CONTACT_METHODS = {"phone", "max", "whatsapp"}
 LEAD_ID_PATTERN = re.compile(r"^[a-f0-9]{32}$")
 
 
@@ -772,16 +772,11 @@ async def restore_manager_line(
 
 def validate_contact(method: str, contact: str) -> str:
     normalized = contact.strip()
-    if method in {"phone", "whatsapp"}:
+    if method in CONTACT_METHODS:
         if not re.fullmatch(r"[+\d\s()\-]{7,40}", normalized) or not 7 <= len(re.sub(r"\D", "", normalized)) <= 15:
             raise HTTPException(status_code=422, detail="Проверьте номер телефона")
-    elif method == "telegram":
-        if not re.fullmatch(r"@?[A-Za-z0-9_]{5,32}", normalized):
-            raise HTTPException(status_code=422, detail="Укажите Telegram в формате @username")
-    elif method == "email":
-        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", normalized) or len(normalized) > 160:
-            raise HTTPException(status_code=422, detail="Проверьте адрес электронной почты")
-        normalized = normalized.lower()
+    else:
+        raise HTTPException(status_code=422, detail="Выберите телефон, MAX или WhatsApp")
     return normalized
 
 
@@ -816,8 +811,6 @@ async def create_lead(
     contact_only = intent in {"estimate_access", "ready_kit_order", "ready_kit_consultation"}
     if not contact_only and len(name.strip()) < 2:
         raise HTTPException(status_code=422, detail="Укажите имя")
-    if contact_only and normalized_method not in {"phone", "telegram"}:
-        raise HTTPException(status_code=422, detail="Укажите телефон или Telegram")
 
     estimate: LeadEstimate | None = None
     if estimate_json:
@@ -857,7 +850,7 @@ async def create_lead(
         "id": lead_id,
         "created_at": datetime.now(UTC).isoformat(),
         "name": name.strip(),
-        "phone": normalized_contact if normalized_method in {"phone", "whatsapp"} else "",
+        "phone": normalized_contact,
         "contact_method": normalized_method,
         "contact": normalized_contact,
         "comment": comment.strip(),

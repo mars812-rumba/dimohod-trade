@@ -4,6 +4,8 @@ import { FormEvent, useId, useState } from "react";
 import { CheckCircle2, Paperclip, Send } from "lucide-react";
 import { METRIKA_GOALS, reachMetrikaGoal } from "@/lib/metrika";
 import { PersonalDataConsent } from "./PersonalDataConsent";
+import { PhoneContactFields } from "./PhoneContactFields";
+import { quickEstimateContact } from "@/lib/quickEstimateLead";
 
 type LeadFormProps = {
   source: string;
@@ -26,7 +28,7 @@ export function LeadForm({
   commentPlaceholder = "Модель печи, размеры, удобное время для звонка",
   attachmentLabel = "Фото или план",
   submitLabel = "Оставить заявку",
-  successMessage = "Менеджер перезвонит по указанному телефону и уточнит данные для подбора.",
+  successMessage = "Менеджер свяжется с вами выбранным способом и уточнит данные для подбора.",
 }: LeadFormProps) {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -40,6 +42,14 @@ export function LeadForm({
     setMessage("");
     const form = event.currentTarget;
     const data = new FormData(form);
+    const contact = quickEstimateContact(String(data.get("contact") ?? ""), data.get("contact_method"));
+    if (!contact) {
+      setStatus("error");
+      setMessage("Проверьте номер телефона для выбранного способа связи.");
+      return;
+    }
+    data.set("contact", contact.value);
+    data.set("contact_method", contact.method);
     data.set("source", source);
     data.set(
       "configuration",
@@ -82,16 +92,11 @@ export function LeadForm({
       onSubmit={submit}
     >
       {title ? <h3>{title}</h3> : null}
-      <div className="lead-form-grid">
-        <label>
-          <span>Имя</span>
-          <input name="name" autoComplete="name" minLength={2} maxLength={100} required />
-        </label>
-        <label>
-          <span>Телефон</span>
-          <input name="phone" type="tel" autoComplete="tel" placeholder="+7 999 000-00-00" required />
-        </label>
-      </div>
+      <label>
+        <span>Имя</span>
+        <input name="name" autoComplete="name" minLength={2} maxLength={100} required />
+      </label>
+      <PhoneContactFields disabled={status === "sending"} />
       <label>
         <span>Комментарий — необязательно</span>
         <textarea

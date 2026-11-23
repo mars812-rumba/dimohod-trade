@@ -2227,7 +2227,8 @@
   margin-top: 0;
 }
 
-.contactCard :global(.lead-form) { grid-column: 3; grid-row: 1 / span 2; }
+.contactCard :global(.lead-form) { grid-column: 3; grid-row: 1 / span 2; color: #fff; }
+.contactCard :global(.lead-form-error) { color: #ffbca8; }
 .contactCard :global(.lead-form-note),
 .contactCard :global(.personal-data-consent label) { color: #c4d4d8; }
 .contactCard :global(.personal-data-consent a) { color: #fff; }
