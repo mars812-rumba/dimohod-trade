@@ -14,6 +14,8 @@ import {
 import { CatalogVariantFilters } from "@/components/CatalogVariantFilters";
 import { CatalogPipeSelectionHelp } from "@/components/CatalogPipeSelectionHelp";
 import { CatalogSandwichOffers } from "@/components/CatalogSandwichOffers";
+import { CatalogSingleWallOffers } from "@/components/CatalogSingleWallOffers";
+import { splitSingleWallDescription } from "@/lib/catalogSingleWallOffers";
 import {
   catalogCategoryPath,
   catalogFilteredHeading,
@@ -259,7 +261,11 @@ export async function CatalogCategoryView({
     outer_pipe: appliedOuterPipe,
   });
   const showSandwichContent = category.slug === "sendvich-truby" && !hasQuery && !seoPage;
-  const intro = seoPage?.intro ?? category.description;
+  const showSingleWallContent = category.slug === "odnokonturnye-truby" && !seoPage;
+  const description = seoPage?.intro ?? category.description;
+  const { intro, remainder: singleWallDescription } = showSingleWallContent
+    ? splitSingleWallDescription(description)
+    : { intro: description, remainder: "" };
 
   return (
     <>
@@ -292,6 +298,8 @@ export async function CatalogCategoryView({
           {intro ? (
             <p className="lead catalog-category-description">{intro}</p>
           ) : null}
+
+          {showSingleWallContent ? <CatalogSingleWallOffers /> : null}
 
           {relatedSeoPages.length ? (
             <nav className="catalog-seo-links" aria-label="Популярные подборки">
@@ -389,6 +397,9 @@ export async function CatalogCategoryView({
               </Link>
             ) : <span />}
           </nav>
+          {singleWallDescription ? (
+            <p className="catalog-category-description" data-single-wall-description>{singleWallDescription}</p>
+          ) : null}
           {showSandwichContent ? (
             <section className="catalog-selection-help" aria-labelledby="sandwich-selection-title">
               <h2 id="sandwich-selection-title">Что проверить перед покупкой сэндвич-трубы</h2>

@@ -1,0 +1,21 @@
+.section { margin: 24px 0 28px; color: var(--text, #17262b); }
+.section h2 { margin: 0 0 8px; font-size: 24px; line-height: 1.25; }
+.parameters { margin: 0 0 16px; font-size: 15px; line-height: 1.5; }
+.table { width: 100%; table-layout: fixed; border-collapse: collapse; border: 1px solid var(--border, #d7dee0); background: #fff; font-size: 15px; line-height: 1.45; }
+.diameterColumn { width: 28%; }
+.priceColumn { width: 34%; }
+.linkColumn { width: 38%; }
+.table th, .table td { padding: 8px 12px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--border, #d7dee0); }
+.table thead th { padding-top: 12px; padding-bottom: 12px; background: var(--surface, #f3f6f6); font-size: 14px; font-weight: 600; }
+.table tbody th { white-space: nowrap; }
+.table td:last-child { text-align: right; }
+.price { font-variant-numeric: tabular-nums; font-weight: 700; }
+.table a { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent-strong, #bd3d16); font-weight: 600; white-space: nowrap; text-decoration: underline; text-underline-offset: 4px; }
+.table a:hover { text-decoration-thickness: 2px; }
+.table a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+@media (max-width: 600px) {
+  .section h2 { font-size: 22px; }
+  .table { font-size: 14px; }
+  .table th, .table td { padding-left: 8px; padding-right: 8px; }
+  .table thead th { font-size: 13px; }
+}

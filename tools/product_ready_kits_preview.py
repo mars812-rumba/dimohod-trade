@@ -24,7 +24,7 @@ def main():
                 with lock:
                     body = json.dumps({"isolated_public_product_preview": True, "requests": dict(requests)}).encode()
                 status, content_type = 200, "application/json"
-            elif path == "/api/v1/ready-kits" or path.startswith("/api/v1/ready-kits/") or path == "/api/v1/catalog/tree" or path.startswith("/api/v1/products/") or path.startswith("/media/"):
+            elif path in {"/api/v1/ready-kits", "/api/v1/catalog/tree", "/api/v1/products"} or path.startswith("/api/v1/ready-kits/") or path.startswith("/api/v1/products/") or path.startswith("/media/"):
                 with lock:
                     requests[path] += 1
                     cached = cache.get(self.path)
