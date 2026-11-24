@@ -293,7 +293,7 @@ export const guideArticles: GuideArticle[] = [
   {
     slug: "komplekt-dymohoda-dlya-pechi",
     publishedAt: "2026-08-22T12:11:55Z",
-    modifiedAt: "2026-11-24T15:11:27Z",
+    modifiedAt: "2026-11-24T15:21:09Z",
     title: "Комплект дымохода для печи: что входит и что проверить перед заказом",
     shortTitle: "Комплект для печи",
     description:

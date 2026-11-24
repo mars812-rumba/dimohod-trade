@@ -1,12 +1,31 @@
 .project { margin: 32px 0; }
 .project h3 { font-size: 24px; line-height: 1.2; margin: 0 0 16px; }
-.table { width: 100%; border-collapse: collapse; font-size: 16px; line-height: 1.5; font-variant-numeric: tabular-nums; }
-.table caption { text-align: left; font-weight: 700; margin-bottom: 12px; }
-.table th, .table td { padding: 12px 0; border-bottom: 1px solid var(--guide-line); text-align: left; vertical-align: top; }
+.tableWrap { border: 1px solid var(--guide-line); border-radius: 12px; overflow: hidden; background: #fff; }
+.table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 16px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.table caption { padding: 16px; text-align: left; font-weight: 700; }
+.table th, .table td { padding: 14px 16px; border-bottom: 1px solid var(--guide-line); text-align: left; vertical-align: top; }
+.table thead { background: #e8eeee; }
+.table th:last-child, .table td:last-child { width: 132px; text-align: right; }
 .table tbody th { font-weight: 400; }
-.table th:first-child { padding-right: 20px; }
+.table tbody tr:nth-child(even) { background: #f4f6f5; }
+.table tbody tr:hover { background: #fff0e8; }
 .table td { white-space: nowrap; text-align: right; }
-.table tfoot { font-weight: 700; }
+.table tfoot { font-weight: 700; background: #ffede4; }
+.table tfoot th, .table tfoot td { border-bottom: 0; }
+.table tfoot td { color: #a83b1c; font-size: 18px; }
+.comparisonTitle { margin: 32px 0 16px; font-size: 24px; line-height: 1.3; }
+.actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 28px; }
+.action { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 16px; border: 1px solid; border-radius: 10px; font-size: 16px; font-weight: 650; line-height: 1.4; transition: background-color 160ms ease, border-color 160ms ease; }
+.action svg, .photosAction svg { flex-shrink: 0; }
+.action span, .photosAction span { flex: 1; }
+.catalogAction { color: #a83b1c; background: #fff0e8; border-color: #d27152; }
+.catalogAction:hover { background: #ffe3d5; border-color: #a83b1c; }
+.calculatorAction { color: #fff; background: #bf431e; border-color: #bf431e; }
+.calculatorAction:hover { background: #a93616; border-color: #a93616; }
+.photosAction { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 8px 0; color: #a83b1c; font-size: 15px; line-height: 1.5; }
+.photosAction span { text-decoration: underline; text-underline-offset: 3px; }
+.photosAction:hover { color: #832b14; }
+.action:focus-visible, .photosAction:focus-visible { outline: 3px solid var(--guide-accent); outline-offset: 3px; }
 .gallery { margin-top: 24px; }
 .gallery .galleryLabel { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
 .gallery .photoGrid {
@@ -26,5 +45,12 @@
 .photoGrid > button:first-child img { object-fit: contain; object-position: center; }
 @media (max-width: 620px) {
   .gallery .photoGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .actions { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: 520px) { .table th:first-child { padding-right: 12px; } }
+@media (max-width: 520px) {
+  .table caption { padding: 14px 12px; }
+  .table th, .table td { padding: 12px; }
+  .table th:last-child, .table td:last-child { width: 116px; }
+  .table tfoot td { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { .action { transition: none; } }
