@@ -24,6 +24,6 @@ test("cost explanation stays scoped to the stove article with pickup and accessi
   for (const text of ['scope="row"', 'scope="col"']) assert.ok(component.includes(text), text);
   assert.ok(stoveProjectCosts.find(project => project.id === 11).context.includes("самовывозом"));
   const actions = read("../components/GuideStoveActions.tsx");
-  for (const href of ["/catalog/sendvich-truby", "/raschet", "/komplekty"]) assert.ok(actions.includes(href), href);
+  for (const href of ["/catalog/sendvich-truby", "/komplekty"]) assert.ok(actions.includes(href), href);
   assert.doesNotMatch(component, /use client|<form|AISI/);
 });

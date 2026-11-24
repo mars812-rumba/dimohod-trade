@@ -26,6 +26,9 @@ type GuideArticlePageProps = {
 
 export function GuideArticlePage({ article }: GuideArticlePageProps) {
   const assetBasePath = process.env.NEXT_BASE_PATH ?? "";
+  const isStoveGuide = article.slug === "komplekt-dymohoda-dlya-pechi";
+  const calculationHref = isStoveGuide ? "/bystryy-raschet" : guideConfiguratorHref;
+  const calculationClassName = `${styles.primaryButton}${isStoveGuide ? ` ${styles.costButton}` : ""}`;
   const related = article.relatedSlugs
     .map((slug) => guideArticleBySlug[slug])
     .filter(Boolean);
@@ -53,8 +56,8 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                 <span><Clock size={17} aria-hidden /> {article.readingTime}</span>
                 <span>Обновлено <time dateTime={article.modifiedAt}>{guideDate(article.modifiedAt)}</time></span>
               </div>
-              <Link className={styles.primaryButton} href={guideConfiguratorHref}>
-                Рассчитать свой комплект <ArrowRight size={18} aria-hidden />
+              <Link className={calculationClassName} href={calculationHref}>
+                {isStoveGuide ? "Рассчитать стоимость" : "Рассчитать свой комплект"} <ArrowRight size={18} aria-hidden />
               </Link>
             </div>
             <figure
@@ -174,17 +177,17 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                   compact
                 />
               </details>
-              <Link className={styles.selectionCalculation} href={guideConfiguratorHref}>Рассчитать самостоятельно</Link>
+              {!isStoveGuide ? <Link className={styles.selectionCalculation} href={guideConfiguratorHref}>Рассчитать самостоятельно</Link> : null}
             </section>
           </div>
 
           <aside className={styles.sidebar} aria-label="Действия со статьёй">
             <div className={styles.sidebarCard}>
               <p className={styles.sidebarLabel}>Перейти от статьи к своему объекту</p>
-              <h2>Соберите маршрут по реальным размерам</h2>
-              <p>Можно сохранить известные параметры, а неизвестные отметить для уточнения.</p>
-              <Link className={styles.primaryButton} href={guideConfiguratorHref}>
-                Открыть конфигуратор <ArrowRight size={18} aria-hidden />
+              <h2>{isStoveGuide ? "Рассчитайте стоимость комплекта" : "Соберите маршрут по реальным размерам"}</h2>
+              <p>{isStoveGuide ? "Выберите маршрут и параметры дымохода. Калькулятор покажет предварительную стоимость комплекта." : "Можно сохранить известные параметры, а неизвестные отметить для уточнения."}</p>
+              <Link className={calculationClassName} href={calculationHref}>
+                {isStoveGuide ? "Рассчитать стоимость" : "Открыть конфигуратор"} <ArrowRight size={18} aria-hidden />
               </Link>
               <Link className={styles.secondaryLink} href="/solutions">
                 Сначала выбрать сценарий

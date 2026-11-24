@@ -158,6 +158,9 @@
 .scenarioLink:hover { color: #832b14; }
 .scenarioLink:focus-visible { outline: 3px solid var(--guide-accent); outline-offset: 3px; }
 .selectionRequest { margin: 20px 0 16px; }
+.costButton { background: #bd3d16; }
+.costButton:focus-visible { outline-color: #bd3d16; }
+.sidebarCard .costButton:focus-visible { outline-color: #f5b49e; }
 .selectionRequest summary { cursor: pointer; list-style: none; }
 .selectionRequest summary::-webkit-details-marker { display: none; }
 .selectionRequest summary:focus-visible { outline: 3px solid var(--guide-accent); outline-offset: 3px; }

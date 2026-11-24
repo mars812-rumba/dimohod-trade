@@ -1,19 +1,24 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Calculator, Package } from "lucide-react";
+import { ArrowRight, Package } from "lucide-react";
 import styles from "./GuideStoveActions.module.css";
 
 export function GuideStoveActions() {
   return (
     <div className={styles.nextStep}>
-      <nav className={styles.actions} aria-label="Готовые комплекты и расчёт для печи">
+      <Image
+        className={styles.kitsImage}
+        src={`${process.env.NEXT_BASE_PATH ?? ""}/images/guides/stove-ready-kits.webp`}
+        alt="Иллюстрация маршрутов дымохода через стену и через кровлю"
+        width={1280}
+        height={853}
+        sizes="(max-width: 860px) 100vw, 760px"
+        quality={82}
+      />
+      <nav className={styles.actions} aria-label="Готовые комплекты для печи">
         <Link className={`${styles.action} ${styles.kitsAction}`} href="/komplekty">
           <Package aria-hidden size={22} />
           <span>Готовые комплекты: состав и цены</span>
-          <ArrowRight aria-hidden size={20} />
-        </Link>
-        <Link className={`${styles.action} ${styles.calculatorAction}`} href="/raschet">
-          <Calculator aria-hidden size={22} />
-          <span>Рассчитать свой комплект</span>
           <ArrowRight aria-hidden size={20} />
         </Link>
       </nav>
