@@ -114,7 +114,7 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                 <h2>{section.title}</h2>
                 {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                 {section.items?.length ? (
-                  <ul>
+                  <ul className={styles.articleList}>
                     {section.items.map((item) => <li key={item}>{item}</li>)}
                   </ul>
                 ) : null}

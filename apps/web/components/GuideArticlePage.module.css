@@ -7,6 +7,20 @@
   background: #f6f5f1;
 }
 
+.articleList {
+  display: grid;
+  gap: 14px;
+  margin: 24px 0 0;
+  padding-left: 24px;
+  list-style: disc;
+  color: var(--guide-ink);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.articleList li { padding-left: 4px; }
+.articleList li::marker { color: var(--guide-accent); }
+
 .shell {
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;

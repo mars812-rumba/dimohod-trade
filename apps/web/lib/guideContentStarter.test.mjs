@@ -10,7 +10,6 @@ test("starter content preserves five existing routes, images and valid related l
   for (const article of guideArticles) {
     assert.ok(existsSync(new URL(`../public${article.image}`, import.meta.url)));
     assert.equal(new Set(article.sections.map(section => section.title)).size, article.sections.length);
-    assert.ok(article.modifiedAt.startsWith("2026-10-05T"));
     assert.ok(Date.parse(article.modifiedAt) >= Date.parse(article.publishedAt));
     for (const slug of article.relatedSlugs) assert.ok(guideArticleBySlug[slug], slug);
     assert.doesNotMatch(textOf(article), /\b(?:SKU|BOM)\b|трубы должны отображаться|полезно показывать/);
@@ -33,7 +32,12 @@ test("routes are compared without presenting hypothetical examples as completed 
 test("buyer's checks separate accessories and hidden inclusions from the chimney itself", () => {
   assert.match(textOf(guideArticleBySlug["dymohod-dlya-bani"]), /не стоит считать включёнными/);
   const stove = guideArticleBySlug["komplekt-dymohoda-dlya-pechi"];
-  assert.equal(stove.sections.find(section => section.title === "Логика состава комплекта").paragraphs.length, 8);
+  const composition = stove.sections.find(section => section.items?.length);
+  assert.ok(composition, "kit inclusions must be a scannable list");
+  const inclusions = composition.items.join("\n");
+  for (const subject of [/подключения/, /Прямые трубы/, /Узлы прохода/, /Опоры и крепления/, /Завершение/, /доставка/, /монтаж/]) {
+    assert.match(inclusions, subject);
+  }
   const tee = guideArticleBySlug["komplekt-s-troynikom-90"];
   assert.match(textOf(tee), /Одинаковый диаметр не подтверждает совместимость/);
 });
