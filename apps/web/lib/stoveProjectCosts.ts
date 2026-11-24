@@ -10,6 +10,11 @@ export const stoveProjectCosts = [
       { label: "Демонтаж старого дымохода", amount: 6000 },
     ],
     total: 96000,
+    photos: [
+      { src: "/images/works/object-11/03.webp", alt: "Печь и дымоход в доме в СНТ «Звезда»" },
+      { src: "/images/works/object-11/02.webp", alt: "Дымоход на чердаке дома в СНТ «Звезда»" },
+      { src: "/images/works/object-11/01.webp", alt: "Дымоход над кровлей дома в СНТ «Звезда»" },
+    ],
   },
   {
     id: 10,
@@ -24,5 +29,12 @@ export const stoveProjectCosts = [
       { label: "Доставка печи и дымохода, разгрузка", amount: 5500 },
     ],
     total: 213880,
+    photos: [
+      { src: "/images/guides/stove-lampovo/01.webp", alt: "Печь с чёрным дымоходом на первом этаже дома в Лампово" },
+      { src: "/images/guides/stove-lampovo/02.webp", alt: "Металлическая труба на втором этаже дома в Лампово" },
+      { src: "/images/guides/stove-lampovo/03.webp", alt: "Общий вид дома в Лампово с дымоходом над кровлей" },
+      { src: "/images/guides/stove-lampovo/04.webp", alt: "Наружный участок дымохода и проход через кровлю в Лампово" },
+      { src: "/images/guides/stove-lampovo/05.webp", alt: "Труба в проёме деревянного перекрытия дома в Лампово" },
+    ],
   },
 ] as const;

@@ -11,15 +11,17 @@ type GalleryImage = {
 };
 
 type SolutionHouseGalleryProps = {
-  images: GalleryImage[];
+  images: readonly GalleryImage[];
   label?: string;
   equalItems?: boolean;
+  className?: string;
 };
 
 export function SolutionHouseGallery({
   images,
   label = "Фотографии дымохода в доме",
   equalItems = false,
+  className,
 }: SolutionHouseGalleryProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -48,7 +50,7 @@ export function SolutionHouseGallery({
 
   return (
     <>
-      <div className={styles.houseGallery} aria-label={label}>
+      <div className={[styles.houseGallery, className].filter(Boolean).join(" ")} aria-label={label}>
         {images.map((image, index) => (
           <button
             aria-label={`Увеличить фотографию ${index + 1} из ${images.length}`}

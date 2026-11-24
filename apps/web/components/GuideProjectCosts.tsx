@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { stoveProjectCosts } from "@/lib/stoveProjectCosts";
+import { SolutionHouseGallery } from "./SolutionHouseGallery";
 import styles from "./GuideArticlePage.module.css";
 import costStyles from "./GuideProjectCosts.module.css";
 
@@ -20,6 +21,15 @@ export function GuideProjectCosts() {
             <tbody>{project.lines.map(line => <tr key={line.label}><th scope="row">{line.label}</th><td>{money(line.amount)}</td></tr>)}</tbody>
             <tfoot><tr><th scope="row">Итого по указанным позициям</th><td>{money(project.total)}</td></tr></tfoot>
           </table>
+          <div className={costStyles.gallery}>
+            <p className={costStyles.galleryLabel}>Фотографии объекта · {project.photos.length} фото</p>
+            <SolutionHouseGallery
+              images={project.photos}
+              label={`Фотографии объекта: ${project.name}`}
+              equalItems
+              className={costStyles.photoGrid}
+            />
+          </div>
         </section>
       ))}
       <p>В СНТ «Звезда» комплект стоил 55 000 ₽, а итог с монтажом и демонтажом — 96 000 ₽. В Лампово комплект с покраской — 94 380 ₽, а итог с печью и остальными указанными позициями — 213 880 ₽.</p>
