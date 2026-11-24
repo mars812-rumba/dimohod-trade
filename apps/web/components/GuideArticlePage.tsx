@@ -17,6 +17,7 @@ import styles from "./GuideArticlePage.module.css";
 import { guideDate } from "@/lib/guidePresentation";
 import { GuideEstimateExample } from "./GuideEstimateExample";
 import { GuideProjectCosts } from "./GuideProjectCosts";
+import { GuideStoveActions } from "./GuideStoveActions";
 import { LeadForm } from "./LeadForm";
 
 type GuideArticlePageProps = {
@@ -80,6 +81,12 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
               <p>{article.quickAnswer}</p>
             </section>
 
+            {article.slug === "komplekt-dymohoda-dlya-pechi" ? (
+              <Link className={styles.scenarioLink} href="/solutions/pech">
+                Подобрать дымоход для своей печи <ArrowRight size={18} aria-hidden />
+              </Link>
+            ) : null}
+
             {article.inlineImages?.length ? (
               <div className={styles.articlePhotos} aria-label="Фотографии с объекта">
                 {article.inlineImages.map((image) => (
@@ -110,7 +117,7 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
             {article.slug === "komplekt-dymohoda-dlya-pechi" ? <GuideProjectCosts /> : null}
 
             {article.sections.map((section) => (
-              <section className={styles.section} key={section.title}>
+              <section className={styles.section} id={section.id} key={section.title}>
                 <h2>{section.title}</h2>
                 {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                 {section.items?.length ? (
@@ -118,6 +125,7 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                     {section.items.map((item) => <li key={item}>{item}</li>)}
                   </ul>
                 ) : null}
+                {article.slug === "komplekt-dymohoda-dlya-pechi" && section.id === "stove-kit-composition" ? <GuideStoveActions /> : null}
               </section>
             ))}
 

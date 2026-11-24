@@ -5,6 +5,7 @@ export type GuideSource = {
 };
 
 export type GuideSection = {
+  id?: string;
   title: string;
   paragraphs: string[];
   items?: string[];
@@ -293,7 +294,7 @@ export const guideArticles: GuideArticle[] = [
   {
     slug: "komplekt-dymohoda-dlya-pechi",
     publishedAt: "2026-08-22T12:11:55Z",
-    modifiedAt: "2026-11-24T15:21:09Z",
+    modifiedAt: "2026-11-24T16:08:34Z",
     title: "Комплект дымохода для печи: что входит и что проверить перед заказом",
     shortTitle: "Комплект для печи",
     description:
@@ -325,6 +326,7 @@ export const guideArticles: GuideArticle[] = [
         ],
       },
       {
+        id: "stove-kit-composition",
         title: "Что входит в комплект",
         paragraphs: [
           "Попросите пояснить, для чего нужна каждая позиция в смете и где она показана на схеме. Сверьте размеры на схеме с выбранными деталями. Если маршрут изменился, состав нужно пересчитать, даже когда печь остаётся прежней.",

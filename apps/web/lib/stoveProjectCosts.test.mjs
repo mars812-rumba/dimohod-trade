@@ -21,6 +21,8 @@ test("cost explanation is scoped to the existing stove article and preserves unc
   const view = read("../components/GuideArticlePage.tsx");
   assert.match(view, /article\.slug === "komplekt-dymohoda-dlya-pechi" \? <GuideProjectCosts/);
   const component = read("../components/GuideProjectCosts.tsx");
-  for (const text of ["не действующий тариф", "Доставка и расходники", "не указаны", 'scope="row"', 'scope="col"', "/catalog/sendvich-truby", "/raschet"]) assert.ok(component.includes(text), text);
+  for (const text of ["не действующий тариф", "Доставка и расходники", "не указаны", 'scope="row"', 'scope="col"']) assert.ok(component.includes(text), text);
+  const actions = read("../components/GuideStoveActions.tsx");
+  for (const href of ["/catalog/sendvich-truby", "/raschet", "/komplekty"]) assert.ok(actions.includes(href), href);
   assert.doesNotMatch(component, /use client|<form|AISI/);
 });

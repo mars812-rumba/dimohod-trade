@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Calculator, Images, Package } from "lucide-react";
+import { ArrowUpRight, Images } from "lucide-react";
 import { stoveProjectCosts } from "@/lib/stoveProjectCosts";
 import { SolutionHouseGallery } from "./SolutionHouseGallery";
 import styles from "./GuideArticlePage.module.css";
@@ -45,23 +45,11 @@ export function GuideProjectCosts() {
         <li>Отдельно сравните монтаж, демонтаж, доставку, расходники и дополнительные работы. Не принимайте отсутствующую строку за нулевую стоимость.</li>
         <li>Уточните, какие позиции включены в итог и какие оплачиваются отдельно.</li>
       </ul>
-      <nav className={costStyles.actions} aria-label="Каталог и расчёт комплекта">
-        <Link className={`${costStyles.action} ${costStyles.catalogAction}`} href="/catalog/sendvich-truby">
-          <Package aria-hidden size={22} />
-          <span>Выбрать сэндвич-трубы в каталоге</span>
-          <ArrowRight aria-hidden size={20} />
-        </Link>
-        <Link className={`${costStyles.action} ${costStyles.calculatorAction}`} href="/raschet">
-          <Calculator aria-hidden size={22} />
-          <span>Рассчитать свой комплект</span>
-          <ArrowRight aria-hidden size={20} />
-        </Link>
-        <Link className={costStyles.photosAction} href="/solutions/dom#works-title">
-          <Images aria-hidden size={20} />
-          <span>Фотографии объектов на странице «Дымоход для дома»</span>
-          <ArrowUpRight aria-hidden size={18} />
-        </Link>
-      </nav>
+      <Link className={costStyles.photosAction} href="/solutions/dom#works-title">
+        <Images aria-hidden size={20} />
+        <span>Фотографии объектов на странице «Дымоход для дома»</span>
+        <ArrowUpRight aria-hidden size={18} />
+      </Link>
     </section>
   );
 }

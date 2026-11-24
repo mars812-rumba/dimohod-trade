@@ -240,6 +240,9 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
               <article>
                 <h3>Проверка состава перед заказом</h3>
                 <p>Калькулятор формирует предварительный состав по введённым параметрам. Перед оформлением специалист сверяет печь, размеры объекта, найденные товары и позиции, которые требуют уточнения.</p>
+                <div className={styles.inlineLinks}>
+                  <Link href="/guides/komplekt-dymohoda-dlya-pechi">Что входит в комплект дымохода для печи <ArrowRight aria-hidden size={15} /></Link>
+                </div>
               </article>
             </div>
             <div className={styles.measurementCallout}>

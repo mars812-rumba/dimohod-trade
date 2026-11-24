@@ -153,6 +153,10 @@
 }
 
 .content { min-width: 0; }
+.scenarioLink { display: inline-flex; align-items: center; gap: 10px; margin-top: 20px; padding: 8px 0; color: #a83b1c; font-size: 16px; font-weight: 650; line-height: 1.5; text-decoration: underline; text-underline-offset: 3px; }
+.scenarioLink svg { flex-shrink: 0; }
+.scenarioLink:hover { color: #832b14; }
+.scenarioLink:focus-visible { outline: 3px solid var(--guide-accent); outline-offset: 3px; }
 .selectionRequest { margin: 20px 0 16px; }
 .selectionRequest summary { cursor: pointer; list-style: none; }
 .selectionRequest summary::-webkit-details-marker { display: none; }
