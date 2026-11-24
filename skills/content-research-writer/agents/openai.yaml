@@ -1,0 +1,4 @@
+interface:
+  display_name: "Content Research Writer"
+  short_description: "Источники, план и черновики статей Дымоход Трейд"
+  default_prompt: "Используй $content-research-writer и ToV Дымоход Трейд: собери проверенные источники и план статьи, затем подготовь понятный черновик."
