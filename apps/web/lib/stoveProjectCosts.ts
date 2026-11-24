@@ -14,6 +14,7 @@ export const stoveProjectCosts = [
       { src: "/images/works/object-11/03.webp", alt: "Печь и дымоход в доме в СНТ «Звезда»" },
       { src: "/images/works/object-11/02.webp", alt: "Дымоход на чердаке дома в СНТ «Звезда»" },
       { src: "/images/works/object-11/01.webp", alt: "Дымоход над кровлей дома в СНТ «Звезда»" },
+      { src: "/images/works/object-11/04.webp", alt: "Труба в проёме деревянного перекрытия дома в СНТ «Звезда»" },
     ],
   },
   {
@@ -34,7 +35,6 @@ export const stoveProjectCosts = [
       { src: "/images/guides/stove-lampovo/02.webp", alt: "Металлическая труба на втором этаже дома в Лампово" },
       { src: "/images/guides/stove-lampovo/03.webp", alt: "Общий вид дома в Лампово с дымоходом над кровлей" },
       { src: "/images/guides/stove-lampovo/04.webp", alt: "Наружный участок дымохода и проход через кровлю в Лампово" },
-      { src: "/images/guides/stove-lampovo/05.webp", alt: "Труба в проёме деревянного перекрытия дома в Лампово" },
     ],
   },
 ] as const;
