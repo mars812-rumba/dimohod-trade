@@ -125,3 +125,22 @@ def test_remote_failure_is_short_and_does_not_dump_the_ssh_script(monkeypatch):
         remote.run(['ssh','private-script-must-not-be-printed'])
     assert 'ssh failed (exit 1)' in str(error.value)
     assert 'private-script' not in str(error.value)
+
+
+def test_monitor_refresh_cannot_undo_successful_application_release(tmp_path, monkeypatch, capsys):
+    remote = load('native_remote_monitor_test', 'native-remote.py')
+    env = tmp_path / 'bot.env'
+    env.touch()
+    monkeypatch.setattr(remote, 'BOT_ENV', env)
+    calls = []
+    def failed_install(args, **kwargs):
+        calls.append(args)
+        assert kwargs == {'check': False, 'timeout': 150}
+        return SimpleNamespace(returncode=1)
+    monkeypatch.setattr(remote.subprocess, 'run', failed_install)
+    remote.refresh_monitor()
+    assert calls[0][:2] == ['systemd-run', '--unit=dimohod-monitor-install']
+    assert 'monitor update failed' in capsys.readouterr().out
+    env.unlink()
+    remote.refresh_monitor()
+    assert len(calls) == 1

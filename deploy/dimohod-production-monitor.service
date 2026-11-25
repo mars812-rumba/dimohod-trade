@@ -1,0 +1,19 @@
+[Unit]
+Description=Independent Dimohod production disk, catalog and order-form checks
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/home/codex-bot/production-monitor/current
+EnvironmentFile=/home/codex-bot/.env
+ExecStart=/usr/bin/python3 /home/codex-bot/production-monitor/current/tools/production_monitor.py
+TimeoutStartSec=120
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/codex-bot/.codex-telegram
+

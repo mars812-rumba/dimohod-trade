@@ -15,6 +15,9 @@ import time
 from datetime import datetime, timezone
 from urllib.request import urlopen
 
+sys.path.insert(0, str(Path(__file__).parent / 'native-runtime'))
+from release_maintenance import ensure_space, maintain
+
 SOURCE = Path(__file__).resolve().parents[1]
 BASE = Path('/home/dimohod-production')
 RUNTIME = Path('/home/dimohod-production-runtime')
@@ -97,6 +100,9 @@ def main():
     changed += subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard', '-z'], cwd=SOURCE).decode().split('\0')
     if any(path and not is_protected_commit_path(path) for path in changed):
         raise SystemExit('Commit all source changes first: /push or /ship.')
+    # Under the deploy lock, before allocating a new build or stopping services.
+    maintain(BASE, RUNTIME)
+    ensure_space(BASE, minimum_gib=8)
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=SOURCE, text=True).strip()
     from dotenv import dotenv_values
     envfile = RUNTIME/'private/production.env'
@@ -128,7 +134,9 @@ def main():
     cache = release/'apps/web/.next/cache'
     cache.mkdir(exist_ok=True)
     run('chown', '-R', 'dimohod:dimohod', str(release/'apps/web/.next'))
+    ensure_space(BASE, minimum_gib=4)
     run('systemctl', 'start', 'dimohod-backup.service')
+    ensure_space(BASE, minimum_gib=2)
     units = {}
     for name in ['dimohod-api.service', 'dimohod-web.service']:
         path = Path('/etc/systemd/system')/name
@@ -174,6 +182,12 @@ def main():
         raise
     record = {'commit': commit, 'release': str(release), 'previous_release': str(previous), 'deployed_at_utc': stamp}
     (RUNTIME/'private/latest-release.json').write_text(json.dumps(record, indent=2)+'\n')
+    # Only prune after readiness + backup, retaining current, rollback and five newest.
+    # A maintenance error must not turn a successful switch into a failed deployment.
+    try:
+        maintain(BASE, RUNTIME, prune=True)
+    except Exception as error:
+        print(f'Release cleanup skipped: {type(error).__name__}: {error}', file=sys.stderr)
     print(f'Production ready: https://dimohod-trade.pro ({commit[:12]})')
 
 if __name__ == '__main__':

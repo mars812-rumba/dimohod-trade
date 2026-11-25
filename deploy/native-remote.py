@@ -14,6 +14,7 @@ from pathlib import Path
 
 RUNTIME = Path('/home/dimohod-production-runtime')
 SOURCE = Path('/home/dimohod-recovery')
+BOT_ENV = Path('/home/codex-bot/.env')
 
 
 def run(args, **kwargs):
@@ -23,6 +24,22 @@ def run(args, **kwargs):
         # stdout/stderr already contain the remote readiness diagnostics. Avoid
         # burying them under a traceback containing the entire quoted SSH script.
         raise SystemExit(f'{args[0]} failed (exit {exc.returncode}); see command output above.') from None
+
+
+def refresh_monitor():
+    """Update the independent snapshot after a successful bot-driven release."""
+    if not BOT_ENV.is_file():
+        return
+    try:
+        result = subprocess.run(
+            ['systemd-run', '--unit=dimohod-monitor-install', '--wait', '--collect',
+             '/usr/bin/python3', str(SOURCE / 'deploy/install-production-monitor.py')],
+            check=False, timeout=150,
+        )
+        if result.returncode:
+            print('Production monitor update failed; inspect dimohod-monitor-install.service.')
+    except (OSError, subprocess.TimeoutExpired) as error:
+        print('Production monitor update failed: ' + type(error).__name__)
 
 
 def main():
@@ -99,6 +116,7 @@ if bundle != '-':
         command = shlex.join(['python3', '-c', script, remote_bundle, commit])
         run([*ssh, config['host'], command])
     print(f'Production deployed on {config["host"]}: {commit[:12]}')
+    refresh_monitor()
 
 
 if __name__ == '__main__':
