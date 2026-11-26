@@ -1172,6 +1172,9 @@ def test_seo_prompt_requires_natural_language_and_skips_empty_sections() -> None
     assert "не используй «данное изделие»" in prompt
     assert "пропускай раздел без подтверждённых фактов" in prompt
     assert "не более одного раза" in prompt
+    assert "покупку конкретного изделия" in prompt
+    assert "понятное предложение оформить заказ" in prompt
+    assert "без обещаний наличия, скидок или доставки" in prompt
 
 
 def test_compatible_tubes_may_have_different_lengths_but_not_different_materials() -> None:

@@ -8,7 +8,7 @@ import { installationTerms } from "@/lib/installationTerms";
 import styles from "../contacts/page.module.css";
 
 const title = "Монтаж дымоходов в СПб и Ленобласти — Дымоход Трейд";
-const description = "Подбор комплекта и монтаж дымохода в Санкт-Петербурге и области. Условия платного замера, состав работ и реальные объекты. Окончательная стоимость после замера.";
+const description = "Закажите подбор комплекта и монтаж дымохода в Санкт-Петербурге и области. Условия платного замера, состав работ и реальные объекты. Окончательная стоимость после замера.";
 
 export const metadata: Metadata = {
   title, description,

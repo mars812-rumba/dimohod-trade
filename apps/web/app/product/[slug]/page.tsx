@@ -15,6 +15,7 @@ import { productFaqItems } from "@/lib/productFaq";
 import { productOfferAvailability } from "@/lib/productAvailability";
 import { getReadyKits } from "@/lib/readyKits";
 import { productReadyKitMemberships } from "@/lib/productReadyKits";
+import { purchaseMetadata } from "@/lib/commercialMetadata";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -361,8 +362,7 @@ export async function generateMetadata({ params, searchParams }: ProductPageProp
     notFound();
   }
   const sku = selectSku(product, initialSkuKey, route.diameter, initialLengthMm);
-  const title = metadataTitle(product, sku);
-  const description = metadataDescription(product, sku);
+  const { title, description } = purchaseMetadata(metadataTitle(product, sku), metadataDescription(product, sku));
   const image = productImage(product, sku);
   const canonicalPath = productPublicPath(product.slug, sku);
 

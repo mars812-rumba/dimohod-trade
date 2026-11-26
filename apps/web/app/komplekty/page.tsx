@@ -9,10 +9,14 @@ import styles from "@/components/ReadyKit.module.css";
 import groupStyles from "@/components/ReadyKitGroups.module.css";
 
 export const dynamic = "force-dynamic";
+const title = "Купить готовый комплект дымохода — состав и цены | Дымоход Трейд";
+const description = "Закажите комплект дымохода через стену или перекрытие и кровлю. Сравните маршруты, диаметры, состав и стоимость изделий по актуальным ценам каталога.";
 export const metadata: Metadata = {
-  title: "Готовые комплекты дымоходов — состав и цены | Дымоход Трейд",
-  description: "Комплекты дымоходов через перекрытие и через стену. Сравните опубликованные составы, диаметры и стоимость изделий по актуальным ценам каталога.",
+  title,
+  description,
   alternates: { canonical: "/komplekty" },
+  openGraph: { type: "website", url: "/komplekty", title, description },
+  twitter: { card: "summary", title, description },
 };
 
 export default async function ReadyKitsPage() {

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CatalogCategoryView } from "@/components/CatalogCategoryView";
 import { getCatalogCategoryBySlug } from "@/lib/catalogCategories";
 import { hasCatalogQuery, type CatalogSearchParams } from "@/lib/catalogFilters";
+import { purchaseMetadata } from "@/lib/commercialMetadata";
 import {
   catalogSeoPagePath,
   getCatalogSeoPage,
@@ -43,9 +44,10 @@ export async function generateMetadata({ params, searchParams }: CatalogSeoPageP
 
   const canonical = absoluteUrl(catalogSeoPagePath(page));
   const image = categoryData.cover?.url ? absoluteUrl(categoryData.cover.url) : undefined;
+  const { title, description } = purchaseMetadata(page.title, page.description, "Закажите комплектующие для дымохода.");
   return {
-    title: page.title,
-    description: page.description,
+    title,
+    description,
     alternates: { canonical },
     robots: hasCatalogQuery(query)
       ? { index: false, follow: true }
@@ -53,15 +55,15 @@ export async function generateMetadata({ params, searchParams }: CatalogSeoPageP
     openGraph: {
       type: "website",
       locale: "ru_RU",
-      title: page.title,
-      description: page.description,
+      title,
+      description,
       url: canonical,
       images: image ? [{ url: image, alt: page.h1 }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
-      title: page.title,
-      description: page.description,
+      title,
+      description,
       images: image ? [image] : undefined,
     },
   };

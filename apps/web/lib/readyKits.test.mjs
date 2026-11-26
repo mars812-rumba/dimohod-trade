@@ -4,7 +4,8 @@ import test from "node:test";
 import ts from "typescript";
 
 const source = await readFile(new URL("./readyKits.ts", import.meta.url), "utf8");
-const executable = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText.replace(/\bexport\s+/g, "");
+const commercialSource = await readFile(new URL("./commercialMetadata.ts", import.meta.url), "utf8");
+const executable = ts.transpileModule(`${commercialSource}\n${source.replace(/import \{ purchaseMetadata \} from "\.\/commercialMetadata";\n/, "")}`, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText.replace(/\bexport\s+/g, "");
 const { kitMetadata, kitPath, kitRub, readyKitEstimate } = new Function(`${executable}; return {kitMetadata,kitPath,kitRub,readyKitEstimate};`)();
 
 test("detail loading accepts future lineup slugs and leaves publication checks to the API", async () => {
@@ -52,7 +53,7 @@ test("editable kit SEO overrides legacy description without changing title or ca
     name: "Комплект дымохода через перекрытие, 4 м, Ø120 мм" };
   const original = kitMetadata(kit);
   const edited = kitMetadata({ ...kit, content: { seo_description: "Новое описание Ø120 мм" } });
-  assert.equal(edited.description, "Новое описание Ø120 мм");
+  assert.equal(edited.description, "Закажите комплект дымохода. Новое описание Ø120 мм");
   assert.equal(edited.title, original.title);
   assert.deepEqual(edited.alternates, original.alternates);
   assert.equal(kitMetadata({ ...kit, content: { seo_description: "  " } }).description, original.description);

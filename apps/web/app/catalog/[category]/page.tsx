@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CatalogCategoryView } from "@/components/CatalogCategoryView";
 import { getCatalogCategoryBySlug } from "@/lib/catalogCategories";
+import { purchaseMetadata } from "@/lib/commercialMetadata";
 import {
   catalogCategoryPath,
   hasCatalogQuery,
@@ -32,10 +33,13 @@ export async function generateMetadata({ params, searchParams }: CategoryPagePro
     };
   }
 
-  const title = category.seo_title?.trim() || `${category.name} — купить | Дымоход Трейд`;
-  const description = category.seo_description?.trim()
+  const { title, description } = purchaseMetadata(
+    category.seo_title?.trim() || `${category.name} — купить | Дымоход Трейд`,
+    category.seo_description?.trim()
     || category.description?.trim()
-    || `${category.name}: выбор изделий по диаметру, материалу и марке стали в каталоге Дымоход Трейд.`;
+    || `${category.name}: выбор изделий по диаметру, материалу и марке стали в каталоге Дымоход Трейд.`,
+    "Закажите комплектующие для дымохода.",
+  );
   const canonical = absoluteUrl(catalogCategoryPath(category.slug));
   const image = category.cover?.url ? absoluteUrl(category.cover.url) : undefined;
   return {

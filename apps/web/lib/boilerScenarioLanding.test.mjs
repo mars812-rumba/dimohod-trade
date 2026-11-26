@@ -45,8 +45,8 @@ test("boiler landings include contact paths, trust, FAQ and structured data", ()
 });
 
 test("boiler metadata uses canonical scenario data and actual hero dimensions", () => {
-  assert.match(scenarios, /Дымоход для твердотопливного котла - расчёт комплекта/);
-  assert.match(scenarios, /Дымоход для газового котла - расчёт по модели/);
+  assert.match(scenarios, /Дымоход для твердотопливного котла — купить комплект/);
+  assert.match(scenarios, /Дымоход для газового котла — купить комплект/);
   assert.match(metadata, /content\.slug === "tverdotoplivny-kotel" \|\| content\.slug === "gazovyy-kotel"/);
   assert.match(metadata, /\{ width: 960, height: 720 \}/);
 });

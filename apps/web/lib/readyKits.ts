@@ -1,6 +1,7 @@
 import type { MediaItem } from "./api";
 import type { ChimneyEstimate } from "./chimneyEstimate";
 import type { SpecificationGroup } from "./estimateSpecification";
+import { purchaseMetadata } from "./commercialMetadata";
 
 export type ReadyKitLine = {
   sku_id: string; label: string; sku_name: string; article: string; quantity: number;
@@ -49,8 +50,11 @@ export const kitRub = (price: string | null) => price === null ? "Цена ут�
 export function kitMetadata(kit: Pick<ReadyKit, "name" | "route" | "height_m" | "diameter_mm" | "slug" | "content">) {
   const route = kit.route === "roof" ? "через перекрытие" : "через стену";
   return {
-    title: `${kit.name} | Дымоход Трейд`,
-    description: kit.content?.seo_description?.trim() || `Комплект ${route}, ${kit.height_m} м, диаметр ${kit.diameter_mm} мм: состав с артикулами, количествами и актуальными ценами. Закажите комплект или обсудите подбор со специалистом.`,
+    ...purchaseMetadata(
+      `${kit.name} | Дымоход Трейд`,
+      kit.content?.seo_description?.trim() || `Комплект ${route}, ${kit.height_m} м, диаметр ${kit.diameter_mm} мм: состав с артикулами, количествами и актуальными ценами. Закажите комплект или обсудите подбор со специалистом.`,
+      "Закажите комплект дымохода.",
+    ),
     alternates: { canonical: kitPath(kit.slug) },
   };
 }
