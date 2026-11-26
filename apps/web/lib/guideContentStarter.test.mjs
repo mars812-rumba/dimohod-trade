@@ -26,7 +26,7 @@ test("route comparison uses the owner's real Lampovo case and links to its compl
   assert.equal(project.images.length, 2);
   for (const image of project.images) assert.ok(existsSync(new URL(`../public${image.src}`, import.meta.url)));
   assert.equal(project.links[0].href, "/guides/komplekt-dymohoda-dlya-pechi#project-cost-10");
-  assert.match(project.afterMediaParagraphs.join(" "), /Возможность применения кожуха нужно уточнить/);
+  assert.match(project.afterMediaParagraphs.join(" "), /Уточните, можно ли использовать такой кожух с вашей печью и дымоходом/);
   assert.doesNotMatch(textOf(wall), /Условный пример|не описывают наши выполненные объекты/);
   assert.doesNotMatch(textOf(wall), /всегда дешевле|гарантированно подходит/);
 });
