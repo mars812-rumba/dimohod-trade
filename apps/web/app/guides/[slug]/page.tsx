@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
       description: article.description,
       publishedTime: article.publishedAt,
       modifiedTime: article.modifiedAt,
-      images: [{ url: article.image, width: 1672, height: 941, alt: article.imageAlt }],
+      images: [{ url: article.image, width: article.imageWidth ?? 1672, height: article.imageHeight ?? 941, alt: article.imageAlt }],
     },
     twitter: {
       card: "summary_large_image",

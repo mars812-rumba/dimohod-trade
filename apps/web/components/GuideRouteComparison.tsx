@@ -29,12 +29,13 @@ export function GuideImagePair({ images }: { images: readonly GuideImage[] }) {
 }
 
 export function GuideRouteSchemes() {
-  return <div aria-label="Два маршрута дымохода">
-    <GuideImagePair images={[
-      { src: "/images/ready-kits/wall-6m-scheme.webp", alt: "Схема готового комплекта через стену с наружным подъёмом 6 м", caption: "Выход через стену и подъём вдоль фасада", width: 853, height: 1280 },
-      { src: "/images/ready-kits/roof-6m-scheme.webp", alt: "Схема готового комплекта через перекрытия и кровлю, 6 м", caption: "Проход через перекрытия и кровлю", width: 853, height: 1280 },
-    ]} />
-  </div>;
+  const base = process.env.NEXT_BASE_PATH ?? "";
+  return <figure className={styles.illustration}>
+    <Image src={`${base}/images/guides/wall-or-roof-comparison.webp`}
+      alt="Два дома в разрезе: слева дымоход через стену, справа — через перекрытие и крышу"
+      width={1280} height={720} sizes="(max-width: 860px) calc(100vw - 28px), 760px" />
+    <figcaption>Два маршрута дымохода — через стену и через перекрытие и крышу</figcaption>
+  </figure>;
 }
 
 export function GuideRoutePrices() {

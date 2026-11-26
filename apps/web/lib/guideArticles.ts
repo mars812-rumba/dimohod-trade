@@ -32,6 +32,8 @@ export type GuideArticle = {
   description: string;
   eyebrow: string;
   image: string;
+  imageWidth?: number;
+  imageHeight?: number;
   imageAlt: string;
   imageCaption?: string;
   imageLayout?: "landscape" | "portrait";
@@ -163,10 +165,12 @@ export const guideArticles: GuideArticle[] = [
       "Сравниваем дымоход через стену и через крышу: маршрут, проходы, опоры и цены готовых комплектов Ø115 мм. Пример двухэтажного дома в Лампово.",
     eyebrow: "Выбор маршрута дымохода",
     layout: "route-comparison",
-    image: "/images/guides/real-dymohod-cherez-stenu.webp",
-    imageAlt: "Наружный вертикальный дымоход, выведенный через стену дома",
-    imageCaption: "Фотография с реального объекта",
-    imageLayout: "portrait",
+    image: "/images/guides/wall-or-roof-comparison.webp",
+    imageWidth: 1280,
+    imageHeight: 720,
+    imageAlt: "Иллюстрация двух маршрутов дымохода: через стену и через перекрытие и крышу",
+    imageCaption: "Сравнение маршрутов дымохода",
+    imageLayout: "landscape",
     readingTime: "7 минут",
     summary:
       "У хозяина дома обычно уже есть представление, где пройдёт дымоход. Если печь стоит у наружной стены и хочется сохранить кровлю целой, первым рассматривают выход на фасад. Если трубу планируют вести внутри, возникает другой вопрос: что находится над печью и где дымоход пройдёт на следующем этаже?",

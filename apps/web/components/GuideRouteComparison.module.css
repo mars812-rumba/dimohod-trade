@@ -2,6 +2,9 @@
 .images figure { margin: 0; min-width: 0; }
 .images img { display: block; width: 100%; height: auto; border-radius: 10px; }
 .images figcaption { margin-top: 12px; color: #435257; font-size: 14px; line-height: 1.5; }
+.illustration { margin: 28px 0; }
+.illustration img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.illustration figcaption { margin-top: 12px; color: #435257; font-size: 14px; line-height: 1.5; }
 .tableWrap { margin: 28px 0; border: 1px solid var(--guide-line); border-radius: 10px; overflow: hidden; }
 .table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 15px; line-height: 1.5; font-variant-numeric: tabular-nums; }
 .table caption { padding: 18px; text-align: left; font-weight: 650; background: #fff; }
