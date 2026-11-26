@@ -16,16 +16,18 @@ test("starter content preserves five existing routes, images and valid related l
   }
 });
 
-test("routes are compared without presenting hypothetical examples as completed jobs", () => {
+test("route comparison uses the owner's real Lampovo case and links to its complete estimate", () => {
   const wall = guideArticleBySlug["dymohod-cherez-stenu"];
   const roof = guideArticleBySlug["dymohod-cherez-krovlyu"];
   assert.ok(wall.relatedSlugs.includes(roof.slug));
   assert.ok(roof.relatedSlugs.includes(wall.slug));
-  const comparison = wall.sections.find(section => section.title.startsWith("Через стену или кровлю"));
-  assert.equal(comparison.paragraphs.length, 8);
-  assert.match(textOf(wall), /Условный пример/);
-  assert.match(textOf(wall), /не описывают наши выполненные объекты/);
-  assert.match(textOf(wall), /Коаксиальные системы газовых котлов — другой сценарий/);
+  const project = wall.sections.find(section => section.id === "lampovo");
+  assert.match(project.paragraphs.join(" "), /Dacha 2 с конфорками/);
+  assert.equal(project.images.length, 2);
+  for (const image of project.images) assert.ok(existsSync(new URL(`../public${image.src}`, import.meta.url)));
+  assert.equal(project.links[0].href, "/guides/komplekt-dymohoda-dlya-pechi#project-cost-10");
+  assert.match(project.afterMediaParagraphs.join(" "), /Возможность применения кожуха нужно уточнить/);
+  assert.doesNotMatch(textOf(wall), /Условный пример|не описывают наши выполненные объекты/);
   assert.doesNotMatch(textOf(wall), /всегда дешевле|гарантированно подходит/);
 });
 

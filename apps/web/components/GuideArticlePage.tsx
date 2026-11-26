@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Fragment } from "react";
 import {
   IconAlertTriangle as AlertTriangle,
   IconArrowRight as ArrowRight,
@@ -19,6 +20,7 @@ import { GuideEstimateExample } from "./GuideEstimateExample";
 import { GuideProjectCosts } from "./GuideProjectCosts";
 import { GuideStoveActions } from "./GuideStoveActions";
 import { LeadForm } from "./LeadForm";
+import { GuideImagePair, GuideRouteActions, GuideRoutePrices, GuideRouteSchemes } from "./GuideRouteComparison";
 
 type GuideArticlePageProps = {
   article: GuideArticle;
@@ -27,8 +29,10 @@ type GuideArticlePageProps = {
 export function GuideArticlePage({ article }: GuideArticlePageProps) {
   const assetBasePath = process.env.NEXT_BASE_PATH ?? "";
   const isStoveGuide = article.slug === "komplekt-dymohoda-dlya-pechi";
-  const calculationHref = isStoveGuide ? "/bystryy-raschet" : guideConfiguratorHref;
-  const calculationClassName = `${styles.primaryButton}${isStoveGuide ? ` ${styles.costButton}` : ""}`;
+  const isRouteComparison = article.layout === "route-comparison";
+  const usesQuickCalculation = isStoveGuide || isRouteComparison;
+  const calculationHref = usesQuickCalculation ? "/bystryy-raschet" : guideConfiguratorHref;
+  const calculationClassName = `${styles.primaryButton}${usesQuickCalculation ? ` ${styles.costButton}` : ""}`;
   const related = article.relatedSlugs
     .map((slug) => guideArticleBySlug[slug])
     .filter(Boolean);
@@ -47,20 +51,20 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
 
       <article>
         <header className={styles.hero}>
-          <div className={`${styles.shell} ${styles.heroGrid}`}>
+          <div className={`${styles.shell} ${styles.heroGrid}${isRouteComparison ? ` ${styles.comparisonHero}` : ""}`}>
             <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>{article.eyebrow}</p>
+              {!isRouteComparison ? <p className={styles.eyebrow}>{article.eyebrow}</p> : null}
               <h1>{article.title}</h1>
               <p className={styles.lead}>{article.summary}</p>
               <div className={styles.meta}>
                 <span><Clock size={17} aria-hidden /> {article.readingTime}</span>
                 <span>Обновлено <time dateTime={article.modifiedAt}>{guideDate(article.modifiedAt)}</time></span>
               </div>
-              <Link className={calculationClassName} href={calculationHref}>
+              {!isRouteComparison ? <Link className={calculationClassName} href={calculationHref}>
                 {isStoveGuide ? "Рассчитать стоимость" : "Рассчитать свой комплект"} <ArrowRight size={18} aria-hidden />
-              </Link>
+              </Link> : null}
             </div>
-            <figure
+            {!isRouteComparison ? <figure
               className={`${styles.heroFigure} ${article.imageLayout === "portrait" ? styles.heroFigurePortrait : ""}`}
             >
               <Image
@@ -72,17 +76,19 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                 src={`${assetBasePath}${article.image}`}
               />
               <figcaption>{article.imageCaption ?? "Концептуальная визуализация — не монтажная схема"}</figcaption>
-            </figure>
+            </figure> : null}
           </div>
         </header>
 
         <div className={`${styles.shell} ${styles.articleGrid}`}>
           <div className={styles.content}>
-            <section className={styles.quickAnswer} aria-labelledby="quick-answer-title">
+            {article.intro?.map(paragraph => <p className={styles.introParagraph} key={paragraph}>{paragraph}</p>)}
+            {isRouteComparison ? <GuideRouteSchemes /> : null}
+            {article.quickAnswer ? <section className={styles.quickAnswer} aria-labelledby="quick-answer-title">
               <p>Короткий ответ</p>
               <h2 id="quick-answer-title">С чего начать</h2>
               <p>{article.quickAnswer}</p>
-            </section>
+            </section> : null}
 
             {article.slug === "komplekt-dymohoda-dlya-pechi" ? (
               <Link className={styles.scenarioLink} href="/solutions/pech">
@@ -108,21 +114,30 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
               </div>
             ) : null}
 
-            <section className={styles.section} aria-labelledby="source-data-title">
+            {article.inputs?.length ? <section className={styles.section} aria-labelledby="source-data-title">
               <h2 id="source-data-title">Что подготовить для расчёта</h2>
               <ul className={styles.checkList}>
                 {article.inputs.map((item) => (
                   <li key={item}><Check size={18} aria-hidden /><span>{item}</span></li>
                 ))}
               </ul>
-            </section>
+            </section> : null}
 
             {article.slug === "komplekt-dymohoda-dlya-pechi" ? <GuideProjectCosts /> : null}
 
             {article.sections.map((section) => (
               <section className={styles.section} id={section.id} key={section.title}>
                 <h2>{section.title}</h2>
-                {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                {section.paragraphs.map((paragraph, index) => <Fragment key={paragraph}>
+                  <p>{paragraph}</p>
+                  {isRouteComparison && section.id === "kit-price-comparison" && index === 0 ? <GuideRoutePrices /> : null}
+                </Fragment>)}
+                {section.images?.length ? <GuideImagePair images={section.images} /> : null}
+                {section.afterMediaParagraphs?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+                {section.links?.length ? <div className={styles.sectionLinks}>
+                  {section.links.map(link => <Link href={link.href} key={link.href}>{link.label} <ArrowRight size={16} aria-hidden /></Link>)}
+                </div> : null}
+                {section.afterLinksParagraphs?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
                 {section.items?.length ? (
                   <ul className={styles.articleList}>
                     {section.items.map((item) => <li key={item}>{item}</li>)}
@@ -131,6 +146,8 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                 {article.slug === "komplekt-dymohoda-dlya-pechi" && section.id === "stove-kit-composition" ? <GuideStoveActions /> : null}
               </section>
             ))}
+
+            {isRouteComparison ? <GuideRouteActions /> : null}
 
             {article.estimateExample ? <GuideEstimateExample example={article.estimateExample} /> : null}
 
@@ -177,17 +194,17 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                   compact
                 />
               </details>
-              {!isStoveGuide ? <Link className={styles.selectionCalculation} href={guideConfiguratorHref}>Рассчитать самостоятельно</Link> : null}
+              {!usesQuickCalculation ? <Link className={styles.selectionCalculation} href={guideConfiguratorHref}>Рассчитать самостоятельно</Link> : null}
             </section>
           </div>
 
           <aside className={styles.sidebar} aria-label="Действия со статьёй">
             <div className={styles.sidebarCard}>
               <p className={styles.sidebarLabel}>Перейти от статьи к своему объекту</p>
-              <h2>{isStoveGuide ? "Рассчитайте стоимость комплекта" : "Соберите маршрут по реальным размерам"}</h2>
-              <p>{isStoveGuide ? "Выберите маршрут и параметры дымохода. Калькулятор покажет предварительную стоимость комплекта." : "Можно сохранить известные параметры, а неизвестные отметить для уточнения."}</p>
+              <h2>{usesQuickCalculation ? "Рассчитайте стоимость комплекта" : "Соберите маршрут по реальным размерам"}</h2>
+              <p>{usesQuickCalculation ? "Выберите маршрут и параметры дымохода. Калькулятор покажет предварительную стоимость комплекта." : "Можно сохранить известные параметры, а неизвестные отметить для уточнения."}</p>
               <Link className={calculationClassName} href={calculationHref}>
-                {isStoveGuide ? "Рассчитать стоимость" : "Открыть конфигуратор"} <ArrowRight size={18} aria-hidden />
+                {usesQuickCalculation ? "Рассчитать стоимость" : "Открыть конфигуратор"} <ArrowRight size={18} aria-hidden />
               </Link>
               <Link className={styles.secondaryLink} href="/solutions">
                 Сначала выбрать сценарий

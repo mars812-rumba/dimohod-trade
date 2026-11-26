@@ -40,8 +40,9 @@ test("all guides reuse the existing optional-attachment lead form with article c
   assert.doesNotMatch(form, /type="file"[^>]*required/);
 });
 
-test("route examples remain hypothetical without the editorial instruction", () => {
+test("the owner's real route example replaces the old hypothetical editorial framing", () => {
   const articles = read("./guideArticles.ts");
   assert.doesNotMatch(articles, /нельзя приписывать Лампово/);
-  assert.match(articles, /Эти примеры объясняют порядок сравнения, а не описывают наши выполненные объекты/);
+  assert.match(articles, /В двухэтажном доме в Лампово мы установили печь-камин Dacha 2/);
+  assert.doesNotMatch(articles, /Эти примеры объясняют порядок сравнения, а не описывают наши выполненные объекты/);
 });

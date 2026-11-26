@@ -63,6 +63,17 @@
   text-wrap: balance;
 }
 
+.comparisonHero { grid-template-columns: minmax(0, 1fr); }
+.comparisonHero .heroCopy { max-width: 900px; }
+.comparisonHero h1 { max-width: 900px; letter-spacing: -.035em; }
+.comparisonHero .lead { max-width: 75ch; font-size: 18px; }
+.comparisonHero .meta { margin-bottom: 0; }
+.introParagraph { margin: 0 0 24px; color: #3d4b50; font-size: 17px; line-height: 1.72; }
+.sectionLinks { display: grid; gap: 12px; margin: 24px 0 28px; }
+.sectionLinks a { display: inline-flex; gap: 8px; align-items: center; width: fit-content; color: #a03618; font-size: 16px; line-height: 1.5; text-underline-offset: 3px; }
+.sectionLinks svg { flex-shrink: 0; }
+.sectionLinks a:focus-visible { outline: 3px solid var(--guide-accent); outline-offset: 3px; }
+
 .eyebrow,
 .sidebarLabel {
   margin: 0;
