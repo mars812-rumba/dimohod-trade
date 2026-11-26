@@ -127,7 +127,7 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
               <p className={styles.eyebrow}>Дымоход для частного дома</p>
               <h1>Рассчитайте дымоход для дома</h1>
               <p className={styles.heroText}>
-                Получите предварительный состав, реальные товары, количество и ориентировочную стоимость.
+                Посмотрите предварительный состав из деталей каталога, их количество и ориентировочную стоимость.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#quick-estimate">
@@ -269,7 +269,7 @@ export function HomeScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
               <article>
                 <ShieldCheck aria-hidden size={25} />
                 <h3>Проверка</h3>
-                <p>Итоговый состав подтверждает специалист после сверки оборудования, размеров и условий объекта.</p>
+                <p>Специалист подтвердит итоговый состав после проверки оборудования, размеров и условий объекта.</p>
               </article>
               <article>
                 <FileDescription aria-hidden size={25} />

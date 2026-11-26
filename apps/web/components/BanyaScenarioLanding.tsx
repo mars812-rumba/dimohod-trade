@@ -118,7 +118,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               <p className={styles.eyebrow}>Дымоход для банной печи</p>
               <h1>Дымоход для банной печи: подбор комплекта</h1>
               <p className={styles.heroText}>
-                Укажите данные печи и маршрут, оставьте номер телефона — покажем предварительную схему, состав комплекта, реальные товары и ориентировочную стоимость.
+                Укажите данные печи и маршрут, оставьте номер телефона — покажем предварительную схему, детали из каталога, их количество и ориентировочную стоимость.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#quick-estimate">
@@ -152,7 +152,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
         <HomeQuickEstimate
           assetBasePath={assetBasePath}
           fixedObjectType="banya"
-          introDescription="Баня и банная печь уже выбраны. Укажите патрубок, маршрут и известные размеры, а допущения увидите вместе с результатом."
+          introDescription="Если баня и печь уже выбраны, укажите параметры патрубка, маршрут и известные размеры. Допущения расчёта покажем рядом с результатом."
           introEyebrow="Быстрый расчёт для бани"
           introTitle="Начните с данных о печи и маршруте"
           leadSource="solution-banya-quick-estimate"
@@ -188,7 +188,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
           <div className={styles.shell}>
             <div className={styles.sectionHeading}>
               <h2 id="banya-inputs-title">Что нужно для расчёта дымохода в бане</h2>
-              <p>Не обязательно знать всё сразу. Сначала фиксируем печь и маршрут, затем уточняем размеры и условия объекта.</p>
+              <p>Начните с модели печи и предполагаемого маршрута. Остальные размеры и условия уточним по ходу расчёта.</p>
             </div>
             <div className={styles.inputGrid}>
               {inputGroups.map(({ icon: Icon, title, text }) => (
@@ -238,7 +238,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               </article>
               <article>
                 <h3>Расчёт и монтаж дымохода</h3>
-                <p>Вместе с заявкой можно передать предварительный состав и фотографии объекта. Специалист сверит оборудование, размеры, условия монтажа и позиции каталога перед оформлением заказа.</p>
+                <p>Вместе с заявкой можно отправить предварительный состав и фотографии объекта. Перед заказом специалист проверит оборудование, размеры, условия монтажа и выбранные детали.</p>
               </article>
             </div>
             <div className={styles.measurementCallout}>
@@ -286,7 +286,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
           <div className={`${styles.shell} ${styles.explainerGrid}`}>
             <div>
               <h2 id="banya-explainer-title">Что проверяем перед заказом</h2>
-              <p>Предварительный расчёт помогает увидеть состав и бюджет. Финальный вариант подтверждается после сверки объекта.</p>
+              <p>Предварительный расчёт покажет состав и ориентировочную стоимость. Окончательный комплект подтвердит специалист после проверки данных объекта.</p>
             </div>
             <div className={styles.explainerColumns}>
               <article>
@@ -302,7 +302,7 @@ export function BanyaScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               <article>
                 <FileDescription aria-hidden size={25} />
                 <h3>Состав комплекта</h3>
-                <p>Сверяем найденные товары, количество, соединительные параметры и позиции без цены.</p>
+                <p>Проверяем выбранные детали, их количество и соединения. Для деталей без цены уточняем стоимость.</p>
               </article>
             </div>
           </div>

@@ -112,7 +112,7 @@ function ReadyKitContactForm({ slug, intent }: { slug: string; intent: "order" |
     <button className={styles.primary} type="submit" disabled={status === "sending"}>
       {status === "sending" ? "Отправляем…" : intent === "order" ? "Отправить заявку на комплект" : "Запросить консультацию"}
     </button>
-    <small>Сохраним выбранный комплект и его состав для менеджера. Наличие и окончательные условия заказа уточняются при общении.</small>
+    <small>Отправим менеджеру выбранный комплект и его состав. Он уточнит наличие и окончательные условия заказа.</small>
   </form>;
 }
 

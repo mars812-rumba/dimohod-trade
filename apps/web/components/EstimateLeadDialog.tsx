@@ -63,7 +63,7 @@ export function EstimateLeadDialog({
   description = "Приложим текущую PDF-смету к заявке. Менеджер проверит состав и свяжется с вами в течение 30 минут.",
   disabled = false,
   estimate,
-  heading = "Отправить BOM менеджеру",
+  heading = "Отправить расчёт менеджеру",
   inline = false,
   intent = "manager_review",
   reviewMode = false,

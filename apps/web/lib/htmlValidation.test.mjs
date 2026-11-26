@@ -54,7 +54,7 @@ test("route cards do not nest block headings in spans and trust articles have he
   const page = read("../app/page.tsx");
   assert.match(page, /<div className=\{styles.routeExampleBody\}>\s*<h3>/);
   assert.doesNotMatch(page, /<span className=\{styles.routeExampleBody\}>/);
-  for (const heading of ["Конкретные позиции", "Без неподтверждённых обещаний", "Инженерная проверка"]) {
+  for (const heading of ["Состав комплекта", "Условия вашего заказа", "Инженерная проверка"]) {
     assert.ok(page.includes(`<h3>${heading}</h3>`));
   }
   const badge = read("../components/YandexRatingBadge.tsx");

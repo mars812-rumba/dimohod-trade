@@ -169,7 +169,7 @@ export function CartPage() {
             submitLabel="Отправить товары"
             triggerClassName={styles.submit}
           />
-          <p className={styles.disclaimer}>Это заявка на проверку, а не автоматическое оформление и оплата заказа.</p>
+          <p className={styles.disclaimer}>Отправляя заявку, вы передаёте список на проверку менеджеру. Оформление и оплату заказа согласуем отдельно.</p>
         </aside>
       </div>
     </main>

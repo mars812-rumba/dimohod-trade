@@ -173,7 +173,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               <div className={styles.sectionHeading}>
                 <p className={styles.eyebrow}>Индивидуальный расчёт</p>
                 <h2 id="kamin-request-title">Нужен подбор для камина? Оставьте заявку</h2>
-                <p>Менеджер перезвонит и уточнит модель топки и данные объекта. Если есть паспорт, план или фото, прикрепите их по желанию для более предметного разговора.</p>
+                <p>Менеджер перезвонит и уточнит модель топки и данные объекта. Паспорт, план или фотографии помогут ему проверить подключение и маршрут; приложить их можно по желанию.</p>
               </div>
               <LeadForm
                 attachmentLabel="Добавить фото, план или паспорт"
@@ -230,7 +230,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               </article>
               <article>
                 <h3>Монтаж каминной топки</h3>
-                <p>В расчёте связываем место установки топки с подключением и будущей трассой. Если части проекта ещё нет, фиксируем, какие сведения нужно получить до окончательной сметы.</p>
+                <p>Для расчёта уточняем место установки топки, подключение и маршрут дымохода. Если часть проекта ещё не готова, подскажем, какие данные нужны для окончательной сметы.</p>
               </article>
               <article>
                 <h3>Камин под ключ</h3>
@@ -244,7 +244,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
             <div className={styles.measurementCallout}>
               <div>
                 <strong>Есть только фотографии или эскиз?</strong>
-                <p>Этого достаточно, чтобы начать сбор исходных данных. После просмотра материалов менеджер сообщит, что нужно измерить или уточнить.</p>
+                <p>Начните с того, что уже известно. Менеджер посмотрит материалы и подскажет, что ещё измерить или уточнить.</p>
               </div>
               <a className={styles.secondaryButton} href="#project-request">
                 Оставить заявку <ArrowRight aria-hidden size={17} />
@@ -285,7 +285,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
           <div className={`${styles.shell} ${styles.explainerGrid}`}>
             <div>
               <h2 id="kamin-process-title">Как проходит расчёт проекта</h2>
-              <p>Сначала собираем подтверждённые исходные данные, затем формируем состав дымохода и перечень работ для согласования.</p>
+              <p>Проверяем данные о топке и доме, затем согласуем состав дымохода и перечень работ.</p>
             </div>
             <div className={styles.explainerColumns}>
               <article>
@@ -301,7 +301,7 @@ export function KaminScenarioLanding({ assetBasePath = "" }: { assetBasePath?: s
               <article>
                 <ShieldCheck aria-hidden size={25} />
                 <h3>Согласование</h3>
-                <p>До заказа фиксируем состав проекта, стоимость и данные, которые ещё требуют проверки.</p>
+                <p>Перед заказом согласуем состав и стоимость, уточним данные, которые ещё нужно проверить.</p>
               </article>
             </div>
           </div>

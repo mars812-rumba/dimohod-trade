@@ -122,7 +122,7 @@ export function LeadForm({
           <Send aria-hidden size={16} /> {status === "sending" ? "Отправляем…" : submitLabel}
         </button>
       </div>
-      <small className="lead-form-note" id={attachmentHelpId}>Можно отправить заявку без фото. Если есть фото, план или паспорт, прикрепите для более предметного разговора. PDF, JPG, PNG или WebP до 10 МБ.</small>
+      <small className="lead-form-note" id={attachmentHelpId}>Заявку можно отправить без вложений. Фото, план или паспорт помогут менеджеру проверить данные и уточнить комплект. Принимаем PDF, JPG, PNG и WebP до 10 МБ.</small>
       <PersonalDataConsent />
       {status === "error" ? <p className="lead-form-error" role="alert">{message}</p> : null}
     </form>

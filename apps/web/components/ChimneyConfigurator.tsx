@@ -857,7 +857,7 @@ function DynamicWallRearScheme({ scene }: { scene: EngineeringSceneGraph }) {
         <g aria-label="Состав наружной вертикали">
           <rect fill="#edf3f4" height="64" rx="10" stroke="#cbd7da" width="272" x="40" y="92" />
           <text fill="#173d4c" fontSize="13" fontWeight="800" x="54" y="115">Сэндвич-трубы · {verticalPipeNodes.length} шт.</text>
-          <text fill="#53656d" fontSize="11.5" x="54" y="138">{pipeSummary || "Длины отсутствуют в BOM"}</text>
+          <text fill="#53656d" fontSize="11.5" x="54" y="138">{pipeSummary || "Длины не указаны"}</text>
         </g>
       </g>
 
@@ -1590,7 +1590,7 @@ function VerticalPassageDetails({
             Перекрытие: {calculation.floorThicknessesMm.length ? `${calculation.floorThicknessesMm.join(" / ")} мм` : "нужен замер"}
           </text>
           <text x="160" y="235" textAnchor="middle" className="scheme-node-note">
-            Вата в BOM: {calculation.passageWoolKits} компл. · по числу проходов
+            Вата в комплекте: {calculation.passageWoolKits} компл. · по числу проходов
           </text>
         </svg>
       </article>
@@ -1877,7 +1877,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
   const diagramValidationErrors = useMemo(() => {
     const issues = [...svgValidationErrors];
     if (calculation.routeKind === "wall-rear") {
-      if (catalogMatchStatus === "error") issues.push("Не удалось получить каталожные изделия для построения схемы.");
+      if (catalogMatchStatus === "error") issues.push("Не удалось загрузить изделия из каталога для построения схемы.");
       if (catalogMatchStatus === "ready") issues.push(...(rearSceneGraph?.errors ?? ["Scene graph не сформирован."]));
     }
     return [...new Set(issues)];
@@ -2176,7 +2176,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           <strong>{calculationProfiles.length ? "Выберите сохранённый замер" : "Сначала сделайте замеры объекта"}</strong>
           <p>
             {calculationProfiles.length
-              ? "После выбора здесь появятся схема дымохода, BOM с ценами и кнопка скачивания PDF."
+              ? "После выбора здесь появятся схема дымохода, состав комплекта с ценами и кнопка скачивания PDF."
               : "Заполните размеры на странице замеров и сохраните профиль. Затем схема, комплект и смета появятся здесь автоматически."}
           </p>
           <Link href="/zamery?edit=1">
@@ -2420,7 +2420,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
             ) : calculation.routeKind === "wall-rear" && catalogMatchStatus !== "ready" ? (
               <div className="configurator-svg-validation" role="status">
                 <strong>Собираем расчётную сцену</strong>
-                <span>Проверяем BOM и привязываем каждую отображаемую деталь к каталогу.</span>
+                <span>Подбираем для каждой детали в расчёте соответствующее исполнение из каталога.</span>
               </div>
             ) : calculation.routeKind === "wall-rear" ? (
               <div className="configurator-wall-route-scheme">
@@ -2526,7 +2526,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
           {!estimateUnlocked ? (
             <div className="configurator-estimate-lock">
               <EstimateLeadDialog
-                description={`Расчёт готов: ${selectedBom.length} позиций. Введите имя и телефон, чтобы увидеть предварительную стоимость, позиции BOM и скачать PDF. Запрос на связь можно отправить отдельно под сметой.`}
+                description={`Расчёт готов: ${selectedBom.length} позиций. Введите имя и телефон, чтобы увидеть предварительную стоимость, состав комплекта и скачать PDF. Запрос на связь можно отправить отдельно под сметой.`}
                 disabled={!selectedBom.length || catalogMatchStatus === "loading"}
                 estimate={estimate}
                 heading="Откройте предварительную смету"
@@ -2534,7 +2534,7 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
                 intent="estimate_access"
                 key={estimateAccessKey}
                 onSubmitted={(_customer, lead) => { if (lead) setEstimateAccess({ key: estimateAccessKey, lead }); }}
-                submitLabel="Показать стоимость и BOM"
+                submitLabel="Показать стоимость и состав"
               />
             </div>
           ) : <>
@@ -2670,10 +2670,10 @@ export function ChimneyConfigurator({ assetBasePath = "" }: ChimneyConfiguratorP
               <PackageCheck aria-hidden size={18} />
               <strong>Каталожные позиции</strong>
             </div>
-            {catalogMatchStatus === "loading" ? <p>Сопоставляем строки BOM со структурированными полями каталога…</p> : null}
+            {catalogMatchStatus === "loading" ? <p>Подбираем исполнения из каталога по параметрам деталей…</p> : null}
             {catalogMatchStatus === "ready" ? <p>Найдено {Object.keys(catalogMatches).length} из {selectedBom.length} позиций. Совпадения только по типу помечены для проверки.</p> : null}
             {catalogMatchStatus === "idle" ? <p>Укажите одинаковые значения X и Y наружного диаметра патрубка для подбора SKU.</p> : null}
-            {catalogMatchStatus === "error" ? <p>Каталог временно недоступен; геометрический расчёт и BOM сохранены.</p> : null}
+            {catalogMatchStatus === "error" ? <p>Каталог временно недоступен. Расчёт размеров и состав комплекта сохранены.</p> : null}
           </div>
           {estimateAccess && estimateUnlocked ? <EstimateCallbackRequest
             key={estimateAccess.lead.id}

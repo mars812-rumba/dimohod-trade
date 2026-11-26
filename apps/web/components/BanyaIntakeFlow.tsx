@@ -497,7 +497,7 @@ export function BanyaIntakeFlow({
                   Объект и отопитель
                 </h3>
                 <p>
-                  Сначала укажите объект и то, насколько точно уже известен отопитель.
+                  Выберите объект и укажите, выбрана ли уже модель отопителя.
                 </p>
               </div>
             </div>
@@ -785,18 +785,18 @@ export function BanyaIntakeFlow({
                     </MeasurementField>
                     {Number(intake.levels) >= 2 ? <>
                       <MeasurementField draft={intake} field="secondCeilingHeight" label="Высота помещения на 2 этаже" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 2400" unit="мм">
-                        <MeasurementHelp scheme={schemes.roomHeight}><p>Измерьте отдельную чистовую высоту второго этажа. Если она совпадает с первым, всё равно укажите значение — оно задаёт точную координату следующего перекрытия.</p></MeasurementHelp>
+                        <MeasurementHelp scheme={schemes.roomHeight}><p>Измерьте высоту от чистового пола до чистового потолка второго этажа. Укажите её, даже если она такая же, как на первом: по ней рассчитаем положение следующего перекрытия.</p></MeasurementHelp>
                       </MeasurementField>
                       <MeasurementField draft={intake} field="secondFloorThickness" label="Толщина перекрытия над 2 этажом" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 200" unit="мм">
-                        <MeasurementHelp scheme={schemes.floorThickness}><p>Укажите толщину именно второго перекрытия. Внутри этого интервала конфигуратор запретит стыки труб.</p></MeasurementHelp>
+                        <MeasurementHelp scheme={schemes.floorThickness}><p>Укажите толщину второго перекрытия. Конфигуратор проверит, чтобы стыки труб не оказались внутри него.</p></MeasurementHelp>
                       </MeasurementField>
                     </> : null}
                     {Number(intake.levels) >= 3 ? <>
                       <MeasurementField draft={intake} field="thirdCeilingHeight" label="Высота помещения на 3 этаже" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 2400" unit="мм">
-                        <MeasurementHelp scheme={schemes.roomHeight}><p>Измерьте чистовую высоту третьего этажа для расчёта абсолютной отметки прохода.</p></MeasurementHelp>
+                        <MeasurementHelp scheme={schemes.roomHeight}><p>Измерьте высоту от чистового пола до чистового потолка третьего этажа, чтобы рассчитать положение прохода.</p></MeasurementHelp>
                       </MeasurementField>
                       <MeasurementField draft={intake} field="thirdFloorThickness" label="Толщина перекрытия над 3 этажом" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 200" unit="мм">
-                        <MeasurementHelp scheme={schemes.floorThickness}><p>Укажите полную толщину третьего перекрытия. Стык внутри этого диапазона будет считаться ошибкой.</p></MeasurementHelp>
+                        <MeasurementHelp scheme={schemes.floorThickness}><p>Укажите полную толщину третьего перекрытия. Конфигуратор отметит как ошибку стык трубы внутри него.</p></MeasurementHelp>
                       </MeasurementField>
                     </> : null}
                     <MeasurementField allowDefer={false} draft={intake} field="ridgeHeight" label="Высота дома в коньке" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Например, 5200" required unit="мм">
@@ -812,7 +812,7 @@ export function BanyaIntakeFlow({
                       </MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="roofAngle" label="Угол кровли" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="Если известен" unit="°">
-                      <MeasurementHelp scheme={schemes.atticRoof}><p>Если угол указан в проекте дома, используйте это значение. Иначе оставьте поле для последующего замера — нормативные выводы по углу здесь не делаются.</p></MeasurementHelp>
+                      <MeasurementHelp scheme={schemes.atticRoof}><p>Если угол указан в проекте дома, используйте это значение. Иначе оставьте поле до замера. По одному углу кровли этот расчёт не проверяет соблюдение норм.</p></MeasurementHelp>
                     </MeasurementField>
                     <MeasurementField draft={intake} field="roofThickness" label="Толщина кровельного пирога" onChange={updateMeasurement} onDefer={toggleDeferred} placeholder="По линии прохода" unit="мм">
                       <MeasurementHelp scheme={schemes.atticRoof}><p>Укажите толщину кровельной конструкции по линии трубы. Этот диапазон станет отдельной зоной, внутри которой стыки запрещены.</p></MeasurementHelp>

@@ -54,10 +54,10 @@ test("home and industrial route use the shared bank without adding new structure
 
 test("public text preserves price, service and safety boundaries", () => {
   const byId = Object.fromEntries(Object.values(catalog).flatMap(set => set.items.map(item => [item.id, item])));
-  assert.match(byId['HOME-02'].answer, /сумма неполная/);
-  assert.match(byId['HOME-06'].answer, /не означает выезд монтажников в любой регион/);
+  assert.match(byId['HOME-02'].answer, /сумма будет неполной/);
+  assert.match(byId['HOME-06'].answer, /Возможность выезда монтажников уточняем по адресу объекта/);
   assert.match(byId['HOME-07'].answer, /документах на конкретный заказ/);
-  assert.match(byId['INDUSTRIAL-03'].answer, /не подтверждение любой комбинации/);
+  assert.match(byId['INDUSTRIAL-03'].answer, /Возможность изготовления конкретного сочетания размеров.*согласуем по заданию на объект/);
   assert.match(byId['BANYA-03'].answer, /Утепление трубы не заменяет/);
   assert.match(byId['GAS-08'].answer, /не заменяет проверку допустимой схемы/);
 });

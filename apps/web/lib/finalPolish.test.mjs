@@ -34,7 +34,7 @@ test("all guides reuse the existing optional-attachment lead form with article c
   assert.match(view, /configuration=\{`Подбор комплекта\. Статья: \$\{article.title\}`\}/);
   assert.match(view, /href=\{guideConfiguratorHref\}>Рассчитать самостоятельно/);
   assert.doesNotMatch(view, /Проверяемая основа|Граница предварительного расчёта/);
-  assert.match(view, /Он не заменяет\s+паспорт отопителя, проект, документацию производителя/);
+  assert.match(view, /При выборе и монтаже нужны паспорт отопителя, проект, документация производителя дымохода и проверка узлов на вашем объекте/);
   const form = read("../components/LeadForm.tsx");
   assert.match(form, /\/api\/v1\/leads/);
   assert.doesNotMatch(form, /type="file"[^>]*required/);

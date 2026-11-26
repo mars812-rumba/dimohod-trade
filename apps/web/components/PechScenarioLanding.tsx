@@ -118,7 +118,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
               <p className={styles.eyebrow}>Дымоход для отопительной печи</p>
               <h1>Дымоход для печи: подбор и расчёт комплекта</h1>
               <p className={styles.heroText}>
-                Укажите модель печи, расположение патрубка и маршрут. Покажем предварительный состав, реальные товары и ориентировочную стоимость.
+                Укажите модель печи, расположение патрубка и маршрут. Покажем предварительный состав из деталей каталога и ориентировочную стоимость.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#quick-estimate">
@@ -153,7 +153,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           assetBasePath={assetBasePath}
           fixedEquipmentType="pech"
           fixedObjectType="house"
-          introDescription="Дом и отопительная печь уже выбраны. Укажите состояние печи, патрубок, маршрут и известные размеры, а допущения увидите вместе с результатом."
+          introDescription="Если дом и печь уже выбраны, укажите, установлена ли печь, параметры патрубка, маршрут и известные размеры. Допущения расчёта покажем рядом с результатом."
           introEyebrow="Быстрый расчёт для печи"
           introTitle="Начните с патрубка и маршрута"
           leadSource="solution-pech-quick-estimate"
@@ -172,7 +172,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
             <div className={styles.helpPanel}>
               <div className={styles.sectionHeading}>
                 <h2 id="pech-help-title">Не знаете параметры? Поможем разобраться</h2>
-                <p>Оставьте контакты — менеджер перезвонит и уточнит данные для подбора комплекта. Если есть фото печи, паспорта или места установки, прикрепите его для более предметного разговора.</p>
+                <p>Оставьте контакты — менеджер перезвонит и уточнит данные для подбора комплекта. Фото печи, паспорта или места установки помогут ему проверить подключение и маршрут.</p>
               </div>
               <LeadForm
                 attachmentLabel="Добавить фото или паспорт"
@@ -189,7 +189,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           <div className={styles.shell}>
             <div className={styles.sectionHeading}>
               <h2 id="pech-inputs-title">Что нужно для расчёта дымохода для печи</h2>
-              <p>Не обязательно знать всё сразу. Сначала фиксируем модель печи и маршрут, затем уточняем размеры и условия объекта.</p>
+              <p>Начните с модели печи и предполагаемого маршрута. Остальные размеры и условия уточним по ходу расчёта.</p>
             </div>
             <div className={styles.inputGrid}>
               {inputGroups.map(({ icon: Icon, title, text }) => (
@@ -223,7 +223,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
             <div className={styles.seoGrid}>
               <article>
                 <h3>Начинаем с паспорта печи</h3>
-                <p>Название отопителя и параметры выходного патрубка помогают не переносить характеристики одной модели на другую. Если печь пока не выбрана, расчёт остаётся предварительным.</p>
+                <p>Для проверки подключения нужны точная модель печи и параметры выходного патрубка. Если печь пока не выбрана, расчёт остаётся предварительным.</p>
               </article>
               <article>
                 <h3>Через кровлю или через стену</h3>
@@ -239,7 +239,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
               </article>
               <article>
                 <h3>Проверка состава перед заказом</h3>
-                <p>Калькулятор формирует предварительный состав по введённым параметрам. Перед оформлением специалист сверяет печь, размеры объекта, найденные товары и позиции, которые требуют уточнения.</p>
+                <p>Калькулятор подбирает предварительный состав по вашим параметрам. Перед заказом специалист проверит печь, размеры и выбранные детали, а также уточнит недостающие данные.</p>
                 <div className={styles.inlineLinks}>
                   <Link href="/guides/komplekt-dymohoda-dlya-pechi">Что входит в комплект дымохода для печи <ArrowRight aria-hidden size={15} /></Link>
                 </div>
@@ -290,7 +290,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
           <div className={`${styles.shell} ${styles.explainerGrid}`}>
             <div>
               <h2 id="pech-explainer-title">Что проверяем перед заказом</h2>
-              <p>Предварительный расчёт помогает увидеть состав и бюджет. Финальный вариант подтверждается после сверки печи и объекта.</p>
+              <p>Предварительный расчёт покажет состав и ориентировочную стоимость. Окончательный комплект подтвердит специалист после проверки печи и данных объекта.</p>
             </div>
             <div className={styles.explainerColumns}>
               <article>
@@ -306,7 +306,7 @@ export function PechScenarioLanding({ assetBasePath = "" }: { assetBasePath?: st
               <article>
                 <FileDescription aria-hidden size={25} />
                 <h3>Состав комплекта</h3>
-                <p>Сверяем найденные товары, количество, соединительные параметры и позиции без точного совпадения.</p>
+                <p>Проверяем детали, их количество и соединения. Если точного исполнения в каталоге нет, подбираем его отдельно.</p>
               </article>
             </div>
           </div>

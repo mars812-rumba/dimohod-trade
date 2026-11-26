@@ -24,7 +24,7 @@ export default async function ReadyKitsPage() {
   const groups = groupReadyKits(kits);
   return <main className={styles.page}>
     <nav className={styles.breadcrumbs} aria-label="Хлебные крошки"><Link href="/">Главная</Link> / <span>Готовые комплекты</span></nav>
-    <header className={styles.heading}><p className="eyebrow">Каталог комплектов</p><h1>Готовые комплекты дымоходов</h1><p>Выберите маршрут и откройте полный состав с текущей стоимостью изделий. Условия монтажа проверяются для конкретного объекта.</p></header>
+    <header className={styles.heading}><p className="eyebrow">Каталог комплектов</p><h1>Готовые комплекты дымоходов</h1><p>Выберите маршрут и откройте полный состав с текущей стоимостью изделий. Условия монтажа уточним по вашему объекту.</p></header>
     {kits.length ? <div className={groupStyles.cards}>{groups.map(group => <ReadyKitGroupCard key={group.key} group={group} catalogPreview={readyKitCatalogPilot(group.route, group.height_m)} />)}</div> : <p>Согласованные комплекты пока не опубликованы.</p>}
     <ReadyKitCustomRequest />
     <p><Link href="/catalog">Каталог отдельных изделий →</Link></p>

@@ -143,7 +143,7 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
       layout: "lightHorizontalLines",
       margin: [0, 0, 0, 16],
     },
-    { text: "BOM и смета", style: "section" },
+    { text: "Состав комплекта и смета", style: "section" },
     {
       table: {
         headerRows: 1,
@@ -200,7 +200,7 @@ async function createChimneyEstimatePdf(estimate: ChimneyEstimate) {
     info: {
       title: "Предварительная смета дымохода",
       author: "Дымоход Трейд",
-      subject: "BOM, размеры и цены выбранного комплекта дымохода",
+      subject: "Состав, размеры и цены выбранного комплекта дымохода",
     },
     defaultStyle: { font: "Roboto", fontSize: 9, color: "#102127", lineHeight: 1.2 },
     styles: {
