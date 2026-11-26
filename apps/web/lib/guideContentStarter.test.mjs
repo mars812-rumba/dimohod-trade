@@ -44,14 +44,10 @@ test("buyer's checks separate accessories and hidden inclusions from the chimney
   assert.match(textOf(tee), /Одинаковый диаметр не подтверждает совместимость/);
 });
 
-test("wall, roof and tee articles link only to official sources, not competitors", () => {
-  for (const slug of ["dymohod-cherez-stenu", "dymohod-cherez-krovlyu", "komplekt-s-troynikom-90"]) {
-    const article = guideArticleBySlug[slug];
-    assert.equal(article.sources.length, 3);
-    for (const source of article.sources) {
-      const host = new URL(source.href).hostname;
-      assert.ok(host.endsWith(".mchs.gov.ru") || host === "publication.pravo.gov.ru", host);
-    }
+test("guides omit generic source lists and unrelated equipment manuals", () => {
+  for (const article of guideArticles) {
+    assert.equal(article.sources.length, 0);
+    assert.doesNotMatch(JSON.stringify(article), /mchs\.gov\.ru|publication\.pravo\.gov\.ru|tmf-shop\.ru|lanordica-extraflame\.com/);
     assert.doesNotMatch(JSON.stringify(article), /ferrum|вулкан|dymohodvulkan/i);
   }
 });

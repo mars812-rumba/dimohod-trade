@@ -163,7 +163,7 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
               </div>
             </aside>
 
-            <section className={styles.sources} aria-labelledby="sources-title">
+            {article.sources.length > 0 ? <section className={styles.sources} aria-labelledby="sources-title">
               <div className={styles.sourcesTitle}>
                 <BookOpen size={23} strokeWidth={1.7} aria-hidden />
                 <div>
@@ -180,7 +180,7 @@ export function GuideArticlePage({ article }: GuideArticlePageProps) {
                   </li>
                 ))}
               </ol>
-            </section>
+            </section> : null}
             <section className={styles.section} aria-labelledby="guide-selection-title">
               <h2 id="guide-selection-title">Поможем подобрать комплект под вашу задачу</h2>
               <p>Оставьте заявку. Если есть модель печи, фотографии или готовый список деталей, приложите их — менеджер уточнит недостающие данные и поможет с подбором.</p>

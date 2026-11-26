@@ -67,35 +67,11 @@ export type GuideEstimateExample = {
   }>;
 };
 
-const spSource: GuideSource = {
-  label: "СП 7.13130.2013 на сайте МЧС России",
-  href: "https://92.mchs.gov.ru/deyatelnost/napravleniya-deyatelnosti/nadzornaya-deyatelnost-i-profilakticheskaya-rabota/gosudarstvennye-uslugi-predstavlyaemye-mchs-rossii/deklarirovanie-pozharnoy-bezopasnosti/normativnye-pravovye-akty-i-metodicheskie-rekomendacii/svody-pravil/svod-pravil-sp-7-13130-2013-otoplenie-ventilyaciya-i-kondicionirovanie",
-  note: "Базовый свод правил по требованиям пожарной безопасности для отопления, вентиляции и кондиционирования.",
-};
-
-const fireRegimeSource: GuideSource = {
-  label: "Постановление Правительства РФ № 1479",
-  href: "https://publication.pravo.gov.ru/Document/View/0001202009250010",
-  note: "Официальная публикация Правил противопожарного режима в Российской Федерации.",
-};
-
-const mchsFaqSource: GuideSource = {
-  label: "Разъяснение МЧС о печах и дымоходах",
-  href: "https://04.mchs.gov.ru/deyatelnost/rabota-s-obrashcheniyami-grazhdan/chasto-zadavaemye-voprosy/kakie-trebovaniya-pozharnoy-bezopasnosti-ustanovleny-k-ustroystvu-i-ekspluatacii-otopitelnyh-pechey-i-dymohodov",
-  note: "МЧС связывает требования к печам и дымоходам с Правилами противопожарного режима и СП 7.13130.2013.",
-};
-
-const tmfManualSource: GuideSource = {
-  label: "Паспорт банной печи TMF «Гейзер»",
-  href: "https://tmf-shop.ru/re-geyzer-ggu.pdf",
-  note: "Пример паспорта, в котором параметры подключения задаются для конкретной модели оборудования.",
-};
-
 export const guideArticles: GuideArticle[] = [
   {
     slug: "dymohod-dlya-bani",
     publishedAt: "2026-08-22T12:11:55Z",
-    modifiedAt: "2026-10-05T19:46:02Z",
+    modifiedAt: "2026-11-26T00:00:00Z",
     title: "Дымоход для бани: как подготовить данные для подбора комплекта",
     shortTitle: "Дымоход для бани",
     description:
@@ -152,7 +128,7 @@ export const guideArticles: GuideArticle[] = [
         ],
       },
     ],
-    sources: [spSource, fireRegimeSource, mchsFaqSource, tmfManualSource],
+    sources: [],
     relatedSlugs: ["dymohod-cherez-krovlyu", "komplekt-dymohoda-dlya-pechi"],
   },
   {
@@ -233,13 +209,13 @@ export const guideArticles: GuideArticle[] = [
         ],
       },
     ],
-    sources: [spSource, fireRegimeSource, mchsFaqSource],
+    sources: [],
     relatedSlugs: ["dymohod-cherez-krovlyu", "komplekt-dymohoda-dlya-pechi", "komplekt-s-troynikom-90"],
   },
   {
     slug: "dymohod-cherez-krovlyu",
     publishedAt: "2026-08-22T12:11:55Z",
-    modifiedAt: "2026-10-05T19:46:02Z",
+    modifiedAt: "2026-11-26T00:00:00Z",
     title: "Дымоход через кровлю: как рассчитать прямой вертикальный маршрут",
     shortTitle: "Дымоход через кровлю",
     description:
@@ -306,13 +282,13 @@ export const guideArticles: GuideArticle[] = [
         ],
       },
     ],
-    sources: [spSource, fireRegimeSource, mchsFaqSource],
+    sources: [],
     relatedSlugs: ["dymohod-cherez-stenu", "dymohod-dlya-bani", "komplekt-dymohoda-dlya-pechi"],
   },
   {
     slug: "komplekt-dymohoda-dlya-pechi",
     publishedAt: "2026-08-22T12:11:55Z",
-    modifiedAt: "2026-11-24T20:09:52Z",
+    modifiedAt: "2026-11-26T00:00:00Z",
     title: "Комплект дымохода для печи: что входит и что проверить перед заказом",
     shortTitle: "Комплект для печи",
     description:
@@ -366,17 +342,13 @@ export const guideArticles: GuideArticle[] = [
         ],
       },
     ],
-    sources: [spSource, mchsFaqSource, tmfManualSource, {
-      label: "Паспорт и характеристики печи La Nordica Isetta Forno",
-      href: "https://www.lanordica-extraflame.com/ru/drova/drovianye-peci/isetta-forno",
-      note: "Ещё один пример того, что параметры дымоходного подключения указываются для конкретной модели.",
-    }],
+    sources: [],
     relatedSlugs: ["dymohod-cherez-stenu", "dymohod-cherez-krovlyu"],
   },
   {
     slug: "komplekt-s-troynikom-90",
     publishedAt: "2026-08-22T12:11:55Z",
-    modifiedAt: "2026-10-05T19:46:02Z",
+    modifiedAt: "2026-11-26T00:00:00Z",
     title: "Комплект дымохода с тройником 90°: когда он появляется в схеме через стену",
     shortTitle: "Комплект с тройником 90°",
     description:
@@ -427,7 +399,7 @@ export const guideArticles: GuideArticle[] = [
         ],
       },
     ],
-    sources: [spSource, fireRegimeSource, mchsFaqSource],
+    sources: [],
     relatedSlugs: ["dymohod-cherez-stenu", "komplekt-dymohoda-dlya-pechi"],
   },
 ];
